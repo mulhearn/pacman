@@ -18,9 +18,15 @@ vivado -mode batch -source tcl/build.tcl
 #
 # Peta-Linux:
 #
+cd petalinux
+petalinux-config --get-hw-description=../products/ --oldconfig
+petalinux-build
+petalinux-package --boot --force --fsbl images/linux/zynq_fsbl.elf --fpga images/linux/system.bit --u-boot
 
-
-
+#
+# Install:
+#
+From the petalinux/images/linux directory copy BOOT.bin and image.ub to the boot directory of TE0720
 
 
 

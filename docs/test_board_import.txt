@@ -74,8 +74,26 @@ vivado
 
 Check that you can Run Synthesis and Run Implementation on your project...
 
-Now, the whole trick here is that Xilinx can reproduce this whole shebank from your little tar ball,
-so blow away your test pacman directory, remake it clean from the tar ball, and commit everything into your repository of choice before compiling again.
+Now, the whole trick here is that Xilinx can reproduce this whole
+shebank from your little tar ball, so blow away your test pacman
+directory, remake it clean from the tar ball, and commit everything
+into your repository of choice before compiling again.
+
+
+
+# petalinux:
+For petalinux, I build following the instructions from:
+
+
+   https://wiki.trenz-electronic.de/display/PD/PetaLinux+KICKstart
+
+leading to the steps documented in the README.txt.  After the initial
+build, I adjusted the petalinux/.gitignore based on:
+
+    https://www.xilinx.com/support/answers/69415.html
+
+plus adding some additional files clearly automatically generated
+(which is potentially dangerous...and so noted in the .gitignore)
 
 
 
