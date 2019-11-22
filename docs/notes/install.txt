@@ -1,0 +1,37 @@
+Notes on installation of Vivado.
+
+1) Installed lastest version of Ubuntu 16.04 LTS
+
+This is technically not supported, and Vivado will complain, but it seems unreasonable to insist on an out-of-date version from 16.04 branch.  
+
+
+2) Download and install the webpack for the whole vitas suite:
+
+Set /tools/ to a user owned directory, so installed there as normal user.
+
+After installation, used "perl ldd-recursive.pl ..." as described at:
+   https://www.xilinx.com/support/answers/66184.html
+   to determine the missing libraries:
+
+libtcmalloc.so.4 => not found
+libboost_signals.so => not found
+librdi_common.so => not found
+librdi_commonmain.so => not found
+
+Satisfied the first two with:
+
+$ sudo apt-get install google-perftools
+$ sudo apt-get install llibboost-signals-dev
+
+The last two are Xilinx libraries, and are already located in Xilinx
+installation lib directory.  To see this, you can set LD_LIBRARY_LOAD to include the Xilinx libraries, but this isn't really needed.  Evidently, Vivado already finds these libraries.
+
+
+3) Because I installed as root, the cable drivers were not installed automatically, so I had to do the following:
+
+- unplug all cables (including SoMs with FTDI driver over USB, effectively a JTAG cable)
+
+$cd /tools/Xilinx/Vivado/2018.3/data/xicom/cable_drivers/lin64/install_script/install_drivers/
+
+$sudo ./install_drivers
+

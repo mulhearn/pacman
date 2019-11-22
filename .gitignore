@@ -1,6 +1,10 @@
-/pacman
+/pacman-fw
 *.jou
 *.log
 *~
-/products/zsys_wrapper.hdf
-
+/products/
+!/products/zsys_wrapper.hdf
+/tcl/recreate_xpr.tcl.old
+/hello
+/hello.old
+/build

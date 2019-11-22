@@ -2590,7 +2590,7 @@ CONFIG_packagegroup-core-boot=y
 #
 # packagegroup-core-buildessential 
 #
-# CONFIG_packagegroup-core-buildessential is not set
+CONFIG_packagegroup-core-buildessential=y
 # CONFIG_packagegroup-core-buildessential-dev is not set
 # CONFIG_packagegroup-core-buildessential-dbg is not set
 
@@ -4060,7 +4060,7 @@ CONFIG_bridge-utils=y
 #
 # packagegroup-petalinux-python-modules 
 #
-# CONFIG_packagegroup-petalinux-python-modules is not set
+CONFIG_packagegroup-petalinux-python-modules=y
 # CONFIG_packagegroup-petalinux-python-modules-dbg is not set
 # CONFIG_packagegroup-petalinux-python-modules-dev is not set
 
@@ -4089,7 +4089,7 @@ CONFIG_bridge-utils=y
 #
 # packagegroup-petalinux-utils 
 #
-# CONFIG_packagegroup-petalinux-utils is not set
+CONFIG_packagegroup-petalinux-utils=y
 # CONFIG_packagegroup-petalinux-utils-dbg is not set
 # CONFIG_packagegroup-petalinux-utils-dev is not set
 
@@ -4139,4 +4139,4 @@ CONFIG_webfwu=y
 #
 # PetaLinux RootFS Settings
 #
-CONFIG_ROOTFS_ROOT_PASSWD="root"
+CONFIG_ROOTFS_ROOT_PASSWD="pacman"
