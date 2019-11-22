@@ -56,11 +56,12 @@ $vivado -mode batch -source tcl/recreate_xpr.tcl
 $vivado -mode batch -source tcl/build_xpr.tcl
 
 A successful build produces the file:
-products/zynq_fsbl.elf
+products/zsys_wrapper.hdf
 
 # on another terminal, connect to USB serial device with TE0720 connected:
 $busybox microcom -s 115200 /dev/ttyUSB1
 # (your tty device may vary!  Try "dmesg | grep tty")
+# Exit with Ctrl-x or Ctrl-X
 
 # create, build, and run the hello world bare metal application:
 xsct tcl/hello.tcl
