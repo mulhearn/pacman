@@ -131,9 +131,15 @@ Suppose someone updates the repository with an updated
 propogate these updates into the project.  You'll need to move the
 pacman directory elsewhere, e.g.:
 
-$mv pacman pacman.old
+$mv pacman-fw pacman-fw.old
 
-And then proceed as above with the recreate_xpr.tcl 
+And then proceed as above with the recreate_xpr.tcl
+
+You can then manually merge any of your local changes from
+pacman-fw.old into the reconstituted new project at pacman-fw.
+Another approach is to merge the changes at the project TCL level (see
+below).  Note that changes to source files are version controlled like
+ordinary source files.
 
 -----------------------------------------------------------------------
 6) Update the TCL project file after making changes to the Xilinx project 
@@ -144,7 +150,8 @@ sources), you'll need to update the project TCL file:
 
 $vivado -mode batch -source tcl/export_xpr.tcl
 
-
+One merge strategy is to export your project as TCL, merge the changes
+made by others to the TCL file, then rebuild the the project.
 
 
 
