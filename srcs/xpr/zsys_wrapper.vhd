@@ -1,7 +1,7 @@
 --Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 ----------------------------------------------------------------------------------
 --Tool Version: Vivado v.2018.3 (lin64) Build 2405991 Thu Dec  6 23:36:41 MST 2018
---Date        : Fri Nov 15 23:41:22 2019
+--Date        : Tue Nov 26 02:02:57 2019
 --Host        : phys80dev running 64-bit Ubuntu 16.04.6 LTS
 --Command     : generate_target zsys_wrapper.bd
 --Design      : zsys_wrapper
@@ -42,7 +42,9 @@ entity zsys_wrapper is
     PL_pin_N15 : in STD_LOGIC;
     PL_pin_N22 : out STD_LOGIC;
     PL_pin_P16 : in STD_LOGIC;
-    PL_pin_P22 : in STD_LOGIC
+    PL_pin_P22 : in STD_LOGIC;
+    test_pin_1 : out STD_LOGIC;
+    test_pin_2 : out STD_LOGIC
   );
 end zsys_wrapper;
 
@@ -58,6 +60,14 @@ architecture STRUCTURE of zsys_wrapper is
     PL_pin_N22 : out STD_LOGIC;
     PL_pin_P16 : in STD_LOGIC;
     PL_pin_P22 : in STD_LOGIC;
+    test_pin_1 : out STD_LOGIC;
+    test_pin_2 : out STD_LOGIC;
+    FIXED_IO_mio : inout STD_LOGIC_VECTOR ( 53 downto 0 );
+    FIXED_IO_ddr_vrn : inout STD_LOGIC;
+    FIXED_IO_ddr_vrp : inout STD_LOGIC;
+    FIXED_IO_ps_srstb : inout STD_LOGIC;
+    FIXED_IO_ps_clk : inout STD_LOGIC;
+    FIXED_IO_ps_porb : inout STD_LOGIC;
     DDR_cas_n : inout STD_LOGIC;
     DDR_cke : inout STD_LOGIC;
     DDR_ck_n : inout STD_LOGIC;
@@ -72,13 +82,7 @@ architecture STRUCTURE of zsys_wrapper is
     DDR_dm : inout STD_LOGIC_VECTOR ( 3 downto 0 );
     DDR_dq : inout STD_LOGIC_VECTOR ( 31 downto 0 );
     DDR_dqs_n : inout STD_LOGIC_VECTOR ( 3 downto 0 );
-    DDR_dqs_p : inout STD_LOGIC_VECTOR ( 3 downto 0 );
-    FIXED_IO_mio : inout STD_LOGIC_VECTOR ( 53 downto 0 );
-    FIXED_IO_ddr_vrn : inout STD_LOGIC;
-    FIXED_IO_ddr_vrp : inout STD_LOGIC;
-    FIXED_IO_ps_srstb : inout STD_LOGIC;
-    FIXED_IO_ps_clk : inout STD_LOGIC;
-    FIXED_IO_ps_porb : inout STD_LOGIC
+    DDR_dqs_p : inout STD_LOGIC_VECTOR ( 3 downto 0 )
   );
   end component zsys;
 begin
@@ -113,6 +117,8 @@ zsys_i: component zsys
       PL_pin_N15 => PL_pin_N15,
       PL_pin_N22 => PL_pin_N22,
       PL_pin_P16 => PL_pin_P16,
-      PL_pin_P22 => PL_pin_P22
+      PL_pin_P22 => PL_pin_P22,
+      test_pin_1 => test_pin_1,
+      test_pin_2 => test_pin_2
     );
 end STRUCTURE;
