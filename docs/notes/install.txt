@@ -58,7 +58,8 @@ do something like:
 
 $ mkdir ~/workaround 
 $ cd ~/workaround
-$ wget https://github.com/mulhearn/pacman/blob/master/docs/workaround/sed
+$ wget https://raw.githubusercontent.com/mulhearn/pacman/master/docs/workaround/sed
+$ chmod ugo+x sed
 $ export PATH=~/workaround:$PATH
 $ which sed
 
@@ -81,6 +82,8 @@ above is still in effect, then run the installer as described in the
 documentation.
 
 I installed to /tools/Xilinx/petalinux/2018.3 as a normal user.
+
+You can delete ~/workaround once the installation is complete.
 
 -----------------
 Ubuntu 16.04 LTS
