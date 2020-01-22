@@ -5,6 +5,12 @@
 #
 #    products/zynq_fsbl.elf
 #
+if {[file exists "build"] == 1} {
+    if {[file exists "build.old"] == 1} {
+	file delete -force build.old
+    }
+    file rename build/ build.old/
+}
 
 # Set SDK workspace
 setws build
