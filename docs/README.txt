@@ -104,8 +104,12 @@ products/zynq_fsbl.elf
 4) Build and install Peta-Linux:
 -----------------------------------------
 
-Build Peta-Linux by running the build script:
+In a new shell, setup petalinux:
+$source /tools/Xilinx/petalinux/2018.3/settings.sh
+(Petalinux is very fussy about the shell.  Make sure you are using
+bash, and try hiding e.g. your .bash_aliases file if you having trouble.)
 
+Build Peta-Linux by running the build script:
 $chmod ugo+x ./petalinux/build.sh
 $./petalinux/build.sh
 
@@ -121,6 +125,10 @@ To install, format an SD card:
 From the petalinux/images/linux directory copy BOOT.bin and image.ub to the boot partition
 
 Untar the rootfs tarball onto the rootfs partition
+
+
+If you just want to update the firmware, you can just do:
+petalinux-package --boot --force --fsbl ../products/zynq_fsbl.elf --fpga images/linux/system.bit --u-boot
 
 --------------------------------------------------------------
 5) Update the Xilinx project from an updated TCL project file:
