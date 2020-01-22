@@ -7,6 +7,7 @@ source /tools/Xilinx/Vivado/2018.3/settings64.sh
 vivado -mode batch -source tcl/recreate_xpr.tcl
 vivado -mode batch -source tcl/build_xpr.tcl
 xsct tcl/hello.tcl
+xsct tcl/build_sw.tcl
 
 # connecting to UART
 busybox microcom -s 115200 /dev/ttyUSB1
