@@ -82,6 +82,7 @@ $cd serious_task
 # edit bareapp/src/bareapp.c as needed... for now just change the message.
 
 # build and run your own the bare metal application:
+$xsct build.tcl
 $xsct run.tcl
 
 # remember to go back out to root directory:
