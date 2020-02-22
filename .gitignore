@@ -9,4 +9,5 @@
 /build
 /hello
 /gpio
+/hwcheck
 /*.old
