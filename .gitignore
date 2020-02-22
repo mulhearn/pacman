@@ -1,6 +1,7 @@
 /pacman-fw
 *.jou
 *.log
+*.aux
 *~
 /products/
 !/products/zsys_wrapper.hdf

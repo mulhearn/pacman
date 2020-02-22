@@ -1,0 +1,88 @@
+\documentclass[12pt]{article}
+
+
+\usepackage[dvips,letterpaper,margin=0.75in,bottom=0.75in]{geometry}
+\usepackage{cite}
+\usepackage{slashed}
+\usepackage{graphicx}
+\usepackage{amsmath}
+
+\usepackage[american,fulldiode]{circuitikz}
+\usetikzlibrary{calc}
+
+\begin{document}
+\ctikzset{bipoles/thickness=1}
+\ctikzset{bipoles/length=.8cm}
+
+\title{Technical Reference Manual for the Pixel Array Control Monitor and Network (Pac-Man) Card}
+
+\maketitle
+
+\section{Signal Mapping}
+
+\begin{tabular}{lll}
+\hline
+Logical & Trenz & Package Pin \\  
+\hline
+SCL         & MIO10        & \\
+SDA         & MIO11        & \\
+LED         & MIO12        & \\
+LED         & MIO13        & \\
+LED         & B35\_L20\_P  & G19 \\
+LED         & M35\_L20\_N  & F19 \\
+\hline
+TILE1\_CLK\_1      & B33\_L13\_P  & W17\\
+TILE1\_CUR\_SEL\_1 & B33\_L13\_N  & W18\\
+TILE1\_RESET\_1    & B33\_L4\_P   & W20\\
+TILE1\_TRIG\_1     & B33\_L4\_N   & W21\\
+TILE1\_EN          & B33\_L12\_P  & Y18\\
+TILE1\_MOSI\_0     & B33\_L7\_P   & AA22\\
+TILE1\_MOSI\_1     & B33\_L8\_P   & AA21\\
+TILE1\_MOSI\_2     & B33\_L11\_P  & Y19\\
+TILE1\_MOSI\_3     & B33\_L17\_P  & AA17\\
+TILE1\_MISO\_0     & B33\_L7\_N   & AB22\\
+TILE1\_MISO\_1     & B33\_L8\_N   & AB21\\
+TILE1\_MISO\_2     & B33\_L11\_N  & AA19\\
+TILE1\_MISO\_3     & B33\_L17\_N  & AB17\\
+\hline
+\end{tabular}
+
+\begin{tabular}{|ll|l|l|l|}
+\hline
+   & FPGA        & Front Panel & (Connection) & Example Use  \\  
+\hline
+1  & PANEL\_1     & PANEL\_1     & Lemo?      & External Trigger \\
+\hline
+2  & PANEL\_2     & PANEL\_2     & Lemo?      & External Clock \\
+\hline
+3  & PANEL\_3     & PANEL\_3     & Lemo?      & External Sync \\
+\hline
+4  & PANEL\_4     & PANEL\_4     & Lemo?      & - \\
+\hline
+5  & LED\_1       & LED\_1       & LED        & Power \\
+\hline
+6  & LED\_2       & LED\_2       & LED        & Zynq Power \\
+\hline
+7  & LED\_3       & LED\_3       & LED        & Tile Analog Power \\
+\hline
+8  & LED\_4       & LED\_4       & LED        & Tile Digital Power \\
+\hline
+9  & LED\_5       & LED\_5       & LED        & UART Status \\
+\hline
+10  & LED\_6       & LED\_6       & LED        & FIFO full detected \\
+\hline
+11  & LED\_7       & LED\_7       & LED        & - \\
+\hline
+12  & LED\_8       & LED\_8       & LED        & - \\
+\hline
+13 & BUTTON\_1    & BUTTON\_1    & Button     & Sync \\
+\hline
+14  & BUTTON\_2    & BUTTON\_2    & Button     & Soft Reset \\
+\hline
+15  & BUTTON\_3    & BUTTON\_3    & Button     & Hard Reset \\
+\hline
+16  & BUTTON\_4    & BUTTON\_4    & Button     & - \\
+\hline
+\end{tabular}
+ 
+\end{document}
