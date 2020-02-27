@@ -50,7 +50,7 @@ CONFIG_system-zynq=y
 #
 # CONFIG_busybox is not set
 # CONFIG_busybox-udhcpd is not set
-CONFIG_busybox-httpd=y
+# CONFIG_busybox-httpd is not set
 # CONFIG_busybox-dbg is not set
 # CONFIG_busybox-inetd is not set
 # CONFIG_busybox-dev is not set
@@ -147,7 +147,7 @@ CONFIG_busybox-httpd=y
 #
 # i2c-tools 
 #
-CONFIG_i2c-tools=y
+# CONFIG_i2c-tools is not set
 # CONFIG_i2c-tools-dev is not set
 # CONFIG_i2c-tools-dbg is not set
 # CONFIG_i2c-tools-misc is not set
@@ -2590,7 +2590,7 @@ CONFIG_packagegroup-core-boot=y
 #
 # packagegroup-core-buildessential 
 #
-CONFIG_packagegroup-core-buildessential=y
+# CONFIG_packagegroup-core-buildessential is not set
 # CONFIG_packagegroup-core-buildessential-dev is not set
 # CONFIG_packagegroup-core-buildessential-dbg is not set
 
@@ -4060,7 +4060,7 @@ CONFIG_bridge-utils=y
 #
 # packagegroup-petalinux-python-modules 
 #
-CONFIG_packagegroup-petalinux-python-modules=y
+# CONFIG_packagegroup-petalinux-python-modules is not set
 # CONFIG_packagegroup-petalinux-python-modules-dbg is not set
 # CONFIG_packagegroup-petalinux-python-modules-dev is not set
 
@@ -4089,7 +4089,7 @@ CONFIG_packagegroup-petalinux-python-modules=y
 #
 # packagegroup-petalinux-utils 
 #
-CONFIG_packagegroup-petalinux-utils=y
+# CONFIG_packagegroup-petalinux-utils is not set
 # CONFIG_packagegroup-petalinux-utils-dbg is not set
 # CONFIG_packagegroup-petalinux-utils-dev is not set
 
@@ -4126,8 +4126,8 @@ CONFIG_imagefeature-hwcodecs=y
 #
 # apps 
 #
-CONFIG_startup=y
-CONFIG_webfwu=y
+# CONFIG_startup is not set
+# CONFIG_webfwu is not set
 
 #
 # user packages 
@@ -4139,4 +4139,4 @@ CONFIG_webfwu=y
 #
 # PetaLinux RootFS Settings
 #
-CONFIG_ROOTFS_ROOT_PASSWD="pacman"
+CONFIG_ROOTFS_ROOT_PASSWD="root"
