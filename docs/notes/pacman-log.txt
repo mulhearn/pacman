@@ -1,0 +1,97 @@
+Pac-Man Card (v1) Testing Log
+
+----------------------------------------------------------------
+27 Feb 2020:
+----------------------------------------------------------------
+
+I tried to reproduce the problems booting from SD card by rebooting 
+several times, and eventually encountering this error:
+
+reading image.ub
+sdhci_transfer_data: Error detected in status(0x208000)!
+Error reading cluster
+** Unable to read file image.ub **
+Zynq> <INTERRUPT>
+Zynq> 
+
+Which led me to find these references:
+
+http://zedboard.org/sites/default/files/documentations/PicoZed_7010_7020_RevC_Errata_v1_1.pdf
+https://www.xilinx.com/support/answers/59999.html
+
+The solution is to use SSM at a maximum rate of 25 MHz.  Note that it
+is associated with cold starts.
+
+The "dirty-bit" was a red-herring.  It was likely simply warming up that allowed it to boot!  Still, I should change FS type on the boot partition to avoid the dirty-bit warning.
+
+
+----------------------------------------------------------------
+25 Feb 2020:
+----------------------------------------------------------------
+
+Initial testing of newly assembled Pac-Man card:
+
+1) Using a bench-top power supply, measured power consumption of the
+Trenz TE0720 while on the TE0706.  Measured power consumption of bare
+PacMan card.  Based on these measurements, adjusted the current limits
+on bench-top supply to 0.5 A at 20 V.  Installed TRENZ on PacMan,
+powered it up, and observed 400 mA of current, near the expected
+value.
+
+2) On the Pac-Man's 12-pin header for JTAG/UART, installed a
+TE0790-03, a Trenz Daughter card which provides simultaneous access to
+JTAG and UART over a single USB cable.  The "Hello World" test ran
+over JTAG out of the box.  This shows UART and JTAG are both
+functional.
+
+3) Ran low-level hardware test over JTAG, blinked 3 out of 4 LEDs.
+Two LEDs are over MIO, and two on HR pins (connected via AXI GPIO).
+The non-working LED is due to an assembly problem, just ignoring this
+for now.
+
+4) Boot to Linux from SD card did not work.  Later, using a fsck'ed
+and cleanly unmounted SD card and a power-cycle of the Pac-Man, I was
+able to boot successfully from SD card.
+
+5) Using a petalinux image that uses initramfs as root filesystem, I
+was able to BOOT to linux over JTAG, like this:
+
+petalinux-boot --jtag --kernel --fpga
+
+6) Ethernet is working:
+
+root@petalinux:~# ifconfig eth0
+eth0      Link encap:Ethernet  HWaddr 54:10:EC:E2:DC:69
+          inet addr:169.237.43.122  Bcast:169.237.43.255  Mask:255.255.254.0
+          inet6 addr: fe80::5610:ecff:fee2:dc69/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:12683 errors:0 dropped:2748 overruns:0 frame:0
+          TX packets:202 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:2037195 (1.9 MiB)  TX bytes:33925 (33.1 KiB)
+          Interrupt:27 Base address:0xb000
+
+7) ssh is working, was able to login to pacman from my pc:
+
+mulhearn@vonnegut:/media/mulhearn$ ssh root@pacman-dev1
+root@pacman-dev1's password:
+root@petalinux:~# pwd
+/home/root
+root@petalinux:~#
+
+8) Despite inability to boot from SD card, the SD card is visible from Linux:
+
+root@petalinux:/run/media# cd mmcblk0p1/
+root@petalinux:/run/media/mmcblk0p1# ls
+BOOT.bin  flash     image.ub  latest    safe      working
+root@petalinux:/run/media/mmcblk0p1# cd ../mmcblk0p2/
+root@petalinux:/run/media/mmcblk0p2# ls
+bin    boot   dev    etc    home   lib    media  mnt    proc   run
+sbin   srv    sys    tmp    usr    var
+root@petalinux:/run/media/mmcblk0p2# dmesg | grep mmc
+mmc0: SDHCI controller on e0100000.mmc [e0100000.mmc] using ADMA
+mmc0: new high speed SDHC card at address 1388
+mmcblk0: mmc0:1388 USD00 14.7 GiB
+ mmcblk0: p1 p2
+EXT4-fs (mmcblk0p2): mounted filesystem with ordered data mode. Opts: (null)
+
