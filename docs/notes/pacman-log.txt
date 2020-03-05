@@ -1,6 +1,127 @@
 Pac-Man Card (v1) Testing Log
 
 ----------------------------------------------------------------
+4 Mar 2020:
+----------------------------------------------------------------
+
+I've been pouring through the specs of the ADCs here:
+
+  http://www.ti.com/lit/ds/symlink/ina219.pdf
+
+and think I understand what is going on and have a good solution that
+doesn't require pulling the ADC chips.
+
+The input leakage current is 20 uA in the specs, but in the footnotes
+it says "Negative leakage currents can occur under different input
+conditions".  I think we simply have a negative leakage current when
+the voltage is set to zero.  In the specs, the input leakage drops
+from 20 uA to 0.1 uA when going to Power-down mode.  I suspect that if
+we simply set the ADC into power down mode when we turn the power off,
+we will reduce the leakage current by a factor of 1.0/0.1=10 or even
+20/0.1=200.
+
+I've also sorted out how to calculate the voltage and current from the
+register values correctly.  At least for the bus voltage, I can now
+reproduce the measured values quite precisely.  The current
+measurements are still off by about 10% wrt the benchtop supply, and I
+can't see where the crazy high shunt voltage measurements are coming
+from.  I thought these might be two-complement negative voltages, but
+it appears the sign bit is much higher.
+
+***
+
+Booting Linux from SD has been 100% reliable since changing SDIO
+frequency to 25 MHz.
+
+The full set of hardware features can not be tested with the "hwcheck"
+bare-metal app, running with minimal firmware which routes GPIO to the
+digital outputs:
+
+mulhearn@vonnegut:~/research/pacman/hwcheck$ busybox microcom -s 115200 /dev/ttyUSB1
+Pac-Man Card Low-Level Hardware Testing
+initializing PS GPIO interface (MIO and EMIO pins)...success.
+initializing AXI GPIO interface (HR pins)...success.
+initializing I2C interface...success.
+perfomring I2C selftest...success.
+setting IIC clk rate to 200000...success.
+choose an option:
+   (1) blink LEDs          (2) read voltage levels
+   (3) power up tile 1     (4) power down tile 1
+   (5) init and check I2C  (6) check digital I/O 
+BLINK LEDS:  blinking LED 1 (MIO pin)...
+BLINK LEDS:  blinking LED 2 (MIO pin)...
+BLINK LEDS:  blinking LED 3 (HR pin)...
+BLINK LEDS:  blinking LED 4 (HR pin)...
+BLINK LEDS:  done.
+choose an option:
+   (1) blink LEDs          (2) read voltage levels
+   (3) power up tile 1     (4) power down tile 1
+   (5) init and check I2C  (6) check digital I/O 
+
+I2C is working to control the DACs:
+
+https://datasheets.maximintegrated.com/en/ds/MAX5215-MAX5217.pdf
+
+and the ADCs:
+
+http://www.ti.com/lit/ds/symlink/ina219.pdf
+
+
+, and we are able to enable and control VDDD and VDDA.
+
+
+There are some caveats:
+
+1) The range of VDDA and VDDD exceeds design specs (0 -> 1.8 V).
+Output can reach 2 V if software is configured incorrectly.
+
+2) The DACs require some configuration before setting the DAC value.
+The config register must be set to 0x00, which differes from it's
+default value (at cold start) of 0x08 by the AUX* mode: disabled
+versus the default (CLR*).  The pin 5 (AUX*) is not-connected in
+Pac-Man, I suspect that by pulling it high (or maybe low?), the
+default config should work, but this is not yet confirmed.  In either
+case, this is already handled in software by configuring it to disable
+the AUX*.
+
+3) The ground filtering has an orientation mistake, which we have
+worked around.
+
+4) It seems that the voltage and current monitoring devices leak a few
+uA into VDDA and VDDD even when they are turned off.  This is an
+unpleasant surprise which we don't yet understand.  We have confirmed
+that pulling the chip removes the source os the leakage current.
+
+5) The voltage and current monitoring devices report:
+
+with VDDA/VDDD off:
+SUMMARY:  V+:    V=19497 mV I=175 mA   <-- benchtop supply says 19.9V at 400 mA
+SUMMARY:  VDDD:  V=864 mV I=28923 mA   <-- DMM says 863 mV (leakage current!).. crazy current reading!
+SUMMARY:  VDDA:  V=0 mV I=0 mA         <-- chip removed!
+
+with VDDA/VDDD on:
+SUMMARY:  V+:    V=19493 mV I=187 mA   <-- benchtop supply says 19.9V at 400 mA
+SUMMARY:  VDDD:  V=2028 mV I=28916 mA  <-- DMM says 2.07 V ... crazy current reading!
+SUMMARY:  VDDA:  V=0 mV I=0 mA         <-- chip removed!
+
+The crazy current readings are possibly two's complement negative
+values, and this might be related to the observed leakage current.  I
+also need to understand why the values are different from the DMM
+values.  These devices are using the default configuration (e.g. 32 V)
+and from cursory reading of specs, should be much more accurate than
+this.  These devices aren't show stoppers, we can simply pull them,
+but it would be nice to understand before next revision.
+
+The digital I/O also appears to be working... I can control CLK, TRIG,
+RESET, MOSI0-3 through the AXI GPIO interface, bit banging at up to
+100 kHZ from the processsor (PS).
+
+Setting TILE_EN to zero does not disable LVDS digital I/O.
+
+I was able to do some simple loopback testing using the available TPs for MISO_1 and MISO_2.
+
+
+----------------------------------------------------------------
 27 Feb 2020:
 ----------------------------------------------------------------
 
@@ -22,8 +143,33 @@ https://www.xilinx.com/support/answers/59999.html
 The solution is to use SSM at a maximum rate of 25 MHz.  Note that it
 is associated with cold starts.
 
-The "dirty-bit" was a red-herring.  It was likely simply warming up that allowed it to boot!  Still, I should change FS type on the boot partition to avoid the dirty-bit warning.
+The "dirty-bit" was a red-herring.  It was likely simply warming up
+that allowed it to boot!  Still, I should change FS type on the boot
+partition to avoid the dirty-bit warning.
 
+Looking at latest project TCL file, indeed it seems we are exceeding 25 MHz.
+
+   CONFIG.PCW_ACT_SDIO_PERIPHERAL_FREQMHZ {100.000000} \
+   CONFIG.PCW_EN_EMIO_CD_SDIO1 {0} \
+   CONFIG.PCW_EN_EMIO_SDIO1 {0} \
+   CONFIG.PCW_EN_EMIO_WP_SDIO1 {0} \
+   CONFIG.PCW_EN_SDIO0 {1} \
+   CONFIG.PCW_EN_SDIO1 {0} \
+   CONFIG.PCW_SDIO_PERIPHERAL_DIVISOR0 {10} \
+   CONFIG.PCW_SDIO_PERIPHERAL_FREQMHZ {100} \
+   CONFIG.PCW_SDIO_PERIPHERAL_VALID {1} \
+
+Using the IP customization GUI, I've now changed this to:
+
+   CONFIG.PCW_ACT_SDIO_PERIPHERAL_FREQMHZ {25.000000} \
+   CONFIG.PCW_EN_EMIO_CD_SDIO1 {0} \
+   CONFIG.PCW_EN_EMIO_SDIO1 {0} \
+   CONFIG.PCW_EN_EMIO_WP_SDIO1 {0} \
+   CONFIG.PCW_EN_SDIO0 {1} \
+   CONFIG.PCW_EN_SDIO1 {0} \
+   CONFIG.PCW_SDIO_PERIPHERAL_DIVISOR0 {40} \
+   CONFIG.PCW_SDIO_PERIPHERAL_FREQMHZ {25} \
+   CONFIG.PCW_SDIO_PERIPHERAL_VALID {1} \
 
 ----------------------------------------------------------------
 25 Feb 2020:
