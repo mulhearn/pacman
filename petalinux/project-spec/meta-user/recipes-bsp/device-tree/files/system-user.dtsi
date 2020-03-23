@@ -74,3 +74,22 @@
         reg = <0x6F>;
     };
 };
+
+/* DDR memory reserved for PL-DMA */
+/ {
+    reserved-memory {
+        #address-cells = <1>;
+        #size-cells = <1>;
+        ranges;
+
+        reserved: buffer@0x38000000 {
+            no-map;
+	    reg = <0x38000000 0x080000000>;
+        };
+    };
+
+    reserved-driver@0x38000000 {
+        compatible = "xlnx,reserved-memory";
+	memory-region = <&reserved>;
+    };
+};
