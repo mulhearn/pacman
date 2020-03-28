@@ -1,16 +1,32 @@
-APPS =  pacman-cmdserver
-APPS += pacman-dataserver
+APP := pacman-cmdserver
+APP += pacman-dataserver
 
-# Add any other object files to this list below
- APP_OBJS =  pacman-cmdserver.o
- APP_OBJS += pacman-dataserver.o
+INCLUDE_DIR := include
+SRC_DIR := src
+OBJ_DIR := obj
+
+SRC := $(wildcard $(SRC_DIR)/*.cc)
+OBJ := $(SRC:$(SRC_DIR)/%.cc=$(OBJ_DIR)/%.o)
+
+CPPFLAGS += -I${INCLUDE_DIR}
+
+LDLIBS += -lzmq -lstdc++
 
 all: build
 
-build: $(APPS)
+build: $(APP)
 
-$(APPS): $(APP_OBJS)
-	$(CC) $(LDFLAGS) -o $@ $@.o $(LDLIBS) -lzmq
+$(APP): $(OBJ)
+	$(CC) $(LDFLAGS) $(filter-out $(OBJ_DIR)/$(filter-out $@, $(APP)).o, $^) $(LDLIBS) -o $@
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cc | $(OBJ_DIR)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR):
+	mkdir $@
+
+.PHONY: all clean
 
 clean:
-	$(RM) $(APP_OBJS) $(APPS)
+	$(RM) -rf $(OBJ_DIR)
+	$(RM) -f $(APP)

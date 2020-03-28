@@ -11,8 +11,8 @@
 #include <cerrno>
 
 #include "fw-addr-conf.hh"
-#include "dma.cc"
-#include "larpix.cc"
+#include "dma.hh"
+#include "larpix.hh"
 
 #define TX_ERR (DMA_ERR_IRQ|DMA_INTERR|DMA_SLVERR|DMA_DECERR)
 
@@ -23,9 +23,13 @@
 #define REPLY_ERR  "ERR"
 #define REPLY_PONG "PONG"
 
+uint32_t dma_stop(uint32_t* virtual_address) {
+    dma_set(virtual_address, DMA_MM2S_CTRL_REG, 0);
+}
+
 uint32_t dma_start(uint32_t* virtual_address, uint32_t tx_address){
     dma_set(virtual_address, DMA_MM2S_CTRL_REG, DMA_RST);
-    dma_set(virtual_address, DMA_MM2S_CTRL_REG, 0);
+    dma_stop(virtual_address);
     dma_set(virtual_address, DMA_MM2S_ADDR_REG, tx_address);
     dma_set(virtual_address, DMA_MM2S_CTRL_REG, DMA_RUN | DMA_IOC_IRQEN | DMA_ERR_IRQEN);
 }
@@ -70,8 +74,6 @@ int main(int argc, char* argv[]){
     // create zmq connection
     void* ctx = zmq_ctx_new();
     void* rep_socket = zmq_socket(ctx, ZMQ_REP);
-//    char req_relaxed = 1;
-//    zmq_setsockopt(rep_socket, ZMQ_REQ_RELAXED, &req_relaxed, sizeof(req_relaxed));
     if (zmq_bind(rep_socket, "tcp://*:5555") != 0) {
         printf("Failed to bind socket!\n");
         return RV_ERR_FAILED_TO_BIND;
@@ -89,6 +91,7 @@ int main(int argc, char* argv[]){
     int req_msg_nbytes;
     int rep_msg_nbytes;
     while (1) {
+        //std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         // wait for msg
         zmq_msg_t req_msg;
         zmq_msg_init(&req_msg);
