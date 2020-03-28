@@ -5,7 +5,7 @@
 #include <cstring>
 #include <cstdint>
 
-#include "message_format.hh"
+#include "message-format.hh"
 
 char* init_msg(uint16_t* msg_words, char &msg_type) {
   // Allocates and clears memory for message and sets header n words
