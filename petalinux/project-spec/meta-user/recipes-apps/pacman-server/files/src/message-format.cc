@@ -71,7 +71,7 @@ const uint32_t set_data_word_data(char* word, char* io_channel, uint32_t* ts_pac
   // data_larpix : 64-bit larpix data word
   // returns : word length
   memset(word, WORD_TYPE_DATA, 1);
-  memcpy(word, io_channel, 1);
+  memcpy(word+1, io_channel, 1);
   memcpy(word+4, ts_pacman, 4);
   memcpy(word+8, data_larpix, 8);
   return WORD_LEN;
@@ -106,9 +106,9 @@ uint32_t* get_req_word_write_reg(char* word) {
   return (uint32_t*)(word+4);
 }
 
-uint64_t* get_req_word_write_val(char* word) {
+uint32_t* get_req_word_write_val(char* word) {
   // Parse write request word for register value
-  return (uint64_t*)(word+8);
+  return (uint32_t*)(word+8);
 }
 
 uint32_t* get_req_word_read_reg(char* word) {
@@ -126,13 +126,21 @@ uint64_t* get_req_word_tx_data(char* word) {
   return (uint64_t*)(word+8);
 }
 
+const uint32_t set_rep_word_pong(char* word) {
+  // Write data in specified word position as successful ping
+  // returns : word length
+  memset(word, WORD_TYPE_PONG_REP, 1);
+  return WORD_LEN;
+}
+
 const uint32_t set_rep_word_write(char* word, uint32_t* reg, uint64_t* val) {
   // Write data in specified word position as successful write
   // reg : register address
   // val : register value
   // returns : word length
+  memset(word, WORD_TYPE_WRITE_REP, 1);
   memcpy(word+4, reg, 4);
-  memcpy(word+8, val, 8);
+  memcpy(word+12, val, 4);
   return WORD_LEN;
 }
 
@@ -141,8 +149,9 @@ const uint32_t set_rep_word_read(char* word, uint32_t* reg, uint64_t* val) {
   // reg : register address
   // val : register value
   // returns : word length
+  memset(word, WORD_TYPE_READ_REP, 1);
   memcpy(word+4, reg, 4);
-  memcpy(word+8, val, 8);
+  memcpy(word+12, val, 4);
   return WORD_LEN;
 }
 
@@ -151,6 +160,7 @@ const uint32_t set_rep_word_tx(char* word, char* io_channel, uint64_t* data) {
   // io_channel : io channel to send data on
   // data : 64-bit larpix packet to send
   // returns : word length
+  memset(word, WORD_TYPE_TX_REP, 1);
   memcpy(word+1, io_channel, 1);
   memcpy(word+8, data, 8);
   return WORD_LEN;
@@ -161,6 +171,7 @@ const uint32_t set_rep_word_err(char* word, char* err_type, char* err_desc) {
   // err_type : type of error
   // err_desc : info to associate with error
   // return : word length
+  memset(word, WORD_TYPE_ERR, 1);
   memcpy(word+1, err_type, 1);
   memcpy(word+2, err_desc, 14);
   return WORD_LEN;

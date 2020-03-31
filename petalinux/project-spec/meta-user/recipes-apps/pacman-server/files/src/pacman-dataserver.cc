@@ -19,6 +19,7 @@
 #include "message-format.hh"
 
 #define MAX_MSG_LEN 1024 // words
+#define PUB_SOCKET_BINDING "tcp://*:5556"
 
 void* restart_dma(uint32_t* dma) {
   printf("Restarting DMA...\n");
@@ -33,7 +34,7 @@ int main(int argc, char* argv[]){
   // create zmq connection
   void* ctx = zmq_ctx_new();
   void* pub_socket = zmq_socket(ctx, ZMQ_PUB);
-  if (zmq_bind(pub_socket, "tcp://*:5556") !=0 ) {
+  if (zmq_bind(pub_socket, PUB_SOCKET_BINDING) !=0 ) {
     printf("Failed to bind socket!\n");
     return 1;
   }
@@ -89,16 +90,16 @@ int main(int argc, char* argv[]){
     
       // copy data into message
       while(word_idx < msg_words) {
-	word_type = *((char*)prev->word + WORD_TYPE_OFFSET);
+	word_type = *(prev->word + WORD_TYPE_OFFSET);
 	
 	word = get_word(msg, word_idx);
 	switch (word_type) {
 	default : {
 	  // for now, don't worry about the word type, make all larpix data
 	  set_data_word_data(word,
-			     (char*)prev->word + IO_CHANNEL_OFFSET,
-			     (uint32_t*)((char*)prev->word + TS_PACMAN_OFFSET),
-			     (uint64_t*)((char*)prev->word + LARPIX_DATA_OFFSET)
+			     &prev->word[IO_CHANNEL_OFFSET],
+			     (uint32_t*)(&prev->word[TS_PACMAN_OFFSET]),
+			     (uint64_t*)(&prev->word[LARPIX_DATA_OFFSET])
 			     );
 	}}
       
@@ -127,8 +128,8 @@ int main(int argc, char* argv[]){
       dma_set(dma, DMA_S2MM_TAIL_REG, (prev->prev)->addr);
 
       // send message
-      // print_msg(msg);
-      if (zmq_msg_send(pub_msg, pub_socket, NULL) < 0)
+      print_msg(msg);
+      if (zmq_msg_send(pub_msg, pub_socket, 0) < 0)
 	printf("Error sending message!\n");
       else
 	printf("Message sent!\n");

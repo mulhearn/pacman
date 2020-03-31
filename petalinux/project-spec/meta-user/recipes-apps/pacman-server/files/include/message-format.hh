@@ -17,10 +17,12 @@
 #define WORD_TYPE_TRIG 0x54 // T
 #define WORD_TYPE_SYNC 0x53 // S
 /* cmd words */
+#define WORD_TYPE_PING  0x50 // P
 #define WORD_TYPE_WRITE 0x57 // W
 #define WORD_TYPE_READ  0x52 // R
-#define WORD_TYPE_TX    0x54 // T
+#define WORD_TYPE_TX    WORD_TYPE_DATA
 /* response words */
+#define WORD_TYPE_PONG_REP  WORD_TYPE_PING
 #define	WORD_TYPE_WRITE_REP WORD_TYPE_WRITE
 #define	WORD_TYPE_READ_REP  WORD_TYPE_READ
 #define	WORD_TYPE_TX_REP    WORD_TYPE_TX
@@ -38,12 +40,13 @@ const uint32_t set_data_word_data(char* word, char* io_channel, uint32_t* ts_pac
 const uint32_t set_data_word_trig(char* word, uint32_t* trig_type,  uint32_t* ts_pacman);
 const uint32_t set_data_word_sync(char* word, char* sync_type, char* sync_src, uint32_t* ts_pacman);
 
-uint32_t* get_rep_word_write_reg(char* word);
-uint32_t* get_rep_word_write_val(char* word);
-uint32_t* get_rep_word_read_reg(char* word);
-char*     get_rep_word_tx_channel(char* word);
-uint64_t* get_rep_word_tx_data(char* word);
+uint32_t* get_req_word_write_reg(char* word);
+uint32_t* get_req_word_write_val(char* word);
+uint32_t* get_req_word_read_reg(char* word);
+char*     get_req_word_tx_channel(char* word);
+uint64_t* get_req_word_tx_data(char* word);
 
+const uint32_t set_rep_word_pong(char* word);
 const uint32_t set_rep_word_write(char* word, uint32_t* reg, uint64_t* val);
 const uint32_t set_rep_word_read(char* word, uint32_t* reg, uint64_t* val);
 const uint32_t set_rep_word_tx(char* word, char* io_channel, uint64_t* data);
