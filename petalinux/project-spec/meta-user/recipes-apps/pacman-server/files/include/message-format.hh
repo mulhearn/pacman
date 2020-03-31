@@ -26,11 +26,12 @@
 #define	WORD_TYPE_TX_REP    WORD_TYPE_TX
 #define WORD_TYPE_ERR       0x45 // E
 
-char*     init_msg(uint16_t* msg_words, char* msg_type);
-void*     free_msg(char* msg);
+void      print_msg(char* msg);
+uint32_t  init_msg(char* &msg, const uint16_t &msg_words, const char &msg_type);
+void*     free_msg(char* msg, void*);
 char*     get_msg_type(char* msg);
 uint16_t* get_msg_words(char* msg);
-char*     get_word(char* msg, uint16_t &offset);
+char*     get_word(char* msg, const uint16_t &offset);
 char*     get_word_type(char* word);
 
 const uint32_t set_data_word_data(char* word, char* io_channel, uint32_t* ts_pacman, uint64_t* data);

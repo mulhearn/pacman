@@ -1,2 +1,2 @@
-./pacman-cmdserver &
-./pacman-dataserver &
+pacman-cmdserver &
+pacman-dataserver &

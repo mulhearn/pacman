@@ -4,21 +4,41 @@
 #include <ctime>
 #include <cstring>
 #include <cstdint>
+#include <iostream>
 
 #include "message-format.hh"
 
-char* init_msg(uint16_t* msg_words, char &msg_type) {
-  // Allocates and clears memory for message and sets header n words
-  uint32_t msg_bytes = HEADER_LEN + (*msg_words) * WORD_LEN;
-  char* msg = new char[msg_bytes];
-  memset(msg, 0, msg_bytes);
-  memset(msg, msg_type, 1);
-  memset(msg+1, time(NULL), 4);
-  memcpy(msg+6, msg_words, 2);
-  return msg;
+void print_msg(char* msg) {
+  uint16_t msg_words = *get_msg_words(msg);
+  uint32_t bytes = HEADER_LEN + msg_words * WORD_LEN;
+  printf("START(%d,%d)", msg_words, bytes);
+  for (uint32_t i = 0; i < bytes; i++) {
+    if (i == HEADER_LEN || i == 0) {
+      printf("\t%c", msg[i]);
+    } else if (i > HEADER_LEN && (i-HEADER_LEN) % WORD_LEN == 0) {
+      printf("\t%c", msg[i]);
+    } else {
+      printf(".%02x", msg[i]);
+    }
+  }
+  printf("\tEND\n");
 }
 
-void* free_msg(char* msg) {
+uint32_t init_msg(char* &msg, const uint16_t &msg_words, const char &msg_type) {
+  // Allocates and clears memory for message and sets header n words
+  uint32_t msg_bytes = HEADER_LEN + msg_words * WORD_LEN;
+  msg = new char[msg_bytes];
+  memset(msg, 0, msg_bytes);
+
+  memcpy(msg, &msg_type, 1);
+  uint32_t now = time(NULL);
+  memcpy(msg+1, &now, 4);
+  memcpy(msg+6, &msg_words, 2);
+  //print_msg(msg);
+  return msg_bytes;
+}
+
+void* free_msg(char* msg, void*) {
   // Deallocates memory held for message
   delete[] msg;
   return NULL;
@@ -34,14 +54,14 @@ uint16_t* get_msg_words(char* msg) {
   return (uint16_t*)(msg+6); 
 }
 
-char* get_word(char* msg, uint16_t &offset) {
+char* get_word(char* msg, const uint16_t &offset) {
   // Returns ptr to word start
   return msg + HEADER_LEN + offset * WORD_LEN;
 }
 
 char* get_word_type(char* word) {
   // Returns ptr to word type
-  return word + 0;
+  return word;
 }
 
 const uint32_t set_data_word_data(char* word, char* io_channel, uint32_t* ts_pacman, uint64_t* data_larpix) {
