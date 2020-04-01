@@ -26,11 +26,11 @@ updatemss -mss build/bsp1/system.mss
 regenbsp -bsp bsp1
 
 # Create application project
-createapp -name zynq_fsbl -hwproject hw1 -bsp bsp1 -proc ps7_cortexa9_0 -os standalone -app {Empty Application}
-importsources -name zynq_fsbl -path srcs/sw/zynq_fsbl
+createapp -name pacman_fsbl -hwproject hw1 -bsp bsp1 -proc ps7_cortexa9_0 -os standalone -app {Empty Application}
+importsources -name pacman_fsbl -path srcs/sw/fsbl
 
 #build:
 projects -build
 
 # copy the custom FSBL into products for use by peta-linux:
-file copy -force build/zynq_fsbl/Debug/zynq_fsbl.elf products
+file copy -force build/pacman_fsbl/Debug/pacman_fsbl.elf products
