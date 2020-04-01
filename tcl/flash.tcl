@@ -31,6 +31,7 @@ importsources -name pacman_fsbl -path srcs/sw/pacman_fsbl/src
 createapp -name hello -app {Hello World} -proc ps7_cortexa9_0 -hwproject hw1  -bsp bsp1 -os standalone
 
 file copy srcs/sw/flash/build.tcl flash/
+file copy srcs/sw/flash/program.tcl flash/
 file copy srcs/sw/flash/all.bif flash/
 
 cd flash
