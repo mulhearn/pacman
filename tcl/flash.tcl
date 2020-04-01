@@ -16,12 +16,16 @@ setlib -bsp bsp1 -lib xilrsa
 updatemss -mss build/bsp1/system.mss
 regenbsp -bsp bsp1
 
+# FSBL for writing QSPI flast:
+createapp -name flash_fsbl -app {Zynq FSBL} -proc ps7_cortexa9_0 -hwproject hw1 -bsp bsp1 -os standalone
+importsources -name flash_fsbl -path srcs/sw/flash_fsbl/src
+
 # Pac-Man specific FSBL:
-createapp -name pacman_fsbl -hwproject hw1 -bsp bsp1 -proc ps7_cortexa9_0 -os standalone -app {Empty Application}
-importsources -name pacman_fsbl -path srcs/sw/fsbl
+createapp -name pacman_fsbl -app {Zynq FSBL} -proc ps7_cortexa9_0 -hwproject hw1 -bsp bsp1 -os standalone
+importsources -name pacman_fsbl -path srcs/sw/pacman_fsbl/src
 
 # Vanilla FSBL:
-createapp -name fsbl -app {Zynq FSBL} -proc ps7_cortexa9_0 -hwproject hw1 -bsp bsp1 -os standalone
+#createapp -name fsbl -app {Zynq FSBL} -proc ps7_cortexa9_0 -hwproject hw1 -bsp bsp1 -os standalone
 
 # Hello World app:
 createapp -name hello -app {Hello World} -proc ps7_cortexa9_0 -hwproject hw1  -bsp bsp1 -os standalone

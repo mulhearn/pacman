@@ -25,12 +25,17 @@ setlib -bsp bsp1 -lib xilrsa
 updatemss -mss build/bsp1/system.mss
 regenbsp -bsp bsp1
 
-# Create application project
-createapp -name pacman_fsbl -hwproject hw1 -bsp bsp1 -proc ps7_cortexa9_0 -os standalone -app {Empty Application}
-importsources -name pacman_fsbl -path srcs/sw/fsbl
+# Create application projects
+
+createapp -name pacman_fsbl -app {Zynq FSBL} -proc ps7_cortexa9_0 -hwproject hw1 -bsp bsp1 -os standalone
+importsources -name pacman_fsbl -path srcs/sw/pacman_fsbl/src
+
+createapp -name flash_fsbl -app {Zynq FSBL} -proc ps7_cortexa9_0 -hwproject hw1 -bsp bsp1 -os standalone
+importsources -name flash_fsbl -path srcs/sw/flash_fsbl/src
 
 #build:
 projects -build
 
 # copy the custom FSBL into products for use by peta-linux:
 file copy -force build/pacman_fsbl/Debug/pacman_fsbl.elf products
+file copy -force build/flash_fsbl/Debug/flash_fsbl.elf products
