@@ -33,4 +33,4 @@ importsources -name zynq_fsbl -path srcs/sw/zynq_fsbl
 projects -build
 
 # copy the custom FSBL into products for use by peta-linux:
-file copy build/zynq_fsbl/Debug/zynq_fsbl.elf products
+file copy -force build/zynq_fsbl/Debug/zynq_fsbl.elf products
