@@ -1,6 +1,53 @@
 Pac-Man Card (v1) Testing Log
 
 ----------------------------------------------------------------
+1 Apr 2020:
+----------------------------------------------------------------
+
+I've been digging into the boot sequence and clock setting of the Zynq
+to see if there is a software work-around for the unreliable SD card.
+
+I'm now able to build a BOOT.bin file and load it into QSPI flash.
+For instance, I've been able to put U-boot into QSPI to reliably bring
+up u-boot even under cold conditions.
+
+There are a number of places where there are settings for the SD clock
+speed.
+
+1) In the firmware, by modifying the Peripheral clock setting in the
+Recustomize-IP GUI of the Zynq processor.
+
+2) In project-spec/meta-user/recipes-bsp/device-tree/files/system-user.dtsi
+there are vary settings, most relevant being:
+
+&sdhci0 {
+   max-frequency = <20000000>;
+};
+
+3) I also noticed that in:
+
+petalinux/project-spec/meta-plnx-generated/recipes-bsp/u-boot/configs/platform-auto.h
+
+there is a setting:
+
+#define CONFIG_ZYNQ_SDHCI_MAX_FREQ  52000000
+
+
+So far, I've only confirmed an effect from (1).  Using the "clk" utility from the U-boot prompt.
+
+The largest divisor I can put on the SD clk is 63, which results in a
+clock rate of about 15 MHz, confirmed via "clk", but not yet with
+scope probes.
+
+I've discovered that I can push this down to 10 MHz by adjusting the
+IO_PLL divisor.  However, this is interfering with the QSPI clock
+rate, which I see is correctly set by HW, but flash operation still
+fails now.  Work in progress.
+
+
+
+
+----------------------------------------------------------------
 30 Mar 2020:
 ----------------------------------------------------------------
 
