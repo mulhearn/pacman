@@ -35,5 +35,6 @@
 #define CONFIG_SYS_I2C_MUX_EEPROM_SEL          0x4
 #endif
 
-/*#define CONFIG_PREBOOT"echo U-BOOT for pac-man card ;setenv preboot; echo;env import -t 0xFFFFFC00;dhcp"*/
-#define CONFIG_PREBOOT    "echo U-BOOT for pac-man card;echo importing env from FSBL shared area at 0xFFFFFC00; if itest *0xFFFFFC00 == 0xCAFEBABE; then echo Found valid magic; env import -t 0xFFFFFC04; fi;setenv preboot; echo; dhcp"
+#define CONFIG_PREBOOT      "echo U-BOOT for Pac-Man card; setenv preboot; echo"
+
+#define CONFIG_BOOTCOMMAND  "ext4load mmc 1 0x08000000 image.ub ; bootm 0x08000000"

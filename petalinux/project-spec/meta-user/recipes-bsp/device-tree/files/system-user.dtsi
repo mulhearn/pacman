@@ -56,7 +56,3 @@
         reg = <0x6F>;
     };
 };*/
-
-&sdhci0 {
-   max-frequency = <10000000>;
-};
