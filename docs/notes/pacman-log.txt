@@ -1,6 +1,24 @@
 Pac-Man Card (v1) Testing Log
 
 ----------------------------------------------------------------
+2 Apr 2020:
+----------------------------------------------------------------
+
+This is a weird one.  Suddenly petalinux-config started failing with:
+
+ERROR: Failed to source bitbake
+
+After digging throught the logfile build/config.log I see:
+
+ERROR: No space left on device or exceeds fs.inotify.max_user_watches?
+
+This is an odd one... the solution is to simply add more:
+
+> cat /proc/sys/fs/inotify/max_user_watches
+# see current threshold and double it:
+> echo 16384 | sudo tee /proc/sys/fs/inotify/max_user_watches
+
+----------------------------------------------------------------
 1 Apr 2020:
 ----------------------------------------------------------------
 
