@@ -29,3 +29,5 @@ set_property PACKAGE_PIN AB22 [get_ports {gpio_0_tri_io[11]}]
 set_property PACKAGE_PIN AB21 [get_ports {gpio_0_tri_io[12]}]
 set_property PACKAGE_PIN AA19 [get_ports {gpio_0_tri_io[13]}]
 set_property PACKAGE_PIN AB17 [get_ports {gpio_0_tri_io[14]}]
+
+set_property BITSTREAM.CONFIG.UNUSEDPIN PULLUP [current_design]

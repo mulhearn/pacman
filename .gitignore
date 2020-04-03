@@ -8,6 +8,6 @@
 /tcl/recreate_xpr.tcl.old
 /build
 /hello
-/gpio
+/flash
 /hwcheck
 /*.old
