@@ -6,8 +6,8 @@
 /products/
 !/products/zsys_wrapper.hdf
 /tcl/recreate_xpr.tcl.old
-/build
+/build_sw
 /hello
-/gpio
+/flash
 /hwcheck
 /*.old

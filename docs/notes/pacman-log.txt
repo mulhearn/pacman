@@ -1,6 +1,125 @@
 Pac-Man Card (v1) Testing Log
 
 ----------------------------------------------------------------
+2 Apr 2020:
+----------------------------------------------------------------
+
+This is a weird one.  Suddenly petalinux-config started failing with:
+
+ERROR: Failed to source bitbake
+
+After digging throught the logfile build/config.log I see:
+
+ERROR: No space left on device or exceeds fs.inotify.max_user_watches?
+
+This is an odd one... the solution is to simply add more:
+
+> cat /proc/sys/fs/inotify/max_user_watches
+# see current threshold and double it:
+> echo 16384 | sudo tee /proc/sys/fs/inotify/max_user_watches
+
+----------------------------------------------------------------
+1 Apr 2020:
+----------------------------------------------------------------
+
+I've been digging into the boot sequence and clock setting of the Zynq
+to see if there is a software work-around for the unreliable SD card.
+
+I'm now able to build a BOOT.bin file and load it into QSPI flash.
+For instance, I've been able to put U-boot into QSPI to reliably bring
+up u-boot even under cold conditions.
+
+There are a number of places where there are settings for the SD clock
+speed.
+
+1) In the firmware, by modifying the Peripheral clock setting in the
+Recustomize-IP GUI of the Zynq processor.
+
+2) In project-spec/meta-user/recipes-bsp/device-tree/files/system-user.dtsi
+there are vary settings, most relevant being:
+
+&sdhci0 {
+   max-frequency = <20000000>;
+};
+
+3) I also noticed that in:
+
+petalinux/project-spec/meta-plnx-generated/recipes-bsp/u-boot/configs/platform-auto.h
+
+there is a setting:
+
+#define CONFIG_ZYNQ_SDHCI_MAX_FREQ  52000000
+
+
+So far, I've only confirmed an effect from (1).  Using the "clk" utility from the U-boot prompt.
+
+The largest divisor I can put on the SD clk is 63, which results in a
+clock rate of about 15 MHz, confirmed via "clk", but not yet with
+scope probes.
+
+I've discovered that I can push this down to 10 MHz by adjusting the
+IO_PLL divisor.  However, this is interfering with the QSPI clock
+rate, which I see is correctly set by HW, but flash operation still
+fails now.  Work in progress.
+
+
+
+
+----------------------------------------------------------------
+30 Mar 2020:
+----------------------------------------------------------------
+
+I just noticed that the entry from Mar 4 is incomplete.  I went on to
+test that putting the ADC into powerdown mode did reduce the leakage
+current.  So the combination of adding a load resistor and placing the
+ADC in powerdown mode when voltage is off should bring the output
+voltage to within mV of zero.
+
+Today I performed more systematic tests of the SD card performance,
+and found that reliably booting from SD card requires a warm card
+*and* the timing reduced (currently at 15 MHz).
+
+I'm going to hang some scope probes tomorrow after I retrieve my scope
+from the lab, and check signal integrity and clock speed.  I'd like to
+make sure the software interventions are in fact causing the clock to
+run at reduced rate.
+
+----------------------------------------------------------------
+29 Mar 2020:
+----------------------------------------------------------------
+
+Since moving the Pac-Man card to my home from the office, the problems
+with the SD card have suddenly reasserting themselves.
+
+
+I've confirmed that the firmware still has the clock set to 25 MHz,
+which appeared to cure the problem in the past.
+
+To the useful discussions here:
+http://zedboard.org/sites/default/files/documentations/PicoZed_7010_7020_RevC_Errata_v1_1.pdf
+https://www.xilinx.com/support/answers/59999.html
+
+I have found a Trenz specific related discussion here:
+https://forum.trenz-electronic.de/index.php/topic,795.msg3504.html#msg3504
+
+And have tried setting project-spec/meta-user/recipes-bsp/device-tree/files/system-user.dtsi to include:
+
+&sdhci0 {
+   max-frequency = <25000000>;
+   //disable-wp;
+   no-1-8-v;
+};
+
+and related variations with no effect.  I can boot to Linux from JTAG and then see the SD card, but with many errors like:
+
+mmcblk0: error -84 transferring data, sector 995391, nr 376, cmd response 0x900, card status 0xb00
+
+
+
+
+
+
+----------------------------------------------------------------
 4 Mar 2020:
 ----------------------------------------------------------------
 
