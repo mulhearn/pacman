@@ -1,0 +1,55 @@
+
+# Reminders only, see README.txt for instructions...
+
+# building from repo:
+git clone https://github.com/mulhearn/pacman.git
+# or, with ssh:
+git clone git@github.com:mulhearn/pacman.git
+cd pacman
+source /tools/Xilinx/Vivado/2018.3/settings64.sh
+vivado -mode batch -source tcl/recreate_xpr.tcl
+vivado -mode batch -source tcl/build_xpr.tcl
+xsct tcl/hello.tcl
+xsct tcl/build_sw.tcl
+
+# connecting to UART
+busybox microcom -s 115200 /dev/ttyUSB1
+# (Use Ctrl-X to exit)
+
+# building petalinux (initramdisk version) for first time:
+# !!! Make sure custom FSBL is uptodate via build_sw.tcl  !!!
+source /tools/Xilinx/petalinux/2018.3/settings.sh
+mv petalinux-initramdisk petalinux-initramdisk.old
+./petalinux/initramdisk/scratch_build.sh
+# check if the scratch build is out of date:
+git diff --name-only petalinux-initramdisk/jtag_boot.sh petalinux-initramdisk
+# if so, resolve first via "updating petalinux scratch build"
+
+# to build
+cd petalinux-initramdisk
+./build.sh 
+# with board in SD card mode, and no SD card inserted:
+# to test new image over JTAG:
+./jtag_boot.sh
+
+
+
+# Boot Hello World from QSPI flash:
+xsct tcl/build_sw.tcl
+xsct tcl/flash.tcl
+cd flash
+source program.sh
+
+# copying files to Pac-Man over uart:
+# use minicom instead of microcom:
+minicom -b 115200 -D /dev/ttyUSB1
+# Press enter to start Pac-Man terminal
+# (Use Ctrl-A X to exit when done)
+# On Pac-Man:
+
+# exporting project to tcl for updating repo:
+vivado -mode batch -source tcl/export_xpr.tcl
+
+# updating petalinux scratch build
+# NOT IMPLEMENTED
+
