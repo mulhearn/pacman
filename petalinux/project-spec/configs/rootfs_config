@@ -4126,7 +4126,6 @@ CONFIG_imagefeature-hwcodecs=y
 #
 # apps 
 #
-CONFIG_pacman-server=y
 CONFIG_startup=y
 CONFIG_webfwu=y
 
@@ -4134,6 +4133,7 @@ CONFIG_webfwu=y
 # user packages 
 #
 # CONFIG_gpio-demo is not set
+CONFIG_pacman-server=y
 # CONFIG_peekpoke is not set
 # CONFIG_startuo is not set
 
