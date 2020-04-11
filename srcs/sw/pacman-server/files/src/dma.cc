@@ -144,6 +144,7 @@ dma_desc* init_circular_buffer(uint32_t* virtual_address, uint32_t start, uint32
 
     if (i < 3) {
       printf("Chunk desc @ %p\n", (void*)buffer[i].desc);
+      printf("\tSelf @ %p\n", (void*)&buffer[i]);
       printf("\tNext @ %p\n", (void*)buffer[i].next);
       printf("\tPrev @ %p\n", (void*)buffer[i].prev);
       printf("\tWord @ %p\n", (void*)buffer[i].word);
@@ -162,7 +163,7 @@ dma_desc* init_circular_buffer(uint32_t* virtual_address, uint32_t start, uint32
   buffer[buffer_len-1].addr = chunk_addr;
   buffer[buffer_len-1].word_addr = chunk_addr + desc_len;
   
-  dma_set(chunk, DESC_ADDR, buffer[buffer_len-1].addr);
+  dma_set(chunk, DESC_ADDR, buffer[buffer_len-1].word_addr);
   dma_set(chunk, DESC_CTRL, word_len & DESC_LEN);
   dma_set(chunk, DESC_NEXT, start);
 

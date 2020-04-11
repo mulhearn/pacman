@@ -9,8 +9,13 @@ file pacman-server.c.
 You can easily import any existing application code by copying it into this 
 directory, and editing the automatically generated Makefile.
 
-Before building the application, you will need to enable the application
-from PetaLinux menuconfig by running:
+Before building the application, you will need to create a link within the
+petalinux project directory tree (if it doesn't exist)::
+
+          cd petalinux/project-spec/meta-user/recipes-apps/
+          ln -s ../../../../srcs/sw/pacman-server/ pacman-server
+          
+Then enable the application from PetaLinux menuconfig by running:
     "petalinux-config -c rootfs"
 You will see your application in the "apps --->" submenu.
 

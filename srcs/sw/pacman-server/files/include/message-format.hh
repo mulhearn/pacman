@@ -47,8 +47,8 @@ char*     get_req_word_tx_channel(char* word);
 uint64_t* get_req_word_tx_data(char* word);
 
 const uint32_t set_rep_word_pong(char* word);
-const uint32_t set_rep_word_write(char* word, uint32_t* reg, uint64_t* val);
-const uint32_t set_rep_word_read(char* word, uint32_t* reg, uint64_t* val);
+const uint32_t set_rep_word_write(char* word, uint32_t* reg, uint32_t* val);
+const uint32_t set_rep_word_read(char* word, uint32_t* reg, uint32_t* val);
 const uint32_t set_rep_word_tx(char* word, char* io_channel, uint64_t* data);
 const uint32_t set_rep_word_err(char* word, char* err_type, char* err_desc);
 

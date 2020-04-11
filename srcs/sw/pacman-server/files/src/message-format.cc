@@ -9,9 +9,9 @@
 #include "message-format.hh"
 
 void print_msg(char* msg) {
-  uint16_t msg_words = *get_msg_words(msg);
-  uint32_t bytes = HEADER_LEN + msg_words * WORD_LEN;
-  printf("START(%d,%d)", msg_words, bytes);
+  uint16_t *msg_words = get_msg_words(msg);
+  uint32_t bytes = HEADER_LEN + *msg_words * WORD_LEN;
+  printf("START(%d,%d)", *msg_words, bytes);
   for (uint32_t i = 0; i < bytes; i++) {
     if (i == HEADER_LEN || i == 0) {
       printf("\t%c", msg[i]);
@@ -108,7 +108,7 @@ uint32_t* get_req_word_write_reg(char* word) {
 
 uint32_t* get_req_word_write_val(char* word) {
   // Parse write request word for register value
-  return (uint32_t*)(word+8);
+  return (uint32_t*)(word+12);
 }
 
 uint32_t* get_req_word_read_reg(char* word) {
@@ -133,7 +133,7 @@ const uint32_t set_rep_word_pong(char* word) {
   return WORD_LEN;
 }
 
-const uint32_t set_rep_word_write(char* word, uint32_t* reg, uint64_t* val) {
+const uint32_t set_rep_word_write(char* word, uint32_t* reg, uint32_t* val) {
   // Write data in specified word position as successful write
   // reg : register address
   // val : register value
@@ -144,7 +144,7 @@ const uint32_t set_rep_word_write(char* word, uint32_t* reg, uint64_t* val) {
   return WORD_LEN;
 }
 
-const uint32_t set_rep_word_read(char* word, uint32_t* reg, uint64_t* val) {
+const uint32_t set_rep_word_read(char* word, uint32_t* reg, uint32_t* val) {
   // Write data in specified word position as successful read
   // reg : register address
   // val : register value

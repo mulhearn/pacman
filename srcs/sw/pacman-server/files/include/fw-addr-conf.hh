@@ -1,6 +1,13 @@
 #ifndef fw_addr_conf_hh
 #define fw_addr_conf_hh
 
+/* ~~~ start PACMAN-PL interface ~~~ */
+
+#define PACMAN_ADDR 0x60000000
+#define PACMAN_LEN  0x00010000
+
+/* ~~~ end PACMAN-PL interface ~~~ */
+
 /* ~~~ start DMA interface ~~~ */
 
 #define DMA_ADDR 0x40400000
