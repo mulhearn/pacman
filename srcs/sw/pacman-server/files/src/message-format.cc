@@ -54,6 +54,11 @@ uint16_t* get_msg_words(char* msg) {
   return (uint16_t*)(msg+6); 
 }
 
+uint32_t get_msg_bytes(char* msg) {
+  // Returns number of bytes in complete message (header + words)
+  return (uint32_t)(HEADER_LEN + *get_msg_words(msg) * WORD_LEN);
+}
+
 char* get_word(char* msg, const uint16_t &offset) {
   // Returns ptr to word start
   return msg + HEADER_LEN + offset * WORD_LEN;

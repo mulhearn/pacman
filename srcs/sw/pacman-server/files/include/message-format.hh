@@ -33,6 +33,7 @@ uint32_t  init_msg(char* &msg, const uint16_t &msg_words, const char &msg_type);
 void*     free_msg(char* msg, void*);
 char*     get_msg_type(char* msg);
 uint16_t* get_msg_words(char* msg);
+uint32_t  get_msg_bytes(char* msg);
 char*     get_word(char* msg, const uint16_t &offset);
 char*     get_word_type(char* word);
 
