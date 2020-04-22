@@ -2,31 +2,23 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity axi_lite_read_write is
+entity axi_lite_read_only is
   generic (
     C_S_AXI_LITE_DATA_WIDTH  : integer  := 32;
     C_S_AXI_LITE_ADDR_WIDTH  : integer  := 32;
 
-    C_REG0_DEFAULT : std_logic_vector(31 downto 0) := x"00000000";
-    C_REG1_DEFAULT : std_logic_vector(31 downto 0) := x"00000000";
-    C_REG2_DEFAULT : std_logic_vector(31 downto 0) := x"00000000";
-    C_REG3_DEFAULT : std_logic_vector(31 downto 0) := x"00000000";
-
     C_REG0_OFFSET : std_logic_vector(11 downto 0) := x"000";
     C_REG1_OFFSET : std_logic_vector(11 downto 0) := x"004";
     C_REG2_OFFSET : std_logic_vector(11 downto 0) := x"008";
-    C_REG3_OFFSET : std_logic_vector(11 downto 0) := X"00C"
+    C_REG3_OFFSET : std_logic_vector(11 downto 0) := x"00C"
   );
   port (
     -- registers available from axi at specified offsets
-    REG0            : out std_logic_vector(C_S_AXI_LITE_DATA_WIDTH-1 downto 0);
-    REG1            : out std_logic_vector(C_S_AXI_LITE_DATA_WIDTH-1 downto 0);
-    REG2            : out std_logic_vector(C_S_AXI_LITE_DATA_WIDTH-1 downto 0);
-    REG3            : out std_logic_vector(C_S_AXI_LITE_DATA_WIDTH-1 downto 0);
+    REG0            : in std_logic_vector(C_S_AXI_LITE_DATA_WIDTH-1 downto 0);
+    REG1            : in std_logic_vector(C_S_AXI_LITE_DATA_WIDTH-1 downto 0);
+    REG2            : in std_logic_vector(C_S_AXI_LITE_DATA_WIDTH-1 downto 0);
+    REG3            : in std_logic_vector(C_S_AXI_LITE_DATA_WIDTH-1 downto 0);
     
-    -- high for 1 clock cycle whenever a register is updated
-    update : out std_logic; 
-          
     -- axi signals
     S_AXI_LITE_ACLK  : in std_logic;
     S_AXI_LITE_ARESETN  : in std_logic;
@@ -55,9 +47,9 @@ entity axi_lite_read_write is
     S_AXI_LITE_RVALID  : out std_logic;
     S_AXI_LITE_RREADY  : in std_logic
   );
-end axi_lite_read_write;
+end axi_lite_read_only;
 
-architecture arch_imp of axi_lite_read_write is
+architecture arch_imp of axi_lite_read_only is
 
   -- AXI4LITE signals
   signal axi_awaddr  : std_logic_vector(C_S_AXI_LITE_ADDR_WIDTH-1 downto 0);
@@ -95,13 +87,6 @@ begin
   S_AXI_LITE_RDATA  <= axi_rdata;
   S_AXI_LITE_RRESP  <= axi_rresp;
   S_AXI_LITE_RVALID  <= axi_rvalid;
-
-  REG0    <= slv_reg0;
-  REG1    <= slv_reg1;
-  REG2    <= slv_reg2;
-  REG3    <= slv_reg3;
-  
-  update <= slv_reg_wren;
 
   -- Address write ready (AWREADY)
   process (S_AXI_LITE_ACLK)
@@ -154,56 +139,21 @@ begin
     end if;
   end process; 
 
-  -- Data write latch (WDATA)
+  -- Data write latch (WDATA) (does nothing -> these are read only registers
   slv_reg_wren <= axi_wready and S_AXI_LITE_WVALID and axi_awready and S_AXI_LITE_AWVALID ;
+
+  -- Register inputs
   process (S_AXI_LITE_ACLK)
   variable loc_addr : std_logic_vector(11 downto 0); 
   begin
     if rising_edge(S_AXI_LITE_ACLK) then 
       if S_AXI_LITE_ARESETN = '0' then
-        slv_reg0 <= C_REG0_DEFAULT;
-        slv_reg1 <= C_REG1_DEFAULT;
-        slv_reg2 <= C_REG2_DEFAULT;
-        slv_reg3 <= C_REG3_DEFAULT;
+
       else
-        loc_addr := axi_awaddr(11 downto 0); -- only use lower 12-bits of address
-        if (slv_reg_wren = '1') then
-          case loc_addr is
-            when C_REG0_OFFSET =>
-              for byte_index in 0 to (C_S_AXI_LITE_DATA_WIDTH/8-1) loop
-                if ( S_AXI_LITE_WSTRB(byte_index) = '1' ) then
-                  slv_reg0(byte_index*8+7 downto byte_index*8) <= S_AXI_LITE_WDATA(byte_index*8+7 downto byte_index*8);
-                end if;
-              end loop;
-                    
-            when C_REG1_OFFSET =>
-              for byte_index in 0 to (C_S_AXI_LITE_DATA_WIDTH/8-1) loop
-                if ( S_AXI_LITE_WSTRB(byte_index) = '1' ) then
-                  slv_reg1(byte_index*8+7 downto byte_index*8) <= S_AXI_LITE_WDATA(byte_index*8+7 downto byte_index*8);
-                end if;
-              end loop;
-                    
-            when C_REG2_OFFSET =>
-              for byte_index in 0 to (C_S_AXI_LITE_DATA_WIDTH/8-1) loop
-                if ( S_AXI_LITE_WSTRB(byte_index) = '1' ) then
-                  slv_reg2(byte_index*8+7 downto byte_index*8) <= S_AXI_LITE_WDATA(byte_index*8+7 downto byte_index*8);
-                end if;
-              end loop;
-                    
-            when C_REG3_OFFSET =>
-              for byte_index in 0 to (C_S_AXI_LITE_DATA_WIDTH/8-1) loop
-                if ( S_AXI_LITE_WSTRB(byte_index) = '1' ) then
-                  slv_reg3(byte_index*8+7 downto byte_index*8) <= S_AXI_LITE_WDATA(byte_index*8+7 downto byte_index*8);
-                end if;
-              end loop;
-                    
-            when others =>
-              slv_reg0 <= slv_reg0;
-              slv_reg1 <= slv_reg1;
-              slv_reg2 <= slv_reg2;
-              slv_reg3 <= slv_reg3;
-          end case;
-        end if;
+        slv_reg0 <= REG0;
+        slv_reg1 <= REG1;
+        slv_reg2 <= REG2;
+        slv_reg3 <= REG3;
       end if;
     end if;                   
   end process; 
