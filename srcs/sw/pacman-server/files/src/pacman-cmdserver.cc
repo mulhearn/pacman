@@ -153,20 +153,25 @@ int main(int argc, char* argv[]){
       case WORD_TYPE_WRITE: {
         // set pacman reg
         uint32_t* reg = get_req_word_write_reg(word);
-        uint32_t* val = get_req_word_write_val(word);
-        
-        pacman_set(pacman_pl, *reg, *val);
-
-        set_rep_word_write(reply_word, reg, val);
+        if (*reg < PACMAN_LEN) {
+          uint32_t* val = get_req_word_write_val(word);
+          pacman_set(pacman_pl, *reg, *val);
+          set_rep_word_write(reply_word, reg, val);
+        } else {
+          set_rep_word_err(reply_word, NULL, NULL);
+        }
         break;
       }
       
       case WORD_TYPE_READ: {
         // read pacman reg
         uint32_t* reg = get_req_word_read_reg(word);
-        uint32_t val = pacman_get(pacman_pl, *reg);
-
-        set_rep_word_read(reply_word, reg, &val);
+        if (*reg < PACMAN_LEN) {
+          uint32_t val = pacman_get(pacman_pl, *reg);
+          set_rep_word_read(reply_word, reg, &val);
+        } else {
+          set_rep_word_err(reply_word, NULL, NULL);
+        }
         break;
       }
 
