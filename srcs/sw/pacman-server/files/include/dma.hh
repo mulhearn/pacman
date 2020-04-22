@@ -79,6 +79,7 @@ uint32_t dma_s2mm_sync(uint32_t* dma_virtual_address);
 // scatter / gather
 bool dma_desc_cmplt(uint32_t* desc_virtual_address);
 void dma_desc_print(uint32_t* desc_virtual_address);
+void dma_desc_print(dma_desc* desc);
 
 uint32_t addr_padding(uint32_t bytes, uint32_t addr_bndry);
 dma_desc* init_circular_buffer(uint32_t* virtual_address, uint32_t start, uint32_t len, uint32_t word_len);

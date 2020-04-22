@@ -95,6 +95,17 @@ void dma_desc_print(uint32_t* desc_virtual_address) {
   printf("\n");
 }
 
+void dma_desc_print(dma_desc* desc) {
+  printf("Chunk desc @ %p\n", (void*)(*desc).desc);
+  printf("\tSelf @ %p\n", (void*)desc);
+  printf("\tNext @ %p\n", (void*)(*desc).next);
+  printf("\tPrev @ %p\n", (void*)(*desc).prev);
+  printf("\tWord @ %p\n", (void*)(*desc).word);
+  printf("\tAddr = %p\n", (void*)(*desc).addr);
+  printf("\tWord addr = %p\n", (void*)(*desc).word_addr);
+  dma_desc_print((*desc).desc);
+}
+
 uint32_t addr_padding(uint32_t bytes, uint32_t addr_bndry) {
   // calculates padding such that addr + addr_padding(nbytes, addr_bndry) is the next address boundary relative to addr
   // e.g. for addr = 0x0000_0000, nbytes = 52, addr_bndry = 64 => addr_padding = 12
@@ -142,15 +153,8 @@ dma_desc* init_circular_buffer(uint32_t* virtual_address, uint32_t start, uint32
     dma_set(chunk, DESC_CTRL, word_len & DESC_ADDR_LEN);
     dma_set(chunk, DESC_NEXT, buffer[i].addr + chunk_len);
 
-    if (i < 3) {
-      printf("Chunk desc @ %p\n", (void*)buffer[i].desc);
-      printf("\tSelf @ %p\n", (void*)&buffer[i]);
-      printf("\tNext @ %p\n", (void*)buffer[i].next);
-      printf("\tPrev @ %p\n", (void*)buffer[i].prev);
-      printf("\tWord @ %p\n", (void*)buffer[i].word);
-      printf("\tAddr = %p\n", (void*)buffer[i].addr);
-      printf("\tWord addr = %p\n", (void*)buffer[i].word_addr);
-      dma_desc_print(buffer[i].desc);
+    if (i < 2) {
+      dma_desc_print(buffer + i);
     } else if (i == 4) { printf("...\n"); }
 
     chunk += chunk_len/sizeof(*virtual_address);
@@ -162,11 +166,13 @@ dma_desc* init_circular_buffer(uint32_t* virtual_address, uint32_t start, uint32
   buffer[buffer_len-1].word = (char*)chunk + desc_len;
   buffer[buffer_len-1].addr = chunk_addr;
   buffer[buffer_len-1].word_addr = chunk_addr + desc_len;
-  
+
   dma_set(chunk, DESC_ADDR, buffer[buffer_len-1].word_addr);
   dma_set(chunk, DESC_CTRL, word_len & DESC_LEN);
   dma_set(chunk, DESC_NEXT, start);
 
+  dma_desc_print(buffer + buffer_len - 1);
+  
   printf("Circular buffer initialzed\n");
   return buffer;
 }
