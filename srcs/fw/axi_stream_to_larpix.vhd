@@ -30,6 +30,7 @@ architecture arch_imp of axi_stream_to_larpix is
   type state is ( IDLE,
                   RX,
                   RX_DONE,
+                  TX_WAIT,
                   TX,
                   TX_DONE );
   signal mst_exec_state : state;
@@ -90,6 +91,8 @@ begin
         -- synchronous reset
         mst_exec_state <= IDLE;
         buf_bytes <= 0;
+        axis_tready <= '0';
+        update <= '0';
         
       else
         case mst_exec_state is
@@ -129,24 +132,28 @@ begin
               end if;
               -- check that data is destined for this channel
               if (C_DATA_TYPE = buf(7 downto 0) and C_CHANNEL = buf(15 downto 8)) then
-                mst_exec_state <= TX;
+                mst_exec_state <= TX_WAIT;
               -- skip word if not
               else
                 mst_exec_state <= IDLE;
               end if;
             end if;
+
+          when TX_WAIT =>
+            -- wait for larpix ready
+            if (busy_LArPix = '0') then
+              mst_exec_state <= TX;
+            end if;
             
           when TX =>
             -- update larpix data
             update <= '1';
-            if (busy_LArPix = '1') then
-              mst_exec_state <= TX_DONE;
-            end if;
+            mst_exec_state <= TX_DONE;
 
           when TX_DONE =>
-            -- wait for complete transmission
+            -- wait for acknowledgement
             update <= '0';
-            if (busy_LArPix = '0') then
+            if (busy_LArPix = '1') then
               mst_exec_state <= IDLE;
             end if;
 

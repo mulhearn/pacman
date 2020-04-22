@@ -36,7 +36,7 @@ architecture tb of axi_loopback_tb is
     );
   end component;
 
-  component larpix_to_axis_stream is
+  component larpix_to_axi_stream is
     generic(
       C_M_AXIS_TDATA_WIDTH    : integer := 128;
       C_LARPIX_DATA_WIDTH     : integer := 64;

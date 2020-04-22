@@ -54,17 +54,21 @@ begin
   process(M_AXIS_ACLK)
   begin
     if (rising_edge (M_AXIS_ACLK)) then
+      -- synchronous reset
       if(M_AXIS_ARESETN = '0') then
-        mst_exec_state      <= IDLE;
-
+        mst_exec_state <= IDLE;
+        axis_tvalid <= '0';
+        busy <= '1';
       else
+        -- axi-stream fsm
         case (mst_exec_state) is
-
           when IDLE =>
             busy <= '0';
             axis_tvalid <= '0';
-            data_out <= data_LArPix & x"0000" & std_logic_vector(timestamp) & C_M_AXIS_TDATA_CHANNEL & C_M_AXIS_TDATA_TYPE;
             if (data_update_LArPix = '1') then
+              busy <= '1';
+              axis_tvalid <= '1';
+              data_out <= data_LArPix & x"0000" & std_logic_vector(timestamp) & C_M_AXIS_TDATA_CHANNEL & C_M_AXIS_TDATA_TYPE;
               mst_exec_state <= TX;
             end if;
 
@@ -72,13 +76,17 @@ begin
             busy <= '1';
             axis_tvalid <= '1';
             if (M_AXIS_TREADY = '1') then
+              busy <= '1';
+              axis_tvalid <= '0';
               mst_exec_state <= TX_DONE;
             end if;
             
           when TX_DONE =>
-            busy <= '0';
+            busy <= '1';
             axis_tvalid <= '0';
             if (data_update_LArPix = '0') then
+              busy <= '0';
+              axis_tvalid <= '0';
               mst_exec_state <= IDLE;
             end if;
             
