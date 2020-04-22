@@ -32,13 +32,17 @@ cd petalinux-initramdisk
 # to test new image over JTAG:
 ./jtag_boot.sh
 
-
-
-# Boot Hello World from QSPI flash:
+# Write Hello World from QSPI flash:
 xsct tcl/build_sw.tcl
 xsct tcl/flash.tcl
 cd flash
 source program.sh
+
+# Write QSPI flash from Linux on Pac-Man:
+# check boot partition location (usually mtd0):
+cat /proc/mtd
+# write flash:
+flashcp -v BOOT.BIN /dev/mtd0
 
 # copying files to Pac-Man over uart:
 # use minicom instead of microcom:
