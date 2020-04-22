@@ -82,13 +82,13 @@
         #size-cells = <1>;
         ranges;
 
-        reserved: buffer@0x38000000 {
+        reserved: buffer@0x30000000 {
             no-map;
-	    reg = <0x38000000 0x080000000>;
+	    reg = <0x30000000 0x10000000>;
         };
     };
 
-    reserved-driver@0x38000000 {
+    reserved-driver@0x30000000 {
         compatible = "xlnx,reserved-memory";
 	memory-region = <&reserved>;
     };
