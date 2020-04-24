@@ -5,8 +5,8 @@
 # Requires a "larpix_uart_channel_1" block existing either within the top level of the zsys
 # block diagram or within an existing larpix_uart_array
 #
-# This will generate a new larpix_uart_array heirarchy complete with axi interconnects and
-# 32 larpix_uart_channel subheirarchies (copied from the source larpix_uart_channel_1) but
+# This will generate a new larpix_uart_array hierarchy complete with axi interconnects and
+# 32 larpix_uart_channel subhierarchies (copied from the source larpix_uart_channel_1) but
 # with the channel parameters updated
 #
 # Note: this does take a while (~30min on my machine), so test your small changes using
@@ -22,9 +22,9 @@ open_project ./pacman-fw/pacman-fw.xpr
 # open up block design
 open_bd_design {./pacman-fw/pacman-fw.srcs/sources_1/bd/zsys/zsys.bd}
 
-# create uart array heirarchy
-set uart_array_heir "[get_bd_cell larpix_uart_array]"
-if { $uart_array_heir != "" } {
+# create uart array hierarchy
+set uart_array_hier "[get_bd_cell larpix_uart_array]"
+if { $uart_array_hier != "" } {
     if { [get_bd_cells {larpix_uart_array/larpix_uart_channel_1}] != "" } {
         if { [get_bd_cells {larpix_uart_channel_1}] == "" } {
             copy_bd_objs /  [get_bd_cells {larpix_uart_array/larpix_uart_channel_1}]
@@ -32,7 +32,7 @@ if { $uart_array_heir != "" } {
     }
 
     puts "delete existing larpix uart array"
-    delete_bd_objs $uart_array_heir
+    delete_bd_objs $uart_array_hier
 }
 save_bd_design
 
@@ -101,11 +101,11 @@ set_property location {1 20000 10000} [get_bd_cells $axis_interconnect_0]
 set_property location {1 10000 20000} [get_bd_cells $axis_interconnect_1]
 set_property location {1 10000 0} [get_bd_cells $axis_interconnect_2]
 # axis interconnect 0 settings
-set_property -dict [list CONFIG.NUM_SI {2} CONFIG.NUM_MI {1} CONFIG.M00_FIFO_DEPTH {4096} CONFIG.S00_FIFO_DEPTH {1024} CONFIG.S01_FIFO_DEPTH {1024}] [get_bd_cells $axis_interconnect_0]
+set_property -dict [list CONFIG.NUM_SI {2} CONFIG.NUM_MI {1} CONFIG.M00_FIFO_DEPTH {4096} CONFIG.S00_FIFO_DEPTH {16} CONFIG.S01_FIFO_DEPTH {16}] [get_bd_cells $axis_interconnect_0]
 # axis interconnect 1 settings
-set_property -dict [list CONFIG.NUM_SI {16} CONFIG.NUM_MI {1} CONFIG.M00_FIFO_DEPTH {1024} CONFIG.M01_FIFO_DEPTH {32} CONFIG.M02_FIFO_DEPTH {32} CONFIG.M03_FIFO_DEPTH {32} CONFIG.M04_FIFO_DEPTH {32} CONFIG.S00_FIFO_DEPTH {32} CONFIG.S01_FIFO_DEPTH {32} CONFIG.S02_FIFO_DEPTH {32} CONFIG.S03_FIFO_DEPTH {32} CONFIG.S04_FIFO_DEPTH {32} CONFIG.S05_FIFO_DEPTH {32} CONFIG.S06_FIFO_DEPTH {32} CONFIG.S07_FIFO_DEPTH {32} CONFIG.S08_FIFO_DEPTH {32} CONFIG.S09_FIFO_DEPTH {32} CONFIG.S10_FIFO_DEPTH {32} CONFIG.S11_FIFO_DEPTH {32} CONFIG.S12_FIFO_DEPTH {32} CONFIG.S13_FIFO_DEPTH {32} CONFIG.S14_FIFO_DEPTH {32} CONFIG.S15_FIFO_DEPTH {32}] [get_bd_cells $axis_interconnect_1]
+set_property -dict [list CONFIG.NUM_SI {16} CONFIG.NUM_MI {1} CONFIG.M00_FIFO_DEPTH {1024} CONFIG.M01_FIFO_DEPTH {16} CONFIG.M02_FIFO_DEPTH {16} CONFIG.M03_FIFO_DEPTH {16} CONFIG.M04_FIFO_DEPTH {16} CONFIG.S00_FIFO_DEPTH {16} CONFIG.S01_FIFO_DEPTH {16} CONFIG.S02_FIFO_DEPTH {16} CONFIG.S03_FIFO_DEPTH {16} CONFIG.S04_FIFO_DEPTH {16} CONFIG.S05_FIFO_DEPTH {16} CONFIG.S06_FIFO_DEPTH {16} CONFIG.S07_FIFO_DEPTH {16} CONFIG.S08_FIFO_DEPTH {16} CONFIG.S09_FIFO_DEPTH {16} CONFIG.S10_FIFO_DEPTH {16} CONFIG.S11_FIFO_DEPTH {16} CONFIG.S12_FIFO_DEPTH {16} CONFIG.S13_FIFO_DEPTH {16} CONFIG.S14_FIFO_DEPTH {16} CONFIG.S15_FIFO_DEPTH {16}] [get_bd_cells $axis_interconnect_1]
 # axis interconnect 2 settings
-set_property -dict [list CONFIG.NUM_SI {16} CONFIG.NUM_MI {1} CONFIG.M00_FIFO_DEPTH {1024} CONFIG.M01_FIFO_DEPTH {32} CONFIG.M02_FIFO_DEPTH {32} CONFIG.M03_FIFO_DEPTH {32} CONFIG.M04_FIFO_DEPTH {32} CONFIG.S00_FIFO_DEPTH {32} CONFIG.S01_FIFO_DEPTH {32} CONFIG.S02_FIFO_DEPTH {32} CONFIG.S03_FIFO_DEPTH {32} CONFIG.S04_FIFO_DEPTH {32} CONFIG.S05_FIFO_DEPTH {32} CONFIG.S06_FIFO_DEPTH {32} CONFIG.S07_FIFO_DEPTH {32} CONFIG.S08_FIFO_DEPTH {32} CONFIG.S09_FIFO_DEPTH {32} CONFIG.S10_FIFO_DEPTH {32} CONFIG.S11_FIFO_DEPTH {32} CONFIG.S12_FIFO_DEPTH {32} CONFIG.S13_FIFO_DEPTH {32} CONFIG.S14_FIFO_DEPTH {32} CONFIG.S15_FIFO_DEPTH {32}] [get_bd_cells $axis_interconnect_2]
+set_property -dict [list CONFIG.NUM_SI {16} CONFIG.NUM_MI {1} CONFIG.M00_FIFO_DEPTH {1024} CONFIG.M01_FIFO_DEPTH {16} CONFIG.M02_FIFO_DEPTH {16} CONFIG.M03_FIFO_DEPTH {16} CONFIG.M04_FIFO_DEPTH {16} CONFIG.S00_FIFO_DEPTH {16} CONFIG.S01_FIFO_DEPTH {16} CONFIG.S02_FIFO_DEPTH {16} CONFIG.S03_FIFO_DEPTH {16} CONFIG.S04_FIFO_DEPTH {16} CONFIG.S05_FIFO_DEPTH {16} CONFIG.S06_FIFO_DEPTH {16} CONFIG.S07_FIFO_DEPTH {16} CONFIG.S08_FIFO_DEPTH {16} CONFIG.S09_FIFO_DEPTH {16} CONFIG.S10_FIFO_DEPTH {16} CONFIG.S11_FIFO_DEPTH {16} CONFIG.S12_FIFO_DEPTH {16} CONFIG.S13_FIFO_DEPTH {16} CONFIG.S14_FIFO_DEPTH {16} CONFIG.S15_FIFO_DEPTH {16}] [get_bd_cells $axis_interconnect_2]
 # Connect axi streams
 connect_bd_intf_net $M_AXIS [get_bd_intf_pins $axis_interconnect_0/M00_AXIS]
 connect_bd_intf_net [get_bd_intf_pins $axis_interconnect_1/M00_AXIS] [get_bd_intf_pins $axis_interconnect_0/S00_AXIS]
