@@ -28,12 +28,6 @@ open_bd_design {./pacman-fw/pacman-fw.srcs/sources_1/bd/zsys/zsys.bd}
 # create uart array hierarchy
 set uart_array_hier "[get_bd_cell larpix_uart_array]"
 if { $uart_array_hier != "" } {
-    #if { [get_bd_cells {larpix_uart_array/larpix_uart_channel_1}] != "" } {
-    #    if { [get_bd_cells {larpix_uart_channel_1}] == "" } {
-    #        copy_bd_objs /  [get_bd_cells {larpix_uart_array/larpix_uart_channel_1}]
-    #    }
-    #}
-
     puts "delete existing larpix uart array"
     delete_bd_objs $uart_array_hier
 }
@@ -82,14 +76,6 @@ for {set i 0} {$i < 8} {incr i} {
     connect_bd_net $ACLK [get_bd_pins ${axis_broadcaster}_$i/aclk]
     connect_bd_net $ARESETN [get_bd_pins ${axis_broadcaster}_$i/aresetn]
 
-    # register slice
-    #for {set j 0} {$j < $n_interfaces} {incr j} {
-    #    set reg ${axis_broadcaster}_reg_${i}_${j}
-    #    create_bd_cell -type ip -vlnv xilinx.com:ip:axis_register_slice:1.1 ${reg}
-    #    connect_bd_intf_net [get_bd_intf_pins ${axis_broadcaster}_$i/M0${j}_AXIS] [get_bd_intf_pins ${reg}/S_AXIS]
-    #    connect_bd_net [get_bd_pins $axis_broadcast/aclk] [get_bd_pins ${reg}/aclk]
-    #    connect_bd_net [get_bd_pins $axis_broadcast/aresetn] [get_bd_pins ${reg}/aresetn]
-    #}
 }
 save_bd_design
 #
