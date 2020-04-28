@@ -6,6 +6,10 @@
 #     products/zsys_wrapper.hdf
 #
 
+set jobs 2
+set synth_run synth_1
+set impl_run impl_1
+
 # open the project:
 open_project ./pacman-fw/pacman-fw.xpr
 
@@ -23,13 +27,13 @@ make_wrapper -files [get_files zsys.bd] -top
 add_files -norecurse pacman-fw/pacman-fw.srcs/sources_1/bd/zsys/hdl/zsys_wrapper.vhd
 
 update_compile_order -fileset sources_1
-reset_run synth_1
-reset_run impl_1
-launch_runs synth_1 -jobs 2
-wait_on_run synth_1
-launch_runs impl_1 -jobs 2
-wait_on_run impl_1
-launch_runs impl_1 -to_step write_bitstream -jobs 2
-wait_on_run impl_1
+reset_run $synth_run
+reset_run $impl_run
+launch_runs $synth_run -jobs $jobs
+wait_on_run $synth_run
+launch_runs $impl_run -jobs $jobs
+wait_on_run $impl_run
+launch_runs $impl_run -to_step write_bitstream -jobs $jobs
+wait_on_run $impl_run
 update_compile_order -fileset sources_1
 file copy -force ./pacman-fw/pacman-fw.runs/impl_1/zsys_wrapper.sysdef ./products/zsys_wrapper.hdf
