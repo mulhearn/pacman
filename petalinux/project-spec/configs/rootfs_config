@@ -3579,7 +3579,7 @@ CONFIG_bridge-utils=y
 # CONFIG_avahi-autoipd is not set
 # CONFIG_avahi-utils is not set
 # CONFIG_libavahi-common is not set
-# CONFIG_avahi-daemon is not set
+CONFIG_avahi-daemon=y
 # CONFIG_libavahi-gobject is not set
 
 #
