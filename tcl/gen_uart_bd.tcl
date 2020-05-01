@@ -9,8 +9,6 @@
 # 32 larpix_uart_channel subhierarchies (copied from the source larpix_uart_channel_1) but
 # with the channel parameters updated
 #
-# Note: this does take a while (~30min on my machine), so test your small changes using
-# fewer channels before generating all 32
 #
 # Usage:
 #   vivado -mode batch -source tcl/gen_uart_bd.tcl
@@ -31,14 +29,18 @@ if { $uart_array_hier != "" } {
     puts "delete existing larpix uart array"
     delete_bd_objs $uart_array_hier
 }
-save_bd_design
 
 set larpix_uart_array [create_bd_cell -type hier larpix_uart_array]
 set ACLK [create_bd_pin -dir I larpix_uart_array/ACLK -type clk]
+connect_bd_net $ACLK [get_bd_pins processing_system7_0/FCLK_CLK0]
 set ARESETN [create_bd_pin -dir I larpix_uart_array/ARESETN -type rst]
+connect_bd_net $ARESETN [get_bd_pins rst_ps7_0_100M/peripheral_aresetn]
 set MCLK [create_bd_pin -dir I larpix_uart_array/MCLK -type clk]
+connect_bd_net $MCLK [get_bd_pins larpix_clk/MCLK]
 set PACMAN_TS [create_bd_pin -dir I -from 31 -to 0 larpix_uart_array/PACMAN_TS]
+connect_bd_net $PACMAN_TS [get_bd_pins larpix_clk/TIMESTAMP]
 set S_AXIMM [create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 larpix_uart_array/S_AXIMM]
+save_bd_design
 
 # create axi interface interconnect
 connect_bd_intf_net $S_AXIMM [get_bd_intf_pins ps7_0_axi_periph/M04_AXI]
@@ -46,8 +48,8 @@ create_bd_cell -type hier larpix_uart_array/aximm
 set aximm_interconnect larpix_uart_array/aximm/aximm_interconnect_0
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 $aximm_interconnect
 set_property -dict [list CONFIG.NUM_MI {32}] [get_bd_cells $aximm_interconnect]
-set_property -dict [list CONFIG.STRATEGY {2} CONFIG.S00_HAS_REGSLICE {3}] [get_bd_cells $aximm_interconnect]
-set_property -dict [list CONFIG.M00_HAS_REGSLICE {3} CONFIG.M01_HAS_REGSLICE {3} CONFIG.M02_HAS_REGSLICE {3} CONFIG.M03_HAS_REGSLICE {3} CONFIG.M04_HAS_REGSLICE {3} CONFIG.M05_HAS_REGSLICE {3} CONFIG.M06_HAS_REGSLICE {3} CONFIG.M07_HAS_REGSLICE {3} CONFIG.M08_HAS_REGSLICE {3} CONFIG.M09_HAS_REGSLICE {3} CONFIG.M10_HAS_REGSLICE {3} CONFIG.M11_HAS_REGSLICE {3} CONFIG.M12_HAS_REGSLICE {3} CONFIG.M13_HAS_REGSLICE {3} CONFIG.M14_HAS_REGSLICE {3} CONFIG.M15_HAS_REGSLICE {3} CONFIG.M16_HAS_REGSLICE {3} CONFIG.M17_HAS_REGSLICE {3} CONFIG.M18_HAS_REGSLICE {3} CONFIG.M19_HAS_REGSLICE {3} CONFIG.M20_HAS_REGSLICE {3} CONFIG.M21_HAS_REGSLICE {3} CONFIG.M22_HAS_REGSLICE {3} CONFIG.M23_HAS_REGSLICE {3} CONFIG.M24_HAS_REGSLICE {3} CONFIG.M25_HAS_REGSLICE {3} CONFIG.M26_HAS_REGSLICE {3} CONFIG.M27_HAS_REGSLICE {3} CONFIG.M28_HAS_REGSLICE {3} CONFIG.M29_HAS_REGSLICE {3} CONFIG.M30_HAS_REGSLICE {3} CONFIG.M31_HAS_REGSLICE {3}] [get_bd_cells $aximm_interconnect]
+set_property -dict [list CONFIG.STRATEGY {1} CONFIG.S00_HAS_REGSLICE {0} CONFIG.S00_HAS_DATA_FIFO {0}] [get_bd_cells $aximm_interconnect]
+set_property -dict [list CONFIG.M00_HAS_REGSLICE {1} CONFIG.M01_HAS_REGSLICE {1} CONFIG.M02_HAS_REGSLICE {1} CONFIG.M03_HAS_REGSLICE {1} CONFIG.M04_HAS_REGSLICE {1} CONFIG.M05_HAS_REGSLICE {1} CONFIG.M06_HAS_REGSLICE {1} CONFIG.M07_HAS_REGSLICE {1} CONFIG.M08_HAS_REGSLICE {1} CONFIG.M09_HAS_REGSLICE {1} CONFIG.M10_HAS_REGSLICE {1} CONFIG.M11_HAS_REGSLICE {1} CONFIG.M12_HAS_REGSLICE {1} CONFIG.M13_HAS_REGSLICE {1} CONFIG.M14_HAS_REGSLICE {1} CONFIG.M15_HAS_REGSLICE {1} CONFIG.M16_HAS_REGSLICE {1} CONFIG.M17_HAS_REGSLICE {1} CONFIG.M18_HAS_REGSLICE {1} CONFIG.M19_HAS_REGSLICE {1} CONFIG.M20_HAS_REGSLICE {1} CONFIG.M21_HAS_REGSLICE {1} CONFIG.M22_HAS_REGSLICE {1} CONFIG.M23_HAS_REGSLICE {1} CONFIG.M24_HAS_REGSLICE {1} CONFIG.M25_HAS_REGSLICE {1} CONFIG.M26_HAS_REGSLICE {1} CONFIG.M27_HAS_REGSLICE {1} CONFIG.M28_HAS_REGSLICE {1} CONFIG.M29_HAS_REGSLICE {1} CONFIG.M30_HAS_REGSLICE {1} CONFIG.M31_HAS_REGSLICE {1}] [get_bd_cells $aximm_interconnect]
 connect_bd_intf_net $S_AXIMM [get_bd_intf_pins $aximm_interconnect/S00_AXI]
 connect_bd_net $ACLK [get_bd_pins $aximm_interconnect/ACLK]
 connect_bd_net $ACLK [get_bd_pins $aximm_interconnect/S00_ACLK]
@@ -68,6 +70,7 @@ for {set i 0} {$i < 8} {incr i} {
     # axi broadcast settings
     set_property -dict [list CONFIG.M_TDATA_NUM_BYTES.VALUE_SRC USER CONFIG.S_TDATA_NUM_BYTES.VALUE_SRC USER CONFIG.HAS_TREADY.VALUE_SRC USER CONFIG.HAS_TSTRB.VALUE_SRC USER CONFIG.HAS_TKEEP.VALUE_SRC USER CONFIG.HAS_TLAST.VALUE_SRC USER] [get_bd_cells ${axis_broadcaster}_$i]
     set_property -dict [list CONFIG.NUM_MI $n_interfaces CONFIG.M_TDATA_NUM_BYTES {16} CONFIG.S_TDATA_NUM_BYTES {16} CONFIG.M00_TDATA_REMAP {tdata[127:0]} CONFIG.M01_TDATA_REMAP {tdata[127:0]} CONFIG.M02_TDATA_REMAP {tdata[127:0]} CONFIG.M03_TDATA_REMAP {tdata[127:0]}] [get_bd_cells ${axis_broadcaster}_$i]
+    set_property -dict [list CONFIG.HAS_TREADY {1} CONFIG.HAS_TKEEP {1} CONFIG.HAS_TLAST {1} CONFIG.HAS_TSTRB {1}] [get_bd_cells ${axis_broadcaster}_$i]
 
     # create/connect pins
     set S_AXIS [create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 larpix_uart_array/S${i}_AXIS]
@@ -92,7 +95,8 @@ for {set i 0} {$i < 8} {incr i} {
     # axi interconnect settings
     set_property -dict [list CONFIG.NUM_SI $n_interfaces CONFIG.NUM_MI {1} CONFIG.M00_FIFO_DEPTH {1024} CONFIG.S00_FIFO_DEPTH {0} CONFIG.S01_FIFO_DEPTH {0} CONFIG.S02_FIFO_DEPTH {0} CONFIG.S03_FIFO_DEPTH {0}] [get_bd_cells ${axis_interconnect}_${i}]
     set_property -dict [list CONFIG.M00_HAS_REGSLICE {1} CONFIG.S00_HAS_REGSLICE {0} CONFIG.S01_HAS_REGSLICE {0} CONFIG.S02_HAS_REGSLICE {0} CONFIG.S03_HAS_REGSLICE {0}] [get_bd_cells ${axis_interconnect}_${i}]
-
+    set_property -dict [list CONFIG.ARB_ON_NUM_CYCLES {1} CONFIG.ARB_ON_TLAST {1}] [get_bd_cells ${axis_interconnect}_${i}]
+    
     # create/connect pins
     set M_AXIS [create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 larpix_uart_array/M${i}_AXIS]
     connect_bd_intf_net $M_AXIS [get_bd_intf_pins ${axis_interconnect}_${i}/M00_AXIS]
@@ -124,7 +128,8 @@ for {set channel 1} {$channel < [expr { $n_channels + 1 }]} {incr channel} {
     # create new uart channel
     #copy_bd_objs larpix_uart_array [get_bd_cells {larpix_uart_channel_1}]
     set larpix_uart_channel $uart_channels/larpix_uart_channel_$channel
-    create_bd_cell -type ip -vlnv user.org:user:uart_channel:1.0 $larpix_uart_channel
+    #create_bd_cell -type ip -vlnv user.org:user:uart_channel:1.0 $larpix_uart_channel
+    create_bd_cell -type module -reference uart_channel $larpix_uart_channel
 
     set channel_s_axis ${axis_interconnect}_${channel_major}/S$channel_minor_padded
     #set channel_m_axis ${axis_broadcaster}_reg_${channel_major}_${channel_minor}/M
@@ -132,9 +137,10 @@ for {set channel 1} {$channel < [expr { $n_channels + 1 }]} {incr channel} {
     set channel_m_aximm ${aximm_interconnect}/M$channel_padded
 
     # set channel property
-    create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 ${larpix_uart_channel}_id
-    set_property -dict [list CONFIG.CONST_WIDTH 8 CONFIG.CONST_VAL 0x$channel_hex] [get_bd_cells ${larpix_uart_channel}_id]
-    connect_bd_net [get_bd_pins ${larpix_uart_channel}_id/dout] [get_bd_pins $larpix_uart_channel/C_CHANNEL]
+    #create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 ${larpix_uart_channel}_id
+    #set_property -dict [list CONFIG.CONST_WIDTH 8 CONFIG.CONST_VAL 0x$channel_hex] [get_bd_cells ${larpix_uart_channel}_id]
+    #connect_bd_net [get_bd_pins ${larpix_uart_channel}_id/dout] [get_bd_pins $larpix_uart_channel/C_CHANNEL]
+    set_property -dict [list CONFIG.C_CHANNEL 0x$channel_hex] [get_bd_cells $larpix_uart_channel]
 
     # make connections
     # axi-stream master
@@ -142,7 +148,7 @@ for {set channel 1} {$channel < [expr { $n_channels + 1 }]} {incr channel} {
     # axi-stream slave
     connect_bd_intf_net [get_bd_intf_pins ${channel_m_axis}_AXIS] [get_bd_intf_pins $larpix_uart_channel/S_AXIS]
     # axi-lite mm
-    connect_bd_intf_net [get_bd_intf_pins ${channel_m_aximm}_AXI] [get_bd_intf_pins $larpix_uart_channel/S00_AXI]
+    connect_bd_intf_net [get_bd_intf_pins ${channel_m_aximm}_AXI] [get_bd_intf_pins $larpix_uart_channel/S_AXI_LITE]
     connect_bd_net [get_bd_pins ${channel_m_aximm}_ACLK] $ACLK
     connect_bd_net [get_bd_pins ${channel_m_aximm}_ARESETN] $ARESETN
 
@@ -161,10 +167,8 @@ for {set channel 1} {$channel < [expr { $n_channels + 1 }]} {incr channel} {
     connect_bd_net [get_bd_pins $larpix_uart_channel/UART_RX] [get_bd_pins $larpix_uart_channel/UART_TX]
 
     # setup reserved addresses
-    set seg_ro [get_bd_addr_segs $larpix_uart_channel/S00_AXI/Reg0]
-    set seg_rw [get_bd_addr_segs $larpix_uart_channel/S00_AXI/Reg1]
-    create_bd_addr_seg -range 4K -offset 0x50${channel_hex}0000 [get_bd_addr_spaces processing_system7_0/Data] $seg_ro seg_uart_ro_$channel
-    create_bd_addr_seg -range 4K -offset 0x50${channel_hex}1000 [get_bd_addr_spaces processing_system7_0/Data] $seg_rw seg_uart_rw_$channel
+    set seg [get_bd_addr_segs $larpix_uart_channel/S_AXI_LITE/reg0]
+    create_bd_addr_seg -range 4K -offset 0x500${channel_hex}000 [get_bd_addr_spaces processing_system7_0/Data] $seg seg_uart_$channel
     
     save_bd_design
 }
