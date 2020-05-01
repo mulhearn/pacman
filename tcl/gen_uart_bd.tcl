@@ -55,6 +55,11 @@ connect_bd_net $ACLK [get_bd_pins $aximm_interconnect/ACLK]
 connect_bd_net $ACLK [get_bd_pins $aximm_interconnect/S00_ACLK]
 connect_bd_net $ARESETN [get_bd_pins $aximm_interconnect/ARESETN]
 connect_bd_net $ARESETN [get_bd_pins $aximm_interconnect/S00_ARESETN]
+for {set i 0} {$i < 32} {incr i} {
+    set i_padded [format %02d $i]    
+    connect_bd_net [get_bd_pins $aximm_interconnect/M${i_padded}_ACLK] $ACLK
+    connect_bd_net [get_bd_pins $aximm_interconnect/M${i_padded}_ARESETN] $ARESETN
+}
 save_bd_design
 #
 
@@ -149,8 +154,6 @@ for {set channel 1} {$channel < [expr { $n_channels + 1 }]} {incr channel} {
     connect_bd_intf_net [get_bd_intf_pins ${channel_m_axis}_AXIS] [get_bd_intf_pins $larpix_uart_channel/S_AXIS]
     # axi-lite mm
     connect_bd_intf_net [get_bd_intf_pins ${channel_m_aximm}_AXI] [get_bd_intf_pins $larpix_uart_channel/S_AXI_LITE]
-    connect_bd_net [get_bd_pins ${channel_m_aximm}_ACLK] $ACLK
-    connect_bd_net [get_bd_pins ${channel_m_aximm}_ARESETN] $ARESETN
 
     # other pins
     connect_bd_net [get_bd_pins $larpix_uart_channel/ACLK] $ACLK
@@ -159,12 +162,12 @@ for {set channel 1} {$channel < [expr { $n_channels + 1 }]} {incr channel} {
     connect_bd_net [get_bd_pins $larpix_uart_channel/PACMAN_TS] $PACMAN_TS
 
     # external uart pins
-    create_bd_pin -dir I larpix_uart_array/UART_RX_$channel
-    create_bd_pin -dir O larpix_uart_array/UART_TX_$channel
-    connect_bd_net [get_bd_pins $larpix_uart_channel/UART_RX] [get_bd_pins larpix_uart_array/UART_RX_$channel]
-    connect_bd_net [get_bd_pins $larpix_uart_channel/UART_TX] [get_bd_pins larpix_uart_array/UART_TX_$channel]
+    set UART_RX [create_bd_pin -dir I larpix_uart_array/UART_RX_$channel]
+    set UART_TX [create_bd_pin -dir O larpix_uart_array/UART_TX_$channel]
+    connect_bd_net [get_bd_pins $larpix_uart_channel/UART_RX] $UART_RX
+    connect_bd_net [get_bd_pins $larpix_uart_channel/UART_TX] $UART_TX
     # loop back (comment out if not)
-    connect_bd_net [get_bd_pins $larpix_uart_channel/UART_RX] [get_bd_pins $larpix_uart_channel/UART_TX]
+    connect_bd_net $UART_TX $UART_RX
 
     # setup reserved addresses
     set seg [get_bd_addr_segs $larpix_uart_channel/S_AXI_LITE/reg0]
