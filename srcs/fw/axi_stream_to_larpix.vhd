@@ -81,7 +81,7 @@ begin
             axis_tready <= '1';
             buf_srg(C_S_AXIS_TDATA_WIDTH-1 downto 0) <= S_AXIS_TDATA(C_S_AXIS_TDATA_WIDTH-1 downto 0);
             buf_index <= 0;
-            keep_srg((C_S_AXIS_TDATA_WIDTH/8)-1 downto 0) <= (S_AXIS_TSTRB and S_AXIS_TKEEP)((C_S_AXIS_TDATA_WIDTH/8)-1 downto 0);
+            keep_srg((C_S_AXIS_TDATA_WIDTH/8)-1 downto 0) <= S_AXIS_TSTRB((C_S_AXIS_TDATA_WIDTH/8)-1 downto 0) and S_AXIS_TKEEP((C_S_AXIS_TDATA_WIDTH/8)-1 downto 0);
             mst_exec_state <= SHIFT;
 
           when SHIFT =>
