@@ -159,10 +159,10 @@ for {set channel 1} {$channel < [expr { $n_channels + 1 }]} {incr channel} {
     connect_bd_net [get_bd_pins $larpix_uart_channel/PACMAN_TS] $PACMAN_TS
 
     # external uart pins
-    #create_bd_pin -dir I larpix_uart_array/UART_RX_$channel
-    #create_bd_pin -dir O larpix_uart_array/UART_TX_$channel
-    #connect_bd_net [get_bd_pins $larpix_uart_channel/UART_RX] [get_bd_pins larpix_uart_array/UART_RX_$channel]
-    #connect_bd_net [get_bd_pins $larpix_uart_channel/UART_TX] [get_bd_pins larpix_uart_array/UART_TX_$channel]
+    create_bd_pin -dir I larpix_uart_array/UART_RX_$channel
+    create_bd_pin -dir O larpix_uart_array/UART_TX_$channel
+    connect_bd_net [get_bd_pins $larpix_uart_channel/UART_RX] [get_bd_pins larpix_uart_array/UART_RX_$channel]
+    connect_bd_net [get_bd_pins $larpix_uart_channel/UART_TX] [get_bd_pins larpix_uart_array/UART_TX_$channel]
     # loop back (comment out if not)
     connect_bd_net [get_bd_pins $larpix_uart_channel/UART_RX] [get_bd_pins $larpix_uart_channel/UART_TX]
 
