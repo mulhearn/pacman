@@ -10,6 +10,8 @@ entity larpix_to_axi_stream is
     C_M_AXIS_TDATA_CHANNEL  : std_logic_vector(7 downto 0) := x"FF"
     );
   port (
+    --C_M_AXIS_TDATA_CHANNEL  : in std_logic_vector(7 downto 0) := x"FF";
+    
     timestamp           : in unsigned(31 downto 0) := (others => '0');
 
     data_LArPix         : in std_logic_vector(C_LARPIX_DATA_WIDTH-1 downto 0);

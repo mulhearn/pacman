@@ -12,6 +12,8 @@ entity larpix_uart_rx is
     C_M_AXIS_TDATA_WIDTH : integer := 128
     );
   port (
+    --C_CHANNEL : in std_logic_vector (7 downto 0) := x"FF";
+    
     ACLK : in std_logic;
     ARESETN : in std_logic;
 
@@ -33,6 +35,8 @@ end entity larpix_uart_rx;
 
 architecture arch_imp of larpix_uart_rx is
 
+  attribute ASYNC_REG : string;
+
   component larpix_to_axi_stream is
     generic (
       C_M_AXIS_TDATA_WIDTH : integer;
@@ -41,6 +45,8 @@ architecture arch_imp of larpix_uart_rx is
       C_M_AXIS_TDATA_CHANNEL  : std_logic_vector(7 downto 0) := C_CHANNEL
       );
     port (
+      --C_M_AXIS_TDATA_CHANNEL  : in std_logic_vector(7 downto 0) := C_CHANNEL;
+      
       timestamp : in unsigned(31 downto 0) := (others => '0');
       data_LArPix : in std_logic_vector(C_LARPIX_DATA_WIDTH-1 downto 0);
       data_update_LArPix : in std_logic;
@@ -84,6 +90,9 @@ architecture arch_imp of larpix_uart_rx is
 
   signal pacman_ts_meta : unsigned(PACMAN_TS'length-1 downto 0);
   signal pacman_ts_aclk : unsigned(PACMAN_TS'length-1 downto 0);
+
+  attribute ASYNC_REG of pacman_ts_meta: signal is "TRUE";
+  attribute ASYNC_REG of pacman_ts_aclk: signal is "TRUE";
 
 begin
   -- reset

@@ -12,6 +12,8 @@ entity larpix_uart_tx is
     C_FIFO_COUNT_WIDTH : integer := 9
     );
   port (
+    --C_CHANNEL : in std_logic_vector(7 downto 0) := x"FF";
+    
     ACLK : in std_logic;
     ARESETN : in std_logic;
 
@@ -33,6 +35,8 @@ end larpix_uart_tx;
 
 architecture arch_imp of larpix_uart_tx is
 
+  attribute ASYNC_REG : string;
+  
   component axi_stream_to_larpix is
     generic (
       C_S_AXIS_TDATA_WIDTH : integer := C_S_AXIS_TDATA_WIDTH;
@@ -41,6 +45,7 @@ architecture arch_imp of larpix_uart_tx is
       C_DATA_TYPE : std_logic_vector(7 downto 0) := C_DATA_TYPE
       );
     port (
+      --C_CHANNEL : in std_logic_vector(7 downto 0) := C_CHANNEL;
       data_LArPix         : out std_logic_vector(C_LARPIX_DATA_WIDTH-1 downto 0);
       data_update_LArPix  : out std_logic;
       busy_LArPix         : in std_logic;
@@ -113,6 +118,15 @@ architecture arch_imp of larpix_uart_tx is
 
   signal uart_clkout_ratio_meta : unsigned (7 downto 0);
   signal uart_clkout_ratio_mclk : unsigned (7 downto 0);
+
+  attribute ASYNC_REG of rst_aclk: signal is "TRUE";
+  attribute ASYNC_REG of rst_mclk_meta: signal is "TRUE";
+  attribute ASYNC_REG of rst_mclk: signal is "TRUE";
+  attribute ASYNC_REG of rst_registered_mclk: signal is "TRUE";
+  attribute ASYNC_REG of rst_registered_aclk_meta: signal is "TRUE";
+  attribute ASYNC_REG of rst_registered_aclk: signal is "TRUE";
+  attribute ASYNC_REG of uart_clkout_ratio_meta: signal is "TRUE";
+  attribute ASYNC_REG of uart_clkout_ratio_mclk: signal is "TRUE";
 
 begin
 

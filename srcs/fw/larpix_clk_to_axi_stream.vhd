@@ -37,6 +37,7 @@ end larpix_clk_to_axi_stream;
 
 architecture implementation of larpix_clk_to_axi_stream is                     
 
+  attribute ASYNC_REG : string;
   type state is ( IDLE,
                   TX );                                                            
   signal  mst_exec_state : state;
@@ -44,9 +45,11 @@ architecture implementation of larpix_clk_to_axi_stream is
   signal data_out       : std_logic_vector(C_M_AXIS_TDATA_WIDTH-1 downto 0);
   signal axis_tvalid	: std_logic;
 
+
   signal mclk_prev : std_logic;
   signal timestamp_meta : unsigned(31 downto 0) := (others => '0');
   signal timestamp_aclk : unsigned(31 downto 0) := (others => '0');
+  
   signal timestamp_prev_meta : unsigned(31 downto 0) := (others => '0');
   signal timestamp_prev_aclk : unsigned(31 downto 0) := (others => '0');
   signal timestamp_sync_meta : std_logic;
@@ -58,6 +61,15 @@ architecture implementation of larpix_clk_to_axi_stream is
   signal clk_src_prev : std_logic;
 
   signal hb_counter : unsigned(HB_CYCLES'length-1 downto 0);
+
+  attribute ASYNC_REG of timestamp_meta: signal is "TRUE";
+  attribute ASYNC_REG of timestamp_aclk: signal is "TRUE";
+  attribute ASYNC_REG of timestamp_prev_meta: signal is "TRUE";
+  attribute ASYNC_REG of timestamp_prev_aclk: signal is "TRUE";
+  attribute ASYNC_REG of timestamp_sync_meta: signal is "TRUE";
+  attribute ASYNC_REG of timestamp_sync_aclk: signal is "TRUE";
+  attribute ASYNC_REG of clk_src_meta: signal is "TRUE";
+  attribute ASYNC_REG of clk_src_prev: signal is "TRUE";
 
 begin
   -- I/O Connections assignments
