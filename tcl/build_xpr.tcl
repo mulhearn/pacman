@@ -25,6 +25,10 @@ if { $file != "" } {
 puts "recreating top-level wrapper"
 make_wrapper -files [get_files zsys.bd] -top
 add_files -norecurse pacman-fw/pacman-fw.srcs/sources_1/bd/zsys/hdl/zsys_wrapper.vhd
+set_property source_mgmt_mode None [current_project]
+set_property top zsys_wrapper [current_fileset]
+set_property source_mgmt_mode All [current_project]
+update_compile_order -fileset sources_1
 
 update_compile_order -fileset sources_1
 reset_run $synth_run
