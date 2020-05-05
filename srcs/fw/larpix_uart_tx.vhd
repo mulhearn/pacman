@@ -22,6 +22,7 @@ entity larpix_uart_tx is
     UART_TX_OUT : out std_logic;
     CLKOUT_RATIO : in unsigned (7 downto 0);
     FIFO_COUNT : out std_logic_vector (C_FIFO_COUNT_WIDTH-1 downto 0);
+    UART_TX_BUSY : out std_logic;
     
     -- axi-stream slave
     S_AXIS_TREADY : out std_logic;
@@ -129,7 +130,9 @@ architecture arch_imp of larpix_uart_tx is
   attribute ASYNC_REG of uart_clkout_ratio_mclk: signal is "TRUE";
 
 begin
-
+  
+  UART_TX_BUSY <= uart_busy;
+  
   -- reset sync (ARESETN streching)
   -- faster clock
   aclk_reset_sync : process (ACLK) is

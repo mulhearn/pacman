@@ -22,6 +22,7 @@ entity larpix_uart_rx is
     CLKIN_RATIO : in unsigned (7 downto 0);
     PACMAN_TS : in unsigned (31 downto 0);
     UART_RX_IN : in std_logic;
+    UART_RX_BUSY : out std_logic;
 
     -- axi-stream master
     M_AXIS_TVALID : out std_logic;
@@ -97,6 +98,7 @@ architecture arch_imp of larpix_uart_rx is
 begin
   -- reset
   rst <= not ARESETN;
+  UART_RX_BUSY <= larpix_busy;
 
   -- uart receiver
   uart_rx_inst : uart_rx port map(

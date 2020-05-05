@@ -43,7 +43,9 @@ entity uart_channel is
     S_AXI_LITE_wstrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
     S_AXI_LITE_wvalid : in STD_LOGIC;
     UART_RX : in STD_LOGIC;
-    UART_TX : out STD_LOGIC
+    UART_TX : out STD_LOGIC;
+    UART_RX_BUSY : out STD_LOGIC;
+    UART_TX_BUSY : out STD_LOGIC
   );
 end uart_channel;
 
@@ -59,6 +61,7 @@ architecture arch_imp of uart_channel is
     UART_TX_OUT : out STD_LOGIC;
     CLKOUT_RATIO : in UNSIGNED ( 7 downto 0 );
     FIFO_COUNT : out STD_LOGIC_VECTOR ( 8 downto 0 );
+    UART_TX_BUSY : out STD_LOGIC;
     S_AXIS_TREADY : out STD_LOGIC;
     S_AXIS_TDATA : in STD_LOGIC_VECTOR ( 127 downto 0 );
     S_AXIS_TSTRB : in STD_LOGIC_VECTOR ( 15 downto 0 );
@@ -79,6 +82,7 @@ architecture arch_imp of uart_channel is
     CLKIN_RATIO : in UNSIGNED ( 7 downto 0 );
     PACMAN_TS : in UNSIGNED ( 31 downto 0 );
     UART_RX_IN : in STD_LOGIC;
+    UART_RX_BUSY : out STD_LOGIC;
     M_AXIS_TVALID : out STD_LOGIC;
     M_AXIS_TDATA : out STD_LOGIC_VECTOR ( 127 downto 0 );
     M_AXIS_TKEEP : out STD_LOGIC_VECTOR ( 15 downto 0 );
@@ -273,7 +277,8 @@ begin
       M_AXIS_TSTRB(15 downto 0) => larpix_uart_rx_0_M_AXIS_TSTRB(15 downto 0),
       M_AXIS_TVALID => larpix_uart_rx_0_M_AXIS_TVALID,
       PACMAN_TS(31 downto 0) => PACMAN_TS_1(31 downto 0),
-      UART_RX_IN => UART_RX_1
+      UART_RX_IN => UART_RX_1,
+      UART_RX_BUSY => UART_RX_BUSY
       );
   
   larpix_uart_tx_0: component larpix_uart_tx
@@ -289,6 +294,7 @@ begin
       S_AXIS_TREADY => S_AXIS_1_TREADY,
       S_AXIS_TSTRB(15 downto 0) => S_AXIS_1_TSTRB(15 downto 0),
       S_AXIS_TVALID => S_AXIS_1_TVALID,
-      UART_TX_OUT => larpix_uart_tx_0_UART_TX_OUT
+      UART_TX_OUT => larpix_uart_tx_0_UART_TX_OUT,
+      UART_TX_BUSY => UART_TX_BUSY
     );
 end arch_imp;
