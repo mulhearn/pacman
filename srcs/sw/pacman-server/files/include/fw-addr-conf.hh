@@ -4,7 +4,7 @@
 /* ~~~ start PACMAN-PL interface ~~~ */
 
 #define PACMAN_ADDR 0x50000000
-#define PACMAN_LEN  0x00022000
+#define PACMAN_LEN  0x00024000
 
 /* ~~~ end PACMAN-PL interface ~~~ */
 

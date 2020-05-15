@@ -3,6 +3,8 @@
 
 #include <cstdint>
 
+#include "fw-add-conf.hh"
+
 //I2C peripherals:
 #define ADDR_ADC_VPLUS    0b1001000
 #define ADDR_DAC_VDDD     0b0011100  // ADDR -> GND
@@ -11,30 +13,32 @@
 #define ADDR_ADC_VDDA     0b1000000  // A1-> GND, A0-> GND
 
 //MAX5215-5217:
-#define CODE_LOAD 0x01
-#define NO_OP 0x00
-#define CODE 0x02
-#define LOAD 0x03
+#define NO_OP       0x00
+#define CODE_LOAD   0x01
+#define CODE        0x02
+#define LOAD        0x03
 #define USER_CONFIG 0x08
-#define SW_RESET 0x09
-#define SW_CLEAR 0x0A
+#define SW_RESET    0x09
+#define SW_CLEAR    0x0A
 
 //INA219:
-#define CONFIG 0x00
+#define CONFIG      0x00
 #define ADC_V_SHUNT 0x01
-#define ADC_V_BUS 0x02
-#define ADC_POW 0x03
-#define ADC_I 0x04
-#define ADC_CAL 0x05
+#define ADC_V_BUS   0x02
+#define ADC_POW     0x03
+#define ADC_I       0x04
+#define ADC_CAL     0x05
 
 //I2C server-level access:
-#define I2C_BASE_ADDR 0x00023000
-#define I2C_BASE_LEN 0x100
-#define OFFSET_DAC_VDDD 0x000
-#define OFFSET_DAC_VDDA 0x010
+#define I2C_BASE_ADDR PACMAN_LEN // i2c registers immediately follow pacman-fw registers
+#define I2C_BASE_LEN  0x1000
+
+#define OFFSET_DAC_VDDD  0x000
+#define OFFSET_DAC_VDDA  0x010
 #define OFFSET_ADC_VPLUS 0x020
-#define OFFSET_ADC_VDDD 0x030
-#define OFFSET_ADC_VDDA 0x040
+#define OFFSET_ADC_VDDD  0x030
+#define OFFSET_ADC_VDDA  0x040
+
 #define I2C_DEV "/dev/i2c-0"
 
 // low-level access to i2c
