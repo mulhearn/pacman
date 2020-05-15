@@ -18,6 +18,7 @@
 #include "message-format.hh"
 #include "larpix.hh"
 #include "pacman.hh"
+#include "pacman-i2c.hh"
 
 #define REP_SOCKET_BINDING "tcp://*:5555"
 #define ECHO_SOCKET_BINDING "tcp://*:5554"
@@ -94,6 +95,13 @@ int main(int argc, char* argv[]){
   // initialize pacman-pl
   uint32_t* pacman_pl = (uint32_t*)mmap(NULL, PACMAN_LEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, PACMAN_ADDR);
 
+  // initialize i2c
+  int i2c_dh = i2c_open(I2C_DEV);
+  if (i2c_dh < 0) {
+      printf("Error initializing I2C\n");
+      return 3;
+  }
+
   // initialize zmq msg
   int req_msg_nbytes;
   uint32_t tx_words = 0;
@@ -157,6 +165,10 @@ int main(int argc, char* argv[]){
           uint32_t* val = get_req_word_write_val(word);
           pacman_set(pacman_pl, *reg, *val);
           set_rep_word_write(reply_word, reg, val);
+        } else if (*reg >= I2C_BASE_ADDR || *reg < I2C_BASE_ADDR + I2C_BASE_LEN) {
+          uint32_t* val = get_req_word_write_val(word);
+          i2c_write(i2c_dh, *reg, *val);
+          set_rep_word_write(reply_word, reg, val);
         } else {
           set_rep_word_err(reply_word, NULL, NULL);
         }
@@ -168,6 +180,9 @@ int main(int argc, char* argv[]){
         uint32_t* reg = get_req_word_read_reg(word);
         if (*reg < PACMAN_LEN) {
           uint32_t val = pacman_get(pacman_pl, *reg);
+          set_rep_word_read(reply_word, reg, &val);
+        } else if (*reg >= I2C_BASE_ADDR || *reg < I2C_BASE_ADDR + I2C_BASE_LEN) {
+          uint32_t val = i2c_read(i2c_dh, *reg);
           set_rep_word_read(reply_word, reg, &val);
         } else {
           set_rep_word_err(reply_word, NULL, NULL);
