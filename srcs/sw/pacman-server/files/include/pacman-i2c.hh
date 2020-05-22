@@ -6,11 +6,11 @@
 #include "fw-addr-conf.hh"
 
 //I2C peripherals:
-#define ADDR_ADC_VPLUS    0b1001000
-#define ADDR_DAC_VDDD     0b0011100  // ADDR -> GND
-#define ADDR_DAC_VDDA     0b0011101  // ADDR -> NC
-#define ADDR_ADC_VDDD     0b1001100  // A1-> SCL. A0-> GND
-#define ADDR_ADC_VDDA     0b1000000  // A1-> GND, A0-> GND
+#define ADDR_ADC_VPLUS    0x48
+#define ADDR_DAC_VDDD     0x1C  // ADDR -> GND
+#define ADDR_DAC_VDDA     0x1D  // ADDR -> NC
+#define ADDR_ADC_VDDD     0x4C  // A1-> SCL. A0-> GND
+#define ADDR_ADC_VDDA     0x40  // A1-> GND, A0-> GND
 
 //MAX5215-5217:
 #define NO_OP       0x00
