@@ -73,7 +73,7 @@ int main(int argc, char* argv[]){
   char* word;
   bool err = false;
   while(1) {
-    // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
     
     // collect all complete transfers
     while(dma_desc_cmplt(curr->desc)) {
@@ -84,7 +84,7 @@ int main(int argc, char* argv[]){
     }
     if (curr == prev) continue;
     now = std::chrono::high_resolution_clock::now();
-    printf("DMA_CURR: %p, DMA_TAIL: %p\n",dma_get(dma,DMA_S2MM_CURR_REG), dma_get(dma,DMA_S2MM_TAIL_REG));
+    //printf("DMA_CURR: %p, DMA_TAIL: %p\n",dma_get(dma,DMA_S2MM_CURR_REG), dma_get(dma,DMA_S2MM_TAIL_REG));
     printf("Words: %d, total: %d, rate: %.02fMb/s (%.02fMb/s)\n",
            words,
            total_words,

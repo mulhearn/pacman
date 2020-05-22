@@ -121,7 +121,7 @@ int main(int argc, char* argv[]){
     printf("Receiving message...\n");
     char* msg = (char*)zmq_msg_data(req_msg);
     char* msg_type = get_msg_type(msg);
-    print_msg(msg);
+    //print_msg(msg);
     printf("Message received!\n");    
 
     // only do anything for request messages
@@ -219,7 +219,7 @@ int main(int argc, char* argv[]){
 
     // send reply
     printf("Sending reply...\n");
-    print_msg(reply);
+    //print_msg(reply);
     send_reply(reply, reply_bytes, rep_socket, echo_socket);
     printf("Message sent!\n");
       
