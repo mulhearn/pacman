@@ -70,7 +70,7 @@ CONFIG_busybox-httpd=y
 #
 # dbus 
 #
-# CONFIG_dbus is not set
+CONFIG_dbus=y
 # CONFIG_dbus-lib is not set
 # CONFIG_dbus-dev is not set
 # CONFIG_dbus-dbg is not set
