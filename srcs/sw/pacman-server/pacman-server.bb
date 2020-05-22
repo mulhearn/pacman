@@ -10,11 +10,16 @@ DEPENDS = "zeromq"
 
 SRC_URI = "file://src \
            file://include \
-           file://start-pacman-servers \
+           file://pacman-server.sh \
 	   file://Makefile \
 		  "
+                  
+INITSCRIPT_NAME = "pacman-server"
+INITSCRIPT_PARAMS = "start 99 S ."
 
 S = "${WORKDIR}"
+
+inherit update-rc.d
 
 do_compile() {
 	     oe_runmake
@@ -24,5 +29,8 @@ do_install() {
 	     install -d ${D}${bindir}
 	     install -m 0755 ${S}/pacman-cmdserver ${D}${bindir}
              install -m 0755 ${S}/pacman-dataserver ${D}${bindir}
-	     install -m 0755 ${S}/start-pacman-servers ${D}${bindir}
+             install -d ${D}${sysconfdir}/init.d
+	     install -m 0755 ${S}/pacman-server.sh ${D}${sysconfdir}/init.d/pacman-server
 }
+
+FILES_${PN} += "${sysconfdir}/*"
