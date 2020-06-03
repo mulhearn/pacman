@@ -48,7 +48,8 @@ BEGIN  -- ARCHITECTURE uart_tx_arch
       tx_out <= '1';
       busy_out <= '1';
 
-    elsif (rising_edge(MCLK)) then
+    elsif (falling_edge(MCLK)) then
+    --elsif (rising_edge(MCLK)) then
       case state is
         when IDLE =>
           busy_out <= '0';
