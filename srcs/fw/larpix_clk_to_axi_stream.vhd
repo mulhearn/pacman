@@ -12,7 +12,6 @@ entity larpix_clk_to_axi_stream is
     );
   port (
     -- mclk'd timestamps
-    MCLK : in std_logic;
     TIMESTAMP : in unsigned(31 downto 0) := (others => '0');
     TIMESTAMP_PREV : in unsigned(31 downto 0) := (others => '0');
     TIMESTAMP_SYNC : in std_logic;
