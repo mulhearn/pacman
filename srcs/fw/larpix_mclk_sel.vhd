@@ -3,15 +3,18 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.math_real.all;
 
+library UNISIM;
+use UNISIM.Vcomponents.all;
+
 entity larpix_mclk_sel is
   generic(
     C_ACLK_PERIOD : real := 10.000; -- ns (100MHz)
-    C_AUX_CLK_PERIOD : real := 50.000; -- ns (100MHz)
+    C_AUX_CLK_PERIOD : real := 50.000; -- ns (20MHz)
     C_VCO_MAX_FREQ : real := 1.600; -- Ghz
     C_PFD_MAX_FREQ : real := 0.450; -- Ghz
     C_VCO_MIN_FREQ : real := 0.800; -- Ghz
     C_PFD_MIN_FREQ : real := 0.019; -- Ghz
-    C_MCLK_PERIOD : real := 100.000 -- ns (10MHz)
+    C_MCLK_PERIOD : real := 100.000 -- ns (20MHz)
     );
   port (
     ACLK : in std_logic; -- default clock
@@ -38,7 +41,9 @@ architecture arch_imp of larpix_mclk_sel is
   constant C_PLL1_DIV : real := CEIL(1.000 / C_AUX_CLK_PERIOD / C_PFD_MAX_FREQ);
   constant C_CLKFBOUT0_MULT : real := CEIL(C_VCO_MIN_FREQ * C_ACLK_PERIOD * C_PLL0_DIV);
   constant C_CLKFBOUT1_MULT : real := CEIL(C_VCO_MIN_FREQ * C_AUX_CLK_PERIOD * C_PLL0_DIV);
+  --constant C_MCLK0_DIV : real := C_MCLK_PERIOD / C_ACLK_PERIOD * C_CLKFBOUT0_MULT / C_PLL0_DIV / 2.0;
   constant C_MCLK0_DIV : real := C_MCLK_PERIOD / C_ACLK_PERIOD * C_CLKFBOUT0_MULT / C_PLL0_DIV;
+  --constant C_MCLK1_DIV : real := C_MCLK_PERIOD / C_AUX_CLK_PERIOD * C_CLKFBOUT1_MULT / C_PLL1_DIV / 2.0;
   constant C_MCLK1_DIV : real := C_MCLK_PERIOD / C_AUX_CLK_PERIOD * C_CLKFBOUT1_MULT / C_PLL1_DIV;
 
   attribute ASYNC_REG : string;
@@ -113,7 +118,8 @@ architecture arch_imp of larpix_mclk_sel is
   signal locked_mclk_meta : std_logic_vector(1 downto 0);
   signal locked_mclk_out : std_logic_vector(1 downto 0);
   
-  signal mclk_out : std_logic;
+  signal mclk2x : std_logic := '0';
+  signal mclk_out : std_logic := '0';
 
   attribute ASYNC_REG of clk_sel_mclk0_meta: signal is "TRUE";
   attribute ASYNC_REG of clk_sel_mclk0: signal is "TRUE";
@@ -202,6 +208,7 @@ begin
 
   -- Clock switch
   bufgmux_mclk : BUFGMUX port map(
+--    O => mclk2x,
     O => mclk_out,
     I0 => mclk0,
     I1 => mclk1,
@@ -218,6 +225,15 @@ begin
       clk_sel_mclk0 <= clk_sel_mclk0_meta;
     end if;
   end process;
+--  process (mclk2x, RSTN) is
+--  begin
+--    if (RSTN = '0') then
+--      mclk_out <= '0';
+      
+--    elsif (rising_edge(mclk2x)) then
+--      mclk_out <= not mclk_out;
+--    end if;
+--  end process;
       
   -- Synchronize output signals
   aclk_sync : process (ACLK, RSTN) is
