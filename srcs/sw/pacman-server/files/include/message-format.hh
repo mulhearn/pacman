@@ -29,8 +29,8 @@
 #define WORD_TYPE_ERR       0x45 // E
 
 void      print_msg(char* msg);
-uint32_t  init_msg(char* &msg, const uint16_t &msg_words, const char &msg_type);
-void*     free_msg(char* msg, void*);
+uint32_t  get_msg_bytes(const uint16_t &msg_words);
+uint32_t  init_msg(char* msg, const uint16_t &msg_words, const char &msg_type);
 char*     get_msg_type(char* msg);
 uint16_t* get_msg_words(char* msg);
 uint32_t  get_msg_bytes(char* msg);

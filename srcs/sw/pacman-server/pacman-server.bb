@@ -31,6 +31,7 @@ do_install() {
              install -m 0755 ${S}/pacman-dataserver ${D}${bindir}
              install -d ${D}${sysconfdir}/init.d
 	     install -m 0755 ${S}/pacman-server.sh ${D}${sysconfdir}/init.d/pacman-server
+             install -m 0755 ${S}/pacman-server.sh ${D}${bindir}
 }
 
 FILES_${PN} += "${sysconfdir}/*"

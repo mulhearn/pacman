@@ -24,11 +24,13 @@ void print_msg(char* msg) {
   printf("\tEND\n");
 }
 
-uint32_t init_msg(char* &msg, const uint16_t &msg_words, const char &msg_type) {
-  // Allocates and clears memory for message and sets header n words
-  uint32_t msg_bytes = HEADER_LEN + msg_words * WORD_LEN;
-  msg = new char[msg_bytes];
-  memset(msg, 0, msg_bytes);
+uint32_t get_msg_bytes(const uint16_t &msg_words) {
+  return HEADER_LEN + msg_words * WORD_LEN;
+}
+
+uint32_t init_msg(char* msg, const uint16_t &msg_words, const char &msg_type) {
+  // Creates header for message
+  uint32_t msg_bytes = get_msg_bytes(msg_words);
 
   memcpy(msg, &msg_type, 1);
   uint32_t now = time(NULL);
@@ -36,12 +38,6 @@ uint32_t init_msg(char* &msg, const uint16_t &msg_words, const char &msg_type) {
   memcpy(msg+6, &msg_words, 2);
   //print_msg(msg);
   return msg_bytes;
-}
-
-void* free_msg(char* msg, void*) {
-  // Deallocates memory held for message
-  delete[] msg;
-  return NULL;
 }
 
 char* get_msg_type(char* msg) {
