@@ -5,6 +5,9 @@ use ieee.math_real.all;
 
 entity larpix_uart_tx is
   generic (
+    C_CLK_HZ : integer := 100000000;
+    C_CLKOUT_HZ : integer := 10000000;
+    C_CLKOUT_PHASE : integer := 1;
     C_S_AXIS_TDATA_WIDTH : integer := 128;
     C_LARPIX_DATA_WIDTH : integer := 64;
     C_CHANNEL : std_logic_vector(7 downto 0) := x"FF";
@@ -35,8 +38,6 @@ entity larpix_uart_tx is
 end larpix_uart_tx;
 
 architecture arch_imp of larpix_uart_tx is
-
-  attribute ASYNC_REG : string;
   
   component axi_stream_to_larpix is
     generic (
@@ -63,12 +64,16 @@ architecture arch_imp of larpix_uart_tx is
 
   component uart_tx is
     generic (
+      CLK_HZ : integer := C_CLK_HZ;
+      CLKOUT_HZ : integer := C_CLKOUT_HZ;
+      CLKOUT_PHASE : integer := C_CLKOUT_PHASE;
       DATA_WIDTH : INTEGER := C_LARPIX_DATA_WIDTH
       );
     port (
-      MCLK         : IN  STD_LOGIC;
+      CLK         : IN  STD_LOGIC;
       RST          : IN  STD_LOGIC;
       CLKOUT_RATIO : IN UNSIGNED (7 downto 0);
+      MCLK         : IN STD_LOGIC;
       TX           : OUT STD_LOGIC;
       data         : IN  STD_LOGIC_VECTOR (DATA_WIDTH-1 DOWNTO 0);
       data_update  : IN  STD_LOGIC;
@@ -95,13 +100,6 @@ architecture arch_imp of larpix_uart_tx is
       );
   end component fifo_64x512;
 
-  signal rst_aclk : std_logic;
-  signal rst_mclk_meta : std_logic;
-  signal rst_mclk : std_logic;
-  signal rst_registered_mclk : std_logic;
-  signal rst_registered_aclk_meta : std_logic;
-  signal rst_registered_aclk : std_logic;
-
   signal larpix_update : std_logic;
   signal larpix_data : std_logic_vector ( C_LARPIX_DATA_WIDTH-1 downto 0 );
 
@@ -117,49 +115,9 @@ architecture arch_imp of larpix_uart_tx is
   signal uart_busy : std_logic;
   signal uart_data : std_logic_vector ( C_LARPIX_DATA_WIDTH-1 downto 0 );
 
-  signal uart_clkout_ratio_meta : unsigned (7 downto 0);
-  signal uart_clkout_ratio_mclk : unsigned (7 downto 0);
-
-  attribute ASYNC_REG of rst_aclk: signal is "TRUE";
-  attribute ASYNC_REG of rst_mclk_meta: signal is "TRUE";
-  attribute ASYNC_REG of rst_mclk: signal is "TRUE";
-  attribute ASYNC_REG of rst_registered_mclk: signal is "TRUE";
-  attribute ASYNC_REG of rst_registered_aclk_meta: signal is "TRUE";
-  attribute ASYNC_REG of rst_registered_aclk: signal is "TRUE";
-  attribute ASYNC_REG of uart_clkout_ratio_meta: signal is "TRUE";
-  attribute ASYNC_REG of uart_clkout_ratio_mclk: signal is "TRUE";
-
 begin
   
   UART_TX_BUSY <= uart_busy;
-  
-  -- reset sync (ARESETN streching)
-  -- faster clock
-  aclk_reset_sync : process (ACLK) is
-  begin
-    if (rising_edge(ACLK)) then
-      rst_registered_aclk_meta <= rst_registered_mclk;
-      rst_registered_aclk <= rst_registered_aclk_meta;
-      if (ARESETN = '0' and rst_registered_aclk = '0') then
-        rst_aclk <= '1';
-      elsif (ARESETN = '1' and rst_registered_aclk = '1') then
-        rst_aclk <= '0';
-      end if;
-    end if;
-  end process;
-  -- slower clock
-  mclk_reset_sync : process (MCLK) is
-  begin
-    if (rising_edge(MCLK)) then
-      rst_mclk_meta <= rst_aclk;
-      rst_mclk <= rst_mclk_meta;
-      if (rst_mclk = '1') then
-        rst_registered_mclk <= '1';
-      else
-        rst_registered_mclk <= '0';
-      end if;
-    end if;
-  end process;
 
   -- axi-stream receiver
   axi_stream_to_larpix_inst : axi_stream_to_larpix port map(
@@ -180,9 +138,9 @@ begin
   fifo_rd_en <= (not uart_busy) and (not fifo_empty) and (not fifo_valid);
   fifo_busy <= fifo_full or fifo_almost_full or fifo_wr_ack;
   fifo_64x512_inst : fifo_64x512 port map(
-    rst => rst_aclk,
+    rst => ARESETN,
     wr_clk => ACLK,
-    rd_clk => MCLK,
+    rd_clk => ACLK,
     din => larpix_data,
     wr_en => larpix_update,
     rd_en => fifo_rd_en,
@@ -195,21 +153,12 @@ begin
     wr_data_count => FIFO_COUNT
     );
 
-  -- uart
-  -- sync up clkout ratio (which is presumably on ACLK)
-  mclk_uart_clkout_sync : process (MCLK) is
-  begin
-    if (rising_edge(MCLK)) then
-      uart_clkout_ratio_meta <= CLKOUT_RATIO;
-      uart_clkout_ratio_mclk <= uart_clkout_ratio_meta;
-    end if;
-  end process;
-
   -- drive uart pin
   uart_tx_inst : uart_tx port map(
     MCLK => MCLK,
-    RST => rst_mclk,
-    CLKOUT_RATIO => uart_clkout_ratio_mclk,
+    CLK => ACLK,
+    RST => ARESETN,
+    CLKOUT_RATIO => CLKOUT_RATIO,
     TX => UART_TX_OUT,
     data => uart_data,
     data_update => fifo_valid,
