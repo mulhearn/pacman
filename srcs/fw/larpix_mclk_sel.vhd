@@ -14,7 +14,7 @@ entity larpix_mclk_sel is
     C_PFD_MAX_FREQ : real := 0.450; -- Ghz
     C_VCO_MIN_FREQ : real := 0.800; -- Ghz
     C_PFD_MIN_FREQ : real := 0.019; -- Ghz
-    C_MCLK_PERIOD : real := 100.000 -- ns (20MHz)
+    C_MCLK_PERIOD : real := 100.000 -- ns (10MHz)
     );
   port (
     ACLK : in std_logic; -- default clock
