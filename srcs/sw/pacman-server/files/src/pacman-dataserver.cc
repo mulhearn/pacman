@@ -22,6 +22,12 @@
 #define MAX_MSG_LEN 65535 // words
 #define PUB_SOCKET_BINDING "tcp://*:5556"
 
+volatile bool msg_ready = true;
+
+void clear_msg(void*, void*) {
+    msg_ready = true;
+}
+
 void* restart_dma(uint32_t* dma, uint32_t curr) {
   printf("Restarting DMA...\n");
   dma_set(dma, DMA_S2MM_CTRL_REG, DMA_RST); // reset
@@ -36,11 +42,11 @@ int main(int argc, char* argv[]){
   // create zmq connection
   void* ctx = zmq_ctx_new();
   void* pub_socket = zmq_socket(ctx, ZMQ_PUB);
-  int hwm = 1000;
+  int hwm = 100;
   zmq_setsockopt(pub_socket, ZMQ_SNDHWM, &hwm, sizeof(hwm));
   int linger = 0;
   zmq_setsockopt(pub_socket, ZMQ_LINGER, &linger, sizeof(linger));
-  int timeo = 300;
+  int timeo = 1000;
   zmq_setsockopt(pub_socket, ZMQ_SNDTIMEO, &timeo, sizeof(timeo));
   if (zmq_bind(pub_socket, PUB_SOCKET_BINDING) !=0 ) {
     printf("Failed to bind socket!\n");
@@ -103,12 +109,13 @@ int main(int argc, char* argv[]){
            (std::chrono::duration<double>)total_words/(now-start_time) * LARPIX_PACKET_LEN * 8 / 1e6
            );
     last_time = now;
+    while (!msg_ready) { ; }
 
     // create message
     init_msg(msg_buffer, words, MSG_TYPE_DATA);
     msg_bytes = get_msg_bytes(words);      
 
-    zmq_msg_init_data(pub_msg, msg_buffer, msg_bytes, NULL, NULL);
+    zmq_msg_init_data(pub_msg, msg_buffer, msg_bytes, clear_msg, NULL);
 
     word_idx = 0;
     // copy data into message
@@ -137,8 +144,9 @@ int main(int argc, char* argv[]){
     
     // send message
     //print_msg(msg_buffer);
+    msg_ready = false;    
     if (zmq_msg_send(pub_msg, pub_socket, 0) < 0)
-	printf("Error sending message!\n");
+        printf("Error sending message!\n");
     else
         sent_msgs++;
     //zmq_msg_close(pub_msg);
