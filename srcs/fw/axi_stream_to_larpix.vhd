@@ -44,7 +44,7 @@ architecture arch_imp of axi_stream_to_larpix is
 
   signal buf_srg : std_logic_vector(C_S_AXIS_TDATA_WIDTH-1 downto 0);
   signal buf_index : integer range C_S_AXIS_TDATA_WIDTH/8-1 downto 0;
-  signal srg : std_logic_vector(C_S_AXIS_TDATA_WIDTH-1 downto 0);
+  signal srg : std_logic_vector(C_S_AXIS_TDATA_WIDTH*2-1 downto 0);
   signal srg_bytes : integer range C_S_AXIS_TDATA_WIDTH/8 downto 0;
   signal keep_srg : std_logic_vector((C_S_AXIS_TDATA_WIDTH/8)-1 downto 0);
   
@@ -57,6 +57,8 @@ begin
 
   -- Control state machine implementation
   process (S_AXIS_ACLK) is
+  variable word_start : integer;
+  variable word_end   : integer;
   begin
     if (rising_edge(S_AXIS_ACLK)) then
       if (S_AXIS_ARESETN = '0') then
@@ -93,7 +95,7 @@ begin
             
             -- pack bytes
             if (keep_srg(0) = '1') then
-              srg <= buf_srg(7 downto 0) & srg(C_S_AXIS_TDATA_WIDTH-1 downto 8);
+              srg <= buf_srg(7 downto 0) & srg(C_S_AXIS_TDATA_WIDTH*2-1 downto 8);
               srg_bytes <= srg_bytes + 1;
             end if;            
 
@@ -103,15 +105,17 @@ begin
 
           when RX_DONE =>
             -- complete word packed
+            word_start := srg'length - srg_bytes*8;
+            word_end   := word_start + C_S_AXIS_TDATA_WIDTH - 1;
             if (srg_bytes >= C_S_AXIS_TDATA_WIDTH/8) then
-              if ((srg(7 downto 0) = C_DATA_TYPE(7 downto 0))
-                  and (srg(15 downto 8) = C_CHANNEL(7 downto 0) or srg(15 downto 8) = x"FF")) then
-                data_out(C_LARPIX_DATA_WIDTH-1 downto 0) <= srg(C_S_AXIS_TDATA_WIDTH-1 downto C_S_AXIS_TDATA_WIDTH-C_LARPIX_DATA_WIDTH);
+              srg_bytes <= srg_bytes - C_S_AXIS_TDATA_WIDTH/8;
+              if ((srg(word_start + 7 downto word_start) = C_DATA_TYPE(7 downto 0))
+                  and (srg(word_start + 15 downto word_start + 8) = C_CHANNEL(7 downto 0)
+                  or srg(word_start + 15 downto word_start + 8) = x"FF")) then
+                data_out(C_LARPIX_DATA_WIDTH-1 downto 0) <= srg(word_end downto word_end - C_LARPIX_DATA_WIDTH + 1);
                 mst_exec_state <= TX_WAIT;
-                srg_bytes <= 0;
               else
                 mst_exec_state <= IDLE;
-                srg_bytes <= 0;
               end if;
             -- for partial words don't reset srg_bytes
             else

@@ -100,6 +100,8 @@ architecture arch_imp of larpix_uart_tx is
       );
   end component fifo_64x512;
 
+  signal rst : std_logic;
+
   signal larpix_update : std_logic;
   signal larpix_data : std_logic_vector ( C_LARPIX_DATA_WIDTH-1 downto 0 );
 
@@ -118,6 +120,7 @@ architecture arch_imp of larpix_uart_tx is
 begin
   
   UART_TX_BUSY <= uart_busy;
+  rst <= not ARESETN;
 
   -- axi-stream receiver
   axi_stream_to_larpix_inst : axi_stream_to_larpix port map(
@@ -138,7 +141,7 @@ begin
   fifo_rd_en <= (not uart_busy) and (not fifo_empty) and (not fifo_valid);
   fifo_busy <= fifo_full or fifo_almost_full or fifo_wr_ack;
   fifo_64x512_inst : fifo_64x512 port map(
-    rst => ARESETN,
+    rst => rst,
     wr_clk => ACLK,
     rd_clk => ACLK,
     din => larpix_data,
@@ -157,7 +160,7 @@ begin
   uart_tx_inst : uart_tx port map(
     MCLK => MCLK,
     CLK => ACLK,
-    RST => ARESETN,
+    RST => rst,
     CLKOUT_RATIO => CLKOUT_RATIO,
     TX => UART_TX_OUT,
     data => uart_data,

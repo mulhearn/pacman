@@ -41,7 +41,7 @@ ARCHITECTURE uart_tx_arch OF uart_tx IS
   signal baud_cnt : unsigned(7 downto 0) := (others => '0');
   signal bit_cnt : unsigned(DATA_WIDTH+2 downto 0) := (others => '0');
 
-  TYPE state_type IS (IDLE, WT, SHIFT);
+  TYPE state_type IS (IDLE, WT, DELAY, SHIFT);
   SIGNAL state : state_type := IDLE;
 
   SIGNAL srg : STD_LOGIC_VECTOR (DATA_WIDTH+1 DOWNTO 0);
@@ -77,7 +77,7 @@ BEGIN  -- ARCHITECTURE uart_tx_arch
         when IDLE =>
           busy_out <= '0';
           srg <= '1' & data & '0';
-          if (data_update = '1' and mclk_sync = '1' and mclk_prev = '0') then
+          if (data_update = '1') then
             state <= WT;
             busy_out <= '1';
             bit_cnt <= to_unsigned(DATA_WIDTH + 2, bit_cnt'length);
@@ -86,6 +86,13 @@ BEGIN  -- ARCHITECTURE uart_tx_arch
           end if;
 
         when WT =>
+          -- sync with mclk rising edge
+          busy_out <= '1';
+          if (mclk_sync = '1' and mclk_prev = '0') then
+             state <= DELAY;
+          end if;
+
+        when DELAY =>
           -- delay relative to mclk rising edge
           busy_out <= '1';
           if (phase_cnt > 0) then 
@@ -96,6 +103,7 @@ BEGIN  -- ARCHITECTURE uart_tx_arch
           
         when SHIFT =>
           -- shift bits
+          busy_out <= '1';
           if (baud_cnt = 0) then
             tx_out <= srg(0);
             srg <= '1' & srg(DATA_WIDTH+1 DOWNTO 1);

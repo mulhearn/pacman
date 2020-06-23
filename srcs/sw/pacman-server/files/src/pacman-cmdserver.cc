@@ -125,6 +125,7 @@ int main(int argc, char* argv[]){
     
     // respond to each word in message
     uint16_t* msg_words = get_msg_words(msg);
+    printf("Requested %d actions\n",*msg_words);
     uint32_t reply_bytes = get_msg_bytes(*msg_words);
 
     zmq_msg_init_size(rep_msg, reply_bytes);
@@ -140,7 +141,7 @@ int main(int argc, char* argv[]){
       case WORD_TYPE_PING: {
 	// ping-pong
 	set_rep_word_pong(reply_word);
-        printf("PING\n");        
+        //printf("PING\n");        
 	break;
       }
       
@@ -159,7 +160,7 @@ int main(int argc, char* argv[]){
         } else {
           set_rep_word_err(reply_word, NULL, NULL);
         }
-        printf("WRITE: 0x%08x 0x%08x\n",*reg,*val);
+        //printf("WRITE: 0x%08x 0x%08x\n",*reg,*val);
         break;
       }
       
@@ -176,7 +177,7 @@ int main(int argc, char* argv[]){
         } else {
           set_rep_word_err(reply_word, NULL, NULL);
         }
-        printf("READ: 0x%08x 0x%08x\n",*reg,val);
+        //printf("READ: 0x%08x 0x%08x\n",*reg,val);
         break;
       }
 
@@ -193,13 +194,13 @@ int main(int argc, char* argv[]){
 	curr = curr->next;
 
 	set_rep_word_tx(reply_word, io_channel, data);
-        printf("TX: %d 0x%016x\n",*io_channel,*data);
+        //printf("TX: %d 0x%016x\n",*io_channel,*data);
 	break;
       }
 
       default: 
 	// unknown command
-        printf("UNKNOWN\n");
+        printf("UNKNOWN COMMAND\n");
 	set_rep_word_err(reply_word, NULL, NULL);
       }
     }

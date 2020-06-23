@@ -82,16 +82,40 @@ architecture tb of uart_loopback_tb is
   signal M_AXIS_TSTRB_OUT : std_logic_vector(15 downto 0);
   signal M_AXIS_TLAST_OUT : std_logic;
 
-  constant tx_msgs : integer := 4;
+  constant tx_msgs : integer := 16;
   type tx_data_array is array (tx_msgs-1 downto 0) of std_logic_vector(127 downto 0);
   constant tx_data : tx_data_array := (
-    x"99887766554433220000000000000000",
-    x"0000000000000000010203040506FF44",
-    x"08070605040302010102030405060044",
-    x"8877665544332211010203040506FF44" -- first tx
+    x"B00000000000000000000000FFFFFFFF",
+    x"0000FF44A00000000000000000000000",
+    x"FFFFFFFFFFFFFFFFFFFFFFFF0000FF44",
+    x"9000000000000000000000000000FF44",
+    x"8000000000000000000000000000FF44",
+    x"7000000000000000000000000000FF44",
+    x"6000000000000000000000000000FF44",
+    x"5000000000000000000000000000FF44",
+    x"4000000000000000000000000000FF44",
+    x"3000000000000000000000000000FF44",
+    x"2000000000000000000000000000FF44",
+    x"1000000000000000000000000000FF44",
+    x"0000000000000000FFFFFFFFFFFFFFFF",
+    x"FFFFFFFFFFFFFFFF000000000000FF44", -- check squash logic
+    x"FFFFFFFFFFFFFFFFFFFFFFFFFFFF0044", -- skip this one
+    x"F000000000000000000000000000FF44" -- first tx
     );
   type tx_keep_array is array (tx_msgs-1 downto 0) of std_logic_vector(15 downto 0);
   constant tx_keep : tx_keep_array := (
+    x"FFF0",
+    x"FFFF",
+    x"000F",
+    x"FFFF",
+    x"FFFF",
+    x"FFFF",
+    x"FFFF",
+    x"FFFF",
+    x"FFFF",
+    x"FFFF",
+    x"FFFF",
+    x"FFFF",
     x"FF00",
     x"00FF",
     x"FFFF",

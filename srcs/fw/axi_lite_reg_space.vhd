@@ -256,7 +256,7 @@ begin
 
   -- Read data latch (RDATA)
   slv_reg_rden <= axi_arready and S_AXI_LITE_ARVALID and (not axi_rvalid) ;
-  process (slv_reg0, slv_reg1, slv_reg2, slv_reg3, axi_araddr, S_AXI_LITE_ARESETN, slv_reg_rden)
+  process (slv_reg0, slv_reg1, slv_reg2, slv_reg3, axi_araddr, S_AXI_LITE_ARESETN, slv_reg_rden, RO_REG0, RO_REG1, RO_REG2, RO_REG3)
   variable loc_addr :std_logic_vector(11 downto 0);
   begin
       loc_addr := axi_araddr(11 downto 0);
