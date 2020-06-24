@@ -52,6 +52,9 @@ void send_reply(zmq_msg_t* rep_msg, zmq_msg_t* echo_msg, void* rep_socket, void*
 
   zmq_msg_send(echo_msg, echo_socket, 0);
   zmq_msg_send(rep_msg, rep_socket, 0);
+
+  zmq_msg_close(echo_msg);
+  zmq_msg_close(rep_msg);
 }
   
 
@@ -216,7 +219,7 @@ int main(int argc, char* argv[]){
     send_reply(rep_msg, echo_msg, rep_socket, echo_socket);
     printf("Reply sent!\n");
       
-    // clear messages
+    zmq_msg_close(req_msg);
   }
   return 0;
 }
