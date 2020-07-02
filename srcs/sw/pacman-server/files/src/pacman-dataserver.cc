@@ -72,9 +72,10 @@ int main(int argc, char* argv[]){
   }
   printf("DMA started\n");
 
-  auto start_time = std::chrono::high_resolution_clock::now();
+  auto start_time = std::chrono::high_resolution_clock::now().time_since_epoch();
   auto last_time  = start_time;
   auto now = start_time;
+  auto last_sent_msg = now;  
   uint64_t total_words = 0;
   uint32_t words = 0;
   uint32_t msg_bytes;
@@ -98,7 +99,7 @@ int main(int argc, char* argv[]){
     }
     if (curr == prev) continue;
     total_words += words;
-    now = std::chrono::high_resolution_clock::now();
+    now = std::chrono::high_resolution_clock::now().time_since_epoch();
     //printf("DMA_CURR: %p, DMA_TAIL: %p\n",dma_get(dma,DMA_S2MM_CURR_REG), dma_get(dma,DMA_S2MM_TAIL_REG));
     printf("\n");
     printf("New data available\n");
@@ -109,7 +110,7 @@ int main(int argc, char* argv[]){
            (std::chrono::duration<double>)total_words/(now-start_time) * LARPIX_PACKET_LEN * 8 / 1e6
            );
     last_time = now;
-    while (!msg_ready) { ; }
+    while (!msg_ready && (std::chrono::high_resolution_clock::now().time_since_epoch() < last_sent_msg + std::chrono::milliseconds(timeo))) { ; }
 
     // create message
     init_msg(msg_buffer, words, MSG_TYPE_DATA);
@@ -149,7 +150,8 @@ int main(int argc, char* argv[]){
         printf("Error sending message!\n");
     else
         sent_msgs++;
-    //zmq_msg_close(pub_msg);
+    last_sent_msg = std::chrono::high_resolution_clock::now().time_since_epoch();
+    zmq_msg_close(pub_msg);
 
     printf("Data messages sent: %d\n", sent_msgs);
     sent_msgs = 0;
