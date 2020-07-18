@@ -59,7 +59,8 @@ architecture arch_imp of uart_channel is
     ARESETN : in STD_LOGIC;
     MCLK : in STD_LOGIC;
     UART_TX_OUT : out STD_LOGIC;
-    CLKOUT_RATIO : in UNSIGNED ( 7 downto 0 );
+    CLKOUT_RATIO : in STD_LOGIC_VECTOR ( 7 downto 0 );
+    CLKOUT_PHASE : in STD_LOGIC_VECTOR ( 3 downto 0 );    
     FIFO_COUNT : out STD_LOGIC_VECTOR ( 8 downto 0 );
     UART_TX_BUSY : out STD_LOGIC;
     S_AXIS_TREADY : out STD_LOGIC;
@@ -79,7 +80,7 @@ architecture arch_imp of uart_channel is
     ACLK : in STD_LOGIC;
     ARESETN : in STD_LOGIC;
     MCLK : in STD_LOGIC;
-    CLKIN_RATIO : in UNSIGNED ( 7 downto 0 );
+    CLKIN_RATIO : in STD_LOGIC_VECTOR ( 7 downto 0 );
     PACMAN_TS : in UNSIGNED ( 31 downto 0 );
     UART_RX_IN : in STD_LOGIC;
     UART_RX_BUSY : out STD_LOGIC;
@@ -97,7 +98,7 @@ architecture arch_imp of uart_channel is
     C_S_AXI_LITE_DATA_WIDTH : integer := 32;
     C_S_AXI_LITE_ADDR_WIDTH : integer := 32;
     C_RW_REG0_DEFAULT : std_logic_vector(31 downto 0) := x"00000002";
-    C_RW_REG1_DEFAULT : std_logic_vector(31 downto 0) := x"00000000";
+    C_RW_REG1_DEFAULT : std_logic_vector(31 downto 0) := x"00000001";
     C_RW_REG2_DEFAULT : std_logic_vector(31 downto 0) := x"00000000";
     C_RW_REG3_DEFAULT : std_logic_vector(31 downto 0) := x"00000000";
     C_RO_REG0_OFFSET : std_logic_vector(11 downto 0) := x"000";
@@ -182,7 +183,8 @@ architecture arch_imp of uart_channel is
   signal larpix_uart_rx_0_M_AXIS_TVALID : STD_LOGIC;
   signal larpix_uart_tx_0_FIFO_COUNT : STD_LOGIC_VECTOR ( 8 downto 0 );
   signal larpix_uart_tx_0_UART_TX_OUT : STD_LOGIC;
-  signal CLKIN_RATIO_1 : UNSIGNED ( 7 downto 0 );
+  signal CLKIN_RATIO_1 : std_logic_vector ( 7 downto 0 );
+  signal CLKOUT_PHASE : std_logic_vector ( 3 downto 0 );  
   signal RW_REG0 : std_logic_vector (31 downto 0);
   signal RW_REG1 : std_logic_vector (31 downto 0);
   signal RW_REG2 : std_logic_vector (31 downto 0);
@@ -227,14 +229,15 @@ begin
   UART_RX_1 <= UART_RX;
   UART_TX <= larpix_uart_tx_0_UART_TX_OUT;
   larpix_uart_rx_0_M_AXIS_TREADY <= M_AXIS_tready;
-  CLKIN_RATIO_1(7 downto 0) <= unsigned(RW_REG0(7 downto 0));
+  CLKIN_RATIO_1(7 downto 0) <= RW_REG0(7 downto 0);
+  CLKOUT_PHASE(3 downto 0) <= RW_REG1(3 downto 0);
 
   axi_lite_reg_space_0 : axi_lite_reg_space
      port map (
       s_AXI_LITE_ACLK => ACLK_1,
       S_AXI_LITE_ARESETN => ARESETN_1,
       RW_REG0(31 downto 0) => RW_REG0(31 downto 0),
-      RW_REG1 => open,
+      RW_REG1 => RW_REG1(31 downto 0),
       RW_REG2 => open,
       RW_REG3 => open,      
       RO_REG0(8 downto 0) => larpix_uart_tx_0_FIFO_COUNT(8 downto 0),
@@ -286,6 +289,7 @@ begin
       ACLK => ACLK_1,
       ARESETN => ARESETN_1,
       CLKOUT_RATIO(7 downto 0) => CLKIN_RATIO_1(7 downto 0),
+      CLKOUT_PHASE(3 downto 0) => CLKOUT_PHASE(3 downto 0),      
       FIFO_COUNT(8 downto 0) => larpix_uart_tx_0_FIFO_COUNT(8 downto 0),
       MCLK => MCLK_1,
       S_AXIS_TDATA(127 downto 0) => S_AXIS_1_TDATA(127 downto 0),

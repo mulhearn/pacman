@@ -19,7 +19,7 @@ entity larpix_uart_rx is
 
     -- uart
     MCLK : in std_logic;
-    CLKIN_RATIO : in unsigned (7 downto 0);
+    CLKIN_RATIO : in std_logic_vector (7 downto 0);
     PACMAN_TS : in unsigned (31 downto 0);
     UART_RX_IN : in std_logic;
     UART_RX_BUSY : out std_logic;
@@ -73,7 +73,7 @@ architecture arch_imp of larpix_uart_rx is
     port (
       CLK         : IN  STD_LOGIC;
       RST         : IN  STD_LOGIC;
-      CLKIN_RATIO : IN  UNSIGNED (7 DOWNTO 0);
+      CLKIN_RATIO : IN  STD_LOGIC_VECTOR (7 DOWNTO 0);
 
       RX          : IN  STD_LOGIC;
 

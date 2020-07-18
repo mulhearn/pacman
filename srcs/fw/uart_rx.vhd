@@ -13,7 +13,7 @@ ENTITY uart_rx IS
    PORT (
       CLK         : IN  STD_LOGIC;
       RST         : IN  STD_LOGIC;
-      CLKIN_RATIO : IN  UNSIGNED (7 DOWNTO 0);
+      CLKIN_RATIO : IN  STD_LOGIC_VECTOR (7 DOWNTO 0);
       -- UART RX
       RX          : IN  STD_LOGIC;
       -- received data
@@ -65,7 +65,7 @@ BEGIN  -- ARCHITECTURE uart_rx_arch
         
       ELSIF CLK'EVENT AND CLK = '1' THEN  -- rising clock edge
          data_update <= '0';
-         bit_length  <= CLK_LENGTH * to_integer(CLKIN_RATIO);
+         bit_length  <= CLK_LENGTH * to_integer(unsigned(CLKIN_RATIO));
          
          CASE state IS
             WHEN IDLE =>

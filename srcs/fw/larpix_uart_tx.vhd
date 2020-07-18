@@ -7,7 +7,6 @@ entity larpix_uart_tx is
   generic (
     C_CLK_HZ : integer := 100000000;
     C_CLKOUT_HZ : integer := 10000000;
-    C_CLKOUT_PHASE : integer := 1;
     C_S_AXIS_TDATA_WIDTH : integer := 128;
     C_LARPIX_DATA_WIDTH : integer := 64;
     C_CHANNEL : std_logic_vector(7 downto 0) := x"FF";
@@ -23,7 +22,8 @@ entity larpix_uart_tx is
     -- uart
     MCLK : in std_logic;
     UART_TX_OUT : out std_logic;
-    CLKOUT_RATIO : in unsigned (7 downto 0);
+    CLKOUT_RATIO : in std_logic_vector (7 downto 0);
+    CLKOUT_PHASE : in std_logic_vector (3 downto 0);    
     FIFO_COUNT : out std_logic_vector (C_FIFO_COUNT_WIDTH-1 downto 0);
     UART_TX_BUSY : out std_logic;
     
@@ -66,13 +66,13 @@ architecture arch_imp of larpix_uart_tx is
     generic (
       CLK_HZ : integer := C_CLK_HZ;
       CLKOUT_HZ : integer := C_CLKOUT_HZ;
-      CLKOUT_PHASE : integer := C_CLKOUT_PHASE;
       DATA_WIDTH : INTEGER := C_LARPIX_DATA_WIDTH
       );
     port (
       CLK         : IN  STD_LOGIC;
       RST          : IN  STD_LOGIC;
-      CLKOUT_RATIO : IN UNSIGNED (7 downto 0);
+      CLKOUT_RATIO : IN  STD_LOGIC_VECTOR (7 downto 0);
+      CLKOUT_PHASE : IN  STD_LOGIC_VECTOR (3 downto 0);
       MCLK         : IN STD_LOGIC;
       TX           : OUT STD_LOGIC;
       data         : IN  STD_LOGIC_VECTOR (DATA_WIDTH-1 DOWNTO 0);
@@ -162,6 +162,7 @@ begin
     CLK => ACLK,
     RST => rst,
     CLKOUT_RATIO => CLKOUT_RATIO,
+    CLKOUT_PHASE => CLKOUT_PHASE,    
     TX => UART_TX_OUT,
     data => uart_data,
     data_update => fifo_valid,

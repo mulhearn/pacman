@@ -8,13 +8,13 @@ ENTITY uart_tx IS
   GENERIC (
     CLK_HZ : INTEGER := 100000000;
     CLKOUT_HZ : INTEGER := 10000000;
-    CLKOUT_PHASE : INTEGER := 1;
     DATA_WIDTH   : INTEGER
     );
   PORT (
     CLK          : IN  STD_LOGIC;
     RST          : IN  STD_LOGIC;
-    CLKOUT_RATIO : IN  UNSIGNED (7 downto 0);
+    CLKOUT_RATIO : IN  STD_LOGIC_VECTOR (7 downto 0);
+    CLKOUT_PHASE : IN  STD_LOGIC_VECTOR (3 downto 0);    
     -- UART TX
     MCLK        : IN  STD_LOGIC;
     TX          : OUT STD_LOGIC;
@@ -37,7 +37,7 @@ ARCHITECTURE uart_tx_arch OF uart_tx IS
   signal mclk_sync : std_logic;
   signal mclk_prev : std_logic;
 
-  signal phase_cnt : unsigned(7 downto 0) := (others => '0');
+  signal phase_cnt : unsigned(3 downto 0) := (others => '0');
   signal baud_cnt : unsigned(7 downto 0) := (others => '0');
   signal bit_cnt : unsigned(DATA_WIDTH+2 downto 0) := (others => '0');
 
@@ -82,7 +82,7 @@ BEGIN  -- ARCHITECTURE uart_tx_arch
             busy_out <= '1';
             bit_cnt <= to_unsigned(DATA_WIDTH + 2, bit_cnt'length);
             baud_cnt <= to_unsigned(0, baud_cnt'length);
-            phase_cnt <= to_unsigned(CLKOUT_PHASE, phase_cnt'length);
+            phase_cnt <= unsigned(CLKOUT_PHASE);
           end if;
 
         when WT =>
@@ -114,7 +114,7 @@ BEGIN  -- ARCHITECTURE uart_tx_arch
               
             -- reset baud counter, increment bit counter
             else
-              baud_cnt <= to_unsigned(to_integer(CLKOUT_RATIO) * BIT_LEN, baud_cnt'length) - 1;
+              baud_cnt <= to_unsigned(to_integer(unsigned(CLKOUT_RATIO)) * BIT_LEN, baud_cnt'length) - 1;
               bit_cnt <= bit_cnt - 1;
             end if;
             
