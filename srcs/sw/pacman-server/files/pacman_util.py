@@ -1,9 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 '''
 A lightweight, standalone python script to interface with the pacman servers
 See help text for more details::
 
-    python3 pacman_util.py --help
+    python2 pacman_util.py --help
 
 '''
 import zmq

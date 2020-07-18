@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 '''
 A simple program that mimic the basic PACMAN server functionality, useful to
 test interfacing with the PACMAN board
