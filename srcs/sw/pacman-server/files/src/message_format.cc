@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <iostream>
 
-#include "message-format.hh"
+#include "message_format.hh"
 
 void print_msg(char* msg) {
   uint16_t *msg_words = get_msg_words(msg);

@@ -14,10 +14,10 @@
 #include <zmq.h>
 #include <ctime>
 
-#include "fw-addr-conf.hh"
+#include "addr_conf.hh"
 #include "dma.hh"
 #include "larpix.hh"
-#include "message-format.hh"
+#include "message_format.hh"
 
 #define MAX_MSG_LEN 65535 // words
 #define PUB_SOCKET_BINDING "tcp://*:5556"

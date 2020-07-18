@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-#include "fw-addr-conf.hh"
+#include "addr_conf.hh"
 
 //I2C peripherals:
 #define ADDR_ADC_VPLUS    0x48

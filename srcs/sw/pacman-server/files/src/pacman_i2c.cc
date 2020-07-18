@@ -9,7 +9,7 @@
 #include <fcntl.h>
 #include <string.h>
 
-#include "pacman-i2c.hh"
+#include "pacman_i2c.hh"
 
 int i2c_open(char* dev) {
     // open i2c device

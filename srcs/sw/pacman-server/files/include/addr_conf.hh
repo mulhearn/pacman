@@ -1,5 +1,5 @@
-#ifndef fw_addr_conf_hh
-#define fw_addr_conf_hh
+#ifndef addr_conf_hh
+#define addr_conf_hh
 
 /* ~~~ start PACMAN-PL interface ~~~ */
 

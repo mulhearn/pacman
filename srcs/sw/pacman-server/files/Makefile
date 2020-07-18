@@ -1,5 +1,5 @@
-APP := pacman-cmdserver
-APP += pacman-dataserver
+APP := pacman_cmdserver
+APP += pacman_dataserver
 
 INCLUDE_DIR := include
 SRC_DIR := src

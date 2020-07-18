@@ -9,23 +9,23 @@ dac_config() {
 }
 
 launch_cmdserver () {
-  echo "Launching pacman-cmdserver..."
-  nohup /usr/bin/pacman-cmdserver >> /dev/null &
+  echo "Launching command server..."
+  nohup /usr/bin/pacman_cmdserver >> /dev/null &
 }
 
 stop_cmdserver () {
-  echo "Stopping pacman-cmdserver..."
-  killall pacman-cmdserver  
+  echo "Stopping command server..."
+  killall pacman_cmdserver  
 }
 
 launch_dataserver () {
-  echo "Launching pacman-dataserver..."
-  nohup /usr/bin/pacman-dataserver >> /dev/null &
+  echo "Launching data server..."
+  nohup /usr/bin/pacman_dataserver >> /dev/null &
 }
 
 stop_dataserver () {
-  echo "Stopping pacman-dataserver..."
-  killall pacman-dataserver  
+  echo "Stopping dataserver..."
+  killall pacman_dataserver  
 }
 
 

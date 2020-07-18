@@ -13,12 +13,12 @@
 #include <zmq.h>
 #include <cerrno>
 
-#include "fw-addr-conf.hh"
+#include "addr_conf.hh"
 #include "dma.hh"
-#include "message-format.hh"
+#include "message_format.hh"
 #include "larpix.hh"
 #include "pacman.hh"
-#include "pacman-i2c.hh"
+#include "pacman_i2c.hh"
 
 #define REP_SOCKET_BINDING "tcp://*:5555"
 #define ECHO_SOCKET_BINDING "tcp://*:5554"
