@@ -10,10 +10,13 @@ import zmq
 import struct
 import time
 import argparse
+import sys
 
-ECHO_SERVER = 'tcp://{ip}:5554'
-CMD_SERVER = 'tcp://{ip}:5555'
-DATA_SERVER = 'tcp://{ip}:5556'
+_SERVERS = dict(
+    ECHO_SERVER = 'tcp://{ip}:5554',
+    CMD_SERVER = 'tcp://{ip}:5555',
+    DATA_SERVER = 'tcp://{ip}:5556'
+    )
 
 HEADER_LEN = 8
 WORD_LEN = 16
@@ -62,7 +65,7 @@ def _verbose(func):
         ws = '\t'*_depth
         if _VERBOSE:
             print(ws+'call: '+repr(func.__name__))
-            args_string = ' '.join([repr(val) for val in list(args) + kwargs.items()])
+            args_string = ' '.join([repr(val) for val in list(args) + list(kwargs.items())])
             print(ws+'args: '+args_string)
         _depth += 1
         rv = func(*args, **kwargs)
@@ -148,57 +151,65 @@ def main(**kwargs):
             data_socket.setsockopt(*opt)
             echo_socket.setsockopt(*opt)
 
-        # connect to pacman server
-        connection = None
-        socket = None
-        if any([kwargs[key] for key in ('ping','write','read','tx')]):
-            connection = CMD_SERVER.format(**kwargs)
-            socket = cmd_socket
-        elif kwargs['rx']:
-            connection = DATA_SERVER.format(**kwargs)
-            socket = data_socket
-        elif kwargs['listen']:
-            connection = ECHO_SERVER.format(**kwargs)
-            socket = echo_socket
-        print('connect to server @ {}...'.format(connection))
-        socket.connect(connection)
+        for command,args in sorted(list(kwargs.items())):
+            if not args: continue
+            if not command in ('ping','write','read','tx', 'rx', 'listen'): continue
+            
+            # connect to pacman server
+            connection = None
+            socket = None
+            server = None
+            if command in ('ping','write','read','tx'):
+                server = 'CMD_SERVER'
+                socket = cmd_socket
+            elif command == 'rx':
+                server = 'DATA_SERVER'
+                socket = data_socket
+            elif command == 'listen':
+                server = 'ECHO_SERVER'
+                socket = echo_socket
+            connection = _SERVERS[server].format(**kwargs)
+            print('connect to {} @ {}...'.format(server, connection))
+            socket.connect(connection)
 
-        # run routine
-        # data server interfacing
-        if kwargs['rx'] or kwargs['listen']:
-            socket.setsockopt(zmq.SUBSCRIBE, b'')
-            max_messages = -1
-            if kwargs['rx']: max_messages = kwargs['rx'][0]
-            elif kwargs['listen']: max_messages = kwargs['listen'][0]
-            msg_counter = 0
-            while max_messages < 0 or msg_counter < max_messages:
-                msg = socket.recv()
-                print_msg(msg)
-                msg_counter += 1
-                print('message count {}'.format(msg_counter))
-            socket.setsockopt(zmq.UNSUBSCRIBE, b'')
+            # run routine
+            # data server interfacing
+            if command in ('rx','listen'):
+                for max_messages in args:
+                    socket.setsockopt(zmq.SUBSCRIBE, b'')
+                    msg_counter = 0
+                    while max_messages[0] < 0 or msg_counter < max_messages[0]:
+                        msg = socket.recv()
+                        print_msg(msg)
+                        msg_counter += 1
+                        print('message count {}/{}'.format(msg_counter, max_messages[0]))
+                    socket.setsockopt(zmq.UNSUBSCRIBE, b'')
 
-        # command server interfacing
-        else:
-            msg = None
+            # command server interfacing
+            else:
+                msg = None
 
-            if kwargs['ping']:
-                msg = format_msg('REQUEST',[('PING',)])
-            elif kwargs['write']:
-                msg = format_msg('REQUEST', [['WRITE']+kwargs['write']])
-            elif kwargs['read']:
-                msg = format_msg('REQUEST', [['READ']+kwargs['read']+[0]])
-            elif kwargs['tx']:
-                msg = format_msg('REQUEST', [['DATA'] + [kwargs['tx'][0], 0, kwargs['tx'][-1]]])
+                if command == 'ping':
+                    msg = format_msg('REQUEST',[['PING'] for arg in args])
+                elif command == 'write':
+                    msg = format_msg('REQUEST', [['WRITE'] + arg for arg in args])
+                elif command == 'read':
+                    msg = format_msg('REQUEST', [['READ', arg[0], 0] for arg in args])
+                elif command == 'tx':
+                    msg = format_msg('REQUEST', [['DATA', arg[0], 0, arg[-1]] for arg in args])
 
-            if msg:
-                print_msg(msg)
-                socket.send(msg)
-                reply = socket.recv()
-                print_msg(reply)
+                if msg:
+                    print_msg(msg)
+                    socket.send(msg)
+                    reply = socket.recv()
+                    print_msg(reply)
+
+            print('disconnect from {} @ {}...'.format(server, connection))
+            socket.disconnect(connection)
 
     except Exception as err:
         # handle timeouts
+        print('closing sockets')
         if isinstance(err,zmq.error.Again):
             print('timed out')
         else:
@@ -222,37 +233,47 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='''
         A stand-alone utility script to control the PACMAN. To use, indicate
-        which action to take via a control flag (one of --ping,
+        which action(s) to take via by specifying control flags (one of --ping,
         --write, --read, --tx, --rx, or --listen) followed by the necessary data to
         complete the command, described in more detail below. Data can be
-        specified in hex, binary, or base-10.
+        specified in hex, binary, or base-10. Multiple flags can be specified to
+        perform an action more than once, e.g. to read from register 0x0 and then 0x1:
+        --read 0x0 --read 0x1.
         ''')
     parser.add_argument('-v','--verbose', action='store_true')
-    parser.add_argument('--ip', default='127.0.0.1', help='''
-        ip address of PACMAN (default=%(default)s)
-        ''')
-    parser.add_argument('-t','--timeout', type=_int_parser, default=11, help='''
-        timeout in seconds for server response (default=%(default)ss)
-        ''')
-    parser.add_argument('--ping', action='store_true', help='''
-        pings command server and prints response
-        ''')
-    parser.add_argument('--write', nargs=2, type=_int_parser, default=None, help='''
-        write a value to a pacman register, args: <address> <value>
-        ''')
-    parser.add_argument('--read', nargs=1, type=_int_parser, default=None, help='''
-        read a pacman register, args: <address>
-        ''')
-    parser.add_argument('--tx', nargs=2, type=_int_parser, default=None, help='''
-        transmit a larpix message on a uart channel (channel 255 is broadcast),
-        args: <channel> <64-bit word>
-        ''')
-    parser.add_argument('--rx', nargs=1, type=_int_parser, default=None, help='''
-        prints data server messages to stdout, args: <n msgs, -1 for no limit>
-        ''')
-    parser.add_argument('--listen', nargs=1, type=_int_parser, default=None, help='''
-        print handled pacman command server messages to stdout, args: <n msgs, -1 for no limit>
-        ''')
+    parser.add_argument('--ip', default='127.0.0.1',
+                        help='''
+                        ip address of PACMAN (default=%(default)s)
+                        ''')
+    parser.add_argument('-t','--timeout', type=_int_parser, default=11,
+                        help='''
+                        timeout in seconds for server response (default=%(default)ss)
+                        ''')
+    
+    parser.add_argument('--ping', action='append_const', const=True,
+                        help='''
+                        pings command server and prints response
+                        ''')
+    parser.add_argument('--write', nargs=2, type=_int_parser,
+                        action='append', metavar=('ADDR','VAL'), help='''
+                        write a value to a pacman register
+                        ''')
+    parser.add_argument('--read', nargs=1, type=_int_parser,
+                        action='append', metavar=('ADDR'), help='''
+                        read a pacman register
+                        ''')
+    parser.add_argument('--tx', nargs=2, type=_int_parser,
+                        action='append', metavar=('CHANNEL','WORD'), help='''
+                        transmit a larpix message on a uart channel (channel 255 is broadcast)
+                        ''')
+    parser.add_argument('--rx', nargs=1, type=_int_parser,
+                        action='append', metavar=('N'), help='''
+                        prints data server messages to stdout, for N negative, runs indefinitely
+                        ''')
+    parser.add_argument('--listen', nargs=1, type=_int_parser,
+                        action='append', metavar=('N'), help='''
+                        print handled pacman command server messages to stdout, for N negative, runs indefinitely
+                        ''')
     args = parser.parse_args()
 
     _VERBOSE = args.verbose
