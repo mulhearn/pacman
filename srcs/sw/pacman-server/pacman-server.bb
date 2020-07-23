@@ -45,4 +45,4 @@ do_install() {
 FILES_${PN} += "${sysconfdir}/*"
 FILES_${PN} += "${homedir}/*"
 
-RDEPENDS_${PN} += "python"
+RDEPENDS_${PN} += "python python-pyzmq"
