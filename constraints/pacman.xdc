@@ -20,12 +20,21 @@ set_property PULLUP TRUE [get_ports MISO1]
 set_property PULLUP TRUE [get_ports MISO2]
 set_property PULLUP TRUE [get_ports MISO3]
 set_property PULLUP TRUE [get_ports MISO4]
+# UART TX/RX
+set_property IOSTANDARD LVCMOS33 [get_ports UART_TX_BUSY]
+set_property IOSTANDARD LVCMOS33 [get_ports UART_RX_BUSY]
+set_property PACKAGE_PIN G19 [get_ports UART_TX_BUSY]
+set_property PACKAGE_PIN F19 [get_ports UART_RX_BUSY]
 
 # TILE en/sel
-set_property IOSTANDARD LVCMOS33 [get_ports {TILE_SEL1[0]}]
-set_property IOSTANDARD LVCMOS33 [get_ports {TILE_EN1[0]}]
-set_property PACKAGE_PIN W18 [get_ports {TILE_SEL1[0]}]
-set_property PACKAGE_PIN Y18 [get_ports {TILE_EN1[0]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {TILE_SEL[0]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {TILE_EN[0]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {MOSI_EN_P[0]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {MOSI_EN_N[0]}]
+set_property PACKAGE_PIN W18 [get_ports {TILE_SEL[0]}]
+set_property PACKAGE_PIN Y18 [get_ports {TILE_EN[0]}]
+set_property PACKAGE_PIN J18 [get_ports {MOSI_EN_P[0]}]
+set_property PACKAGE_PIN K18 [get_ports {MOSI_EN_N[0]}]
 
 # RESET out
 set_property IOSTANDARD LVCMOS33 [get_ports RESETN]
@@ -36,7 +45,5 @@ set_property IOSTANDARD LVCMOS33 [get_ports {TRIG[0]}]
 set_property PACKAGE_PIN W21 [get_ports {TRIG[0]}]
 
 # CLK out
-set_property IOSTANDARD DIFF_HSTL_II_18 [get_ports CLK_P]
-set_property IOSTANDARD DIFF_HSTL_II_18 [get_ports CLK_N]
-set_property PACKAGE_PIN G19 [get_ports CLK_P]
-set_property PACKAGE_PIN F19 [get_ports CLK_N]
+set_property IOSTANDARD LVCMOS33 [get_ports CLK]
+set_property PACKAGE_PIN W17 [get_ports CLK]
