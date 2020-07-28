@@ -2,17 +2,15 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity clk_out is
+entity clk_ddr_out is
 port
  (
-  i  : in    std_logic;
-  o  : out   std_logic -- single-ended port
---  o_p : out  std_logic; -- differential port
---  o_n : out  std_logic
+   i    : in  std_logic;
+   o    : out std_logic
 );
-end clk_out;
+end clk_ddr_out;
 
-architecture arch_imp of clk_out is
+architecture arch_imp of clk_ddr_out is
   component ODDR is
     generic (
       DDR_CLK_EDGE : string;
@@ -30,18 +28,7 @@ architecture arch_imp of clk_out is
       );
   end component;
 
---  component OBUFDS is
---    port (
---      O : out std_logic;
---      OB : out std_logic;
---      I : in std_logic
---      );
---  end component;
-
---  signal o : std_logic;
-  
 begin
-
   oddr_inst : ODDR generic map (
       DDR_CLK_EDGE   => "SAME_EDGE", --"SAME_EDGE", --OPPOSITE_EDGE", -- "SAME_EDGE"
       INIT           => '0',
@@ -55,12 +42,5 @@ begin
       R              => '0',
       S              => '0'
       );
-
---  obufds_inst : OBUFDS port map (
---    O => o_p,
---    OB => o_n,
---    I => o_out
---    );
-  
 end arch_imp;
 
