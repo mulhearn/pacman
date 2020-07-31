@@ -77,6 +77,7 @@ architecture arch_imp of larpix_uart_rx is
 
       RX          : IN  STD_LOGIC;
 
+      busy        : OUT STD_LOGIC;
       data        : OUT STD_LOGIC_VECTOR (DATA_WIDTH-1 DOWNTO 0);
       data_update : OUT STD_LOGIC;
 
@@ -106,6 +107,7 @@ begin
     RST => rst,
     CLKIN_RATIO => CLKIN_RATIO,
     RX => UART_RX_IN,
+    busy => larpix_busy,
     data => larpix_data,
     data_update => larpix_update,
     TC => open
@@ -130,7 +132,7 @@ begin
     timestamp => pacman_ts_aclk,
     data_LArPix => larpix_data,
     data_update_LArPix => larpix_update,
-    busy_larpix => larpix_busy,
+    busy_larpix => open,
     M_AXIS_ACLK => ACLK,
     M_AXIS_ARESETN => ARESETN,
     M_AXIS_TVALID => M_AXIS_TVALID,

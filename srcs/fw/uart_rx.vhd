@@ -17,6 +17,7 @@ ENTITY uart_rx IS
       -- UART RX
       RX          : IN  STD_LOGIC;
       -- received data
+      busy        : OUT STD_LOGIC;
       data        : OUT STD_LOGIC_VECTOR (DATA_WIDTH-1 DOWNTO 0);
       data_update : OUT STD_LOGIC;
       -- test signals
@@ -61,6 +62,7 @@ BEGIN  -- ARCHITECTURE uart_rx_arch
    BEGIN  -- PROCESS UART_RX_FSM
       IF RST = '1' THEN  -- asynchronous reset (active high)
         state <= IDLE;
+        busy <= '0';
         data_update <= '0';
         
       ELSIF CLK'EVENT AND CLK = '1' THEN  -- rising clock edge
@@ -69,6 +71,7 @@ BEGIN  -- ARCHITECTURE uart_rx_arch
          
          CASE state IS
             WHEN IDLE =>
+               busy <= '0';
                cnt_bit_length <= (bit_length / 2) - 2;
                cnt_bits       <= 0;
                IF RXfiltered = '0' THEN
@@ -76,6 +79,7 @@ BEGIN  -- ARCHITECTURE uart_rx_arch
                END IF;
                
             WHEN WT =>
+               busy <= '1';
                cnt_bit_length <= cnt_bit_length - 1;
                IF cnt_bit_length = 0 THEN
                   state <= SHIFT;
