@@ -41,3 +41,4 @@ launch_runs $impl_run -to_step write_bitstream -jobs $jobs
 wait_on_run $impl_run
 update_compile_order -fileset sources_1
 file copy -force ./pacman-fw/pacman-fw.runs/impl_1/zsys_wrapper.sysdef ./products/zsys_wrapper.hdf
+file copy -force ./pacman-fw/pacman-fw.runs/impl_1/zsys_wrapper.bit ./products/zsys_wrapper.bit
