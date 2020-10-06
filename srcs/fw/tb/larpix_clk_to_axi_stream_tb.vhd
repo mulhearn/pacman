@@ -22,7 +22,6 @@ architecture implementation of larpix_clk_to_axi_stream_tb is
       C_CLK_SRC_FLAG : std_logic_vector(7 downto 0) := x"43" -- ASCII C 
       );
     port (
-      MCLK : in std_logic;
       TIMESTAMP : in unsigned(31 downto 0) := (others => '0');
       TIMESTAMP_PREV : in unsigned(31 downto 0) := (others => '0');
       TIMESTAMP_SYNC : in std_logic;
@@ -80,6 +79,13 @@ begin
     wait for 1000 ns;
     rstn <= '1';
     wait until (tvalid = '1') and rising_edge(clk);
+    wait for 1000 ns;
+    
+    -- test reset glitch rejection
+    rstn <= '0';
+    wait for 200 ns;
+    rstn <= '1';
+    wait for 1000 ns;
 
     -- test heart beat generation
     hb_en <= '1';
@@ -101,7 +107,6 @@ begin
   end process;
   
   larpix_clk_to_axi_stream_inst : larpix_clk_to_axi_stream port map(
-    MCLK => mclk,
     TIMESTAMP => timestamp,
     TIMESTAMP_PREV => timestamp_prev,
     TIMESTAMP_SYNC => timestamp_sync,

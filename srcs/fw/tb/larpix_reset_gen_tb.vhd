@@ -47,35 +47,41 @@ begin
   process
   begin
     wait until rising_edge(clk) and rstn = '1';
-    wait for 200 ns;
+    wait for 1000 ns;
 
     -- software reset
-    sw_rst_trig <= '1';
-    wait until rising_edge(clk) and rst_sync_n_out = '0';
     wait until rising_edge(clk) and rst_sync_n_out = '1';
-    sw_rst_trig <= '0';
+    sw_rst_trig <= '1';
     wait for 200 ns;
+    sw_rst_trig <= '0';
+    wait for 1000 ns;
 
     -- hardware sync
-    hw_sync_trig <= '1';
-    wait until rising_edge(clk) and rst_sync_n_out = '0';
-    hw_sync_trig <= '0';
     wait until rising_edge(clk) and rst_sync_n_out = '1';
+    hw_sync_trig <= '1';
     wait for 200 ns;
+    hw_sync_trig <= '0';
+    wait for 1000 ns;
+    
+    wait until rising_edge(clk) and rst_sync_n_out = '1';
+    hw_sync_trig <= '1';
+    wait for 10000 ns;
+    hw_sync_trig <= '0';
+    wait for 1000 ns;
 
     -- hardware hard reset
-    hw_hard_rst_trig <= '1';
-    wait until rising_edge(clk) and rst_sync_n_out = '0';
-    hw_hard_rst_trig <= '0';
     wait until rising_edge(clk) and rst_sync_n_out = '1';
+    hw_hard_rst_trig <= '1';
     wait for 200 ns;
+    hw_hard_rst_trig <= '0';
+    wait for 1000 ns;
 
     -- hardware state reset
-    hw_state_rst_trig <= '1';
-    wait until rising_edge(clk) and rst_sync_n_out = '0';
-    hw_state_rst_trig <= '0';
     wait until rising_edge(clk) and rst_sync_n_out = '1';
+    hw_state_rst_trig <= '1';
     wait for 200 ns;
+    hw_state_rst_trig <= '0';
+    wait for 1000 ns;
   end process;
 
   larpix_reset_gen_inst : larpix_reset_gen port map(
