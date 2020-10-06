@@ -37,9 +37,53 @@ architecture arch_imp of larpix_reset_gen is
   -- internal signals
   signal rst_cycles : unsigned(31 downto 0);
   signal rst_sync_n_out : std_logic;
+
+  signal sw_rst_trig_srg : std_logic_vector(1 downto 0);
+  signal hw_sync_trig_srg : std_logic_vector(1 downto 0);
+  signal hw_state_rst_trig_srg : std_logic_vector(1 downto 0);
+  signal hw_hard_rst_trig_srg : std_logic_vector(1 downto 0);
+
+  signal sw_rst_trig_clean : std_logic;
+  signal hw_sync_trig_clean : std_logic;
+  signal hw_state_rst_trig_clean : std_logic;
+  signal hw_hard_rst_trig_clean : std_logic;  
   
 begin
   RST_SYNC_N <= rst_sync_n_out;
+
+  glitch_rej : process (MCLK, RSTN) is
+  begin
+    if (rising_edge(MCLK)) then
+      sw_rst_trig_srg <= SW_RST_TRIG & sw_rst_trig_srg(sw_rst_trig_srg'length-1);
+      hw_sync_trig_srg <= HW_SYNC_TRIG & hw_sync_trig_srg(hw_sync_trig_srg'length-1);
+      hw_state_rst_trig_srg <= HW_STATE_RST_TRIG & hw_state_rst_trig_srg(hw_state_rst_trig_srg'length-1);
+      hw_hard_rst_trig_srg <= HW_HARD_RST_TRIG & hw_hard_rst_trig_srg(hw_hard_rst_trig_srg'length-1);
+
+      if (sw_rst_trig_srg = "11") then
+        sw_rst_trig_clean <= '1';
+      else
+        sw_rst_trig_clean <= '0';
+      end if;
+
+      if (hw_sync_trig_srg = "11") then
+        hw_sync_trig_clean <= '1';
+      else
+        hw_sync_trig_clean <= '0';
+      end if;
+
+      if (hw_state_rst_trig_srg = "11") then
+        hw_state_rst_trig_clean <= '1';
+      else
+        hw_state_rst_trig_clean <= '0';
+      end if;
+
+      if (hw_hard_rst_trig_srg = "11") then
+        hw_hard_rst_trig_clean <= '1';
+      else
+        hw_hard_rst_trig_clean <= '0';
+      end if;
+    end if;
+  end process;
   
   larpix_reset_fsm : process (MCLK, RSTN) is
   begin
@@ -52,16 +96,16 @@ begin
         case mst_exec_state is
           when IDLE =>
             rst_sync_n_out <= '1';
-            if (SW_RST_TRIG = '1') then
+            if (sw_rst_trig_clean = '1') then
               rst_cycles <= SW_RST_CYCLES - 1;
               mst_exec_state <= SW_RESET;
-            elsif (HW_SYNC_TRIG = '1') then
+            elsif (hw_sync_trig_clean = '1') then
               rst_cycles <= to_unsigned(C_SYNC_RST_CYCLES, rst_cycles'length) - 1;
               mst_exec_state <= HW_RESET;
-            elsif (HW_STATE_RST_TRIG = '1') then
+            elsif (hw_state_rst_trig_clean = '1') then
               rst_cycles <= to_unsigned(C_STATE_RST_CYCLES, rst_cycles'length) - 1;
               mst_exec_state <= HW_RESET;
-            elsif (HW_HARD_RST_TRIG = '1') then
+            elsif (hw_hard_rst_trig_clean = '1') then
               rst_cycles <= to_unsigned(C_HARD_RST_CYCLES, rst_cycles'length) - 1;
               mst_exec_state <= HW_RESET;
             end if;
