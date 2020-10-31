@@ -1,4 +1,4 @@
-# pacman-v1-rev2
+# pacman-v1-rev3
 # UARTs
 set_property IOSTANDARD LVCMOS33 [get_ports MOSI1]
 set_property IOSTANDARD LVCMOS33 [get_ports MISO1]
@@ -24,10 +24,16 @@ set_property PULLUP TRUE [get_ports MISO4]
 # Trigger / Sync
 set_property IOSTANDARD LVCMOS18 [get_ports TRIG1_IN]
 set_property IOSTANDARD LVCMOS18 [get_ports HW_SYNC_TRIG]
-set_property PACKAGE_PIN G19 [get_ports HW_SYNC_TRIG]
-set_property PACKAGE_PIN F19 [get_ports TRIG1_IN]
+set_property PACKAGE_PIN R6 [get_ports HW_SYNC_TRIG]
+set_property PACKAGE_PIN T6 [get_ports TRIG1_IN]
 set_property PULLDOWN TRUE [get_ports HW_SYNC_TRIG]
 set_property PULLDOWN TRUE [get_ports TRIG1_IN]
+
+# UART TX/RX
+set_property IOSTANDARD LVCMOS18 [get_ports UART_TX_BUSY]
+set_property IOSTANDARD LVCMOS18 [get_ports UART_RX_BUSY]
+set_property PACKAGE_PIN G19 [get_ports UART_TX_BUSY]
+set_property PACKAGE_PIN F19 [get_ports UART_RX_BUSY]
 
 # TILE en/sel
 set_property IOSTANDARD LVCMOS33 [get_ports {TILE_SEL[0]}]
