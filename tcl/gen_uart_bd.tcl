@@ -11,11 +11,7 @@
 #
 
 # Number of UART RTL modules to instantiate
-set n_channels 4
-# If loopback is set, channels are only routed internally and in a loopback fashion
-# comment out for production use
-#set loopback "True"
-set loopback ""
+set n_channels 32
 
 # open up project
 open_project ./pacman-fw/pacman-fw.xpr
@@ -129,21 +125,38 @@ save_bd_design
 # create uart channels from existing block
 set uart_channels larpix_uart_array/uart_channels
 create_bd_cell -type hier $uart_channels
+
 # uart busy signals
 set or_uart_rx_busy $uart_channels/or_uart_rx_busy
 set or_uart_tx_busy $uart_channels/or_uart_tx_busy
+
 create_bd_cell -type ip -vlnv xilinx.com:ip:util_reduced_logic:2.0 ${or_uart_rx_busy}_logic
 create_bd_cell -type ip -vlnv xilinx.com:ip:util_reduced_logic:2.0 ${or_uart_tx_busy}_logic
+
 set_property -dict [list CONFIG.C_SIZE $n_channels CONFIG.C_OPERATION {or}] [get_bd_cells ${or_uart_rx_busy}_logic]
 set_property -dict [list CONFIG.C_SIZE $n_channels CONFIG.C_OPERATION {or}] [get_bd_cells ${or_uart_tx_busy}_logic]
+
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 ${or_uart_rx_busy}
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 ${or_uart_tx_busy}
+
 set_property -dict [list CONFIG.NUM_PORTS $n_channels] [get_bd_cells $or_uart_rx_busy]
 set_property -dict [list CONFIG.NUM_PORTS $n_channels] [get_bd_cells $or_uart_tx_busy]
+
 connect_bd_net [get_bd_pins ${or_uart_rx_busy}/dout] [get_bd_pins ${or_uart_rx_busy}_logic/Op1]
 connect_bd_net [get_bd_pins ${or_uart_tx_busy}/dout] [get_bd_pins ${or_uart_tx_busy}_logic/Op1]
 connect_bd_net [get_bd_pins ${or_uart_rx_busy}_logic/Res] $UART_RX_BUSY
 connect_bd_net [get_bd_pins ${or_uart_tx_busy}_logic/Res] $UART_TX_BUSY
+
+# uart mosi merge
+set mosi_merge $uart_channels/mosi_merge
+create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 ${mosi_merge}
+set_property -dict [list CONFIG.NUM_PORTS $n_channels] [get_bd_cells $mosi_merge]
+
+set MISO [create_bd_pin -dir I -from 31 -to 0 larpix_uart_array/MISO]
+set MOSI [create_bd_pin -dir O -from 31 -to 0 larpix_uart_array/MOSI]
+set TILE_EN [create_bd_pin -dir I -from 7 -to 0 larpix_uart_array/TILE_EN]
+connect_bd_net ${MOSI} [get_bd_pins $mosi_merge/Dout]
+
 for {set channel 1} {$channel < [expr { $n_channels + 1 }]} {incr channel} {
     puts "Generating channel ${channel}..."
     set channel_hex [format %02X $channel]
@@ -157,13 +170,18 @@ for {set channel 1} {$channel < [expr { $n_channels + 1 }]} {incr channel} {
     # create new uart channel
     set larpix_uart_channel $uart_channels/larpix_uart_channel_$channel
     create_bd_cell -type module -reference uart_channel $larpix_uart_channel
-
+    create_bd_cell -type module -reference obuft_out ${larpix_uart_channel}_obuft_out
+    create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 ${larpix_uart_channel}_slice
+    create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 ${larpix_uart_channel}_en_slice
+    
     set channel_s_axis ${axis_interconnect}_${channel_major}/S$channel_minor_padded
     set channel_m_axis ${axis_broadcaster}_${channel_major}/M${channel_minor_padded}
     set channel_m_aximm ${aximm_interconnect}/M$channel_padded
 
     # set channel property
-     set_property -dict [list CONFIG.C_CHANNEL 0x$channel_hex] [get_bd_cells $larpix_uart_channel]
+    set_property -dict [list CONFIG.C_CHANNEL 0x$channel_hex] [get_bd_cells $larpix_uart_channel]
+    set_property -dict [list CONFIG.DIN_WIDTH $n_channels CONFIG.DIN_TO $channel_base0 CONFIG.DIN_FROM $channel_base0] [get_bd_cells ${larpix_uart_channel}_slice]
+    set_property -dict [list CONFIG.DIN_WIDTH 8 CONFIG.DIN_TO $channel_major CONFIG.DIN_FROM $channel_major] [get_bd_cells ${larpix_uart_channel}_en_slice]
 
     # make connections
     # axi-stream master
@@ -181,24 +199,16 @@ for {set channel 1} {$channel < [expr { $n_channels + 1 }]} {incr channel} {
     connect_bd_net [get_bd_pins $larpix_uart_channel/UART_RX_BUSY] [get_bd_pins $or_uart_rx_busy/In$channel_base0]
     connect_bd_net [get_bd_pins $larpix_uart_channel/UART_TX_BUSY] [get_bd_pins $or_uart_tx_busy/In$channel_base0]
 
-    # external uart pins
-    set UART_RX [create_bd_pin -dir I larpix_uart_array/UART_RX_$channel]
-    set UART_TX [create_bd_pin -dir O larpix_uart_array/UART_TX_$channel]
-    connect_bd_net [get_bd_pins $larpix_uart_channel/UART_RX] $UART_RX
-    connect_bd_net [get_bd_pins $larpix_uart_channel/UART_TX] $UART_TX
-    if {$loopback != ""} {
-        connect_bd_net $UART_TX $UART_RX
-    } else {
-        set MOSI [get_bd_pins io/I_MOSI$channel]
-        set MISO [get_bd_ports MISO$channel]
-        if {$MOSI != ""} {
-            connect_bd_net $UART_TX $MOSI
-        }
-        if {$MISO != ""} {
-            connect_bd_net $UART_RX $MISO
-        }
-    }
-
+    # uart pins
+    connect_bd_net $MISO [get_bd_pins ${larpix_uart_channel}_slice/Din]
+    connect_bd_net [get_bd_pins $larpix_uart_channel/UART_RX] [get_bd_pins ${larpix_uart_channel}_slice/Dout]
+    
+    connect_bd_net [get_bd_pins $larpix_uart_channel/UART_TX] [get_bd_pins ${larpix_uart_channel}_obuft_out/i]
+    connect_bd_net [get_bd_pins ${larpix_uart_channel}_obuft_out/o] [get_bd_pins $mosi_merge/In$channel_base0]
+    
+    connect_bd_net [get_bd_pins ${larpix_uart_channel}_obuft_out/en] [get_bd_pins ${larpix_uart_channel}_en_slice/Dout]
+    connect_bd_net $TILE_EN [get_bd_pins ${larpix_uart_channel}_en_slice/Din]
+    
     # setup reserved addresses
     set seg [get_bd_addr_segs $larpix_uart_channel/S_AXI_LITE/reg0]
     set addr [expr 0x500${channel_hex}000 + 0x2000]
