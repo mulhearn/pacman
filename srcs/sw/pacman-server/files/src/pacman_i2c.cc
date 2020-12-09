@@ -38,15 +38,15 @@ int i2c_set(int fh, uint8_t addr, uint8_t val) {
     return write(fh,buf,1);
 }
 
-int i2c_set(int fh, uint8_t addr, uint8_t reg, uint16_t val) {
-    // write 2 bytes to register reg on i2c device at addr
+int i2c_set(int fh, uint8_t addr, uint8_t reg, uint32_t val, uint8_t bytes) {
+    // write n bytes to register reg on i2c device at addr
     if (i2c_addr(fh, addr) < 0) return -1;
-    uint8_t buf[3];
+    uint8_t buf[bytes+1];
     buf[0] = reg;
-    buf[1] = (val & 0xFF00) >> 8;
-    buf[2] = val & 0x00FF;
+    for (uint8_t i_byte = 1; i_byte < bytes+1; i_byte++)
+        buf[i_byte] = (val >> (8 * (bytes+1-i_byte))) & 0x000000FF;
     //printf("i2c_set %d %d %d\n", buf[0], buf[1], buf[2]);
-    return write(fh,buf,3);
+    return write(fh,buf,bytes+1);
 }
 
 int i2c_recv(int fh, uint8_t addr, uint8_t reg, uint8_t* buf, uint32_t nbytes) {
@@ -84,38 +84,85 @@ int i2c_recv(int fh, uint8_t addr, uint8_t* buf, uint32_t nbytes) {
 #define READ_BYTES 4
 uint32_t i2c_read(int fh, uint32_t reg) {
     // read i2c devices as though they were a 32-bit register
-    if (reg < I2C_BASE_ADDR || reg >= I2C_BASE_ADDR+I2C_BASE_LEN) {
+    if (!((reg >= I2C_1_BASE_ADDR && reg < I2C_1_BASE_ADDR+I2C_1_BASE_LEN) ||
+                    (reg >= I2C_2_BASE_ADDR && reg < I2C_2_BASE_ADDR+I2C_2_BASE_LEN))) {
         printf("Bad i2c address: 0x%08x\n", reg);
         return 0;
     }
-    uint32_t offset = (reg - I2C_BASE_ADDR) & 0xFFFFFFF0;
+    
+    uint32_t i2c_dev_num = (reg < I2C_1_BASE_ADDR + I2C_1_BASE_LEN) && (reg >= I2C_1_BASE_ADDR) ? 1 : 2;
+    uint32_t offset = i2c_dev_num == 1 ? (reg - I2C_1_BASE_ADDR) & 0x00000FF0 : (reg - I2C_2_BASE_ADDR) & 0x00000FF0;
     uint8_t i2c_addr = 0;
-    uint8_t i2c_reg = (reg - I2C_BASE_ADDR) & 0x0000000F;
+    uint8_t i2c_reg = i2c_dev_num == 1 ? (reg - I2C_1_BASE_ADDR) & 0x0000000F : (reg - I2C_2_BASE_ADDR) & 0x0000000F;
     uint8_t buf[READ_BYTES];
     bool use_reg = true;
-    if (offset == OFFSET_DAC_VDDD) {
-        //printf("Read from VDDD DAC\n");
-        i2c_addr = ADDR_DAC_VDDD;
-    } else if (offset == OFFSET_DAC_VDDA) {
-        //printf("Read from VDDA DAC\n");
-        i2c_addr = ADDR_DAC_VDDA;
-    } else if (offset == OFFSET_ADC_VPLUS) {
-        //printf("Read from V+ ADC\n");
-        i2c_addr = ADDR_ADC_VPLUS;
-    } else if (offset == OFFSET_ADC_VDDD) {
-        //printf("Read from VDDD ADC\n");
-        i2c_addr = ADDR_ADC_VDDD;
-    } else if (offset == OFFSET_ADC_VDDA) {
-        //printf("Read from VDDA ADC\n");
-        i2c_addr = ADDR_ADC_VDDA;
-    } else if (offset == OFFSET_ADC_ANA_MON) {
-        //printf("Read from ANA_MON ADC\n");
-        i2c_addr = ADDR_ADC_ANA_MON;
-        use_reg = false;
-    } else {
-        printf("Access empty i2c register: 0x%08x\n", reg);
-        return 0;
+    if (i2c_dev_num == 1) {
+        if (offset == OFFSET_ADC_VDDA_1) {
+            i2c_addr = ADDR_VDDA_TILE1;
+        }
+        else if (offset == OFFSET_ADC_VDDD_1) {
+            i2c_addr = ADDR_VDDD_TILE1;
+        }
+        else if (offset == OFFSET_ADC_VDDA_2) {
+            i2c_addr = ADDR_VDDA_TILE2;
+        }
+        else if (offset == OFFSET_ADC_VDDD_2) {
+            i2c_addr = ADDR_VDDD_TILE2;
+        }
+        else if (offset == OFFSET_ADC_VDDA_3) {
+            i2c_addr = ADDR_VDDA_TILE3;
+        }
+        else if (offset == OFFSET_ADC_VDDD_3) {
+            i2c_addr = ADDR_VDDD_TILE3;
+        }
+        else if (offset == OFFSET_ADC_VDDA_4) {
+            i2c_addr = ADDR_VDDA_TILE4;
+        }
+        else if (offset == OFFSET_ADC_VDDD_4) {
+            i2c_addr = ADDR_VDDD_TILE4;
+        }
+        else if (offset == OFFSET_ADC_VDDA_5) {
+            i2c_addr = ADDR_VDDA_TILE5;
+        }
+        else if (offset == OFFSET_ADC_VDDD_5) {
+            i2c_addr = ADDR_VDDD_TILE5;
+        }
+        else if (offset == OFFSET_ADC_VDDA_6) {
+            i2c_addr = ADDR_VDDA_TILE6;
+        }
+        else if (offset == OFFSET_ADC_VDDD_6) {
+            i2c_addr = ADDR_VDDD_TILE6;
+        }
+        else if (offset == OFFSET_ADC_VDDA_7) {
+            i2c_addr = ADDR_VDDA_TILE7;
+        }
+        else if (offset == OFFSET_ADC_VDDD_7) {
+            i2c_addr = ADDR_VDDD_TILE7;
+        }
+        else if (offset == OFFSET_ADC_VDDA_8) {
+            i2c_addr = ADDR_VDDA_TILE8;
+        }
+        else if (offset == OFFSET_ADC_VDDD_8) {
+            i2c_addr = ADDR_VDDD_TILE8;
+        }
+        else if (offset == OFFSET_V_DAC) {
+            i2c_addr = ADDR_V_DAC;
+        }
+        else {
+            printf("Access empty i2c register: 0x%08x\n", reg);
+            return 0;
+        }
     }
+    else {
+        if (offset == OFFSET_TEST_MUX) {
+            i2c_addr = ADDR_TEST_MUX;
+        }
+        else {
+            printf("Access empty i2c register: 0x%08x\n", reg);
+            return 0;
+        }        
+    }
+
     uint32_t rv = 0;
     if (use_reg) {
         i2c_recv(fh, i2c_addr, i2c_reg, buf, READ_BYTES);
@@ -131,36 +178,90 @@ uint32_t i2c_read(int fh, uint32_t reg) {
 
 uint32_t i2c_write(int fh, uint32_t reg, uint32_t val) {
     // write to i2c devices as through they were a 32-bit register
-    if (reg < I2C_BASE_ADDR || reg >= I2C_BASE_ADDR+I2C_BASE_LEN) {
+    if (!((reg >= I2C_1_BASE_ADDR && reg < I2C_1_BASE_ADDR+I2C_1_BASE_LEN) ||
+                    (reg >= I2C_2_BASE_ADDR && reg < I2C_2_BASE_ADDR+I2C_2_BASE_LEN))) {
         printf("Bad i2c address: 0x%08x\n", reg);
         return 0;
-    }
-    uint32_t offset = (reg - I2C_BASE_ADDR) & 0xFFFFFFF0;
-    uint8_t i2c_reg = (reg - I2C_BASE_ADDR) & 0x0000000F;
+    }    
+// stopped here
+    uint32_t i2c_dev_num = (reg < I2C_1_BASE_ADDR + I2C_1_BASE_LEN) && (reg >= I2C_1_BASE_ADDR) ? 1 : 2;
+    uint32_t offset = i2c_dev_num == 1 ? (reg - I2C_1_BASE_ADDR) & 0x00000FF0 : (reg - I2C_2_BASE_ADDR) & 0x00000FF0;
     uint8_t i2c_addr = 0;
-    uint16_t i2c_val = val & 0x0000FFFF;
+    uint8_t i2c_reg = i2c_dev_num == 1 ? (reg - I2C_1_BASE_ADDR) & 0x0000000F : (reg - I2C_2_BASE_ADDR) & 0x0000000F;
+    uint8_t i2c_bytes = 3; // 1 address + 2 data bytes, default
     bool use_reg = true;
-    if (offset == OFFSET_DAC_VDDD) {
-        i2c_addr = ADDR_DAC_VDDD;
-    } else if (offset == OFFSET_DAC_VDDA) {
-        i2c_addr = ADDR_DAC_VDDA;
-    } else if (offset == OFFSET_ADC_VPLUS) {
-        i2c_addr = ADDR_ADC_VPLUS;
-    } else if (offset == OFFSET_ADC_VDDD) {
-        i2c_addr = ADDR_ADC_VDDD;
-    } else if (offset == OFFSET_ADC_VDDA) {
-        i2c_addr = ADDR_ADC_VDDA;
-    } else if (offset == OFFSET_ADC_ANA_MON) {
-        i2c_addr = ADDR_ADC_ANA_MON;
-        use_reg = false;
-    } else {
-        printf("Access empty i2c register: 0x%08x\n",reg);
-        return 0;
-    }
-    if (use_reg) {
-        if (i2c_set(fh, i2c_addr, i2c_reg, i2c_val) != 3) {
-            printf("Could not write 0x%04x to reg 0x%02x on dev 0x%02x\n", i2c_val, i2c_reg, i2c_addr);
+    if (i2c_dev_num == 1) {
+        if (offset == OFFSET_ADC_VDDA_1) {
+            i2c_addr = ADDR_VDDA_TILE1;
+        }
+        else if (offset == OFFSET_ADC_VDDD_1) {
+            i2c_addr = ADDR_VDDD_TILE1;
+        }
+        else if (offset == OFFSET_ADC_VDDA_2) {
+            i2c_addr = ADDR_VDDA_TILE2;
+        }
+        else if (offset == OFFSET_ADC_VDDD_2) {
+            i2c_addr = ADDR_VDDD_TILE2;
+        }
+        else if (offset == OFFSET_ADC_VDDA_3) {
+            i2c_addr = ADDR_VDDA_TILE3;
+        }
+        else if (offset == OFFSET_ADC_VDDD_3) {
+            i2c_addr = ADDR_VDDD_TILE3;
+        }
+        else if (offset == OFFSET_ADC_VDDA_4) {
+            i2c_addr = ADDR_VDDA_TILE4;
+        }
+        else if (offset == OFFSET_ADC_VDDD_4) {
+            i2c_addr = ADDR_VDDD_TILE4;
+        }
+        else if (offset == OFFSET_ADC_VDDA_5) {
+            i2c_addr = ADDR_VDDA_TILE5;
+        }
+        else if (offset == OFFSET_ADC_VDDD_5) {
+            i2c_addr = ADDR_VDDD_TILE5;
+        }
+        else if (offset == OFFSET_ADC_VDDA_6) {
+            i2c_addr = ADDR_VDDA_TILE6;
+        }
+        else if (offset == OFFSET_ADC_VDDD_6) {
+            i2c_addr = ADDR_VDDD_TILE6;
+        }
+        else if (offset == OFFSET_ADC_VDDA_7) {
+            i2c_addr = ADDR_VDDA_TILE7;
+        }
+        else if (offset == OFFSET_ADC_VDDD_7) {
+            i2c_addr = ADDR_VDDD_TILE7;
+        }
+        else if (offset == OFFSET_ADC_VDDA_8) {
+            i2c_addr = ADDR_VDDA_TILE8;
+        }
+        else if (offset == OFFSET_ADC_VDDD_8) {
+            i2c_addr = ADDR_VDDD_TILE8;
+        }
+        else if (offset == OFFSET_V_DAC) {
+            i2c_addr = ADDR_V_DAC;
+        }
+        else {
+            printf("Access empty i2c register: 0x%08x\n", reg);
             return 0;
+        }
+    }
+    else {
+        if (offset == OFFSET_TEST_MUX) {
+            i2c_addr = ADDR_TEST_MUX;
+            i2c_bytes = 2; // 1 address + 1 data byte
+        }
+        else {
+            printf("Access empty i2c register: 0x%08x\n", reg);
+            return 0;
+        }        
+    }
+    uint16_t i2c_val = val & ~(0xFFFFFFFF >> (8*(4-i2c_bytes)));
+    if (use_reg) {
+        if (i2c_set(fh, i2c_addr, i2c_reg, i2c_val, i2c_bytes) != i2c_bytes) {
+            printf("Could not write 0x%04x to reg 0x%02x on dev 0x%02x\n", i2c_val, i2c_reg, i2c_addr);
+            return 0;            
         }
     } else {
         if (i2c_set(fh, i2c_addr, (uint8_t)(i2c_val & 0x00FF)) != 1) {

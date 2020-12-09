@@ -95,10 +95,16 @@ int main(int argc, char* argv[]){
   // initialize pacman-pl
   uint32_t* pacman_pl = (uint32_t*)mmap(NULL, PACMAN_LEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, PACMAN_ADDR);
 
-  // initialize i2c
-  int i2c_dh = i2c_open(I2C_DEV);
-  if (i2c_dh < 0) {
-      printf("Error initializing I2C\n");
+  // initialize i2c-1
+  int i2c_1_dh = i2c_open(I2C_1_DEV);
+  if (i2c_1_dh < 0) {
+      printf("Error initializing I2C-1\n");
+      return 3;
+  }
+  // initialize i2c-2
+  int i2c_2_dh = i2c_open(I2C_2_DEV);
+  if (i2c_2_dh < 0) {
+      printf("Error initializing I2C-1\n");
       return 3;
   }
 
@@ -156,9 +162,13 @@ int main(int argc, char* argv[]){
           val = get_req_word_write_val(word);
           pacman_set(pacman_pl, *reg, *val);
           set_rep_word_write(reply_word, reg, val);
-        } else if (*reg >= I2C_BASE_ADDR || *reg < I2C_BASE_ADDR + I2C_BASE_LEN) {
+        } else if (*reg >= I2C_1_BASE_ADDR && *reg < I2C_1_BASE_ADDR + I2C_1_BASE_LEN) {
           val = get_req_word_write_val(word);
-          i2c_write(i2c_dh, *reg, *val);
+          i2c_write(i2c_1_dh, *reg, *val);
+          set_rep_word_write(reply_word, reg, val);
+        } else if (*reg >= I2C_2_BASE_ADDR && *reg < I2C_2_BASE_ADDR + I2C_2_BASE_LEN) {
+          val = get_req_word_write_val(word);
+          i2c_write(i2c_2_dh, *reg, *val);
           set_rep_word_write(reply_word, reg, val);
         } else {
           set_rep_word_err(reply_word, NULL, NULL);
@@ -174,8 +184,11 @@ int main(int argc, char* argv[]){
         if (*reg < PACMAN_LEN) {
           val = pacman_get(pacman_pl, *reg);
           set_rep_word_read(reply_word, reg, &val);
-        } else if (*reg >= I2C_BASE_ADDR || *reg < I2C_BASE_ADDR + I2C_BASE_LEN) {
-          val = i2c_read(i2c_dh, *reg);
+        } else if (*reg >= I2C_1_BASE_ADDR || *reg < I2C_1_BASE_ADDR + I2C_1_BASE_LEN) {
+          val = i2c_read(i2c_1_dh, *reg);
+          set_rep_word_read(reply_word, reg, &val);
+        } else if (*reg >= I2C_2_BASE_ADDR || *reg < I2C_2_BASE_ADDR + I2C_2_BASE_LEN) {
+          val = i2c_read(i2c_2_dh, *reg);
           set_rep_word_read(reply_word, reg, &val);
         } else {
           set_rep_word_err(reply_word, NULL, NULL);

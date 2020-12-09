@@ -94,10 +94,10 @@ int main(int argc, char* argv[]){
     while(dma_desc_cmplt(curr->desc)) {
       curr = curr->next;
       words++;
-      if (curr == prev->prev) break;
-      if (words == MAX_MSG_LEN) break;
+      if (curr == prev->prev) break; // reached end of buffer
+      if (words == MAX_MSG_LEN) break; // reached max message size
     }
-    if (curr == prev) continue;
+    if (curr == prev) continue; // no new words
     total_words += words;
     now = std::chrono::high_resolution_clock::now().time_since_epoch();
     //printf("DMA_CURR: %p, DMA_TAIL: %p\n",dma_get(dma,DMA_S2MM_CURR_REG), dma_get(dma,DMA_S2MM_TAIL_REG));
@@ -109,10 +109,11 @@ int main(int argc, char* argv[]){
            (std::chrono::duration<double>)words/(now-last_time) * LARPIX_PACKET_LEN * 8 / 1e6,
            (std::chrono::duration<double>)total_words/(now-start_time) * LARPIX_PACKET_LEN * 8 / 1e6
            );
+    // wait for last message transfer to complete (up to some timeout)
     last_time = now;
     while (!msg_ready && (std::chrono::high_resolution_clock::now().time_since_epoch() < last_sent_msg + std::chrono::milliseconds(timeo))) { ; }
 
-    // create message
+    // create new message
     init_msg(msg_buffer, words, MSG_TYPE_DATA);
     msg_bytes = get_msg_bytes(words);      
 

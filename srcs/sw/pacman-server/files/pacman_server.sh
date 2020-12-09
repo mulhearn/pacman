@@ -1,13 +1,4 @@
 #!/bin/sh
-VDDD_DAC_ADDR=0x1C
-VDDA_DAC_ADDR=0x1D
-
-dac_config() {
-  echo "Configuring i2c DACs..."
-  /usr/sbin/i2cset -y 0 $VDDD_DAC_ADDR 0x08 0x00 0x00 i
-  /usr/sbin/i2cset -y 0 $VDDA_DAC_ADDR 0x08 0x00 0x00 i
-}
-
 launch_cmdserver () {
   echo "Launching command server..."
   nohup /usr/bin/pacman_cmdserver >> /dev/null &
@@ -30,7 +21,6 @@ stop_dataserver () {
 
 
 start () {
-  dac_config
   launch_cmdserver
   launch_dataserver
 }
