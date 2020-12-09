@@ -14,6 +14,7 @@ ENTITY uart_rx IS
       CLK         : IN  STD_LOGIC;
       RST         : IN  STD_LOGIC;
       CLKIN_RATIO : IN  STD_LOGIC_VECTOR (7 DOWNTO 0);
+      CLKIN_PHASE : in  STD_LOGIC_VECTOR (7 downto 0);
       -- UART RX
       RX          : IN  STD_LOGIC;
       -- received data
@@ -31,8 +32,9 @@ ARCHITECTURE uart_rx_arch OF uart_rx IS
   SIGNAL bit_length     : INTEGER RANGE CLK_LENGTH TO CLK_LENGTH * 255;
   SIGNAL cnt_bit_length : INTEGER RANGE -1 TO CLK_LENGTH * 255;
   SIGNAL cnt_bits       : INTEGER RANGE 0 TO DATA_WIDTH+2;
+  SIGNAL delay_cnt      : INTEGER RANGE 0 TO 255;
   
-  TYPE state_type IS (IDLE, WT, SHIFT, UPDATE);
+  TYPE state_type IS (IDLE, DELAY, WT, SHIFT, UPDATE);
   SIGNAL state : state_type := IDLE;
   
   SIGNAL RXfiltered  : STD_LOGIC;
@@ -48,13 +50,8 @@ BEGIN  -- ARCHITECTURE uart_rx_arch
       IF RST = '1' THEN  -- asynchronous reset (active high)
         RXfiltered <= '1';
       ELSIF CLK'EVENT AND CLK = '1' THEN  -- rising clock edge
-         RXfilterSRG <= RXfilterSRG (1 DOWNTO 0) & RX;
-         IF RXfilterSRG = "111" THEN
-            RXfiltered <= '1';
-         END IF;
-         IF RXfilterSRG = "000" THEN
-            RXfiltered <= '0';
-         END IF;
+        RXfilterSRG <= RXfilterSRG (1 DOWNTO 0) & RX;
+        RXfiltered <= ((RXfilterSRG(0) and RXfilterSRG(1)) or (RXfilterSRG(0) and RXfilterSRG(2)) or (RXfilterSRG(1) and RXfilterSRG(2)));
       END IF;
    END PROCESS RX_FILTER;
 
@@ -75,8 +72,21 @@ BEGIN  -- ARCHITECTURE uart_rx_arch
                cnt_bit_length <= (bit_length / 2) - 2;
                cnt_bits       <= 0;
                IF RXfiltered = '0' THEN
-                  state <= WT;
+                 if to_integer(unsigned(CLKIN_PHASE)) = 0 THEN
+                   state <= WT;
+                 else
+                   state <= DELAY;
+                   delay_cnt <= to_integer(unsigned(CLKIN_PHASE)) - 1;
+                 end if;
                END IF;
+
+           when DELAY =>
+              busy <= '1';
+              if delay_cnt = 0 then
+                state <= WT;
+              else
+                delay_cnt <= delay_cnt - 1;
+              end if;
                
             WHEN WT =>
                busy <= '1';

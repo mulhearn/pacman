@@ -81,6 +81,7 @@ architecture arch_imp of uart_channel is
     ARESETN : in STD_LOGIC;
     MCLK : in STD_LOGIC;
     CLKIN_RATIO : in STD_LOGIC_VECTOR ( 7 downto 0 );
+    CLKIN_PHASE : in STD_LOGIC_VECTOR ( 7 downto 0 );
     PACMAN_TS : in UNSIGNED ( 31 downto 0 );
     UART_RX_IN : in STD_LOGIC;
     UART_RX_BUSY : out STD_LOGIC;
@@ -184,7 +185,8 @@ architecture arch_imp of uart_channel is
   signal larpix_uart_tx_0_FIFO_COUNT : STD_LOGIC_VECTOR ( 8 downto 0 );
   signal larpix_uart_tx_0_UART_TX_OUT : STD_LOGIC;
   signal CLKIN_RATIO_1 : std_logic_vector ( 7 downto 0 );
-  signal CLKOUT_PHASE : std_logic_vector ( 3 downto 0 );  
+  signal CLKOUT_PHASE : std_logic_vector ( 3 downto 0 );
+  signal CLKIN_PHASE : std_logic_vector (7 downto 0 );  
   signal RW_REG0 : std_logic_vector (31 downto 0);
   signal RW_REG1 : std_logic_vector (31 downto 0);
   signal RW_REG2 : std_logic_vector (31 downto 0);
@@ -226,11 +228,14 @@ begin
   S_AXI_LITE_rresp(1 downto 0) <= S_AXI_LITE_1_RRESP(1 downto 0);
   S_AXI_LITE_rvalid <= S_AXI_LITE_1_RVALID;
   S_AXI_LITE_wready <= S_AXI_LITE_1_WREADY;
+
   UART_RX_1 <= UART_RX;
   UART_TX <= larpix_uart_tx_0_UART_TX_OUT;
   larpix_uart_rx_0_M_AXIS_TREADY <= M_AXIS_tready;
+  
   CLKIN_RATIO_1(7 downto 0) <= RW_REG0(7 downto 0);
   CLKOUT_PHASE(3 downto 0) <= RW_REG1(3 downto 0);
+  CLKIN_PHASE(7 downto 0) <= RW_REG2(7 downto 0);
 
   axi_lite_reg_space_0 : axi_lite_reg_space
      port map (
@@ -238,7 +243,7 @@ begin
       S_AXI_LITE_ARESETN => ARESETN_1,
       RW_REG0(31 downto 0) => RW_REG0(31 downto 0),
       RW_REG1 => RW_REG1(31 downto 0),
-      RW_REG2 => open,
+      RW_REG2 => RW_REG2(31 downto 0),
       RW_REG3 => open,      
       RO_REG0(8 downto 0) => larpix_uart_tx_0_FIFO_COUNT(8 downto 0),
       RO_REG0(31 downto 9) => (others => '0'),
@@ -272,6 +277,7 @@ begin
       ACLK => ACLK_1,
       ARESETN => ARESETN_1,
       CLKIN_RATIO(7 downto 0) => CLKIN_RATIO_1(7 downto 0),
+      CLKIN_PHASE(7 downto 0) => CLKIN_PHASE(7 downto 0),
       MCLK => MCLK_1,
       M_AXIS_TDATA(127 downto 0) => larpix_uart_rx_0_M_AXIS_TDATA(127 downto 0),
       M_AXIS_TKEEP(15 downto 0) => larpix_uart_rx_0_M_AXIS_TKEEP(15 downto 0),
