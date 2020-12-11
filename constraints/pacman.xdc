@@ -1,4 +1,12 @@
 # pacman-v1-rev3
+# I2C-1
+set_property IOSTANDARD LVCMOS33 [get_ports I2C_1_SDA]
+set_property IOSTANDARD LVCMOS33 [get_ports I2C_1_SCL]
+set_property PACKAGE_PIN K21 [get_ports I2C_1_SDA]
+set_property PACKAGE_PIN J20 [get_ports I2C_1_SCL]
+set_property PULLUP TRUE [get_ports I2C_1_SDA]
+set_property PULLUP TRUE [get_ports I2C_1_SCL]
+
 # UARTs
 set_property IOSTANDARD LVCMOS33 [get_ports MOSI_0]
 set_property IOSTANDARD LVCMOS33 [get_ports MISO_0]

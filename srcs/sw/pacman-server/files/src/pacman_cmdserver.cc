@@ -104,9 +104,10 @@ int main(int argc, char* argv[]){
   // initialize i2c-2
   int i2c_2_dh = i2c_open(I2C_2_DEV);
   if (i2c_2_dh < 0) {
-      printf("Error initializing I2C-1\n");
+      printf("Error initializing I2C-2\n");
       return 3;
   }
+  printf("I2C initialized\n");
 
   // initialize zmq msg
   int req_msg_nbytes;
