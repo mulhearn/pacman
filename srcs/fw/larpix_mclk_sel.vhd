@@ -40,10 +40,8 @@ architecture arch_imp of larpix_mclk_sel is
   constant C_PLL0_DIV : real := CEIL(1.000 / C_ACLK_PERIOD / C_PFD_MAX_FREQ);
   constant C_PLL1_DIV : real := CEIL(1.000 / C_AUX_CLK_PERIOD / C_PFD_MAX_FREQ);
   constant C_CLKFBOUT0_MULT : real := CEIL(C_VCO_MIN_FREQ * C_ACLK_PERIOD * C_PLL0_DIV);
-  constant C_CLKFBOUT1_MULT : real := CEIL(C_VCO_MIN_FREQ * C_AUX_CLK_PERIOD * C_PLL0_DIV);
-  --constant C_MCLK0_DIV : real := C_MCLK_PERIOD / C_ACLK_PERIOD * C_CLKFBOUT0_MULT / C_PLL0_DIV / 2.0;
+  constant C_CLKFBOUT1_MULT : real := CEIL(C_VCO_MIN_FREQ * C_AUX_CLK_PERIOD * C_PLL1_DIV);
   constant C_MCLK0_DIV : real := C_MCLK_PERIOD / C_ACLK_PERIOD * C_CLKFBOUT0_MULT / C_PLL0_DIV;
-  --constant C_MCLK1_DIV : real := C_MCLK_PERIOD / C_AUX_CLK_PERIOD * C_CLKFBOUT1_MULT / C_PLL1_DIV / 2.0;
   constant C_MCLK1_DIV : real := C_MCLK_PERIOD / C_AUX_CLK_PERIOD * C_CLKFBOUT1_MULT / C_PLL1_DIV;
 
   attribute ASYNC_REG : string;
@@ -188,7 +186,7 @@ begin
     CLKOUT0_DIVIDE => integer(C_MCLK1_DIV),
     CLKOUT0_DUTY_CYCLE => 0.5,
     CLKOUT0_PHASE => 0.0,
-    DIVCLK_DIVIDE => integer(C_PLL0_DIV),
+    DIVCLK_DIVIDE => integer(C_PLL1_DIV),
     CLKFBOUT_MULT => integer(C_CLKFBOUT1_MULT)
     )
     port map(
