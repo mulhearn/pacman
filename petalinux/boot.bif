@@ -1,0 +1,6 @@
+the_ROM_image:
+{
+    [bootloader]../srcs/sw/zynq_fsbl/prebuilt/zynq_fsbl.elf
+    ../products/zsys_wrapper.bit
+    images/linux/u-boot.elf
+}
