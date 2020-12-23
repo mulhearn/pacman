@@ -11,7 +11,8 @@ DEPENDS = "zeromq python python-pyzmq"
 SRC_URI = "file://src \
            file://include \
            file://pacman_server.sh \
-           file://power_up.sh \
+           file://power_up_tile.sh \
+           file://report_power.sh \
            file://power_down.sh \
            file://README.md \
            file://pacman_util.py \
@@ -38,7 +39,8 @@ do_install() {
              install -d ${D}${homedir}
              install ${S}/README.md ${D}${homedir}
              install -m 0755 ${S}/pacman_util.py ${D}${homedir}
-             install -m 0755 ${S}/power_up.sh ${D}${homedir}
+             install -m 0755 ${S}/power_up_tile.sh ${D}${homedir}
+             install -m 0755 ${S}/report_power.sh ${D}${homedir}             
              install -m 0755 ${S}/power_down.sh ${D}${homedir}             
              
              install -d ${D}${sysconfdir}/init.d
