@@ -29,10 +29,10 @@ for TILE in $(seq 1 8); do
                         --read $TILE_ADC_READ_ADDR | grep 'READ')
         case $ADC in
             'VDDD' | 'VDDA')
-                python -c "adc=int(\"\"\"${READ_RESP}\"\"\".split()[-1].split('x')[-1].strip('\''),16); print('${ADC}: %f mV ' % (((adc >> 16) >> 3) * 4))"
+                python -c "adc=int(\"\"\"${READ_RESP}\"\"\".split()[-1].split('x')[-1].strip('\'L'),16); print('${ADC}: %f mV ' % (((adc >> 16) >> 3) * 4))"
                 ;;
             'IDDD' | 'IDDA')
-                python -c "adc=int(\"\"\"${READ_RESP}\"\"\".split()[-1].split('x')[-1].strip('\''),16); print('${ADC}: %f mA ' % (((adc >> 16) - (adc >> 31) * 65535) * 500 * 0.01))"
+                python -c "adc=int(\"\"\"${READ_RESP}\"\"\".split()[-1].split('x')[-1].strip('\'L'),16); print('${ADC}: %f mA ' % (((adc >> 16) - (adc >> 31) * 65535) * 500 * 0.01))"
                 ;;
         esac
     done
