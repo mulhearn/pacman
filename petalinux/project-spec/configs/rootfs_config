@@ -148,9 +148,9 @@ CONFIG_dbus=y
 # i2c-tools 
 #
 CONFIG_i2c-tools=y
-# CONFIG_i2c-tools-dev is not set
-# CONFIG_i2c-tools-dbg is not set
-# CONFIG_i2c-tools-misc is not set
+CONFIG_i2c-tools-dev=y
+CONFIG_i2c-tools-dbg=y
+CONFIG_i2c-tools-misc=y
 
 #
 # init-ifupdown 
@@ -4133,6 +4133,7 @@ CONFIG_webfwu=y
 # user packages 
 #
 # CONFIG_gpio-demo is not set
+CONFIG_ntp=y
 CONFIG_pacman-server=y
 # CONFIG_peekpoke is not set
 # CONFIG_startuo is not set
