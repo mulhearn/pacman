@@ -185,10 +185,10 @@ int main(int argc, char* argv[]){
         if (*reg < PACMAN_LEN) {
           val = pacman_get(pacman_pl, *reg);
           set_rep_word_read(reply_word, reg, &val);
-        } else if (*reg >= I2C_1_BASE_ADDR || *reg < I2C_1_BASE_ADDR + I2C_1_BASE_LEN) {
+        } else if (*reg >= I2C_1_BASE_ADDR && *reg < I2C_1_BASE_ADDR + I2C_1_BASE_LEN) {
           val = i2c_read(i2c_1_dh, *reg);
           set_rep_word_read(reply_word, reg, &val);
-        } else if (*reg >= I2C_2_BASE_ADDR || *reg < I2C_2_BASE_ADDR + I2C_2_BASE_LEN) {
+        } else if (*reg >= I2C_2_BASE_ADDR && *reg < I2C_2_BASE_ADDR + I2C_2_BASE_LEN) {
           val = i2c_read(i2c_2_dh, *reg);
           set_rep_word_read(reply_word, reg, &val);
         } else {
