@@ -53,6 +53,7 @@
 };
 
 /* I2C need I2C1 connected to te0720 system controller ip */
+/* on-board i2c devices are not readily accessible with pacman firmware
 &i2c1 {
 
     iexp@20 {       // GPIO in CPLD
@@ -74,6 +75,7 @@
         reg = <0x6F>;
     };
 };
+*/
 
 /* DDR memory reserved for PL-DMA */
 / {
