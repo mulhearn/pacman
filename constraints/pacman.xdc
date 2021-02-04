@@ -108,6 +108,11 @@ set_property PACKAGE_PIN P20 [get_ports TILE_EN[6]]
 set_property PACKAGE_PIN L22 [get_ports TILE_EN[7]]
 
 
+# SYNC in
+set_property IOSTANDARD LVCMOS33 [get_ports HW_SYNC_TRIG]
+set_property PACKAGE_PIN K18 [get_ports HW_SYNC_TRIG]
+
+
 # RESET out
 set_property IOSTANDARD LVCMOS33 [get_ports RESETN]
 set_property IOSTANDARD DIFF_HSTL_II_18 [get_ports RESETN_P]
@@ -129,6 +134,11 @@ set_property PACKAGE_PIN G17 [get_ports RESETN_P[6]]
 set_property PACKAGE_PIN F17 [get_ports RESETN_N[6]]
 set_property PACKAGE_PIN B21 [get_ports RESETN_P[7]]
 set_property PACKAGE_PIN B22 [get_ports RESETN_N[7]]
+
+
+# TRIG in
+set_property IOSTANDARD LVCMOS33 [get_ports TRIG1_IN]
+set_property PACKAGE_PIN J18 [get_ports TRIG1_IN]
 
 
 # TRIG out
