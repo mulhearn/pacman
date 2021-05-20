@@ -1,6 +1,5 @@
 \documentclass[12pt]{article}
 
-
 \usepackage[dvips,letterpaper,margin=0.75in,bottom=0.75in]{geometry}
 \usepackage{cite}
 \usepackage{slashed}
@@ -20,32 +19,206 @@
 
 \section{Signal Mapping}
 
+\newpage
+\begin{tabular}{llll}
+\hline
+Logical & Trenz & Pin & Note\\  
+\hline
+TILE6\_POSI\_0     & B33\_L7\_P   & JB2-12 & EVAL\\
+TILE6\_POSI\_1     & B33\_L7\_N   & JB2-14 & EVAL\\
+TILE6\_POSI\_2     & B33\_L8\_P   & JB2-16 & EVAL\\
+TILE6\_POSI\_3     & B33\_L8\_N   & JB2-18 & EVAL\\
+\hline
+TILE6\_PISO\_0     & B33\_L11\_P  & JB2-22 & EVAL\\
+TILE6\_PISO\_1     & B33\_L11\_N  & JB2-24 & EVAL\\
+TILE6\_PISO\_2     & B33\_L12\_P  & JB2-26 & EVAL\\
+TILE6\_PISO\_3     & B33\_L12\_N  & JB2-28 & EVAL\\
+\hline
+TILE7\_POSI\_0     & B33\_L17\_P  & JB2-32 & \\
+TILE7\_POSI\_1     & B33\_L17\_N  & JB2-34 & \\
+TILE7\_POSI\_2     & B33\_L18\_P  & JB2-36 & \\
+TILE7\_POSI\_3     & B33\_L18\_N  & JB2-38 & \\
+\hline
+TILE7\_PISO\_0     & B13\_L7\_P   & JB2-42& \\
+TILE7\_PISO\_1     & B13\_L7\_N   & JB2-44& \\
+TILE7\_PISO\_2     & B13\_L8\_P   & JB2-46& \\
+TILE7\_PISO\_3     & B13\_L8\_N   & JB2-48& \\
+\hline
+TILE4\_POSI\_0     & B13\_L11\_P  & JB2-52 & \\
+TILE4\_POSI\_1     & B13\_L11\_N  & JB2-54 & \\
+TILE4\_POSI\_2     & B13\_L9\_P   & JB2-56 & \\
+TILE4\_POSI\_3     & B13\_L9\_N   & JB2-58 & \\
+\hline
+TILE4\_PISO\_0     & B13\_L20\_P  & JB2-62 & \\
+TILE4\_PISO\_1     & B13\_L20\_N  & JB2-64 & \\
+TILE4\_PISO\_2     & B13\_L17\_P  & JB2-66 & \\
+TILE4\_PISO\_3     & B13\_L17\_N  & JB2-68 & \\
+\hline
+TILE1\_POSI\_0     & B13\_L16\_P  & JB2-72 & \\
+TILE1\_POSI\_1     & B13\_L16\_N  & JB2-74 & \\
+TILE1\_POSI\_2     & B13\_L18\_P  & JB2-76 & \\
+TILE1\_POSI\_3     & B13\_L18\_N  & JB2-78 & \\
+\hline
+TILE1\_PISO\_0     & B13\_L15\_P  & JB2-82& \\
+TILE1\_PISO\_1     & B13\_L15\_N  & JB2-84& \\
+TILE1\_PISO\_2     & B13\_L21\_P  & JB2-86& \\
+TILE1\_PISO\_3     & B13\_L21\_N  & JB2-88& \\
+\hline
+\end{tabular}
+
+\newpage
+\begin{tabular}{llll}
+\hline
+Logical & Trenz & Pin & Note\\  
+\hline
+TILE3\_POSI\_3     & B33\_L13\_P  & JB2-21 & \\
+TILE3\_POSI\_2     & B33\_L13\_N  & JB2-23 & \\
+TILE3\_POSI\_1     & B33\_L14\_P  & JB2-25 & \\
+TILE3\_POSI\_0     & B33\_L14\_N  & JB2-27 & \\
+\hline
+TILE3\_PISO\_3     & B13\_L5\_P   & JB2-31 & \\
+TILE3\_PISO\_2     & B13\_L5\_N   & JB2-33 & \\
+TILE3\_PISO\_1     & B13\_L6\_P   & JB2-35 & \\
+TILE3\_PISO\_0     & B13\_L6\_N   & JB2-37 & \\
+\hline
+TILE2\_POSI\_3     & B13\_L1\_P   & JB2-41 & \\
+TILE2\_POSI\_2     & B13\_L1\_N   & JB2-43 & \\
+TILE2\_POSI\_1     & B13\_L12\_P  & JB2-45 & \\
+TILE2\_POSI\_0     & B13\_L12\_N  & JB2-47 & \\
+\hline
+TILE2\_PISO\_3     & B13\_L14\_P  & JB2-51 & \\
+TILE2\_PISO\_2     & B13\_L14\_N  & JB2-53 & \\
+TILE2\_PISO\_1     & B13\_L13\_P  & JB2-55 & \\
+TILE2\_PISO\_0     & B13\_L13\_N  & JB2-57 & \\
+\hline
+TILE5\_POSI\_3     & B13\_L4\_P   & JB2-61 & \\
+TILE5\_POSI\_2     & B13\_L4\_N   & JB2-63 & \\
+TILE5\_POSI\_1     & B13\_L3\_P   & JB2-65 & \\
+TILE5\_POSI\_0     & B13\_L3\_N   & JB2-67 & \\
+\hline
+TILE5\_PISO\_3     & B13\_L10\_P  & JB2-71 & \\
+TILE5\_PISO\_2     & B13\_L10\_N  & JB2-73 & \\
+TILE5\_PISO\_1     & B13\_L2\_P   & JB2-75 & \\
+TILE5\_PISO\_0     & B13\_L2\_N   & JB2-77 & \\
+\hline
+TILE8\_POSI\_3     & B13\_L23\_P  & JB2-81 & \\
+TILE8\_POSI\_2     & B13\_L23\_N  & JB2-83 & \\
+TILE8\_POSI\_1     & B13\_L24\_P  & JB2-85 & \\
+TILE8\_POSI\_0     & B13\_L24\_N  & JB2-87 & \\
+\hline
+TILE8\_PISO\_3     & B13\_L19\_P  & JB2-91 & \\
+TILE8\_PISO\_2     & B13\_L19\_N  & JB2-93 & \\
+TILE8\_PISO\_1     & B13\_L22\_P  & JB2-95 & \\
+TILE8\_PISO\_0     & B13\_L22\_N  & JB2-97 & \\
+\hline
+\end{tabular}
+
+\newpage
+\begin{tabular}{llll}
+\hline
+Logical & Trenz & Pin & Note\\  
+\hline
+TILE6\_SYNC\_DN    & B35\_L16\_N   & JB1-32 & EVAL \\
+TILE6\_SYNC\_DP    & B35\_L16\_P   & JB1-34 & EVAL \\
+TILE6\_TRIG\_DN    & B35\_L24\_N   & JB1-36 & EVAL \\
+TILE6\_TRIG\_DP    & B35\_L24\_P   & JB1-38 & EVAL \\
+TILE6\_CLK\_DN     & B35\_L18\_N   & JB1-42 & EVAL \\
+TILE6\_CLK\_DP     & B35\_L18\_P   & JB1-44 & EVAL \\
+\hline
+TILE7\_SYNC\_DN    & B35\_L15\_N   & JB1-46 & \\
+TILE7\_SYNC\_DP    & B35\_L15\_P   & JB1-48 & \\
+TILE7\_TRIG\_DN    & B35\_L22\_N   & JB1-50 & \\
+TILE7\_TRIG\_DP    & B35\_L22\_P   & JB1-52 & \\
+TILE7\_CLK\_DN     & B35\_L17\_N   & JB1-56 & \\
+TILE7\_CLK\_DP     & B35\_L17\_P   & JB1-58 & \\
+\hline
+TILE4\_SYNC\_DN    & B35\_L13\_N   & JB1-60 & \\
+TILE4\_SYNC\_DP    & B35\_L13\_P   & JB1-62 & \\
+TILE4\_TRIG\_DN    & B35\_L14\_N   & JB1-66 & \\
+TILE4\_TRIG\_DP    & B35\_L14\_P   & JB1-68 & \\
+TILE4\_CLK\_DN     & B35\_L4\_N    & JB1-70 & \\
+TILE4\_CLK\_DP     & B35\_L4\_P    & JB1-72 & \\
+\hline
+TILE1\_SYNC\_DN    & B35\_L12\_N   & JB1-76 & \\
+TILE1\_SYNC\_DP    & B35\_L12\_P   & JB1-78 & \\
+TILE1\_TRIG\_DN    & B35\_L20\_N   & JB1-82 & \\
+TILE1\_TRIG\_DP    & B35\_L20\_P   & JB1-84 & \\
+TILE1\_CLK\_DN     & B35\_L19\_N   & JB1-97 & non-contiguous\\
+TILE1\_CLK\_DP     & B35\_L19\_P   & JB1-99 & non-contiguous\\
+\hline
+TILE3\_CLK\_DN      & B35\_L10\_N  & JB1-35 & \\
+TILE3\_CLK\_DP      & B35\_L10\_P  & JB1-37 & \\
+TILE3\_TRIG\_DN     & B35\_L9\_N   & JB1-39 & \\
+TILE3\_TRIG\_DP     & B35\_L9\_P   & JB1-41 & \\
+TILE3\_SYNC\_DN     & B35\_L7\_N   & JB1-45 & \\
+TILE3\_SYNC\_DP     & B35\_L7\_P   & JB1-47 & \\
+\hline
+TILE2\_CLK\_DN      & B35\_L2\_N   & JB1-49 & \\
+TILE2\_CLK\_DP      & B35\_L2\_P   & JB1-51 & \\
+TILE2\_TRIG\_DN     & B35\_L8\_N   & JB1-55 & \\
+TILE2\_TRIG\_DP     & B35\_L8\_P   & JB1-57 & \\
+TILE2\_SYNC\_DN     & B35\_L21\_N  & JB1-59 & \\
+TILE2\_SYNC\_DP     & B35\_L21\_P  & JB1-61 & \\
+\hline
+TILE5\_CLK\_DN      & B35\_L11\_N  & JB1-65 & \\
+TILE5\_CLK\_DP      & B35\_L11\_P  & JB1-67 & \\
+TILE5\_TRIG\_DN     & B35\_L23\_N  & JB1-69 & \\
+TILE5\_TRIG\_DP     & B35\_L23\_P  & JB1-71 & \\
+TILE5\_SYNC\_DN     & B35\_L5\_N   & JB1-75 & \\
+TILE5\_SYNC\_DP     & B35\_L5\_P   & JB1-77 & \\
+\hline
+TILE8\_CLK\_DN      & B35\_L3\_N   & JB1-79 & \\
+TILE8\_CLK\_DP      & B35\_L3\_P   & JB1-81 & \\
+TILE8\_TRIG\_DN     & B35\_L6\_N   & JB1-85 & \\
+TILE8\_TRIG\_DP     & B35\_L6\_P   & JB1-87 & \\
+TILE8\_SYNC\_DN     & B35\_L1\_N   & JB1-93 & \\
+TILE8\_SYNC\_DP     & B35\_L1\_P   & JB1-95 & \\
+\end{tabular}
+
+\newpage
+\begin{tabular}{llll}
+\hline
+Logical & Trenz & Pin & Note\\  
+\hline
+TILE1\_EN & B34\_L1\_P    & JB3-7  & \\
+TILE4\_EN & B34\_L1\_N    & JB3-9  & \\
+TILE7\_EN & B34\_L18\_P   & JB3-13 & \\
+TILE6\_EN & B34\_L18\_N   & JB3-15 & \\
+TILE3\_EN & B34\_L20\_P   & JB3-19 & \\
+TILE2\_EN & B34\_L20\_N   & JB3-21 & \\
+TILE5\_EN & B34\_L10\_P   & JB3-25 & \\
+TILE8\_EN & B34\_L10\_N   & JB3-27 & \\
+\hline
+\end{tabular}
+
+\newpage
+
 \begin{tabular}{lll}
 \hline
 Logical & Trenz & Package Pin \\  
 \hline
-SCL         & MIO10        & \\
-SDA         & MIO11        & \\
-LED         & MIO12        & \\
-LED         & MIO13        & \\
-LED         & B35\_L20\_P  & G19 \\
-LED         & M35\_L20\_N  & F19 \\
-\hline
-TILE1\_CLK\_1      & B33\_L13\_P  & W17\\
-TILE1\_CUR\_SEL\_1 & B33\_L13\_N  & W18\\
-TILE1\_RESET\_1    & B33\_L4\_P   & W20\\
-TILE1\_TRIG\_1     & B33\_L4\_N   & W21\\
-TILE1\_EN          & B33\_L12\_P  & Y18\\
-TILE1\_MOSI\_0     & B33\_L7\_P   & AA22\\
-TILE1\_MOSI\_1     & B33\_L8\_P   & AA21\\
-TILE1\_MOSI\_2     & B33\_L11\_P  & Y19\\
-TILE1\_MOSI\_3     & B33\_L17\_P  & AA17\\
-TILE1\_MISO\_0     & B33\_L7\_N   & AB22\\
-TILE1\_MISO\_1     & B33\_L8\_N   & AB21\\
-TILE1\_MISO\_2     & B33\_L11\_N  & AA19\\
-TILE1\_MISO\_3     & B33\_L17\_N  & AB17\\
+SCL-1          & MIO10        & \\
+SDA-1          & MIO11        & \\
+SCL-LOOPBACK   & B34\_L8\_P   & \\
+SDA-LOOPBACK   & B34\_L8\_N   & \\
+SCL-2          & B34\_L9\_P   & \\
+SDA-2          & B34\_L9\_N   & \\
+LED            & MIO12        & \\
+LED            & MIO13        & \\
+LED            & B34\_L22\_P  & \\
+LED            & B34\_L22\_N  & \\
+ANALOG\_PWR\_EN  & B34\_L2\_P & JB3-14 \\ 
+TRIG\_ISO       & B34\_L7\_P & JB3-8 \\
+SYNC\_ISO       & B34\_L7\_N & JB3-10 \\
+CLK  & TBD & \\
+TRIG & TBD & \\
+SYNC & TBD & \\
 \hline
 \end{tabular}
+
+\newpage
+
+\end{document}
 
 \begin{tabular}{|ll|l|l|l|}
 \hline
