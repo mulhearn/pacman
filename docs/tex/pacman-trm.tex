@@ -5,6 +5,7 @@
 \usepackage{slashed}
 \usepackage{graphicx}
 \usepackage{amsmath}
+\usepackage{capt-of}
 
 \usepackage[american,fulldiode]{circuitikz}
 \usetikzlibrary{calc}
@@ -17,9 +18,153 @@
 
 \maketitle
 
-\section{Signal Mapping}
+\section{Requirements}
+
+This section describes the requirements of the PACMAN card.
+
+
+\subsection{Pixel Tile Interface}
+
+A single PACMAN card shall drive up to eight pixel tile cards through a
+flange card.  The interface to the flange card and subsequent pixel
+tile cards is through a single 6 row by 50 pin high-desnity SAMTEC
+connector {\tt SEAF-50-01-L-06-1-RA-K-TR} on the PACMAN card.
+
+The PACMAN card shall provide a footprint for an optional 2x17
+connector to drive a pixel card directly without the use of flange
+card.
+
+\subsection{Front Panel Interface}
+
+The PACMAN card shall implement the following front panel interfaces in
+specified quantity with specified routing.  When routing to
+programmable logic (PL) is specified, the specified purpose is nominal
+and can be repurposed through firmware changes.
+
+\captionof{table}{Required Front Panel Interface}
+\begin{center}
+\begin{tabular}{lll}
+Interface   & Quantity & Routing \\
+SMA Jack    & 1 & Multiplexed to eight tile analog monitor \\
+SMA Jack    & 1 & Multiplexed to eight tile adc test \\
+Lemo Jack   & 2 & PL: Trigger and Sync \\
+Push Button & 1 & Reset \\
+LED         & 4 & PL: General Purpose
+\end{tabular}
+\end{center}
+
+\subsection{Timing System Endpoint}
+
+The PACMAN card shall implement a ProtoDUNE-SP timing system
+endpoint\footnote{DUNE-doc-1651-v3} of a single fiber-optic link.  The
+simplest hardware implementation of such an endpoint includes a PIN
+diode (photodetector), transimpedance amplifier, and a clock and data
+recovery IC such as ADN2814.
+
+\subsection{Linux System and Peripherals}
+
+The PACMAN card shall provide a linux host with system peripherals:
+\captionof{table}{Required Peripherals}
+\begin{center}
+\begin{tabular}{ll}
+         & Notes \\
+SD Card  & Firmware, linux images, linux root filesytem\\
+Ethernet & Gigabit\\
+JTAG     & Configure FPGA\\
+UART     & Linux terminal\\
+\end{tabular}
+\end{center}
+
+\subsection{Power Requirements}
+
+The PACMAN card shall provide digital and analog power to each pixel
+tile card.  The digital voltage level (VDDD) and analog voltage level
+(VDDA) are digitally controlled independently for each pixel tile, within the limits and at the stability specified below.
+\captionof{table}{Digital and Analog Power Requirements}
+\begin{center}
+\begin{tabular}{llllll}
+      & Stability & Min (V) & Max (V) & Max Current (A) & Max Power (W) \\
+VDDA  & $1\%$ & 0 & 1.8 & 0.5 & 0.9\\
+VDDD  & $1\%$ & 0 & 1.8 & 1   & 1.8 W\\
+\end{tabular}
+\end{center}
+
+\subsection{Digital Signals}
+
+The LArPix-v2 ASIC uses a bit-serial protocol to transmit and receive
+data.  The PACMAN is the primary and the LARPix ASIC the secondary, so
+that the PACMAN transmits POSI and receives PISO signals.
+
+The PACMAN shall provide the following digital IO signals to each
+pixel tile card:
+\captionof{table}{Digital and Analog Power Requirements}
+\begin{center}
+\begin{tabular}{llllll}
+Signal & Quantity & Description \\
+  POSI & 4 & Bit serial transmission to pixel tile \\
+  PISO & 4 & Bit serial reception from pixel tile \\
+  CLK  & 1 & Clock \\
+  TRIG & 1 & Trigger \\
+  SYNC & 1 & Multiplexed Synchronization and Reset \\
+\end{tabular}
+\end{center}
+
+Each POSI signal is received by a single ASIC, but the clock, trigger,
+and sync signals are fanned out to every ASIC on the tile card.  The
+PACMAN must be capable of driving the resulting capacitive load
+($XXX\rm~pF$) with XXX.
+
+The nominal clock rate is $10~\rm MHz$ with a maximum $40~\rm MHz$.
+
+The LArPix-v2 ASIC uses an LVDS-like pseudo-differential CMOS signal
+which the PACMAN shall be capable of transmitting and receiving.
+
+\subsection{Noise}
+
+The noise injected into the pixel tile from the controller shall be
+less than $1~\rm mV$.
+
+
+\section{Test-Bench Results}
+
+\subsection{Power}
+
+Benchtests\footnote{Reported 13 Feb 2020, Brooke} of ASIC power drawer during power up.
+\captionof{table}{ASIC Current Draw at Power-up}
+\begin{center}
+\begin{tabular}{lllll}
+   & Voltage (V) & Current (mA) & Power (mW) & Power ($\rm \mu W / chan$)\\
+VDDA  & 1.8 & 1.4  & 2.5  & 39\\
+VDDD  & 1.8 & 6.92 & 12.5 & 195\\
+\end{tabular}
+\end{center}
+
+Benchtests\footnote{Reported 14 Jan 2021, Brooke} of 10x10 pixel-tile power draw:
+\captionof{table}{10x10 Power Draw}
+\begin{center}
+\begin{tabular}{llll}
+   & Voltage (V) & Current (mA) & Power (W) \\
+VDDA  & 1.8 & 166  & 0.3  \\
+VDDD  & 1.8 & {\color{red} 611}  & 1.1  \\
+\end{tabular}
+\end{center}
+
+When driving the 10x10 tile, the PACMAN v1r3 drew $611~\rm mA$ through
+the LT3045 with nominal limit of $500~\rm mA$.  When driving eight tiles the XXXX was overpowered.  To drive eight pixel tiles with PACMAN v1r3, VDDD was reduced to $1.6~\rm V$ on v1r3, and one 2 A regulator was bypassed.  In this configuration, PACMAN draws $1.4~\rm A$ from the supplies.
+
+
+\subsection{Low-Noise Requirements}
+
+Intrinsic RMS noise on ASIC was benchtested\footnote{Reported 6 Mar
+  2020, Brooke} at $~\sim 3~\rm mV$.
+
+
+\appendix
 
 \newpage
+\section{Trenz Connector Pinout}
+\label{app:bigpinout}
+
 \begin{tabular}{llll}
 \hline
 Logical & Trenz & Pin & Note\\  
