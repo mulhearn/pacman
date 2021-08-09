@@ -6,29 +6,26 @@
 \usepackage{graphicx}
 \usepackage{amsmath}
 \usepackage{capt-of}
-
-\usepackage[american,fulldiode]{circuitikz}
-\usetikzlibrary{calc}
+\usepackage{xcolor}
 
 \begin{document}
-\ctikzset{bipoles/thickness=1}
-\ctikzset{bipoles/length=.8cm}
 
 \title{Technical Reference Manual for the Pixel Array Control Monitor and Network (Pac-Man) Card}
 
 \maketitle
 
-\section{Requirements}
+\section{Requirements for Demonstrator PACMAN}
 
-This section describes the requirements of the PACMAN card.
-
+This section describes the requirements of the PACMAN card intended to
+drive the demonstrator systems through the ArgonCube 2x2 demonstrator.
 
 \subsection{Pixel Tile Interface}
 
-A single PACMAN card shall drive up to eight pixel tile cards through a
-flange card.  The interface to the flange card and subsequent pixel
-tile cards is through a single 6 row by 50 pin high-desnity SAMTEC
-connector {\tt SEAF-50-01-L-06-1-RA-K-TR} on the PACMAN card.
+A single PACMAN card shall drive up to eight pixel tile cards through
+a single flange card.  The interface to the eight-tile flange card
+used in demonstrator systems and subsequent pixel tile cards is
+through a single 6 row by 50 pin high-desnity SAMTEC connector {\tt
+  SEAF-50-01-L-06-1-RA-K-TR} on the PACMAN card.
 
 The PACMAN card shall provide a footprint for an optional 2x17
 connector to drive a pixel card directly without the use of flange
@@ -36,8 +33,8 @@ card.
 
 \subsection{Front Panel Interface}
 
-The PACMAN card shall implement the following front panel interfaces in
-specified quantity with specified routing.  When routing to
+The PACMAN card shall implement the following front panel interfaces
+in specified quantity with specified routing.  When routing to
 programmable logic (PL) is specified, the specified purpose is nominal
 and can be repurposed through firmware changes.
 
@@ -124,6 +121,7 @@ which the PACMAN shall be capable of transmitting and receiving.
 The noise injected into the pixel tile from the controller shall be
 less than $1~\rm mV$.
 
+\subsection{Monitoring}
 
 \section{Test-Bench Results}
 
@@ -159,7 +157,26 @@ Intrinsic RMS noise on ASIC was benchtested\footnote{Reported 6 Mar
   2020, Brooke} at $~\sim 3~\rm mV$.
 
 
+
 \appendix
+
+\newpage
+\section{PACMAN Evolution}
+
+\captionof{table}{PACMAN Evolution}
+\vskip 0.5cm
+\begin{center}
+\begin{tabular}{llll}
+Card        & Designer      & Data & Notes \\
+\hline
+PACMAN v1r1 & Hillbrand     & Feb 2020 & Initial Prototype \\
+PACMAN v1r2 & Karcher       & July 2020 & Single-tile capable\\
+PACMAN v1r3 & Berns/Karcher & Jan 2021 & Eight-tile capable - Module 0\\
+PACMAN v2 & Berns/Karcher   & July 2021 (Est) & LArPix-v2b, Power, TX\\
+PACMAN v3 & Berns/Karcher   & Feb 2022 (Est) & Ten-tile capable \\
+\end{tabular}
+\end{center}
+
 
 \newpage
 \section{Trenz Connector Pinout}
