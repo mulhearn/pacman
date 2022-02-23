@@ -186,7 +186,9 @@ architecture arch_imp of uart_channel is
   signal larpix_uart_tx_0_UART_TX_OUT : STD_LOGIC;
   signal CLKIN_RATIO_1 : std_logic_vector ( 7 downto 0 );
   signal CLKOUT_PHASE : std_logic_vector ( 3 downto 0 );
-  signal CLKIN_PHASE : std_logic_vector (7 downto 0 );  
+  signal CLKIN_PHASE : std_logic_vector (7 downto 0 );
+  signal POSI_POLARITY : std_logic;
+  signal PISO_POLARITY : std_logic;
   signal RW_REG0 : std_logic_vector (31 downto 0);
   signal RW_REG1 : std_logic_vector (31 downto 0);
   signal RW_REG2 : std_logic_vector (31 downto 0);
@@ -229,13 +231,15 @@ begin
   S_AXI_LITE_rvalid <= S_AXI_LITE_1_RVALID;
   S_AXI_LITE_wready <= S_AXI_LITE_1_WREADY;
 
-  UART_RX_1 <= UART_RX;
-  UART_TX <= larpix_uart_tx_0_UART_TX_OUT;
+  UART_RX_1 <= UART_RX xor PISO_POLARITY;
+  UART_TX <= larpix_uart_tx_0_UART_TX_OUT xor POSI_POLARITY;
   larpix_uart_rx_0_M_AXIS_TREADY <= M_AXIS_tready;
   
   CLKIN_RATIO_1(7 downto 0) <= RW_REG0(7 downto 0);
   CLKOUT_PHASE(3 downto 0) <= RW_REG1(3 downto 0);
   CLKIN_PHASE(7 downto 0) <= RW_REG2(7 downto 0);
+  POSI_POLARITY <= RW_REG3(0);
+  PISO_POLARITY <= RW_REG3(1);
 
   axi_lite_reg_space_0 : axi_lite_reg_space
      port map (
@@ -244,7 +248,7 @@ begin
       RW_REG0(31 downto 0) => RW_REG0(31 downto 0),
       RW_REG1 => RW_REG1(31 downto 0),
       RW_REG2 => RW_REG2(31 downto 0),
-      RW_REG3 => open,      
+      RW_REG3 => RW_REG3(31 downto 0),      
       RO_REG0(8 downto 0) => larpix_uart_tx_0_FIFO_COUNT(8 downto 0),
       RO_REG0(31 downto 9) => (others => '0'),
       RO_REG1 => (others => '0'),
