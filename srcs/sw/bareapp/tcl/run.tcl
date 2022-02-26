@@ -11,14 +11,9 @@ rst -system
 # Configure the FPGA
 fpga ./hw1/zsys_wrapper.bit 
 # PS7 initialization
-namespace eval xsdb {source hw1/ps7_init.tcl; ps7_init}
-# Download the elf
+
+source hw1/ps7_init.tcl
+ps7_init
+ps7_post_config
 dow bareapp/Debug/bareapp.elf
-# Insert a breakpoint @ main
-bpadd -addr &main
-# Continue execution until the target is suspended
-con -block -timeout 500
-# Print the target registers
-puts [rrd]
-# Resume the target
 con
