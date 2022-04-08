@@ -4132,10 +4132,12 @@ CONFIG_webfwu=y
 #
 # user packages 
 #
+# CONFIG_dosfstools is not set
 # CONFIG_gpio-demo is not set
 CONFIG_ntp=y
 CONFIG_pacman-server=y
 # CONFIG_peekpoke is not set
+# CONFIG_phytool is not set
 # CONFIG_startuo is not set
 
 #
