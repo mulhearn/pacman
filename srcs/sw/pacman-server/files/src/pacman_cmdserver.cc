@@ -32,6 +32,7 @@ void dma_restart(uint32_t* virtual_address, dma_desc* start) {
   dma_mm2s_status(virtual_address);
 }
 
+
 void transmit_data(uint32_t* virtual_address, dma_desc* start, uint32_t nwords) {
   if (nwords == 0) return;
   dma_desc* tail = start;
@@ -169,7 +170,7 @@ int main(int argc, char* argv[]){
           set_rep_word_write(reply_word, reg, val);
         } else if (*reg >= I2C_2_BASE_ADDR && *reg < I2C_2_BASE_ADDR + I2C_2_BASE_LEN) {
           val = get_req_word_write_val(word);
-          i2c_write(i2c_2_dh, *reg, *val);
+          i2c_write(i2c_1_dh, *reg, *val);
           set_rep_word_write(reply_word, reg, val);
         } else {
           set_rep_word_err(reply_word, NULL, NULL);
@@ -189,7 +190,7 @@ int main(int argc, char* argv[]){
           val = i2c_read(i2c_1_dh, *reg);
           set_rep_word_read(reply_word, reg, &val);
         } else if (*reg >= I2C_2_BASE_ADDR && *reg < I2C_2_BASE_ADDR + I2C_2_BASE_LEN) {
-          val = i2c_read(i2c_2_dh, *reg);
+          val = i2c_read(i2c_1_dh, *reg);
           set_rep_word_read(reply_word, reg, &val);
         } else {
           set_rep_word_err(reply_word, NULL, NULL);

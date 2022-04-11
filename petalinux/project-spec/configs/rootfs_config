@@ -3093,7 +3093,7 @@ CONFIG_packagegroup-core-ssh-dropbear=y
 #
 # rpm 
 #
-# CONFIG_rpm is not set
+CONFIG_rpm=y
 # CONFIG_rpm-build is not set
 # CONFIG_rpm-dev is not set
 # CONFIG_rpm-dbg is not set
