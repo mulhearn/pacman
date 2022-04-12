@@ -27,8 +27,8 @@
 #define I2C_VREG_OFFSET_MON_VDDD 0x040  // ADC for VDDD voltage (one register per tile)
 #define I2C_VREG_OFFSET_MON_IDDA 0x050  // ADC for VDDA current (one register per tile)
 #define I2C_VREG_OFFSET_MON_IDDD 0x060  // ADC for VDDA current (one register per tile)
-#define I2C_VREG_OFFSET_MUXA     0x070  // MUX setting for contact A
-#define I2C_VREG_OFFSET_MUXB     0x080  // MUX setting for contact B
+#define I2C_VREG_OFFSET_SET_MUXA 0x070  // MUX setting for contact A
+#define I2C_VREG_OFFSET_SET_MUXB 0x080  // MUX setting for contact B
 
 #define I2C_VREG_OFFSET_SCRATCH  0x100  // Scratch registers (16 registers:  0x100 to 0x10F)
 #define I2C_VREG_OFFSET_EXPERT   0x110  // Expert registers (16 registers: 0x110 to 0x11F)
