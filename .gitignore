@@ -11,3 +11,5 @@
 /gpio
 /hwcheck
 /*.old
+srcs/ip/fifo_64x512
+srcs/ipshared/
