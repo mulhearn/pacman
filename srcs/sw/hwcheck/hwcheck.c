@@ -15,20 +15,23 @@
 // GPIO pinout:
 #define ANALOG_PWR_EN 0
 #define TILE1_ENABLE  1
-#define TILE2_ENABLE  2
-#define TILE3_ENABLE  3
-#define TILE4_ENABLE  4
-#define TILE5_ENABLE  5
-#define TILE6_ENABLE  6
-#define TILE7_ENABLE  7
-#define TILE8_ENABLE  8
-#define LED3          9
-#define LED4          10
+#define DEBUG  2
+#define CLK    3
+#define TRIG   4
+#define RESET  5
+#define POSI0  6
+#define POSI1  7
+#define POSI2  8
+#define POSI3  9
+#define PISO0  10
+#define PISO1  11
+#define PISO2  12
+#define PISO3  13
 
 //GPIO AXI device:
 #define GPIO_DEVICE_ID XPAR_GPIO_0_DEVICE_ID
 #define GPIO_CHAN    1
-#define GPIO_INPUTS     0b00000000000
+#define GPIO_INPUTS     0b11110000000000
 XGpio gpio;
 
 //GPIO PS device:
@@ -220,6 +223,7 @@ void blink(){
     XGpioPs_WritePin(&gpiops, LED2, 0);
     usleep(wait_usec);
   }
+  /*
   xil_printf("BLINK LEDS:  blinking LED 3 (HR pin)...\r\n");
   for (int iblink=0; iblink<nblink; iblink++){
     XGpio_DiscreteSet(&gpio, GPIO_CHAN, 1 << LED3);
@@ -233,20 +237,20 @@ void blink(){
     usleep(wait_usec);
     XGpio_DiscreteClear(&gpio, GPIO_CHAN, 1 << LED4);
     usleep(wait_usec);
-  }
+  }*/
   xil_printf("BLINK LEDS:  done.\r\n");  
 }
 
 void disable_all(){
    XGpio_DiscreteClear(&gpio, GPIO_CHAN, 1 << TILE1_ENABLE);
-   XGpio_DiscreteClear(&gpio, GPIO_CHAN, 1 << TILE2_ENABLE);
-   XGpio_DiscreteClear(&gpio, GPIO_CHAN, 1 << TILE3_ENABLE);
-   XGpio_DiscreteClear(&gpio, GPIO_CHAN, 1 << TILE4_ENABLE);
-   XGpio_DiscreteClear(&gpio, GPIO_CHAN, 1 << TILE5_ENABLE);
-   XGpio_DiscreteClear(&gpio, GPIO_CHAN, 1 << TILE6_ENABLE);
-   XGpio_DiscreteClear(&gpio, GPIO_CHAN, 1 << TILE7_ENABLE);
-   XGpio_DiscreteClear(&gpio, GPIO_CHAN, 1 << TILE8_ENABLE);   
-   XGpio_DiscreteClear(&gpio, GPIO_CHAN, 1 << ANALOG_PWR_EN);
+   //XGpio_DiscreteClear(&gpio, GPIO_CHAN, 1 << TILE2_ENABLE);
+   //XGpio_DiscreteClear(&gpio, GPIO_CHAN, 1 << TILE3_ENABLE);
+   //XGpio_DiscreteClear(&gpio, GPIO_CHAN, 1 << TILE4_ENABLE);
+   //XGpio_DiscreteClear(&gpio, GPIO_CHAN, 1 << TILE5_ENABLE);
+   //XGpio_DiscreteClear(&gpio, GPIO_CHAN, 1 << TILE6_ENABLE);
+   //XGpio_DiscreteClear(&gpio, GPIO_CHAN, 1 << TILE7_ENABLE);
+   //XGpio_DiscreteClear(&gpio, GPIO_CHAN, 1 << TILE8_ENABLE);   
+   //XGpio_DiscreteClear(&gpio, GPIO_CHAN, 1 << ANALOG_PWR_EN);
 }
 
 void analog_power_enable(){  
@@ -255,13 +259,13 @@ void analog_power_enable(){
 
 void tile_enable(){
    XGpio_DiscreteSet(&gpio, GPIO_CHAN, 1 << TILE1_ENABLE);
-   XGpio_DiscreteSet(&gpio, GPIO_CHAN, 1 << TILE2_ENABLE);
-   XGpio_DiscreteSet(&gpio, GPIO_CHAN, 1 << TILE3_ENABLE);
-   XGpio_DiscreteSet(&gpio, GPIO_CHAN, 1 << TILE4_ENABLE);
-   XGpio_DiscreteSet(&gpio, GPIO_CHAN, 1 << TILE5_ENABLE);
-   XGpio_DiscreteSet(&gpio, GPIO_CHAN, 1 << TILE6_ENABLE);
-   XGpio_DiscreteSet(&gpio, GPIO_CHAN, 1 << TILE7_ENABLE);
-   XGpio_DiscreteSet(&gpio, GPIO_CHAN, 1 << TILE8_ENABLE);
+   //XGpio_DiscreteSet(&gpio, GPIO_CHAN, 1 << TILE2_ENABLE);
+   //XGpio_DiscreteSet(&gpio, GPIO_CHAN, 1 << TILE3_ENABLE);
+   //XGpio_DiscreteSet(&gpio, GPIO_CHAN, 1 << TILE4_ENABLE);
+   //XGpio_DiscreteSet(&gpio, GPIO_CHAN, 1 << TILE5_ENABLE);
+   //XGpio_DiscreteSet(&gpio, GPIO_CHAN, 1 << TILE6_ENABLE);
+   //XGpio_DiscreteSet(&gpio, GPIO_CHAN, 1 << TILE7_ENABLE);
+   //XGpio_DiscreteSet(&gpio, GPIO_CHAN, 1 << TILE8_ENABLE);
 }
 
 
@@ -270,8 +274,8 @@ void tile_enable(){
 #define ADDR_ADC_VDDA     0b1000000  // INA220 for TILE 1
 //...
 #define ADDR_ADC_VDDD     0b1001000  // ADS1219 for TILES 1+2
-
-
+//...
+#define ADDR_MUX          0b1001100  // MAX14661 for TILES 1-8
 
 void check_iic(){
   unsigned val;
@@ -292,9 +296,14 @@ void check_iic(){
   //iic_byte(ADDR_ADC_VDDD, 0b01000000, 0b01100001); 
   iic_send(ADDR_ADC_VDDD, 0b00100000); 
   val = iic_recv(ADDR_ADC_VDDD, 0b00100000, 1); 
-  xil_printf("config register:  0x%x", val);
+  xil_printf("config register:  0x%x\r\n", val);
 
-  
+  xil_printf("CHECK I2C:  setting MUX to TILE 1\r\n");
+  iic_byte(ADDR_MUX, 0x14, 0x0);
+  iic_byte(ADDR_MUX, 0x15, 0x1);
+  xil_printf("CHECK I2C:  setting MUX to TILE 2\r\n");
+  iic_byte(ADDR_MUX, 0x14, 0x2);
+  iic_byte(ADDR_MUX, 0x15, 0x3);
 
 }
 
@@ -395,11 +404,90 @@ void read_voltages(){
   
 }
 
+void io_check(){
+  analog_power_enable();
+  tile_enable();
+  set_voltages_full();
 
+  xil_printf("DIGITAL IO:  starting.\r\n");
+  int half_cycle = 5;  
+  for (int i=0;i<1000000;i++){
+    for(int count=0;count<16;count++){     
+      if (count == 0){
+	XGpio_DiscreteSet(&gpio, GPIO_CHAN, 1 << DEBUG);
+	XGpio_DiscreteSet(&gpio, GPIO_CHAN, 1 << TRIG);
+      } else {
+	XGpio_DiscreteClear(&gpio, GPIO_CHAN, 1 << DEBUG);
+	XGpio_DiscreteClear(&gpio, GPIO_CHAN, 1 << TRIG);
+      }      
+      if (count == 1){
+	XGpio_DiscreteSet(&gpio, GPIO_CHAN, 1 << RESET);      	
+      } else {
+	XGpio_DiscreteClear(&gpio, GPIO_CHAN, 1 << RESET);      	
+      }
+
+      unsigned set_mask = ((0xf & count) << POSI0);
+      unsigned clr_mask = ((0xf & ~count) << POSI0);	
+      XGpio_DiscreteSet(&gpio, GPIO_CHAN, set_mask);
+      XGpio_DiscreteClear(&gpio, GPIO_CHAN, clr_mask);
+      
+      XGpio_DiscreteClear(&gpio, GPIO_CHAN, 1 << CLK);      
+      usleep(half_cycle);
+      XGpio_DiscreteSet(&gpio, GPIO_CHAN, 1 << CLK);
+      usleep(half_cycle);
+    }
+  }
+  xil_printf("DIGITAL IO:  done.\r\n");
+}
+
+
+void loop_back(){
+  analog_power_enable();
+  tile_enable();
+  set_voltages_full();
+  
+  sleep(5);
+
+  XGpio_DiscreteClear(&gpio, GPIO_CHAN, 0xf<<POSI0);
+  XGpio_DiscreteClear(&gpio, GPIO_CHAN, 1 << CLK);
+  XGpio_DiscreteClear(&gpio, GPIO_CHAN, 1 << TRIG);
+  XGpio_DiscreteClear(&gpio, GPIO_CHAN, 1 << RESET);      
+  
+  
+  for (int i=0; i<20; i++){
+    unsigned readback, debug, a, b, c, d;
+    sleep(1);
+    XGpio_DiscreteSet(&gpio, GPIO_CHAN, 1 << DEBUG);
+    usleep(100000);
+    readback = XGpio_DiscreteRead(&gpio, GPIO_CHAN);
+    debug    = (readback>>DEBUG)&0x1;
+    readback = (readback>>PISO0)&0xf;    
+    a = (readback>>0) &1;
+    b = (readback>>1) &1;
+    c = (readback>>2) &1;
+    d = (readback>>3) &1;
+    xil_printf("0:  debug:  %x readback:  0x%x -> %d %d %d %d\r\n", debug, readback,a,b,c,d);
+
+    
+    sleep(1);
+    XGpio_DiscreteClear(&gpio, GPIO_CHAN, 1 << DEBUG);
+    usleep(100000);
+    readback = XGpio_DiscreteRead(&gpio, GPIO_CHAN);
+    debug    = (readback>>DEBUG)&0x1;
+    readback = (readback>>PISO0)&0xf;    
+    a = (readback>>0) &1;
+    b = (readback>>1) &1;
+    c = (readback>>2) &1;
+    d = (readback>>3) &1;
+    xil_printf("0:  debug:  %x readback:  0x%x -> %d %d %d %d\r\n", debug, readback,a,b,c,d);
+  }
+
+  
+}
 
 int main()
 {
-    xil_printf("Pac-Man Card Low-Level Hardware Testing\r\n");
+    xil_printf("Pac-Man Card Low-Level Hardware Testing  (V1.3)\r\n");
     int status = 0;
     status |= init_gpiops();
     status |= init_gpio();
@@ -412,9 +500,9 @@ int main()
       xil_printf("choose an option:\r\n");
       xil_printf("(1) blink LEDs  (2) Disable All (3) Analog Power Enable (4) Tile Enable \r\n");
       xil_printf("(5) set voltages full (6) set voltages half (7) set voltages zero \r\n");      
-      xil_printf("(8) check I2C (9) read voltages \r\n");
+      xil_printf("(8) check I2C (9) read voltages (a) I/O check (b) loop back \r\n ");
       unsigned char c=inbyte();
-      //xil_printf("pressed:  %c\n\r", c);
+      xil_printf("pressed:  %c\n\r", c);
       switch(c){
       case '1':
 	blink();
@@ -442,6 +530,12 @@ int main()
 	break;
       case '9':
         read_voltages();
+	break;
+      case 'a':
+        io_check();
+	break;
+      case 'b':
+        loop_back();
 	break;
       default:
 	xil_printf("invalid selection...\n\r");

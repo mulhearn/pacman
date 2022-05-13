@@ -57,3 +57,18 @@ vivado -mode batch -source tcl/export_xpr.tcl
 # updating petalinux scratch build
 # NOT IMPLEMENTED
 
+
+
+#to try out a new petalinux image safely:
+save into /boot/trial/
+interrupt uboot...
+ext4ls mmc 1 trial
+ext4load mmc 1 0x08000000 trial/image.ub
+bootm 0x08000000
+
+#to boot to initramdisk recovery:
+save into /boot/trial/
+interrupt uboot...
+ext4ls mmc 1 recover
+ext4load mmc 1 0x08000000 recover/image.ub
+bootm 0x08000000
