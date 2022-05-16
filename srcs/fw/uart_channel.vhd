@@ -98,7 +98,7 @@ architecture arch_imp of uart_channel is
     generic (
     C_S_AXI_LITE_DATA_WIDTH : integer := 32;
     C_S_AXI_LITE_ADDR_WIDTH : integer := 32;
-    C_RW_REG0_DEFAULT : std_logic_vector(31 downto 0) := x"00000002";
+    C_RW_REG0_DEFAULT : std_logic_vector(31 downto 0) := x"0000000A";
     C_RW_REG1_DEFAULT : std_logic_vector(31 downto 0) := x"00000001";
     C_RW_REG2_DEFAULT : std_logic_vector(31 downto 0) := x"00000000";
     C_RW_REG3_DEFAULT : std_logic_vector(31 downto 0) := x"00000000";

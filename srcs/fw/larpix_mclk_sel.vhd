@@ -14,15 +14,16 @@ entity larpix_mclk_sel is
     C_PFD_MAX_FREQ : real := 0.450; -- Ghz
     C_VCO_MIN_FREQ : real := 0.800; -- Ghz
     C_PFD_MIN_FREQ : real := 0.019; -- Ghz
-    C_MCLK_PERIOD : real := 100.000 -- ns (10MHz)
+    C_MCLK_PERIOD : real := 10.000 -- ns (100MHz)
     );
   port (
     ACLK : in std_logic; -- default clock
     AUX_CLK : in std_logic; -- aux clock
     RSTN : in std_logic; -- async reset
     CLK_SEL : in std_logic; -- high to enable aux clock
+    MCLK_COUNT : in std_logic_vector(7 downto 0); -- number of ticks-1 of 1/2 MCLK PERIOD
 
-    -- Synchronous statuses
+    -- Synchronous statusesSW
     CLK_STAT_ACLK : out std_logic; -- which clock is currently used
     CLK_STAT_MCLK : out std_logic;
     CLK_VALID_ACLK : out std_logic; -- high if selected clock is locked
@@ -79,6 +80,13 @@ architecture arch_imp of larpix_mclk_sel is
       S : in std_logic
       );
   end component;
+
+  component BUFG is
+    port(
+      I : in std_logic;
+      O : out std_logic
+      );
+  end component;
   
   signal rst : std_logic;
 
@@ -98,6 +106,13 @@ architecture arch_imp of larpix_mclk_sel is
   signal clk_valid_mclk0_meta : std_logic;
   signal clk_valid_mclk0 : std_logic;
 
+  -- interval timer signals
+  signal timer_count_meta : std_logic_vector(7 downto 0);
+  signal timer_count : std_logic_vector(7 downto 0);
+  signal mclk_base : std_logic;
+  signal mclk_meta : std_logic;
+  signal mclk_out : std_logic := '0';
+
   -- output signals
   signal locked_async : std_logic_vector(1 downto 0);
   signal clk_sel_async : std_Logic;
@@ -116,13 +131,13 @@ architecture arch_imp of larpix_mclk_sel is
   signal locked_mclk_meta : std_logic_vector(1 downto 0);
   signal locked_mclk_out : std_logic_vector(1 downto 0);
   
-  signal mclk2x : std_logic := '0';
-  signal mclk_out : std_logic := '0';
-
   attribute ASYNC_REG of clk_sel_mclk0_meta: signal is "TRUE";
   attribute ASYNC_REG of clk_sel_mclk0: signal is "TRUE";
   attribute ASYNC_REG of clk_valid_mclk0_meta: signal is "TRUE";
   attribute ASYNC_REG of clk_valid_mclk0: signal is "TRUE";
+
+  attribute ASYNC_REG of timer_count_meta: signal is "TRUE";
+  attribute ASYNC_REG of timer_count: signal is "TRUE";
   
   attribute ASYNC_REG of clk_stat_aclk_meta: signal is "TRUE";
   attribute ASYNC_REG of clk_stat_aclk_out: signal is "TRUE";
@@ -206,8 +221,7 @@ begin
 
   -- Clock switch
   bufgmux_mclk : BUFGMUX port map(
---    O => mclk2x,
-    O => mclk_out,
+    O => mclk_base,
     I0 => mclk0,
     I1 => mclk1,
     S => clk_sel_mclk0
@@ -223,16 +237,34 @@ begin
       clk_sel_mclk0 <= clk_sel_mclk0_meta;
     end if;
   end process;
---  process (mclk2x, RSTN) is
---  begin
---    if (RSTN = '0') then
---      mclk_out <= '0';
+
+  -- Interval timer
+  process (mclk_base, RSTN) is
+  begin
+    if (RSTN = '0') then
+      timer_count_meta <= b"00000100";
+      timer_count <= b"00000100";
+      mclk_meta <= '0';
+    elsif (rising_edge(mclk_base)) then
       
---    elsif (rising_edge(mclk2x)) then
---      mclk_out <= not mclk_out;
---    end if;
---  end process;
+      if (mclk_meta = '0') then
+        timer_count_meta <= MCLK_COUNT;
+      end if;
       
+      if (timer_count = b"00000000") then
+        timer_count <= timer_count_meta;
+        mclk_meta <= not mclk_meta;
+      else
+        timer_count <= std_logic_vector(unsigned(timer_count) - 1);
+      end if;
+    end if;
+  end process;
+
+  bufg_inst : BUFG port map (
+    O => mclk_out,
+    I => mclk_meta
+    );
+        
   -- Synchronize output signals
   aclk_sync : process (ACLK, RSTN) is
   begin

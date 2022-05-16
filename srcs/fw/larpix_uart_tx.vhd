@@ -6,7 +6,7 @@ use ieee.math_real.all;
 entity larpix_uart_tx is
   generic (
     C_CLK_HZ : integer := 100000000;
-    C_CLKOUT_HZ : integer := 10000000;
+    C_CLKOUT_HZ : integer := 50000000;
     C_S_AXIS_TDATA_WIDTH : integer := 128;
     C_LARPIX_DATA_WIDTH : integer := 64;
     C_CHANNEL : std_logic_vector(7 downto 0) := x"FF";
