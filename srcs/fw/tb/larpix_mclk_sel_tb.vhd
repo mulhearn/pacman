@@ -3,6 +3,9 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.math_real.all;
 
+library UNISIM;
+use UNISIM.Vcomponents.all;
+
 entity larpix_mclk_sel_tb is
   port(
     CLK_STAT_ACLK : out std_logic;
@@ -20,13 +23,14 @@ architecture arch_imp of larpix_mclk_sel_tb is
     generic(
       C_ACLK_PERIOD : real := 10.000; -- ns (100MHz)
       C_AUX_CLK_PERIOD : real := 10.000; -- ns (100MHz)
-      C_MCLK_PERIOD : real := 100.000 -- ns (10MHz)
+      C_MCLK_PERIOD : real := 10.000 -- ns (100MHz)
       );
     port (
       ACLK : in std_logic;
       AUX_CLK : in std_logic;
       RSTN : in std_logic;
       CLK_SEL : in std_logic;
+      MCLK_COUNT : in std_logic_vector(7 downto 0);
       CLK_STAT_ACLK : out std_logic;
       CLK_STAT_MCLK : out std_logic;
       CLK_VALID_ACLK : out std_logic;
@@ -43,6 +47,7 @@ architecture arch_imp of larpix_mclk_sel_tb is
   signal clk_aux_cnt : unsigned(11 downto 0) := x"000";
   signal rstn : std_logic := '0';
   signal clk_sel : std_logic := '0';
+  signal mclk_count_set : std_logic_vector(7 downto 0) := b"00000101";
   
 begin
   clk <= not clk after 5 ns;
@@ -73,6 +78,17 @@ begin
     wait for 10000 ns;
     clk_sel <= not clk_sel;
     wait for 10000 ns;
+
+    -- switch clock speed (slower)
+    mclk_count_set <= x"09";
+    wait for 10000 ns;
+
+    -- switch clock speed (faster)
+    mclk_count_set <= x"00";
+    wait for 10000 ns;
+    -- reset clock speed
+    mclk_count_set <= x"04";
+    wait for 10000 ns;
   end process;
 
   larpix_mclk_sel_inst : larpix_mclk_sel generic map(
@@ -84,6 +100,7 @@ begin
       AUX_CLK => clk_aux_flaky,
       RSTN => rstn,
       CLK_SEL => clk_sel,
+      MCLK_COUNT => mclk_count_set,
       CLK_STAT_ACLK => CLK_STAT_ACLK,
       CLK_STAT_MCLK => CLK_STAT_MCLK,      
       CLK_VALID_ACLK => CLK_VALID_ACLK,
