@@ -1,12 +1,14 @@
 #ifndef pacman_i2c_hh
 #define pacman_i2c_hh
 
+#include <linux/types.h>
 #include <cstdint>
 
 #include "addr_conf.hh"
 
+
 // The I2C device is used to access the PACMAN I2C peripherals:
-#define I2C_DEV "/dev/i2c-0"
+//#define I2C_DEV "/dev/i2c-0"
 
 // The PACMAN driver code uses a virtual register (VREG) space to abstract
 // the specific hardware implementation.  This utility allows access
@@ -41,7 +43,7 @@
 // PACMAN-specific high-level I2C access:  initialize, read, write virtual I2C register space.
 
 // open the I2C device and return the filehandle (fh):
-int i2c_open(char* dev);
+int i2c_open(const char* dev);
 // read the virtual register with offset vreg_offset and return its value
 uint32_t i2c_read(int fh, uint32_t vreg_offset);
 // write the value val to the virtual register with offset vreg_offset and return the associated value
