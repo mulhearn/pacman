@@ -1,0 +1,17 @@
+distro=buster
+export LANG=C
+/debootstrap/debootstrap --second-stage
+apt update
+apt upgrade
+apt install vim
+apt install openssh-server ntpdate nfs-common cifs-utils python3 gcc i2c-tools
+vim etc/hostname 
+passwd
+vim /etc/securetty 
+apt install zmq
+apt install libzmq
+apt-install libzmq3-dev
+apt install libzmq3-dev
+apt install git
+apt install locales dialog
+dpkg-reconfigure locales
