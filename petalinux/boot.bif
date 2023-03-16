@@ -1,6 +1,6 @@
 the_ROM_image:
 {
-    [bootloader]../srcs/sw/zynq_fsbl/prebuilt/zynq_fsbl.elf
-    ../products/zsys_wrapper.bit
+    [bootloader]images/linux/zynq_fsbl.elf
+    /media/sf_tcan_firmware/pacman/pac1v74.bit
     images/linux/u-boot.elf
 }

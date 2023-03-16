@@ -1,9 +1,17 @@
 /include/ "system-conf.dtsi"
 / {
+aliases{
+	};
 };
 
+&sdhci0 {
+   /* On the pacman rev3 board the SD card is routed thru
+      a level translator, this does not seem to work above 25Mhz
+      Note: the actual device can handle up to at least 50Mhz. */
+   max-frequency = <15000000>;
+   cap-sd-highspeed; 
+};
 
-/* default */
 
 /* QSPI PHY */
 &qspi {
@@ -17,7 +25,6 @@
         #size-cells = <1>;
     };
 };
-
 
 /* ETH PHY */
 &gem0 {
@@ -53,8 +60,13 @@
 };
 
 /* I2C need I2C1 connected to te0720 system controller ip */
-/* on-board i2c devices are not readily accessible with pacman firmware
+&i2c0 {
+	clock-frequency = <100000>;
+
+};
+
 &i2c1 {
+	clock-frequency = <100000>;
 
     iexp@20 {       // GPIO in CPLD
         #gpio-cells = <2>;
@@ -70,12 +82,11 @@
         gpio-controller;
     };
 
-    rtc@6F {        // Real Time Clock
-        compatible = "isl12022";
-        reg = <0x6F>;
-    };
+//RTC missing in some modules    rtc@6F {        // Real Time Clock
+//        compatible = "isl12022";
+//        reg = <0x6F>;
+//    };
 };
-*/
 
 /* DDR memory reserved for PL-DMA */
 / {
@@ -86,7 +97,7 @@
 
         reserved: buffer@0x30000000 {
             no-map;
-	    reg = <0x30000000 0x10000000>;
+	    reg = <0x30000000 0xe000000>; //we should reserve 0x10000000, but conflicts with u-boot reloc. this seems to work.
         };
     };
 
@@ -95,3 +106,4 @@
 	memory-region = <&reserved>;
     };
 };
+

@@ -6,7 +6,6 @@
 
 #include "addr_conf.hh"
 
-
 // The I2C device is used to access the PACMAN I2C peripherals:
 //#define I2C_DEV "/dev/i2c-0"
 

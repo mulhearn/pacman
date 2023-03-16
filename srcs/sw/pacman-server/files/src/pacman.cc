@@ -7,6 +7,7 @@
 
 uint32_t pacman_set(uint32_t* pl_addr, uint32_t &offset, uint32_t &value) {
   pl_addr[offset >> 2] = value;
+  return 1;
 }
 
 uint32_t pacman_get(uint32_t* pl_addr, uint32_t &offset) {

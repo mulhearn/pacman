@@ -18,7 +18,7 @@ SRC_URI = "file://src \
            file://pacman_util.py \
 	   file://Makefile \
 		  "
-                  
+
 INITSCRIPT_NAME = "pacman_server"
 INITSCRIPT_PARAMS = "start 99 S ."
 
@@ -52,3 +52,4 @@ FILES_${PN} += "${sysconfdir}/*"
 FILES_${PN} += "${homedir}/*"
 
 RDEPENDS_${PN} += "python python-pyzmq"
+

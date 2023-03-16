@@ -94,9 +94,10 @@ int main(int argc, char* argv[]){
 
   // initialize pacman-pl
   uint32_t* pacman_pl = (uint32_t*)mmap(NULL, PACMAN_LEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, PACMAN_ADDR);
-  const char *i2cdev = "/dev/i2c-0";
+
   // initialize i2c-0
-  int i2c_dh = i2c_open(i2cdev);
+  const char* i2c_dev = "/dev/i2c-0"; 
+  int i2c_dh = i2c_open(i2c_dev);
   if (i2c_dh < 0) {
       printf("Error initializing I2C\n");
       return 3;

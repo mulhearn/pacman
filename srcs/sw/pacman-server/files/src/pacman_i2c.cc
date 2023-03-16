@@ -4,8 +4,7 @@
 #include <stdio.h>
 #include <sys/ioctl.h>
 #include <cstdint>
-extern "C"
-{
+extern "C" {
 #include <linux/i2c-dev.h>
 #include <i2c/smbus.h>
 }
@@ -29,7 +28,7 @@ extern "C"
 
 #define VERBOSE true
 
-int i2c_open(const char *dev) {
+int i2c_open(const char* dev) {
     // open i2c device
     int fh = open(dev, O_RDWR);
     if (fh < 0) {
