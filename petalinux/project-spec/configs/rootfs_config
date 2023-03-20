@@ -983,7 +983,7 @@ CONFIG_pciutils=y
 #
 # python 
 #
-# CONFIG_python is not set
+CONFIG_python=y
 # CONFIG_python-dbg is not set
 # CONFIG_python-mailbox is not set
 # CONFIG_python-resource is not set
@@ -4025,7 +4025,7 @@ CONFIG_imagefeature-debug-tweaks=y
 # CONFIG_gpio-demo is not set
 CONFIG_pacman-server=y
 # CONFIG_peekpoke is not set
-CONFIG_startup=y
+# CONFIG_startup is not set
 CONFIG_webfwu=y
 
 #
@@ -4035,5 +4035,5 @@ CONFIG_webfwu=y
 #
 # PetaLinux RootFS Settings
 #
-CONFIG_ROOTFS_ROOT_PASSWD="root"
-CONFIG_ADD_EXTRA_USERS="petalinux:petalinux;"
+CONFIG_ROOTFS_ROOT_PASSWD="pacman"
+CONFIG_ADD_EXTRA_USERS="petalinux:pacman;"

@@ -97,7 +97,7 @@ aliases{
 
         reserved: buffer@0x30000000 {
             no-map;
-	    reg = <0x30000000 0xe000000>; //we should reserve 0x10000000, but conflicts with u-boot reloc. this seems to work.
+	    reg = <0x30000000 0x8000000>; //tried 0x10000000 (256MB), but conflicts with u-boot reloc. 128MB is OK.
         };
     };
 
