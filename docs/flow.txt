@@ -16,7 +16,23 @@ vivado -mode batch -source vivado/hardware.tcl
 
 # run hello world demo:
 xsct apps/hello/install.tcl
+cd hello
+xsct run.tcl
 
+# run hwcheck
+xsct apps/hwcheck/install.tcl
+cd hwcheck
+xsct run.tcl
+
+# write hello world to flash
+# untested ... start with:
+xsct apps/flash/install.tcl
+
+# build various first stage boot loaders:
+xsct apps/hwcheck/install.tcl
+
+# petalinux:
+source /tools/Xilinx/PetaLinux/2022.2/bin/settings.sh
 
 
 #xsct tcl/build_sw.tcl
