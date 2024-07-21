@@ -4,10 +4,7 @@
 *.log
 *.aux
 *~
-/products/
-!/products/zsys_wrapper.hdf
-/tcl/recreate_xpr.tcl.old
-/build_sw
+/fsbl
 /hello
 /flash
 /hwcheck
