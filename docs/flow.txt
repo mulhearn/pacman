@@ -1,4 +1,3 @@
-
 # Reminders only, see README.txt for instructions...
 
 # building from repo:
@@ -6,12 +5,14 @@ git clone https://github.com/mulhearn/pacman.git
 # or, with ssh:
 git clone git@github.com:mulhearn/pacman.git
 cd pacman
-#source /tools/Xilinx/Vivado/2018.3/settings64.sh
-source /tools/Xilinx/Vivado/2022.2/settings64.sh
-vivado -mode batch -source tcl/recreate_xpr.tcl
-vivado -mode batch -source tcl/build_xpr.tcl
-xsct tcl/hello.tcl
-xsct tcl/build_sw.tcl
+source /tools/Xilinx/Vivado/2020.2/settings64.sh
+
+vivado -mode batch -source vivado/create.tcl
+
+# not working yet:
+#vivado -mode batch -source tcl/build_xpr.tcl
+#xsct tcl/hello.tcl
+#xsct tcl/build_sw.tcl
 
 # connecting to UART
 busybox microcom -s 115200 /dev/ttyUSB1
@@ -33,43 +34,3 @@ cd petalinux-initramdisk
 # to test new image over JTAG:
 ./jtag_boot.sh
 
-# Write Hello World from QSPI flash:
-xsct tcl/build_sw.tcl
-xsct tcl/flash.tcl
-cd flash
-source program.sh
-
-# Write QSPI flash from Linux on Pac-Man:
-# check boot partition location (usually mtd0):
-cat /proc/mtd
-# write flash:
-flashcp -v BOOT.BIN /dev/mtd0
-
-# copying files to Pac-Man over uart:
-# use minicom instead of microcom:
-minicom -b 115200 -D /dev/ttyUSB1
-# Press enter to start Pac-Man terminal
-# (Use Ctrl-A X to exit when done)
-# On Pac-Man:
-
-# exporting project to tcl for updating repo:
-vivado -mode batch -source tcl/export_xpr.tcl
-
-# updating petalinux scratch build
-# NOT IMPLEMENTED
-
-
-
-#to try out a new petalinux image safely:
-save into /boot/trial/
-interrupt uboot...
-ext4ls mmc 1 trial
-ext4load mmc 1 0x08000000 trial/image.ub
-bootm 0x08000000
-
-#to boot to initramdisk recovery:
-save into /boot/trial/
-interrupt uboot...
-ext4ls mmc 1 recover
-ext4load mmc 1 0x08000000 recover/image.ub
-bootm 0x08000000
