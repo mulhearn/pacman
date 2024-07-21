@@ -1,5 +1,9 @@
 # Reminders only, see README.txt for instructions...
 
+# connecting to UART
+busybox microcom -s 115200 /dev/ttyUSB1
+# (Use Ctrl-X to exit)
+
 # building from repo:
 git clone https://github.com/mulhearn/pacman.git
 # or, with ssh:
@@ -8,15 +12,14 @@ cd pacman
 source /tools/Xilinx/Vivado/2020.2/settings64.sh
 
 vivado -mode batch -source vivado/create.tcl
+vivado -mode batch -source vivado/hardware.tcl
 
-# not working yet:
-#vivado -mode batch -source tcl/build_xpr.tcl
-#xsct tcl/hello.tcl
+# run hello world demo:
+xsct apps/hello/install.tcl
+
+
+
 #xsct tcl/build_sw.tcl
-
-# connecting to UART
-busybox microcom -s 115200 /dev/ttyUSB1
-# (Use Ctrl-X to exit)
 
 # building petalinux (initramdisk version) for first time:
 # !!! Make sure custom FSBL is uptodate via build_sw.tcl  !!!

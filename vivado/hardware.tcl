@@ -16,4 +16,4 @@ open_project $origin_dir/$proj_name/$proj_name.xpr
 #launch_runs impl_1 -to_step write_bitstream -jobs 6
 #wait_on_run impl_1
 
-write_hw_platform -fixed -include_bit -force -file ${origin_dir}/hardware.xsa
+write_hw_platform -fixed -include_bit -force -file ${origin_dir}/../hw/pacman.xsa
