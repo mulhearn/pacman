@@ -1,6 +1,42 @@
 Notes on installation of Vivado.
 
 -----------------
+Ubuntu 22.04.4 LTS and Vivado 2022.2
+-----------------
+
+First had to add tinfo, libncurses5 and libncurses5-dev or install hung at "Generating Installed device list"
+
+After installation, used "perl ldd-recursive.pl ..." as described at:
+   https://www.xilinx.com/support/answers/66184.html
+   to determine the missing libraries:
+
+librdi_commonmain.so => not found
+/lib/x86_64-linux-gnu/libgcc_s.so.1
+librdi_common.so => not found
+/lib/x86_64-linux-gnu/libc.so.6
+/lib/x86_64-linux-gnu/libstdc++.so.6
+linux-vdso.so.1
+/lib/x86_64-linux-gnu/libm.so.6
+libtcmalloc.so.4 => not found
+/lib64/ld-linux-x86-64.so.2
+
+The rdi files are Xilinx files and will be installed by the tools.  The other depency is fixed with:
+
+sudo apt-get install google-perftools
+
+
+Cable drivers:
+
+cd tools/Xilinx/Vivado/2022.2/data/xicom/cable_drivers/lin64/install_script/install_drivers
+sudo ./install_drivers
+
+Access to USB TTY device without sudo, by adding user to dialup group:
+
+$sudo usermod -a -G dialout <username>
+
+But I'm not sure this worked... xsct can access, but I need to sudo for busybox terminal access...
+
+-----------------
 Ubuntu 18.04 LTS
 -----------------
 
@@ -32,7 +68,7 @@ to include the Xilinx libraries, but this isn't really needed.
 Evidently, Vivado already finds these libraries.
 
 
-3) Because I installed as root, the cable drivers were not installed
+3) Because I did not install as root, the cable drivers were not installed
 automatically, so I had to do the following:
 
 - unplug all cables (including SoMs with FTDI driver over USB, effectively a JTAG cable)

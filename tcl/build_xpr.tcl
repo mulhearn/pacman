@@ -32,4 +32,6 @@ wait_on_run impl_1
 launch_runs impl_1 -to_step write_bitstream -jobs 2
 wait_on_run impl_1
 update_compile_order -fileset sources_1
-file copy -force ./pacman-fw/pacman-fw.runs/impl_1/zsys_wrapper.sysdef ./products/zsys_wrapper.hdf
+#file copy -force ./pacman-fw/pacman-fw.runs/impl_1/zsys_wrapper.sysdef ./products/zsys_wrapper.hdf
+write_hw_platform -fixed -force -file ./products/zsys_wrapper.xsa
+write_hw_platform -fixed -include_bit -force -file ./products/zsys_wrapper.xsa
