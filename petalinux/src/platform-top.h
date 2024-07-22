@@ -38,4 +38,4 @@
 #define CONFIG_PREBOOT      "echo U-BOOT for Pac-Man card; setenv preboot; echo"
 
 /*#define CONFIG_BOOTCOMMAND  "ext4load mmc 1 0x08000000 image.ub ; bootm 0x08000000"*/
-#define CONFIG_BOOTCOMMAND  "ext4load mmc 1 0x08000000 image.ub ; bootm 0x08000000"
+#define CONFIG_BOOTCOMMAND  "fatload mmc 0 0x08000000 image.ub ; bootm 0x08000000"
