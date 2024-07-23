@@ -105,18 +105,18 @@ CONFIG_system-zynq=y
 #
 # e2fsprogs 
 #
-CONFIG_e2fsprogs=y
-CONFIG_e2fsprogs-resize2fs=y
-CONFIG_e2fsprogs-badblocks=y
-CONFIG_e2fsprogs-e2fsck=y
-CONFIG_libss=y
-CONFIG_libcomerr=y
-CONFIG_libext2fs=y
-CONFIG_e2fsprogs-dev=y
-CONFIG_e2fsprogs-tune2fs=y
-CONFIG_libe2p=y
+# CONFIG_e2fsprogs is not set
+# CONFIG_e2fsprogs-resize2fs is not set
+# CONFIG_e2fsprogs-badblocks is not set
+# CONFIG_e2fsprogs-e2fsck is not set
+# CONFIG_libss is not set
+# CONFIG_libcomerr is not set
+# CONFIG_libext2fs is not set
+# CONFIG_e2fsprogs-dev is not set
+# CONFIG_e2fsprogs-tune2fs is not set
+# CONFIG_libe2p is not set
 CONFIG_e2fsprogs-mke2fs=y
-CONFIG_e2fsprogs-dbg=y
+# CONFIG_e2fsprogs-dbg is not set
 
 #
 # ed 
@@ -146,12 +146,12 @@ CONFIG_e2fsprogs-dbg=y
 #
 # fpga-manager-script 
 #
-# CONFIG_fpga-manager-script is not set
+CONFIG_fpga-manager-script=y
 
 #
 # haveged 
 #
-# CONFIG_haveged is not set
+CONFIG_haveged=y
 
 #
 # i2c-tools 
@@ -369,7 +369,7 @@ CONFIG_mtd-utils=y
 # CONFIG_util-linux-prlimit is not set
 # CONFIG_util-linux-umount is not set
 # CONFIG_util-linux-partx is not set
-CONFIG_util-linux-mkfs=y
+# CONFIG_util-linux-mkfs is not set
 # CONFIG_util-linux-readprofile is not set
 # CONFIG_util-linux-uuidgen is not set
 # CONFIG_util-linux-mount is not set
@@ -454,14 +454,14 @@ CONFIG_util-linux-mkfs=y
 #
 # canutils 
 #
-CONFIG_canutils=y
+# CONFIG_canutils is not set
 # CONFIG_canutils-dbg is not set
 # CONFIG_canutils-dev is not set
 
 #
 # can-utils 
 #
-# CONFIG_can-utils is not set
+CONFIG_can-utils=y
 # CONFIG_can-utils-dbg is not set
 # CONFIG_can-utils-dev is not set
 
@@ -490,7 +490,7 @@ CONFIG_canutils=y
 #
 # lrzsz 
 #
-CONFIG_lrzsz=y
+# CONFIG_lrzsz is not set
 # CONFIG_lrzsz-dbg is not set
 # CONFIG_lrzsz-dev is not set
 
@@ -511,7 +511,7 @@ CONFIG_lrzsz=y
 #
 # nfs-utils 
 #
-# CONFIG_nfs-utils is not set
+CONFIG_nfs-utils=y
 # CONFIG_nfs-utils-dev is not set
 # CONFIG_nfs-utils-client is not set
 # CONFIG_nfs-utils-stats is not set
@@ -528,7 +528,7 @@ CONFIG_lrzsz=y
 # CONFIG_openssh-ssh is not set
 # CONFIG_openssh-dev is not set
 # CONFIG_openssh-sftp is not set
-CONFIG_openssh-sftp-server=y
+# CONFIG_openssh-sftp-server is not set
 # CONFIG_openssh-scp is not set
 
 #
@@ -2198,7 +2198,7 @@ CONFIG_run-postinsts=y
 #
 # CONFIG_libudev is not set
 CONFIG_udev-extraconf=y
-# CONFIG_linux-xlnx-udev-rules is not set
+CONFIG_linux-xlnx-udev-rules=y
 
 #
 # fbset 
@@ -3890,20 +3890,10 @@ CONFIG_imagefeature-hwcodecs=y
 CONFIG_Init-manager-sysvinit=y
 
 #
-# apps 
-#
-CONFIG_pacman-server=y
-
-#
 # user packages 
 #
 # CONFIG_gpio-demo is not set
 # CONFIG_peekpoke is not set
-# CONFIG_phytool is not set
-CONFIG_python3-pyzmq=y
-# CONFIG_startup is not set
-# CONFIG_webfwu is not set
-# CONFIG_zeromq is not set
 
 #
 # PetaLinux RootFS Settings
