@@ -3902,6 +3902,7 @@ CONFIG_pacman-server=y
 # CONFIG_gpio-demo is not set
 # CONFIG_peekpoke is not set
 # CONFIG_phytool is not set
+CONFIG_python3-pyzmq=y
 # CONFIG_zeromq is not set
 
 #

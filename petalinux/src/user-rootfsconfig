@@ -10,3 +10,4 @@ CONFIG_startup
 CONFIG_webfwu
 CONFIG_pacman-server
 CONFIG_zeromq
+CONFIG_python3-pyzmq

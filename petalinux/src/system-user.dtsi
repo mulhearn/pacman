@@ -33,6 +33,13 @@
     };
 };
 
+/* I2C */
+&i2c0 {
+        clock-frequency = <100000>;
+
+};
+
+
 /* I2C need I2C1 connected to te0720 system controller ip */
 /* SC not included in current Pac-Man firmware, will be needed for RTC...
 &i2c1 {

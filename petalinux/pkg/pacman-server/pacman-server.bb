@@ -25,7 +25,7 @@ INITSCRIPT_PARAMS = "start 99 S ."
 S = "${WORKDIR}"
 homedir = "/home/root"
 
-inherit update-rc.d
+#inherit update-rc.d
 
 do_compile() {
 	     oe_runmake
@@ -51,5 +51,4 @@ do_install() {
 FILES:${PN} += "${sysconfdir}/*"
 FILES:${PN} += "${homedir}/*"
 
-RDEPENDS:${PN} = "python3-core "
-
+RDEPENDS:${PN} = "python3-core python3-pyzmq"

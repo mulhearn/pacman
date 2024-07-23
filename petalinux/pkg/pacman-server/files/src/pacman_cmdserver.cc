@@ -79,21 +79,21 @@ int main(int argc, char* argv[]){
   printf("ZMQ socket(s) created\n");
   
   // initialize dma
-  int dh = open("/dev/mem", O_RDWR|O_SYNC);
-  uint32_t* dma = (uint32_t*)mmap(NULL, DMA_LEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_ADDR);
-  uint32_t* dma_tx = (uint32_t*)mmap(NULL, DMA_TX_MAXLEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_TX_ADDR);
-  dma_desc* curr = init_circular_buffer(dma_tx, DMA_TX_ADDR, DMA_TX_MAXLEN, LARPIX_PACKET_LEN);
-  dma_desc* prev = curr;
-  dma_restart(dma, curr);
-  uint32_t dma_status = dma_get(dma, DMA_MM2S_STAT_REG);
-  if ( dma_status & DMA_HALTED ) {
-    printf("Error starting DMA\n");
-    return 2;
-  }
-  printf("DMA started\n");
+  //int dh = open("/dev/mem", O_RDWR|O_SYNC);
+  //uint32_t* dma = (uint32_t*)mmap(NULL, DMA_LEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_ADDR);
+  //uint32_t* dma_tx = (uint32_t*)mmap(NULL, DMA_TX_MAXLEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_TX_ADDR);
+  //dma_desc* curr = init_circular_buffer(dma_tx, DMA_TX_ADDR, DMA_TX_MAXLEN, LARPIX_PACKET_LEN);
+  //dma_desc* prev = curr;
+  //dma_restart(dma, curr);
+  //uint32_t dma_status = dma_get(dma, DMA_MM2S_STAT_REG);
+  //if ( dma_status & DMA_HALTED ) {
+  //  printf("Error starting DMA\n");
+  //  return 2;
+  //}
+  //printf("DMA started\n");
 
   // initialize pacman-pl
-  uint32_t* pacman_pl = (uint32_t*)mmap(NULL, PACMAN_LEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, PACMAN_ADDR);
+  //uint32_t* pacman_pl = (uint32_t*)mmap(NULL, PACMAN_LEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, PACMAN_ADDR);
 
   // initialize i2c-0
   const char* i2c_dev = "/dev/i2c-0"; 
@@ -156,7 +156,7 @@ int main(int argc, char* argv[]){
         uint32_t* val;
         if (*reg < PACMAN_LEN) {
           val = get_req_word_write_val(word);
-          pacman_set(pacman_pl, *reg, *val);
+          //pacman_set(pacman_pl, *reg, *val);
           set_rep_word_write(reply_word, reg, val);
         } else if (*reg >= I2C_VREG_BASE_ADDR && *reg < I2C_VREG_BASE_ADDR + I2C_VREG_LEN) {
           val = get_req_word_write_val(word);
@@ -174,7 +174,7 @@ int main(int argc, char* argv[]){
         uint32_t* reg = get_req_word_read_reg(word);
         uint32_t val;
         if (*reg < PACMAN_LEN) {
-          val = pacman_get(pacman_pl, *reg);
+          //val = pacman_get(pacman_pl, *reg);
           set_rep_word_read(reply_word, reg, &val);
         } else if (*reg >= I2C_VREG_BASE_ADDR && *reg < I2C_VREG_BASE_ADDR + I2C_VREG_LEN) {
           val = i2c_read(i2c_dh, *reg-I2C_VREG_BASE_ADDR);
@@ -192,11 +192,11 @@ int main(int argc, char* argv[]){
 	uint64_t* data = get_req_word_tx_data(word);
 	tx_words++;
 
-	memcpy(&curr->word[WORD_TYPE_OFFSET], word_type, 1);
-	memcpy(&curr->word[IO_CHANNEL_OFFSET], io_channel, 1);
-	memcpy(&curr->word[LARPIX_DATA_OFFSET], (char*)data, sizeof(*data));
-	dma_set(curr->desc, DESC_STAT, 0);
-	curr = curr->next;
+	//memcpy(&curr->word[WORD_TYPE_OFFSET], word_type, 1);
+	//memcpy(&curr->word[IO_CHANNEL_OFFSET], io_channel, 1);
+	//memcpy(&curr->word[LARPIX_DATA_OFFSET], (char*)data, sizeof(*data));
+	//dma_set(curr->desc, DESC_STAT, 0);
+	//curr = curr->next;
 
 	set_rep_word_tx(reply_word, io_channel, data);
         //printf("TX: %d 0x%016x\n",*io_channel,*data);
@@ -211,9 +211,9 @@ int main(int argc, char* argv[]){
     }
 
     // transmit
-    transmit_data(dma, prev, tx_words);
-    prev = curr;
-    tx_words = 0;
+    //transmit_data(dma, prev, tx_words);
+    //prev = curr;
+    //tx_words = 0;
 
     // send reply
     printf("Sending reply...\n");
