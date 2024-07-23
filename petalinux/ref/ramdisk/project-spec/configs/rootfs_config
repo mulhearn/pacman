@@ -3893,8 +3893,6 @@ CONFIG_Init-manager-sysvinit=y
 # apps 
 #
 CONFIG_pacman-server=y
-# CONFIG_startup is not set
-# CONFIG_webfwu is not set
 
 #
 # user packages 
@@ -3903,6 +3901,8 @@ CONFIG_pacman-server=y
 # CONFIG_peekpoke is not set
 # CONFIG_phytool is not set
 CONFIG_python3-pyzmq=y
+# CONFIG_startup is not set
+# CONFIG_webfwu is not set
 # CONFIG_zeromq is not set
 
 #
