@@ -1,0 +1,9 @@
+This is not a petalinux project.  Petalinux projects are scratch
+built.  This is for reference only.
+
+This directory contains a copy of the project_spec directory tree as
+configured by the project creation script for the ramdisk linux image.
+
+If you are curious about what exactly has changed when you reconfigure
+using the tools, simply replace the reference project_spec tree with
+your new one and use git diff.

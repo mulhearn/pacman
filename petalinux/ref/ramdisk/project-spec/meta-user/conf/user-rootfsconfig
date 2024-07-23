@@ -1,0 +1,13 @@
+#Note: Mention Each package in individual line
+#These packages will get added into rootfs menu entry
+
+CONFIG_gpio-demo
+CONFIG_peekpoke
+CONFIG_dosfstools
+CONFIG_lrzsz
+CONFIG_phytool
+CONFIG_startup
+CONFIG_webfwu
+CONFIG_pacman-server
+CONFIG_zeromq
+CONFIG_python3-pyzmq
