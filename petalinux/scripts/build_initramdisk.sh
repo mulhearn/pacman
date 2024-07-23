@@ -29,8 +29,10 @@ cp -v $SRC/system-user.dtsi     $PROJ/project-spec/meta-user/meta-xilinx-tools/r
 cp -v $SRC/user-rootfsconfig    $PROJ/project-spec/meta-user/conf/
 
 # add custom software packages
-cp -v -r $PKG/startup            $PROJ/project-spec/meta-user/recipes-apps/
-cp -v -r $PKG/webfwu            $PROJ/project-spec/meta-user/recipes-apps/
+#cp -v -r $PKG/startup            $PROJ/project-spec/meta-user/recipes-apps/
+#cp -v -r $PKG/webfwu             $PROJ/project-spec/meta-user/recipes-apps/
+cp -v -r $PKG/pacman-server      $PROJ/project-spec/meta-user/recipes-apps/
+
 
 #cd $PROJ
 #source build.sh

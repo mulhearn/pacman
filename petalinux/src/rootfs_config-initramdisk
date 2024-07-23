@@ -3892,6 +3892,7 @@ CONFIG_Init-manager-sysvinit=y
 #
 # apps 
 #
+CONFIG_pacman-server=y
 # CONFIG_startup is not set
 # CONFIG_webfwu is not set
 
@@ -3899,9 +3900,9 @@ CONFIG_Init-manager-sysvinit=y
 # user packages 
 #
 # CONFIG_gpio-demo is not set
-# CONFIG_pacman-server is not set
 # CONFIG_peekpoke is not set
 # CONFIG_phytool is not set
+# CONFIG_zeromq is not set
 
 #
 # PetaLinux RootFS Settings
