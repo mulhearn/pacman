@@ -12,25 +12,46 @@ set_property IOSTANDARD LVCMOS33 [get_ports {gpio_0_tri_io[10]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {gpio_0_tri_io[11]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {gpio_0_tri_io[12]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {gpio_0_tri_io[13]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio_0_tri_io[14]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio_0_tri_io[15]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio_0_tri_io[16]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio_0_tri_io[17]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio_0_tri_io[18]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio_0_tri_io[19]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio_0_tri_io[20]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio_0_tri_io[21]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio_0_tri_io[22]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio_0_tri_io[23]}]
 
-set_property PACKAGE_PIN J16  [get_ports {gpio_0_tri_io[0]}]
-set_property PACKAGE_PIN G21  [get_ports {gpio_0_tri_io[1]}]
-
-set_property PACKAGE_PIN J17  [get_ports {gpio_0_tri_io[2]}]
-
-set_property PACKAGE_PIN C19  [get_ports {gpio_0_tri_io[3]}]
-set_property PACKAGE_PIN G20  [get_ports {gpio_0_tri_io[4]}]
-set_property PACKAGE_PIN D18  [get_ports {gpio_0_tri_io[5]}]
-
-set_property PACKAGE_PIN D21  [get_ports {gpio_0_tri_io[6]}]
-set_property PACKAGE_PIN E21  [get_ports {gpio_0_tri_io[7]}]
-set_property PACKAGE_PIN B20  [get_ports {gpio_0_tri_io[8]}]
-set_property PACKAGE_PIN B19  [get_ports {gpio_0_tri_io[9]}]
-
-set_property PACKAGE_PIN C20  [get_ports {gpio_0_tri_io[10]}]
-set_property PACKAGE_PIN D20  [get_ports {gpio_0_tri_io[11]}]
-set_property PACKAGE_PIN G16  [get_ports {gpio_0_tri_io[12]}]
-set_property PACKAGE_PIN G15  [get_ports {gpio_0_tri_io[13]}]
+# GPIO 0 - Analog Power Enable
+set_property PACKAGE_PIN J16 [get_ports {gpio_0_tri_io[0]}] 
+# GPIO 1-10 - Tile Enable Pins 1 - 10
+set_property PACKAGE_PIN G21 [get_ports {gpio_0_tri_io[1]}] 
+set_property PACKAGE_PIN P18 [get_ports {gpio_0_tri_io[2]}] 
+set_property PACKAGE_PIN P17 [get_ports {gpio_0_tri_io[3]}] 
+set_property PACKAGE_PIN K15 [get_ports {gpio_0_tri_io[4]}] 
+set_property PACKAGE_PIN L21 [get_ports {gpio_0_tri_io[5]}] 
+set_property PACKAGE_PIN P21 [get_ports {gpio_0_tri_io[6]}] 
+set_property PACKAGE_PIN P20 [get_ports {gpio_0_tri_io[7]}] 
+set_property PACKAGE_PIN L22 [get_ports {gpio_0_tri_io[8]}] 
+set_property PACKAGE_PIN M19 [get_ports {gpio_0_tri_io[9]}] 
+set_property PACKAGE_PIN M20 [get_ports {gpio_0_tri_io[10]}] 
+# GPIO 11-13 - Tile 1 CLK, TRIG, SYNC
+set_property PACKAGE_PIN C19 [get_ports {gpio_0_tri_io[11]}] 
+set_property PACKAGE_PIN G20 [get_ports {gpio_0_tri_io[12]}] 
+set_property PACKAGE_PIN D18 [get_ports {gpio_0_tri_io[13]}]
+# GPIO 14-15 - LED-2, LED-3
+set_property PACKAGE_PIN R19 [get_ports {gpio_0_tri_io[14]}]
+set_property PACKAGE_PIN T19 [get_ports {gpio_0_tri_io[15]}] 
+# GPIO 16-19 - Tile 1 POSI 0-3
+set_property PACKAGE_PIN D21 [get_ports {gpio_0_tri_io[16]}] 
+set_property PACKAGE_PIN E21 [get_ports {gpio_0_tri_io[17]}] 
+set_property PACKAGE_PIN B20 [get_ports {gpio_0_tri_io[18]}] 
+set_property PACKAGE_PIN B19 [get_ports {gpio_0_tri_io[19]}] 
+# GPIO 20-23 - Tile 1 PISO 0-3 ***INPUTS***
+set_property PACKAGE_PIN C20 [get_ports {gpio_0_tri_io[20]}] 
+set_property PACKAGE_PIN D20 [get_ports {gpio_0_tri_io[21]}] 
+set_property PACKAGE_PIN G16 [get_ports {gpio_0_tri_io[22]}] 
+set_property PACKAGE_PIN G15 [get_ports {gpio_0_tri_io[23]}] 
 
 set_property BITSTREAM.CONFIG.UNUSEDPIN PULLDOWN [current_design]
-

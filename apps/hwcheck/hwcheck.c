@@ -9,8 +9,8 @@
 #include "sleep.h"
 
 // MIO pinout:
-#define LED1 12
-#define LED2 13
+#define LED0 12
+#define LED1 13
 
 // GPIO pinout:
 #define ANALOG_PWR_EN 0
@@ -27,14 +27,16 @@
 #define CLK           11
 #define TRIG          12
 #define SYNC          13
-#define POSI0         14
-#define POSI1         15
-#define POSI2         16
-#define POSI3         17
-#define PISO0         18
-#define PISO1         19
-#define PISO2         20
-#define PISO3         21
+#define LED3          14
+#define LED4          15
+#define POSI0         16
+#define POSI1         17
+#define POSI2         18
+#define POSI3         19
+#define PISO0         20
+#define PISO1         21
+#define PISO2         22
+#define PISO3         23
 
 //GPIO AXI device:
 #define GPIO_DEVICE_ID XPAR_GPIO_0_DEVICE_ID
@@ -62,12 +64,12 @@ int init_gpiops(){
     xil_printf("FAILED.\r\n");
     return XST_FAILURE;
   }
+  XGpioPs_SetDirectionPin(&gpiops, LED0, 1);
+  XGpioPs_SetOutputEnablePin(&gpiops, LED0, 1);
+  XGpioPs_WritePin(&gpiops, LED0, 0x0);
   XGpioPs_SetDirectionPin(&gpiops, LED1, 1);
   XGpioPs_SetOutputEnablePin(&gpiops, LED1, 1);
   XGpioPs_WritePin(&gpiops, LED1, 0x0);
-  XGpioPs_SetDirectionPin(&gpiops, LED2, 1);
-  XGpioPs_SetOutputEnablePin(&gpiops, LED2, 1);
-  XGpioPs_WritePin(&gpiops, LED2, 0x0);
 
   xil_printf("success.\r\n");
   return XST_SUCCESS;
@@ -219,31 +221,31 @@ void blink(){
   
   xil_printf("BLINK LEDS:  blinking LED 1 (MIO pin)...\r\n");
   for (int iblink=0; iblink<nblink; iblink++){
-    XGpioPs_WritePin(&gpiops, LED1, 1);
+    XGpioPs_WritePin(&gpiops, LED0, 1);
     usleep(wait_usec);
-    XGpioPs_WritePin(&gpiops, LED1, 0);
+    XGpioPs_WritePin(&gpiops, LED0, 0);
     usleep(wait_usec);
   }  
   xil_printf("BLINK LEDS:  blinking LED 2 (MIO pin)...\r\n");
   for (int iblink=0; iblink<nblink; iblink++){
-    XGpioPs_WritePin(&gpiops, LED2, 1);
+    XGpioPs_WritePin(&gpiops, LED1, 1);
     usleep(wait_usec);
-    XGpioPs_WritePin(&gpiops, LED2, 0);
+    XGpioPs_WritePin(&gpiops, LED1, 0);
     usleep(wait_usec);
   }
   /*
   xil_printf("BLINK LEDS:  blinking LED 3 (HR pin)...\r\n");
   for (int iblink=0; iblink<nblink; iblink++){
-    XGpio_DiscreteSet(&gpio, GPIO_CHAN, 1 << LED3);
+    XGpio_DiscreteSet(&gpio, GPIO_CHAN, 1 << LED2);
     usleep(wait_usec);
-    XGpio_DiscreteClear(&gpio, GPIO_CHAN, 1 << LED3);
+    XGpio_DiscreteClear(&gpio, GPIO_CHAN, 1 << LED2);
     usleep(wait_usec);
   }
   xil_printf("BLINK LEDS:  blinking LED 4 (HR pin)...\r\n");
   for (int iblink=0; iblink<nblink; iblink++){
-    XGpio_DiscreteSet(&gpio, GPIO_CHAN, 1 << LED4);
+    XGpio_DiscreteSet(&gpio, GPIO_CHAN, 1 << LED3);
     usleep(wait_usec);
-    XGpio_DiscreteClear(&gpio, GPIO_CHAN, 1 << LED4);
+    XGpio_DiscreteClear(&gpio, GPIO_CHAN, 1 << LED3);
     usleep(wait_usec);
   }*/
   xil_printf("BLINK LEDS:  done.\r\n");  
@@ -377,20 +379,9 @@ void set_voltages_zero(){
 }
 void set_voltages_half(){
   set_voltages(0x7F,0xFF,0x7F,0xFF);
-  // walk down to half from full...
-
-  for (unsigned vdig = 0xFFFF; vdig>=0x7FFF; vdig-=0x1){
-    unsigned up = 0xFF & (vdig>>8);
-    unsigned dn = 0xFF & vdig;
-    xil_printf(" set point:  0x%x 0x%x \r\n",up,dn);    
-    set_voltages(up, dn, up, dn);
-  }
-
-
 }
 void set_voltages_full(){
   set_voltages(0xFF,0xFF,0xFF,0xFF);
-
 }
 
 void read_voltages(){
