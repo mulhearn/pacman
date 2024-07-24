@@ -14,17 +14,31 @@ extern "C" {
 
 #include "pacman_i2c.hh"
 
-// I2C Addresses in I2C hardware address space:
-#define ADDR_BAD          0b0001101  // Non-existent address
-#define ADDR_DAC          0b0001100  // AD5677R for TILES 1-8
-// One VDDA ADC per tile, incrementing address one per tile: 
-#define ADDR_ADC_VDDA_START 0b1000000  // INA220 for TILE 1
-#define ADDR_ADC_VDDA_TILES 1
-// Two VDDD ADC per tile, incrementing address one per two tiles:
-#define ADDR_ADC_VDDD_START 0b1001000  // ADS1219 for TILES 1+2
+#define I2C_DEBUG_TAG     0xABCD
 
-#define ADDR_ADC_VDDD_TILES 2
-#define ADDR_MUX          0b1001100  // MAX14661 for TILES 1-8
+// I2C Address Space - PACMAN Rev 5
+
+//0001100   AD5677        16-chan. 16-bit DAC for VDDA setup                
+//0001101   AD5677        16-chan. 16-bit DAC for VDDD setup                
+//0010000   PAC1944       4-chan. Power Monitor VDDA+VDDD Tile1 + Tile2     
+//0010001   PAC1944       4-chan. Power Monitor VDDA+VDDD Tile3 + Tile4     
+//0010010   PAC1944       4-chan. Power Monitor VDDA+VDDD Tile5 + Tile6     
+//0010011   PAC1944       4-chan. Power Monitor VDDA+VDDD Tile7 + Tile8     
+//0010100   PAC1944       4-chan. Power Monitor VDDA+VDDD Tile9 + Tile10    
+//0010101   PAC1944       4-chan. Power Monitor T3V0 + D3V6 + D3V3          
+//1001100   MAX14661      16:2 Positive-Side MUX                            
+//1001101   MAX14661      16:2 Negative-Side MUX                            
+//1010000   SFP           SFP Module for Timing (primary addr.)             
+//1010001   SFP           SFP Module for Timing (secondary addr.)           
+//1100000   ADN2814       Clock & Data Recovery (CDR) for Timing  
+
+#define ADDR_BAD          0b0001110  // Non-existent address
+#define ADDR_DAC_VDDA     0b0001100  // AD5677 DAC for VDDA TILES 1-10
+#define ADDR_DAC_VDDD     0b0001101  // AD5677 DAC for VDDD TILES 1-10
+#define ADDR_ADC_TILES    0b0010000  // PAC1944 for Tiles 1+2 (ADDR+0), Tiles 3+4 (ADDR+1), ...
+#define ADDR_ADC_BOARD    0b0010101  // PAC 1944 for Board Power and Temp
+#define ADDR_MUX_P        0b1001100  // MAX14661 for TILES 1-10
+#define ADDR_MUX_N        0b1001101  // MAX14661 for TILES 1-10
 
 #define VERBOSE true
 
@@ -214,14 +228,15 @@ uint32_t i2c_direct_write(int fh, uint32_t lower, uint32_t val){
 }
 
 uint32_t i2c_set_vdda(int fh, uint32_t lower, uint32_t val){  
-  uint8_t addr   = 0x0C;
-  uint8_t reg    = 0x30 + 2*lower;
-  uint8_t nbytes = 2;
+  uint8_t reg    = 0x30 + lower;
+  const uint8_t nbytes = 2;
+  if (lower > 0xa)
+    return 0;
   #if VERBOSE
   printf("i2c_set_vdda:  tile: %d value: 0x%x\n", lower+1, val);
-  printf("i2c_set_vdda:  addr: 0x%x reg: 0x%x\n", addr, reg);
+  printf("i2c_set_vdda:  reg: 0x%x\n", reg);
   #endif
-  int ret = i2c_set(fh, addr, reg, val, nbytes);
+  int ret = i2c_set(fh, ADDR_DAC_VDDA, reg, val, nbytes);
   
   if (ret != nbytes+1){
     printf("**ERROR** i2c_set_vdda: i2c_set returned %d when expecting %d\n", ret, nbytes+1);
@@ -231,14 +246,15 @@ uint32_t i2c_set_vdda(int fh, uint32_t lower, uint32_t val){
 }
 
 uint32_t i2c_set_vddd(int fh, uint32_t lower, uint32_t val){  
-  uint8_t addr   = 0x0C;
-  uint8_t reg    = 0x31 + 2*lower;
-  uint8_t nbytes = 2;
+  uint8_t reg    = 0x30 + lower;
+  const uint8_t nbytes = 2;
+  if (lower > 0xa)
+    return 0; 
   #if VERBOSE
   printf("i2c_set_vddd:  tile: %d value: 0x%x\n", lower+1, val);
-  printf("i2c_set_vddd:  addr: 0x%x reg: 0x%x\n", addr, reg);
+  printf("i2c_set_vddd:  reg: 0x%x\n", reg);
   #endif
-  int ret = i2c_set(fh, addr, reg, val, nbytes);
+  int ret = i2c_set(fh, ADDR_DAC_VDDD, reg, val, nbytes);
   
   if (ret != nbytes+1){
     printf("**ERROR** i2c_set_vddd: i2c_set returned %d when expecting %d\n", ret, nbytes+1);
@@ -248,172 +264,70 @@ uint32_t i2c_set_vddd(int fh, uint32_t lower, uint32_t val){
 }
 
 uint32_t i2c_mon_vdda(int fh, uint32_t lower){  
-  uint8_t addr   = 0x40 + lower;
-  uint8_t reg    = 0x2;
-  uint8_t nbytes = 2;
-  #if VERBOSE
-  printf("i2c_mon_vdda:  tile: %d\n", lower+1);
-  printf("i2c_mon_vdda:  addr: 0x%x reg: 0x%x\n", addr, reg);
-  #endif
-  uint8_t buf[nbytes];  
-  if (i2c_recv(fh, addr, reg, buf, nbytes)!=nbytes){
-    printf("**ERROR** i2c_mon_vdda:  Failed to read I2C register.\n");
-    return 0;
-  }
-  uint32_t val = 0;
-  for (int i=0 ; i< nbytes; i++){
-    val = (val<<8) | buf[i];
-  }
-
-  uint32_t mv = 4*(val >> 3);
-  printf("i2c_mon_vdda:  mv: %d\n", mv);
-  return mv;
+  return 0;
 }
 
 uint32_t i2c_mon_vddd(int fh, uint32_t lower){
-  const uint8_t addr   = 0x48+lower/2;
-  const uint8_t mux    = 0x80 + 0x40*(lower%2);
-  const uint8_t reset  = 0x06;
-  const uint8_t config = 0x40;
-  const uint8_t start  = 0x08;
-  const uint8_t ready  = 0x24;
-  const uint8_t rdat   = 0x10;
-  const uint8_t nbytes = 3;
-  #if VERBOSE
-  printf("i2c_mon_vddd:  tile: %d\n", lower+1);
-  printf("i2c_mon_vddd:  addr: 0x%x mux: %x\n", addr, mux);
-  #endif
-  
-  int fail = 0;
-  fail |= (i2c_set(fh,addr,reset) != 1);
-  fail |= (i2c_set(fh,addr,config,mux,1) != 2);
-  fail |= (i2c_set(fh,addr,start) != 1);
-
-  uint8_t buf[4];
-  uint8_t rbit;
-  fail |= (i2c_set(fh,addr,ready) != 1);
-  fail |= (i2c_recv(fh,addr, ready, buf, 1)!=1);
-  rbit = (buf[0]>>7)&1;
-  printf("i2c_mon_vddd:  ready bit:  %d\n", rbit);
-  
-  // there are better solutions... note change in ready 
-  sleep(1);
-
-  fail |= (i2c_set(fh,addr,ready) != 1);
-  fail |= (i2c_recv(fh,addr, ready, buf, 1)!=1);
-  rbit = (buf[0]>>7)&1;
-  printf("i2c_mon_vddd:  ready bit:  %d\n", rbit);
-  
-  fail |= (i2c_set(fh,addr,rdat) != 1);
-  fail |= (i2c_recv(fh,addr, rdat, buf, nbytes)!=nbytes);
-
-  if (fail){
-    printf("**ERROR** i2c_mon_vddd:  I2C failure.\n");
-    return 0;
-  }
-  uint32_t val = 0;
-  for (int i=0 ; i< nbytes; i++){
-    val = (val<<8) | buf[i];
-  }
-  printf("i2c_mon_vddd:  value:  0x%x (%d)\n", val, val);
-  uint32_t mv = val * 0.000476837;
-  printf("i2c_mon_vddd:  mv:  %d\n", mv);  
-  return mv;
+  return 0;
 }
 
 uint32_t i2c_mon_idda(int fh, uint32_t lower){  
-  uint8_t addr   = 0x40 + lower;
-  uint8_t reg    = 0x1;
-  uint8_t nbytes = 2;
-  #if VERBOSE
-  printf("i2c_mon_idda:  tile: %d\n", lower+1);
-  printf("i2c_mon_idda:  addr: 0x%x reg: 0x%x\n", addr, reg);
-  #endif
-  uint8_t buf[nbytes];  
-  if (i2c_recv(fh, addr, reg, buf, nbytes)!=nbytes){
-    printf("**ERROR** i2c_mon_idda:  Failed to read I2C register.\n");
-    return 0;
-  }
-  uint32_t val = 0;
-  for (int i=0 ; i< nbytes; i++){
-    val = (val<<8) | buf[i];
-  }  
-  return val;
+  return 0;
 }
 
 uint32_t i2c_mon_iddd(int fh, uint32_t lower){
-  const uint8_t addr   = 0x48+lower/2;
-  const uint8_t mux    = 0x60 + 0x40*(lower%2);
-  const uint8_t reset  = 0x06;
-  const uint8_t config = 0x40;
-  const uint8_t start  = 0x08;
-  const uint8_t ready  = 0x24;
-  const uint8_t rdat   = 0x10;
-  const uint8_t nbytes = 3;
-  #if VERBOSE
-  printf("i2c_mon_iddd:  tile: %d\n", lower+1);
-  printf("i2c_mon_iddd:  addr: 0x%x mux: %x\n", addr, mux);
-  #endif
-  
-  int fail = 0;
-  fail |= (i2c_set(fh,addr,reset) != 1);
-  fail |= (i2c_set(fh,addr,config,mux,1) != 2);
-  fail |= (i2c_set(fh,addr,start) != 1);
+  return 0;
+}
 
-  uint8_t buf[4];
-  uint8_t rbit;
-  fail |= (i2c_set(fh,addr,ready) != 1);
-  fail |= (i2c_recv(fh,addr, ready, buf, 1)!=1);
-  rbit = (buf[0]>>7)&1;
-  printf("i2c_mon_iddd:  ready bit:  %d\n", rbit);
-  
-  // there are better solutions... note change in ready 
-  sleep(1);
-
-  fail |= (i2c_set(fh,addr,ready) != 1);
-  fail |= (i2c_recv(fh,addr, ready, buf, 1)!=1);
-  rbit = (buf[0]>>7)&1;
-  printf("i2c_mon_iddd:  ready bit:  %d\n", rbit);
-  
-  fail |= (i2c_set(fh,addr,rdat) != 1);
-  fail |= (i2c_recv(fh,addr, rdat, buf, nbytes)!=nbytes);
-
-  if (fail){
-    printf("**ERROR** i2c_mon_iddd:  I2C failure.\n");
-    return 0;
-  }
-  uint32_t val = 0;
-  for (int i=0 ; i< nbytes; i++){
-    val = (val<<8) | buf[i];
-  }
-  printf("i2c_mon_iddd:  value:  0x%x (%d)\n", val, val);
-  return val;
+uint32_t i2c_version(int fh, uint32_t lower){  
+  if (lower == 0) return I2C_MAJOR_VERSION;
+  if (lower == 1) return I2C_MINOR_VERSION;
+  if (lower == 2) return I2C_DEBUG_TAG;
+}
+uint32_t get_mux_code(uint32_t val){
+  uint32_t switch_disabled = 0x10;
+  if (val == 0)
+    return switch_disabled; // disable switch
+  if ((val >= 1) && (val <= 10))
+    return val - 1; // set to TILE val
+  if (val == 11)
+    return 0xb; // set to DAC
+  printf("get_mux_code:  unsupported value:  0x%x (%d)\n", val, val);
+  return switch_disabled;
 }
 
 uint32_t i2c_set_muxa(int fh, uint32_t lower, uint32_t val){  
-  uint8_t addr   = 0x4C;
-  uint8_t reg    = 0x14;
-  uint8_t nbytes = 1;
-  printf("i2c_set_muxa:  value: %d\n", val);
-  int ret = i2c_set(fh, addr, reg, val, nbytes);  
-  if (ret != nbytes+1){
-    printf("**ERROR** i2c_set_muxa: i2c_set returned %d when expecting %d\n", ret, nbytes+1);
-    return 0;
-  }
-  return 1;
+  const uint8_t reg    = 0x14;
+  const uint8_t nbytes = 1;
+
+  uint32_t code = get_mux_code(val);
+
+  printf("i2c_set_muxa:  value: %d  code: %d \n", val, code);
+  int rep, status = 1;
+  rep = i2c_set(fh, ADDR_MUX_P, reg, code, nbytes);  
+  status *= (rep == nbytes+1);
+  rep = i2c_set(fh, ADDR_MUX_N, reg, code, nbytes);  
+  status *= (rep == nbytes+1);
+  if (status!=1)
+    printf("**ERROR** i2c_set_muxa:  i2c_set was not successful\n");
+  return status;
 }
 
-uint32_t i2c_set_muxb(int fh, uint32_t lower, uint32_t val){  
-  uint8_t addr   = 0x4C;
-  uint8_t reg    = 0x15;
-  uint8_t nbytes = 1;
-  printf("i2c_set_muxb:  value: %d\n", val);
-  int ret = i2c_set(fh, addr, reg, val, nbytes);  
-  if (ret != nbytes+1){
-    printf("**ERROR** i2c_set_muxb: i2c_set returned %d when expecting %d\n", ret, nbytes+1);
-    return 0;
-  }  
-  return 1;
+uint32_t i2c_set_muxb(int fh, uint32_t lower, uint32_t val){
+  const uint8_t reg    = 0x15;
+  const uint8_t nbytes = 1;
+  
+  uint32_t code = get_mux_code(val);
+
+  printf("i2c_set_muxb:  value: %d  code: %d \n", val, code);
+  int rep, status = 1;
+  rep = i2c_set(fh, ADDR_MUX_P, reg, code, nbytes);  
+  status *= (rep == nbytes+1);
+  rep = i2c_set(fh, ADDR_MUX_N, reg, code, nbytes);  
+  status *= (rep == nbytes+1);
+  if (status!=1)
+    printf("**ERROR** i2c_set_muxb:  i2c_set was not successful\n");
+  return status;
 }
 
 uint32_t i2c_read(int fh, uint32_t vreg_offset) {
@@ -444,13 +358,16 @@ uint32_t i2c_read(int fh, uint32_t vreg_offset) {
   case I2C_VREG_OFFSET_EXPERT:    
     return i2c_expert[lower];
   case I2C_VREG_OFFSET_DIRECT:
-    return i2c_direct_read(fh, lower);    
+    return i2c_direct_read(fh, lower);
+  case I2C_VREG_OFFSET_I2C_VER:
+    return i2c_version(fh, lower);    
   default:
     printf("i2c_read:  failed to read unimplemented register at offset:  0x%x\n", vreg_offset);
     break;
   }  
   return 0;
 }
+
 
 uint32_t i2c_devel(int fh, uint32_t lower, uint32_t val) {
   printf("i2c_devel:  ***Welcome to PACMAN I2C development code***\n");
@@ -497,5 +414,6 @@ uint32_t i2c_write(int fh, uint32_t vreg_offset, uint32_t val) {
   }  
   return 0;
 }
+
 
 #endif

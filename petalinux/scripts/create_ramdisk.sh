@@ -2,12 +2,8 @@
 
 SRC=./src
 PKG=./pkg
-#SPEC=ramdisk-clean
-SPEC=initramdisk
+SPEC=ramdisk
 PROJ=$SPEC
-
-# TODO: UPDATE NAME TO ramdisk (waiting for next build from scratch)...
-# TODO: Remove petalinux-create safety comment...
 
 if [ -d "$PROJ" ]; then
     echo "The petalinux project directory $PROJ already exists."
@@ -20,7 +16,7 @@ if [ -d "$PROJ" ]; then
     echo "          the existing petalinux project directory and start from scratch."
 else
     echo "Creating new project directory $PROJ"
-    #petalinux-create -t project -n $PROJ --template zynq
+    petalinux-create -t project -n $PROJ --template zynq
 fi
 
 # add configs specfic to this option
@@ -31,8 +27,6 @@ cp -v $SRC/rootfs_config-$SPEC         $PROJ/project-spec/configs/rootfs_config
 cp -v $SRC/platform-top.h       $PROJ/project-spec/meta-user/recipes-bsp/u-boot/files/
 cp -v $SRC/system-user.dtsi     $PROJ/project-spec/meta-user/recipes-bsp/device-tree/files/
 cp -v $SRC/system-user.dtsi     $PROJ/project-spec/meta-user/meta-xilinx-tools/recipes-bsp/uboot-device-tree/files/
-
-
 cp -v $SRC/user-rootfsconfig    $PROJ/project-spec/meta-user/conf/
 
 # add custom software packages
