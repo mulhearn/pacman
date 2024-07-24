@@ -1,0 +1,50 @@
+
+This provides instructions for getting up and running using only a USB
+chord and network cable.  A USB stick can be used instead of network
+in a pinch.
+
+1) Set the TE0720 carrier board jumpers to boot from QSPI (OEM version) and reboot.
+2) Login over the USB using a terminal program, e.g.:
+
+$ busybox microm -s 115200 /dev/ttyUSB1
+
+3) Now you should be able to setup your network as needed, e.g.:
+$ /etc/init.d/networking stop
+$ ifconfig eth0 hw ether 02:01:02:03:04:08
+$ /etc/init.d/networking start
+
+to set MAC address to something as needed.  Hopefully now you can
+transfer files with scp, otherwise, use a USB stick.  Find your ip
+address with ifconfig, e.g.: 123.141.43.141
+
+4) The OEM linux has fdisk and mkfs.vfat.  Use fdisk to partition the
+SD Card into a 1 GB BOOT partition (FAT), and the remainder as Linux
+"rootfs".  Use mkfs.vfat to format the BOOT partiion.  You don't have
+mkfs.ext4 yet, so just leave the root partition unformated.
+
+5) Build the "safe" version of the project, and transfer BOOT.BIN and
+image.ub into BOOT partition of SD card.  Save copies of these into a
+subdiretory called "safe" of the boot directory.  For example:
+
+scp images/linux/BOOT.BIN images/linux/image.ub root@123.141.43.141/run/media/mmcblk0p1/
+
+6) Set the jumpers to boot from SD card, and reboot.
+
+7) Now you should boot into a more fully featured linux, including mkfs.ext4, so format the rootfs partition.
+
+8) Build the full version of the project, transfer BOOT.BIN, image.ub,
+and rootfs.tar.gz to the TE0720.  Untar the rootfs tarball into the
+rootfs partition of the SD card, e.g.:
+
+scp rootfs-wlocal.tar.gz root@123.141.43.141/run/media/mmcblk0p2/
+/run/media/mmcblk0p2/
+tar -xfz rootfs.tar.gz
+
+And copy the BOOT.BIN and image.ub into the BOOT partion as above.
+
+9) Reboot...
+
+
+
+
+

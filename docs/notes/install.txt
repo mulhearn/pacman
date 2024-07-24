@@ -1,0 +1,199 @@
+--------------------------------------
+Ubuntu 22.04.4 LTS and Vivado 2020.2 
+--------------------------------------
+
+Installation of Vivado 2020.2 went smoothly (but see packages added for 2022.2 which are likely relevant).
+
+$ perl ldd-recursive.pl /tools/Xilinx/Vivado/2020.2/bin/unwrapped/lnx64.o/vivado -uniq
+/lib/x86_64-linux-gnu/libtcmalloc.so.4
+librdi_common.so => not found
+/lib/x86_64-linux-gnu/libc.so.6
+/lib64/ld-linux-x86-64.so.2
+linux-vdso.so.1
+librdi_commonmain.so => not found
+/lib/x86_64-linux-gnu/libunwind.so.8
+/lib/x86_64-linux-gnu/liblzma.so.5
+libboost_signals.so => not found
+/lib/x86_64-linux-gnu/libstdc++.so.6
+/lib/x86_64-linux-gnu/libgcc_s.so.1
+/lib/x86_64-linux-gnu/libm.so.6
+
+The two libraries not found (librdi and libboost_signals) are included with the software.
+
+--------------------------------------
+Ubuntu 22.04.4 LTS and Vivado 2022.2 
+--------------------------------------
+
+First had to add tinfo, libncurses5 and libncurses5-dev or install hung at "Generating Installed device list"
+
+After installation, used "perl ldd-recursive.pl ..." as described at:
+   https://www.xilinx.com/support/answers/66184.html
+   to determine the missing libraries:
+
+librdi_commonmain.so => not found
+/lib/x86_64-linux-gnu/libgcc_s.so.1
+librdi_common.so => not found
+/lib/x86_64-linux-gnu/libc.so.6
+/lib/x86_64-linux-gnu/libstdc++.so.6
+linux-vdso.so.1
+/lib/x86_64-linux-gnu/libm.so.6
+libtcmalloc.so.4 => not found
+/lib64/ld-linux-x86-64.so.2
+
+The rdi files are Xilinx files and will be installed by the tools.  The other depency is fixed with:
+
+sudo apt-get install google-perftools
+
+
+Cable drivers:
+
+cd tools/Xilinx/Vivado/2022.2/data/xicom/cable_drivers/lin64/install_script/install_drivers
+sudo ./install_drivers
+
+Access to USB TTY device without sudo, by adding user to dialup group:
+
+$sudo usermod -a -G dialout <username>
+
+-----------------
+Ubuntu 18.04 LTS
+-----------------
+
+1) Installed lastest version of Ubuntu 18.04 LTS
+
+This is technically not supported, and Vivado will complain, but it does work with a minor work-around for petalinx installation, detailed below.
+
+2) Download and install the webpack for the whole vitas suite:
+
+Set /tools/ to a user owned directory, so installed there as normal user.
+
+After installation, used "perl ldd-recursive.pl ..." as described at:
+   https://www.xilinx.com/support/answers/66184.html
+   to determine the missing libraries:
+
+libtcmalloc.so.4 => not found
+libboost_signals.so => not found
+librdi_common.so => not found
+librdi_commonmain.so => not found
+
+Satisfied the first two with:
+
+$ sudo apt-get install google-perftools
+$ sudo apt-get install llibboost-signals-dev
+
+The last two are Xilinx libraries, and are already located in Xilinx
+installation lib directory.  To see this, you can set LD_LIBRARY_LOAD
+to include the Xilinx libraries, but this isn't really needed.
+Evidently, Vivado already finds these libraries.
+
+
+3) Because I did not install as root, the cable drivers were not installed
+automatically, so I had to do the following:
+
+- unplug all cables (including SoMs with FTDI driver over USB, effectively a JTAG cable)
+
+$cd /tools/Xilinx/Vivado/2018.3/data/xicom/cable_drivers/lin64/install_script/install_drivers/
+
+$sudo ./install_drivers
+
+4) So that I could have access to the USB TTY device as normal user
+from the commandline, I added myself to the dialup group with:
+
+$sudo usermod -a -G dialout <username>
+
+where <username> is replaced with your actual username.  This change
+does not take effect until the next time you login to the host.
+
+
+5) A workaround is needed to sucessefully install petalinux.  There is
+an incompatibility between petalinux installer and latest version of
+bash used by Ubuntu 18.04 LTS.  To work around this, we temporarily
+replace sed with a modified version during petalinux installation.  So
+do something like:
+
+$ mkdir ~/workaround 
+$ cd ~/workaround
+$ wget https://raw.githubusercontent.com/mulhearn/pacman/master/docs/workaround/sed
+$ chmod ugo+x sed
+$ export PATH=~/workaround:$PATH
+$ which sed
+
+That last line should show that sed now points to the modified version
+in ~/workaround.  This is only needed during the installation!
+
+Now installation of petalinux 2018.3 proceeds as described in the
+petalinux tools documentation:
+
+   https://www.xilinx.com/support/documentation/sw_manuals/xilinx2018_3/ug1144-petalinux-tools-reference-guide.pdf
+
+Except note that not all the required tools are installed by the
+"Quick installation of packages" commands, notably "gawk" is not
+included but possibly others.  I used the quick install command, then
+went package by package from the table to make sure every tool is
+installed.
+
+Double check with "which sed" to make certain the workaround described
+above is still in effect, then run the installer as described in the
+documentation.
+
+I installed to /tools/Xilinx/petalinux/2018.3 as a normal user.
+
+You can delete ~/workaround once the installation is complete.
+
+-----------------
+Ubuntu 16.04 LTS
+-----------------
+
+1) Installed lastest version of Ubuntu 16.04 LTS
+
+This is technically not supported, and Vivado will complain, but it
+seems unreasonable to insist on an out-of-date version from 16.04
+branch.
+
+2) Download and install the webpack for the whole vitas suite:
+
+Set /tools/ to a user owned directory, so installed there as normal user.
+
+After installation, used "perl ldd-recursive.pl ..." as described at:
+   https://www.xilinx.com/support/answers/66184.html
+   to determine the missing libraries:
+
+libtcmalloc.so.4 => not found
+libboost_signals.so => not found
+librdi_common.so => not found
+librdi_commonmain.so => not found
+
+Satisfied the first two with:
+
+$ sudo apt-get install google-perftools
+$ sudo apt-get install llibboost-signals-dev
+
+The last two are Xilinx libraries, and are already located in Xilinx
+installation lib directory.  To see this, you can set LD_LIBRARY_LOAD
+to include the Xilinx libraries, but this isn't really needed.
+Evidently, Vivado already finds these libraries.
+
+3) Because I installed as root, the cable drivers were not installed automatically, so I had to do the following:
+
+- unplug all cables (including SoMs with FTDI driver over USB, effectively a JTAG cable)
+
+$cd /tools/Xilinx/Vivado/2018.3/data/xicom/cable_drivers/lin64/install_script/install_drivers/
+
+$sudo ./install_drivers
+
+
+4) So that I could have access to the USB TTY device as normal user from the commandline, I added myself to the dialup group with:
+
+$sudo usermod -a -G dialout <username>
+
+where <username> is replaced with your actual username.  This change
+does not take effect until the next time you login to the host.
+
+5) Installation of petalinux 2018.3 proceeded as described in the petalinxu tools documentation:
+
+   https://www.xilinx.com/support/documentation/sw_manuals/xilinx2018_3/ug1144-petalinux-tools-reference-guide.pdf
+
+Except note that not all the required tools are installed by the "Quick installation of packages" commands, notably
+"gawk" is not included but possibly others.  I used the quick install command, then went package by package from the table.
+
+I installed to /tools/Xilinx/petalinux/2018.3 as a normal user.
+
