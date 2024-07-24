@@ -4,7 +4,7 @@
 
 set proj_name "pacman-fw"
 
-set origin_dir [file dirname [info script]]
+set origin_dir [file dirname [info script]]/..
 
 open_project $origin_dir/$proj_name/$proj_name.xpr
 

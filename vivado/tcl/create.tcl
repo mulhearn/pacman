@@ -3,7 +3,7 @@
 #
 
 # Set the reference directory for source file relative paths (by default the value is script directory path)
-set origin_dir [file dirname [info script]]
+set origin_dir [file dirname [info script]]/..
 
 # Set the project name
 set proj_name "pacman-fw"

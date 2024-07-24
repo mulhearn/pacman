@@ -14,9 +14,9 @@ git clone git@github.com:mulhearn/pacman.git
 cd pacman
 source /tools/Xilinx/Vivado/2020.2/settings64.sh
 # create the project from tcl
-vivado -mode batch -source vivado/create.tcl
+vivado -mode batch -source vivado/tcl/create.tcl
 # run systhesis, implementation, and write bit stream:
-vivado -mode batch -source vivado/runsib.tcl
+vivado -mode batch -source vivado/tcl/runsib.tcl
 
 # run hello world demo:
 xsct apps/hello/install.tcl

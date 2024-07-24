@@ -1,7 +1,7 @@
 /.Xil
 /pacman-fw
-*.jou
-*.log
+vivado*.jou
+vivado*.log
 *.aux
 *~
 /fsbl
