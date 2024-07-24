@@ -18,7 +18,6 @@
 /*/project-spec/hw-description/ps7_init_gpl.h
 /*/project-spec/hw-description/system.hdf
 /*/project-spec/hw-description/zsys_wrapper.bit
-/petalinux/initramdisk
 /petalinux/ramdisk
 /petalinux/vanilla
 /petalinux/full
