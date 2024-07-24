@@ -1,4 +1,7 @@
-# Reminders only, see README.txt for instructions...
+# Basic work flows for pacman project:
+
+# prevent accidentally sourcing the commands in this file:
+return
 
 # connecting to UART
 busybox microcom -s 115200 /dev/ttyUSB1
@@ -10,9 +13,10 @@ git clone https://github.com/mulhearn/pacman.git
 git clone git@github.com:mulhearn/pacman.git
 cd pacman
 source /tools/Xilinx/Vivado/2020.2/settings64.sh
-
+# create the project from tcl
 vivado -mode batch -source vivado/create.tcl
-vivado -mode batch -source vivado/hardware.tcl
+# run systhesis, implementation, and write bit stream:
+vivado -mode batch -source vivado/runsib.tcl
 
 # run hello world demo:
 xsct apps/hello/install.tcl
@@ -28,11 +32,27 @@ xsct run.tcl
 # untested ... start with:
 xsct apps/flash/install.tcl
 
-# build various first stage boot loaders:
-xsct apps/hwcheck/install.tcl
+# install various first stage boot loaders
+xsct apps/fsbl/install.tcl
 
-# petalinux:
+# petalinux ramdisk (uses RAM for root fs)
 source /tools/Xilinx/PetaLinux/2022.2/bin/settings.sh
+cd petalinux
+source scripts/create_ramdisk.sh
+cd ramdisk
+source ../scripts/config.sh
+source ../scripts/build.sh
+source ../scripts/package.sh
+cd images/linux
+ls -alh BOOT.BIN image.ub
+
+
+
+
+
+
+
+
 
 
 #xsct tcl/build_sw.tcl

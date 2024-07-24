@@ -5,6 +5,9 @@ PKG=./pkg
 SPEC=ramdisk
 PROJ=$SPEC
 
+# create project in the correct location no matter where the script is run from:
+cd "$(dirname "$0")/.."
+
 if [ -d "$PROJ" ]; then
     echo "The petalinux project directory $PROJ already exists."
     echo "*** You must delete or move project directory to start the process from scratch. ***"
