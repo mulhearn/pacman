@@ -1,13 +1,26 @@
 #Note: Mention Each package in individual line
-#These packages will get added into rootfs menu entry
+#These packages/apps will get added into rootfs menu entry as options
+#They are not added until selected there, so no need to be minimal here
 
+# simple GPIO app
 CONFIG_gpio-demo
+# simple test of AXI registers
 CONFIG_peekpoke
+# needed to partition msdos
 CONFIG_dosfstools
+# file transfer over serial connection
 CONFIG_lrzsz
+# MDIO (Ethernet) Tools
 CONFIG_phytool
+# Trenz testboard
 CONFIG_startup
+# Trenz testboard
 CONFIG_webfwu
+
+# pacman specific:
+#
 CONFIG_pacman-server
+# these are packages are required by pacman-server so will be added automatically
+# by the build process
 CONFIG_zeromq
 CONFIG_python3-pyzmq
