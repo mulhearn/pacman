@@ -1,12 +1,10 @@
+/.Xil
 /pacman-fw
-*.jou
-*.log
+vivado*.jou
+vivado*.log
 *.aux
 *~
-/products/
-!/products/zsys_wrapper.hdf
-/tcl/recreate_xpr.tcl.old
-/build_sw
+/fsbl
 /hello
 /flash
 /hwcheck
@@ -20,3 +18,7 @@
 /*/project-spec/hw-description/ps7_init_gpl.h
 /*/project-spec/hw-description/system.hdf
 /*/project-spec/hw-description/zsys_wrapper.bit
+/petalinux/ramdisk
+/petalinux/vanilla
+/petalinux/full
+
