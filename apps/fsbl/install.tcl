@@ -28,16 +28,16 @@ setws .
 
 # Create pacman, trenz, flash
 
-app create -name pacman_fsbl -hw ../products/pacman.xsa -os standalone -proc ps7_cortexa9_0 -lang C -template {Zynq FSBL}
+app create -name pacman_fsbl -hw ../products/zsys_wrapper.xsa -os standalone -proc ps7_cortexa9_0 -lang C -template {Zynq FSBL}
 importsources -name pacman_fsbl -path ../apps/fsbl/pacman/
 
-app create -name trenz_fsbl -hw ../products/pacman.xsa -os standalone -proc ps7_cortexa9_0 -lang C -template {Zynq FSBL}
+app create -name trenz_fsbl -hw ../products/zsys_wrapper.xsa -os standalone -proc ps7_cortexa9_0 -lang C -template {Zynq FSBL}
 importsources -name trenz_fsbl -path ../apps/fsbl/trenz/
 
-app create -name flash_fsbl -hw ../products/pacman.xsa -os standalone -proc ps7_cortexa9_0 -lang C -template {Zynq FSBL}
+app create -name flash_fsbl -hw ../products/zsys_wrapper.xsa -os standalone -proc ps7_cortexa9_0 -lang C -template {Zynq FSBL}
 importsources -name flash_fsbl -path ../apps/fsbl/flash/
 
-app create -name zynq_fsbl -hw ../products/pacman.xsa -os standalone -proc ps7_cortexa9_0 -lang C -template {Zynq FSBL}
+app create -name zynq_fsbl -hw ../products/zsys_wrapper.xsa -os standalone -proc ps7_cortexa9_0 -lang C -template {Zynq FSBL}
 
 file copy ../apps/fsbl/run.tcl ./
 

@@ -7,7 +7,7 @@ if {[file exists "hello"] == 1} {
 # Set SDK workspace
 setws hello
 
-app create -name bareapp -hw products/pacman.xsa -os standalone -proc ps7_cortexa9_0 -lang C -template {Hello World}
+app create -name bareapp -hw products/zsys_wrapper.xsa -os standalone -proc ps7_cortexa9_0 -lang C -template {Hello World}
 
 # rename hello world so that it may be used for bare metal application development:
 file rename hello/bareapp/src/helloworld.c hello/bareapp/src/bareapp.c
@@ -21,5 +21,5 @@ cd hello
 
 app build bareapp
 
-source run.tcl
-cd ..
+#source run.tcl
+#cd ..
