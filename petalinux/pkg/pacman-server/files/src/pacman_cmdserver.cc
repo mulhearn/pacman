@@ -79,21 +79,21 @@ int main(int argc, char* argv[]){
   printf("ZMQ socket(s) created\n");
   
   // initialize dma
-  //int dh = open("/dev/mem", O_RDWR|O_SYNC);
-  //uint32_t* dma = (uint32_t*)mmap(NULL, DMA_LEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_ADDR);
-  //uint32_t* dma_tx = (uint32_t*)mmap(NULL, DMA_TX_MAXLEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_TX_ADDR);
-  //dma_desc* curr = init_circular_buffer(dma_tx, DMA_TX_ADDR, DMA_TX_MAXLEN, LARPIX_PACKET_LEN);
-  //dma_desc* prev = curr;
-  //dma_restart(dma, curr);
-  //uint32_t dma_status = dma_get(dma, DMA_MM2S_STAT_REG);
-  //if ( dma_status & DMA_HALTED ) {
-  //  printf("Error starting DMA\n");
-  //  return 2;
-  //}
-  //printf("DMA started\n");
+  int dh = open("/dev/mem", O_RDWR|O_SYNC);
+  uint32_t* dma = (uint32_t*)mmap(NULL, DMA_LEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_ADDR);
+  uint32_t* dma_tx = (uint32_t*)mmap(NULL, DMA_TX_MAXLEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_TX_ADDR);
+  dma_desc* curr = init_circular_buffer(dma_tx, DMA_TX_ADDR, DMA_TX_MAXLEN, LARPIX_PACKET_LEN);
+  dma_desc* prev = curr;
+  dma_restart(dma, curr);
+  uint32_t dma_status = dma_get(dma, DMA_MM2S_STAT_REG);
+  if ( dma_status & DMA_HALTED ) {
+    printf("Error starting DMA\n");
+    return 2;
+  }
+  printf("DMA started\n");
 
   // initialize pacman-pl
-  //uint32_t* pacman_pl = (uint32_t*)mmap(NULL, PACMAN_LEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, PACMAN_ADDR);
+  uint32_t* pacman_pl = (uint32_t*)mmap(NULL, PACMAN_LEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, PACMAN_ADDR);
 
   // initialize i2c-0
   const char* i2c_dev = "/dev/i2c-0"; 

@@ -17,7 +17,7 @@
 #define DMA_TX_MAXLEN 0x01000000
 
 #define DMA_RX_ADDR   0x31000000
-#define DMA_RX_MAXLEN 0x0F000000
+#define DMA_RX_MAXLEN 0x07000000
 
 /* ~~~ end DMA interface ~~~ */
 
