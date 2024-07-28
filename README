@@ -1,0 +1,84 @@
+
+This branch is devoted to supporting the legacy (Petalinux 18.04)
+based kernal that is still widely used throughout PACMAN project.
+
+-----------------------------------------
+Building the PACMAN server:
+-----------------------------------------
+
+# Initial Setup
+source /tools/Xilinx/petalinux/2018.3/settings.sh
+source /tools
+cd petalinux
+
+# Build the pacman command server
+./scripts/create_ramdisk.sh
+cd ramdisk
+../scripts/config.sh
+../scripts/build-pacman
+../scripts/build_pacman_server.sh
+
+# Convert the RPM from into a gzipped tar file:
+mkdir tmp
+cd tmp
+rpm2cpio ../pacman-server-latest.rpm | cpio -idmv
+ls
+tar -czvf pacman.tar.gz * 
+mv pacman.tar.gz ..
+cd ..
+rm -fr tmp
+
+-----------------------------------------
+Development of the PACMAN server:
+-----------------------------------------
+
+Make your edits to /petalinux/pkg/pacman-server
+
+Then, just as above:
+
+./scripts/create_ramdisk.sh
+cd ramdisk
+../scripts/config.sh
+../scripts/build_pacman_server.sh
+
+Note, that once the ramdisk directory has been made, you can run this all
+from withing the ramdisk directory like this:
+
+../scripts/create_ramdisk.sh
+../scripts/config.sh
+../scripts/build-pacman
+../scripts/build_pacman_server.sh
+
+But you must still call the create_ramdisk.sh script each time you
+make changes, because the script is still needed to copy the files
+from the pkg directory into the proj_spec directory for the petatlinux
+build.
+
+-----------------------------------------
+Packaging:
+-----------------------------------------
+
+To package new firmware for use with the 18.04 kernel.
+
+Copy the bitsream file to
+
+pacman/packaging/zsys_wrapper.bit
+
+cd into the packaging directory and run:
+
+bootgen -arch zynq -image boot.bif -w -o BOOT.BIN
+
+
+This creates the BOOT.BIN file.
+Place this and image.ub (the legacy 18.04 kernel) on the BOOT partion of your SD card.
+
+-----------------------------------------
+Generating the HDF file in Vivado
+-----------------------------------------
+New versions of Vivado generate .xsa files instead of the .hdf files needed for 18.04.  Yet you can still (for now) force Vivado to generate an .hdf file via the tcl command:
+
+write_hwdef -force zynq_design.hdf
+
+
+
+
