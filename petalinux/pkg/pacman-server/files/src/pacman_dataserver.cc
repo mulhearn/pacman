@@ -28,7 +28,7 @@ void clear_msg(void*, void*) {
     msg_ready = true;
 }
 
-void restart_dma(uint32_t* dma, uint32_t curr) {
+void* restart_dma(uint32_t* dma, uint32_t curr) {
   printf("Restarting DMA...\n");
   dma_set(dma, DMA_S2MM_CTRL_REG, DMA_RST); // reset
   dma_set(dma, DMA_S2MM_CTRL_REG, 0); // halt
@@ -105,7 +105,7 @@ int main(int argc, char* argv[]){
     printf("New data available\n");
     printf("Words: %d, total: %d, rate: %.02fMb/s (%.02fMb/s)\n",
            words,
-           (int)total_words,
+           total_words,
            (std::chrono::duration<double>)words/(now-last_time) * LARPIX_PACKET_LEN * 8 / 1e6,
            (std::chrono::duration<double>)total_words/(now-start_time) * LARPIX_PACKET_LEN * 8 / 1e6
            );

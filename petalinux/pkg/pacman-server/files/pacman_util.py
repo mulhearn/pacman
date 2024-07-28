@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 '''
 A lightweight, standalone python script to interface with the pacman servers
 See help text for more details::

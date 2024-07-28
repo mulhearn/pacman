@@ -1,0 +1,6 @@
+the_ROM_image:
+{
+    [bootloader]prebuilt_fsbl.elf
+    zsys_wrapper.bit
+    prebuilt_u-boot.elf
+}

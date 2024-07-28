@@ -7,7 +7,9 @@
 #include "addr_conf.hh"
 
 #define I2C_MAJOR_VERSION 5
-#define I2C_MINOR_VERSION 0
+#define I2C_MINOR_VERSION 1
+
+#define I2C_DEV "/dev/i2c-0"
 
 // The I2C device is used to access the PACMAN I2C peripherals:
 //#define I2C_DEV "/dev/i2c-0"

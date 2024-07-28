@@ -4,10 +4,7 @@
 #include <stdio.h>
 #include <sys/ioctl.h>
 #include <cstdint>
-extern "C" {
-#include <linux/i2c-dev.h>
-#include <i2c/smbus.h>
-}
+#include <linux/i2c-dev-user.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
@@ -112,16 +109,17 @@ int i2c_smbus_recv(int fh, uint8_t addr, uint8_t reg, uint8_t* buf, uint32_t nby
 int i2c_rw(int fh, uint8_t addr, uint8_t reg, uint8_t* buf, uint32_t nbytes) {
     // perform read from register with repeated start
     if (i2c_addr(fh, addr) < 0) return -1;
+    char reg_char = (char)reg;
     struct i2c_msg msgs[2];
     msgs[0].addr = addr;
     msgs[0].flags = 0;
     msgs[0].len = 1;
-    msgs[0].buf = &reg;
+    msgs[0].buf = &reg_char;
 
     msgs[1].addr = addr;
     msgs[1].flags = I2C_M_RD | I2C_M_NOSTART;
     msgs[1].len = nbytes;
-    msgs[1].buf = buf;
+    msgs[1].buf = (char*)buf;
     
     struct i2c_rdwr_ioctl_data data;
     data.msgs = msgs;

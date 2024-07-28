@@ -8,5 +8,6 @@
 #   $ rpm2cpio pacman-server-1.0-r0.9.cortexa9t2hf_neon.rpm | cpio -idmv
 #
 
-petalinux-build -c pacman-server -x build
-ls -alh build/tmp/deploy/rpm/cortexa9t2hf_neon/pacman-server-1.0-r*.cortexa9t2hf_neon.rpm 
+#petalinux-build -c pacman-server -x build
+ls -alh build/tmp/deploy/rpm/cortexa*_neon/pacman-server-1.0-r*.cortexa*_neon.rpm 
+cp -v build/tmp/deploy/rpm/cortexa*_neon/pacman-server-1.0-r*.cortexa*_neon.rpm pacman-server-latest.rpm

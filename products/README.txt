@@ -1,2 +1,1 @@
-pacman.xsa:        exported hardware from vivado, including bitstream
-trenz_fsbl.elf:     the custom first stage boot loader for TE0720
+zsys_wrapper.hdf   exported hardware from vivado, format for 18.04 petalinux

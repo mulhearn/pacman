@@ -10,7 +10,7 @@ OBJ := $(SRC:$(SRC_DIR)/%.cc=$(OBJ_DIR)/%.o)
 
 CPPFLAGS += -I${INCLUDE_DIR}
 
-LDLIBS += -li2c -lzmq -lstdc++
+LDLIBS += -lzmq -lstdc++
 
 all: build
 
