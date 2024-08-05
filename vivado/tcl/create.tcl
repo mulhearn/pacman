@@ -6,10 +6,7 @@
 set origin_dir [file dirname [info script]]/..
 
 # Set the project name
-set proj_name "pacman-fw"
-
-variable script_file
-set script_file "pacman-fw.tcl"
+set proj_name "trenz-fw"
 
 # Create project
 create_project $proj_name $origin_dir/$proj_name -part xc7z010clg400-1
@@ -69,17 +66,21 @@ make_wrapper -files [get_files ${design_name}.bd] -top -import
 if {[string equal [get_filesets -quiet constrs_1] ""]} {
   create_fileset -constrset constrs_1
 }
-
-# add constraints:
 set obj [get_filesets constrs_1]
-set file "[file normalize "$origin_dir/src/constraints/gpio.xdc"]"
-set file_added [add_files -norecurse -fileset $obj [list $file]]
+set files [list \
+	       [file normalize "${origin_dir}/src/constraints/_i_bitgen_common.xdc"] \
+	       [file normalize "${origin_dir}/src/constraints/_i_common.xdc"] \
+	       [file normalize "${origin_dir}/src/constraints/_i_TE0720-SC.xdc"] \
+	       [file normalize "${origin_dir}/src/constraints/vivado_target.xdc"] \
+	      ]
+add_files -norecurse -fileset $obj $files
 
-set file_obj [get_files -of_objects [get_filesets constrs_1] [list "*$file"]]
+set file_obj [get_files -of_objects [get_filesets constrs_1]]
 set_property -name "file_type" -value "XDC" -objects $file_obj
 
 set obj [get_filesets constrs_1]
 set_property -name "target_part" -value "xc7z020clg484-1" -objects $obj
+
 
 # Create 'sim_1' fileset (if not found)
 if {[string equal [get_filesets -quiet sim_1] ""]} {

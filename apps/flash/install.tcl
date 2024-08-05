@@ -28,14 +28,17 @@ setws .
 
 # Create hello world and flash_fsbl apps:
 
-app create -name hello -hw ../products/pacman.xsa -os standalone -proc ps7_cortexa9_0 -lang C -template {Hello World}
+app create -name hello -hw ../products/trenz.xsa -os standalone -proc ps7_cortexa9_0 -lang C -template {Hello World}
 
-app create -name flash_fsbl -hw ../products/pacman.xsa -os standalone -proc ps7_cortexa9_0 -lang C -template {Zynq FSBL}
-importsources -name flash_fsbl -path ../apps/fsbl/flash/
+app create -name fsbl_zynq -hw ../products/trenz.xsa -os standalone -proc ps7_cortexa9_0 -lang C -template {Zynq FSBL}
+
+app create -name fsbl_jtag -hw ../products/trenz.xsa -os standalone -proc ps7_cortexa9_0 -lang C -template {Zynq FSBL}
+importsources -name fsbl_jtag -path ../apps/flash/jtag/
 
 #build:
 app build hello
-app build flash_fsbl
+app build fsbl_zynq
+app build fsbl_jtag
 
 foreach f [glob -directory ../apps/flash/src/ -nocomplain *] {
     file copy -force $f ./

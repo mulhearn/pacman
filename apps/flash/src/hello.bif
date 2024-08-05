@@ -1,7 +1,7 @@
 //arch = zynq; split = false; format = BIN
 the_ROM_image:
 {
-	[bootloader]flash_fsbl/Debug/flash_fsbl.elf
-	pacman/hw/pacman.bit 
+	[bootloader]fsbl_zynq/Debug/fsbl_zynq.elf
+	trenz/hw/trenz.bit 
 	hello/Debug/hello.elf
 }

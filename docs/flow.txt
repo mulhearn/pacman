@@ -23,17 +23,13 @@ xsct apps/hello/install.tcl
 cd hello
 xsct run.tcl
 
-# run hwcheck
-xsct apps/hwcheck/install.tcl
-cd hwcheck
-xsct run.tcl
-
-# write hello world to flash
-# untested ... start with:
+# install hello world to qspi flash demo (also shows creating BOOT.bin with bootgen)
 xsct apps/flash/install.tcl
-
-# install various first stage boot loaders
-xsct apps/fsbl/install.tcl
+# you can now copy flash/BOOT.bin onto the BOOT partition of an SD card to boot hello world from SD card, and/or:
+# write BOOT.bin to QSPI flash:
+cd flash
+source program.sh
+# switch to QSPI boot mode (boots hello world)
 
 # petalinux ramdisk (uses RAM for root fs)
 source /tools/Xilinx/PetaLinux/2022.2/bin/settings.sh
@@ -42,34 +38,10 @@ source scripts/create_ramdisk.sh
 cd ramdisk
 source ../scripts/config.sh
 source ../scripts/build.sh
-source ../scripts/package.sh
+# source ../scripts/package.sh
 cd images/linux
-ls -alh BOOT.BIN image.ub
+bootgen -arch zynq -image bootgen.bif -w -o BOOT.bin
+ls -alh BOOT.BIN image.ub boot.scr
 
 
-
-
-
-
-
-
-
-
-#xsct tcl/build_sw.tcl
-
-# building petalinux (initramdisk version) for first time:
-# !!! Make sure custom FSBL is uptodate via build_sw.tcl  !!!
-source /tools/Xilinx/petalinux/2018.3/settings.sh
-mv petalinux-initramdisk petalinux-initramdisk.old
-./petalinux/initramdisk/scratch_build.sh
-# check if the scratch build is out of date:
-git diff --name-only petalinux-initramdisk/jtag_boot.sh petalinux-initramdisk
-# if so, resolve first via "updating petalinux scratch build"
-
-# to build
-cd petalinux-initramdisk
-./build.sh 
-# with board in SD card mode, and no SD card inserted:
-# to test new image over JTAG:
-./jtag_boot.sh
 
