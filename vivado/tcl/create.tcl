@@ -25,7 +25,8 @@ set_property -name "part" -value "xc7z020clg484-1" -objects $obj
 set_property -name "sim.central_dir" -value "$proj_dir/${proj_name}.ip_user_files" -objects $obj
 set_property -name "sim.ip.auto_export_scripts" -value "1" -objects $obj
 set_property -name "simulator_language" -value "Mixed" -objects $obj
-set_property -name "source_mgmt_mode" -value "DisplayOnly" -objects $obj
+#set_property -name "source_mgmt_mode" -value "DisplayOnly" -objects $obj
+set_property -name "source_mgmt_mode" -value "All" -objects $obj
 set_property -name "target_language" -value "VHDL" -objects $obj
 set_property -name "xpm_libraries" -value "XPM_CDC XPM_MEMORY" -objects $obj
 
@@ -43,13 +44,13 @@ if { $obj != {} } {
    update_ip_catalog -rebuild
 }
 
-# UNTESTED, BUT THIS IS WHERE WE WILL ADD SRCS:
 # Set 'sources_1' fileset object
-#set obj [get_filesets sources_1]
-#set files [list \
-#    [file normalize "${origin_dir}/srcs/hdl/dummy.vhdl" ]\
-#]
-#set added_files [add_files -fileset sources_1 $files]
+set obj [get_filesets sources_1]
+set files [list \
+    [file normalize "${origin_dir}/src/hdl/axil_demo_ro.vhd" ]\
+]
+set added_files [add_files -fileset sources_1 $files]
+#update_compile_order -fileset sources_1
 
 # Set 'sources_1' fileset properties
 set obj [get_filesets sources_1]
@@ -80,6 +81,8 @@ set_property -name "file_type" -value "XDC" -objects $file_obj
 
 set obj [get_filesets constrs_1]
 set_property -name "target_part" -value "xc7z020clg484-1" -objects $obj
+
+
 
 
 # Create 'sim_1' fileset (if not found)

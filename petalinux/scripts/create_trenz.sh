@@ -20,3 +20,9 @@ petalinux-create -t project -n $PROJ --template zynq
 
 mv $PROJ/project-spec $PROJ/project-spec.orig
 cp -r $SRC/trenz/project-spec $PROJ/
+
+# we'll keep the trenz project-spec directory as provided by trenz and keep our own changes separate:
+echo "our changes:"
+cp -v $SRC/trenz/changes/system-user.dtsi $PROJ/project-spec/meta-user/recipes-bsp/device-tree/files/system-user.dtsi
+
+

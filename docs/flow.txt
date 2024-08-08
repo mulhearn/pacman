@@ -40,8 +40,31 @@ source ../scripts/config.sh
 source ../scripts/build.sh
 # source ../scripts/package.sh
 cd images/linux
-bootgen -arch zynq -image bootgen.bif -w -o BOOT.bin
+bootgen -arch zynq -image bootgen.bif -w -o BOOT.BIN
 ls -alh BOOT.BIN image.ub boot.scr
 
+#
+# put those files on partition 1 (vfat) of an SD card,
+# insert in module and boot to Linux...
+#
 
+# Read out the AXI-Lite secondary address (read only registers) via devmen:
+
+# NOTE:  starting address was noted by reading the address editor in Vivado for the block diagram.
+
+root@Trenz:~# /sbin/devmem 0x40000000
+0xFEEDDADD
+root@Trenz:~# /sbin/devmem 0x40000004
+0xDEADBEEF
+root@Trenz:~# /sbin/devmem 0x40000008
+0x11111111
+root@Trenz:~# /sbin/devmem 0x4000000C
+0x22222222
+root@Trenz:~# /sbin/devmem 0x40000010
+0x33333333
+root@Trenz:~# /sbin/devmem 0x40000014
+0xFFFFFFFF
+root@Trenz:~# /sbin/devmem 0x40000015
+Alignment trap: devmem (681) PC=0x004911b4 Instr=0x59eb Address=0xb6f71015 FSR 0x011
+0xFFFFFFFF
 
