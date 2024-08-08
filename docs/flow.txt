@@ -23,6 +23,13 @@ xsct apps/hello/install.tcl
 cd hello
 xsct run.tcl
 
+# run hwcheck
+xsct apps/hwcheck/install.tcl
+cd hwcheck
+xsct run.tcl
+#  Run "check RO registers" test to read these out.
+
+
 # install hello world to qspi flash demo (also shows creating BOOT.bin with bootgen)
 xsct apps/flash/install.tcl
 # you can now copy flash/BOOT.bin onto the BOOT partition of an SD card to boot hello world from SD card, and/or:
