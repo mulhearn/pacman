@@ -1,5 +1,17 @@
 # pacman v1-rev5 constaints:
 
+# Names changes from v1.5 Schematics to PACMAN v1.4 Firmware (Starting point for v1.5 Firmware)
+# SYNC_ISO -> HW_SYNC_TRIG
+# PISO -> MISO_0
+# POSI -> MOSI_0
+# TRIG_ISO -> TRIG1_IN
+# LED-2 -> UART_TX_BUSY
+# LED-3 -> UART_RX_BUSY
+# RESETN was left as is
+
+# Changes to ucd-sync-fix firmware
+# RESETN made obsolete, independent sync to SYNC[0]...SYNC[9]
+
 # IO settings (unchanged)
 set_property IOSTANDARD LVCMOS33 [get_ports MOSI_0]
 set_property IOSTANDARD LVCMOS33 [get_ports MISO_0]
@@ -15,19 +27,20 @@ set_property IOSTANDARD LVCMOS33 [get_ports HW_SYNC_TRIG]
 set_property IOSTANDARD LVCMOS33 [get_ports UART_TX_BUSY]
 set_property IOSTANDARD LVCMOS33 [get_ports UART_RX_BUSY]
 
-# Names changes from Schematics to PACMAN v1.4 Firmware
-# SYNC_ISO -> HW_SYNC_TRIG
-# PISO -> MISO_0
-# POSI -> MOSI_0
-# TRIG_ISO -> TRIG1_IN
-# LED-2 -> UART_TX_BUSY
-# LED-3 -> UART_RX_BUSY
-# RESETN was left as is
 
 set_property PACKAGE_PIN J16 [get_ports ANALOG_PWR_EN]
 set_property PACKAGE_PIN C19 [get_ports CLK]
 set_property PACKAGE_PIN K18 [get_ports HW_SYNC_TRIG]
 set_property PACKAGE_PIN C20 [get_ports MISO_0[0]]
+set_property PACKAGE_PIN D20 [get_ports MISO_0[1]]
+set_property PACKAGE_PIN G16 [get_ports MISO_0[2]]
+set_property PACKAGE_PIN G15 [get_ports MISO_0[3]]
+set_property PACKAGE_PIN V10 [get_ports MISO_0[4]]
+set_property PACKAGE_PIN V9 [get_ports MISO_0[5]]
+set_property PACKAGE_PIN Y9 [get_ports MISO_0[6]]
+set_property PACKAGE_PIN Y8 [get_ports MISO_0[7]]
+set_property PACKAGE_PIN V12 [get_ports MISO_0[8]]
+set_property PACKAGE_PIN W12 [get_ports MISO_0[9]]
 set_property PACKAGE_PIN W11 [get_ports MISO_0[10]]
 set_property PACKAGE_PIN W10 [get_ports MISO_0[11]]
 set_property PACKAGE_PIN B22 [get_ports MISO_0[12]]
@@ -38,7 +51,6 @@ set_property PACKAGE_PIN AB9 [get_ports MISO_0[16]]
 set_property PACKAGE_PIN AB10 [get_ports MISO_0[17]]
 set_property PACKAGE_PIN AA8 [get_ports MISO_0[18]]
 set_property PACKAGE_PIN AA9 [get_ports MISO_0[19]]
-set_property PACKAGE_PIN D20 [get_ports MISO_0[1]]
 set_property PACKAGE_PIN C18 [get_ports MISO_0[20]]
 set_property PACKAGE_PIN C17 [get_ports MISO_0[21]]
 set_property PACKAGE_PIN F22 [get_ports MISO_0[22]]
@@ -49,7 +61,6 @@ set_property PACKAGE_PIN D17 [get_ports MISO_0[26]]
 set_property PACKAGE_PIN D16 [get_ports MISO_0[27]]
 set_property PACKAGE_PIN AA4 [get_ports MISO_0[28]]
 set_property PACKAGE_PIN Y4 [get_ports MISO_0[29]]
-set_property PACKAGE_PIN G16 [get_ports MISO_0[2]]
 set_property PACKAGE_PIN AB4 [get_ports MISO_0[30]]
 set_property PACKAGE_PIN AB5 [get_ports MISO_0[31]]
 set_property PACKAGE_PIN F17 [get_ports MISO_0[32]]
@@ -60,14 +71,18 @@ set_property PACKAGE_PIN V7 [get_ports MISO_0[36]]
 set_property PACKAGE_PIN W7 [get_ports MISO_0[37]]
 set_property PACKAGE_PIN W6 [get_ports MISO_0[38]]
 set_property PACKAGE_PIN W5 [get_ports MISO_0[39]]
-set_property PACKAGE_PIN G15 [get_ports MISO_0[3]]
-set_property PACKAGE_PIN V10 [get_ports MISO_0[4]]
-set_property PACKAGE_PIN V9 [get_ports MISO_0[5]]
-set_property PACKAGE_PIN Y9 [get_ports MISO_0[6]]
-set_property PACKAGE_PIN Y8 [get_ports MISO_0[7]]
-set_property PACKAGE_PIN V12 [get_ports MISO_0[8]]
-set_property PACKAGE_PIN W12 [get_ports MISO_0[9]]
+
 set_property PACKAGE_PIN D21 [get_ports MOSI_0[0]]
+set_property PACKAGE_PIN E21 [get_ports MOSI_0[1]]
+set_property PACKAGE_PIN B20 [get_ports MOSI_0[2]]
+set_property PACKAGE_PIN B19 [get_ports MOSI_0[3]]
+set_property PACKAGE_PIN U12 [get_ports MOSI_0[4]]
+set_property PACKAGE_PIN U11 [get_ports MOSI_0[5]]
+set_property PACKAGE_PIN U10 [get_ports MOSI_0[6]]
+set_property PACKAGE_PIN U9 [get_ports MOSI_0[7]]
+set_property PACKAGE_PIN AA7 [get_ports MOSI_0[8]]
+set_property PACKAGE_PIN AA6 [get_ports MOSI_0[9]]
+
 set_property PACKAGE_PIN Y6 [get_ports MOSI_0[10]]
 set_property PACKAGE_PIN Y5 [get_ports MOSI_0[11]]
 set_property PACKAGE_PIN C22 [get_ports MOSI_0[12]]
@@ -78,7 +93,6 @@ set_property PACKAGE_PIN AB11 [get_ports MOSI_0[16]]
 set_property PACKAGE_PIN AA11 [get_ports MOSI_0[17]]
 set_property PACKAGE_PIN AB12 [get_ports MOSI_0[18]]
 set_property PACKAGE_PIN AA12 [get_ports MOSI_0[19]]
-set_property PACKAGE_PIN E21 [get_ports MOSI_0[1]]
 set_property PACKAGE_PIN B17 [get_ports MOSI_0[20]]
 set_property PACKAGE_PIN B16 [get_ports MOSI_0[21]]
 set_property PACKAGE_PIN E20 [get_ports MOSI_0[22]]
@@ -89,7 +103,6 @@ set_property PACKAGE_PIN A17 [get_ports MOSI_0[26]]
 set_property PACKAGE_PIN A16 [get_ports MOSI_0[27]]
 set_property PACKAGE_PIN AB6 [get_ports MOSI_0[28]]
 set_property PACKAGE_PIN AB7 [get_ports MOSI_0[29]]
-set_property PACKAGE_PIN B20 [get_ports MOSI_0[2]]
 set_property PACKAGE_PIN U4 [get_ports MOSI_0[30]]
 set_property PACKAGE_PIN T4 [get_ports MOSI_0[31]]
 set_property PACKAGE_PIN E18 [get_ports MOSI_0[32]]
@@ -100,14 +113,7 @@ set_property PACKAGE_PIN Y11 [get_ports MOSI_0[36]]
 set_property PACKAGE_PIN Y10 [get_ports MOSI_0[37]]
 set_property PACKAGE_PIN V8 [get_ports MOSI_0[38]]
 set_property PACKAGE_PIN W8 [get_ports MOSI_0[39]]
-set_property PACKAGE_PIN B19 [get_ports MOSI_0[3]]
-set_property PACKAGE_PIN U12 [get_ports MOSI_0[4]]
-set_property PACKAGE_PIN U11 [get_ports MOSI_0[5]]
-set_property PACKAGE_PIN U10 [get_ports MOSI_0[6]]
-set_property PACKAGE_PIN U9 [get_ports MOSI_0[7]]
-set_property PACKAGE_PIN AA7 [get_ports MOSI_0[8]]
-set_property PACKAGE_PIN AA6 [get_ports MOSI_0[9]]
-set_property PACKAGE_PIN D18 [get_ports RESETN]
+
 set_property PACKAGE_PIN G21 [get_ports TILE_EN[0]]
 set_property PACKAGE_PIN P18 [get_ports TILE_EN[1]]
 set_property PACKAGE_PIN P17 [get_ports TILE_EN[2]]
@@ -118,7 +124,7 @@ set_property PACKAGE_PIN P20 [get_ports TILE_EN[6]]
 set_property PACKAGE_PIN L22 [get_ports TILE_EN[7]]
 set_property PACKAGE_PIN M19 [get_ports TILE_EN[8]]
 set_property PACKAGE_PIN M20 [get_ports TILE_EN[9]]
-set_property PACKAGE_PIN J18 [get_ports TRIG1_IN]
+
 set_property PACKAGE_PIN G20 [get_ports TRIG[0]]
 set_property PACKAGE_PIN R21 [get_ports TRIG[1]]
 set_property PACKAGE_PIN R20 [get_ports TRIG[2]]
@@ -129,10 +135,6 @@ set_property PACKAGE_PIN M21 [get_ports TRIG[6]]
 set_property PACKAGE_PIN T18 [get_ports TRIG[7]]
 set_property PACKAGE_PIN N19 [get_ports TRIG[8]]
 set_property PACKAGE_PIN N20 [get_ports TRIG[9]]
-set_property PACKAGE_PIN T19 [get_ports UART_RX_BUSY]
-set_property PACKAGE_PIN R19 [get_ports UART_TX_BUSY]
-
-# Unused in this design
 
 set_property PACKAGE_PIN D18 [get_ports SYNC[0]]
 set_property PACKAGE_PIN J17 [get_ports SYNC[1]]
@@ -144,6 +146,15 @@ set_property PACKAGE_PIN J21 [get_ports SYNC[6]]
 set_property PACKAGE_PIN J22 [get_ports SYNC[7]]
 set_property PACKAGE_PIN J20 [get_ports SYNC[8]]
 set_property PACKAGE_PIN K21 [get_ports SYNC[9]]
+
+set_property PACKAGE_PIN J18 [get_ports TRIG1_IN]
+set_property PACKAGE_PIN T19 [get_ports UART_RX_BUSY]
+set_property PACKAGE_PIN R19 [get_ports UART_TX_BUSY]
+
+# Unused in this design
+
+# This is replaced by SYNC[0..9] in v1.5 firmware
+set_property PACKAGE_PIN D18 [get_ports RESETN]
 
 set_property PACKAGE_PIN J15 [get_ports ADC_CLK]
 set_property PACKAGE_PIN AA17 [get_ports ADC_D[0]]
