@@ -46,10 +46,11 @@ if { $obj != {} } {
 
 # Set 'sources_1' fileset object
 set obj [get_filesets sources_1]
-set files [list \
-    [file normalize "${origin_dir}/src/hdl/axil_demo_ro.vhd" ]\
-]
-set added_files [add_files -fileset sources_1 $files]
+# add all vhd files in src/hdl to project:
+set files {}
+foreach file [glob src/hdl/*.vhd] {lappend files [file normalize $file]}
+puts "HDL files:  $files"
+add_files -norecurse -fileset sources_1 $files
 #update_compile_order -fileset sources_1
 
 # Set 'sources_1' fileset properties
@@ -68,12 +69,11 @@ if {[string equal [get_filesets -quiet constrs_1] ""]} {
   create_fileset -constrset constrs_1
 }
 set obj [get_filesets constrs_1]
-set files [list \
-	       [file normalize "${origin_dir}/src/constraints/_i_bitgen_common.xdc"] \
-	       [file normalize "${origin_dir}/src/constraints/_i_common.xdc"] \
-	       [file normalize "${origin_dir}/src/constraints/_i_TE0720-SC.xdc"] \
-	       [file normalize "${origin_dir}/src/constraints/vivado_target.xdc"] \
-	      ]
+set files {}
+foreach file [glob src/constraints/*.xdc] {lappend files [file normalize $file]}
+puts "HDL files:  $files"
+add_files -norecurse -fileset sources_1 $files
+puts "Constraint files:  $files"
 add_files -norecurse -fileset $obj $files
 
 set file_obj [get_files -of_objects [get_filesets constrs_1]]
@@ -81,9 +81,6 @@ set_property -name "file_type" -value "XDC" -objects $file_obj
 
 set obj [get_filesets constrs_1]
 set_property -name "target_part" -value "xc7z020clg484-1" -objects $obj
-
-
-
 
 # Create 'sim_1' fileset (if not found)
 if {[string equal [get_filesets -quiet sim_1] ""]} {

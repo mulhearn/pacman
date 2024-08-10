@@ -5,10 +5,10 @@ use ieee.std_logic_1164.all;
 use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08 
 
 --  Defines a testbench (without any ports)
-entity axi_demo_ro_tb is
-end axi_demo_ro_tb;
+entity axil_demo_ro_tb is
+end axil_demo_ro_tb;
      
-architecture behaviour of axi_demo_ro_tb is
+architecture behaviour of axil_demo_ro_tb is
   component axil_demo_ro is
     port (
       S_AXI_ACLK          : in std_logic;
@@ -26,20 +26,20 @@ architecture behaviour of axi_demo_ro_tb is
   signal aclk     : std_logic;
   signal aresetn    : std_logic;
   signal araddr   : std_logic_vector(7 downto 0);
-  signal arval    : std_logic;
+  signal arvalid    : std_logic;
   signal arready  : std_logic;
   signal rdata    : std_logic_vector(31 downto 0);
-  signal rval     : std_logic;  
+  signal rvalid     : std_logic;  
   signal rready   : std_logic;  
 begin
   uut: axil_demo_ro port map (
       S_AXI_ACLK          => aclk,
       S_AXI_ARESETN       => aresetn,
       S_AXI_ARADDR        => araddr,
-      S_AXI_ARVALID       => arval,
+      S_AXI_ARVALID       => arvalid,
       S_AXI_ARREADY       => arready,    
       S_AXI_RDATA         => rdata,
-      S_AXI_RVALID        => rval,
+      S_AXI_RVALID        => rvalid,
       S_AXI_RREADY        => rready);
   
   aresetn_process : process
@@ -63,11 +63,11 @@ begin
 rapid_read_process : process
   begin
     araddr <= x"00";
-    arval  <= '0';
+    arvalid  <= '0';
     rready <= '0';
     wait for 20 ns;
     araddr <= x"00";
-    arval  <= '1';
+    arvalid  <= '1';
     rready <= '1';
     wait for 20 ns;
     araddr <= x"04";
@@ -80,7 +80,7 @@ rapid_read_process : process
     rready <= '1';
     wait for 20 ns;
     araddr <= x"10";
-    arval  <= '1';
+    arvalid  <= '1';
     rready <= '1';
     wait for 20 ns;
     araddr <= x"00";
@@ -105,14 +105,14 @@ rapid_read_process : process
   --challenging_read_process : process
   --begin
     --araddr <= x"00";
-    --arval  <= '0';
+    --arvalid  <= '0';
     --rready <= '0';
     --wait for 20 ns;
     --araddr <= x"01";
-    --arval  <= '1';
+    --arvalid  <= '1';
     --wait for 10 ns;
     --araddr <= x"00";
-    --arval  <= '0';
+    --arvalid  <= '0';
     --wait for 60 ns;
     --rready <= '1';
     --wait for 10 ns;
@@ -124,15 +124,15 @@ rapid_read_process : process
   --single_read_process : process
   --begin
     --araddr <= x"00";
-    --arval  <= '0';
+    --arvalid  <= '0';
     --rready <= '0';
     --wait for 20 ns;
     --araddr <= x"01";
-    --arval  <= '1';
+    --arvalid  <= '1';
     --rready <= '1';
     --wait for 20 ns;
     --araddr <= x"00";
-    --arval  <= '0';
+    --arvalid  <= '0';
     --rready <= '0';
     --wait;
   --end process;
@@ -146,16 +146,14 @@ rapid_read_process : process
     write (l, aclk);    
     write (l, String'(" || ADDRESS:   araddr: 0x"));
     hwrite (l, araddr);
-    write (l, String'(" arval: "));
-    write (l, arval);
+    write (l, String'(" arvalid: "));
+    write (l, arvalid);
     write (l, String'(" arready: "));
     write (l, arready);    
-    write (l, String'(" arval: "));
-    write (l, arval);
     write (l, String'(" || READ:   rdata: 0x"));
     hwrite (l, rdata);
-    write (l, String'(" rval: "));
-    write (l, rval);
+    write (l, String'(" rvalid: "));
+    write (l, rvalid);
     write (l, String'(" rready: "));
     write (l, rready);
 

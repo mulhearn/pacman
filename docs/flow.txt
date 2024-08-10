@@ -59,19 +59,21 @@ ls -alh BOOT.BIN image.ub boot.scr
 
 # NOTE:  starting address was noted by reading the address editor in Vivado for the block diagram.
 
-root@Trenz:~# /sbin/devmem 0x40000000
-0xFEEDDADD
+root@Trenz:~# /sbin/devmem 0x40000000     
+0x00000000
 root@Trenz:~# /sbin/devmem 0x40000004
-0xDEADBEEF
+0x00000000
 root@Trenz:~# /sbin/devmem 0x40000008
 0x11111111
 root@Trenz:~# /sbin/devmem 0x4000000C
 0x22222222
-root@Trenz:~# /sbin/devmem 0x40000010
-0x33333333
-root@Trenz:~# /sbin/devmem 0x40000014
-0xFFFFFFFF
-root@Trenz:~# /sbin/devmem 0x40000015
+root@Trenz:~# /sbin/devmem 0x40000000 32 0xABCDFFFF
+root@Trenz:~# /sbin/devmem 0x40000004 32 0x77777777
+root@Trenz:~# /sbin/devmem 0x40000000              
+0xABCDFFFF
+root@Trenz:~# /sbin/devmem 0x40000004
+0x77777777
+
 Alignment trap: devmem (681) PC=0x004911b4 Instr=0x59eb Address=0xb6f71015 FSR 0x011
 0xFFFFFFFF
 

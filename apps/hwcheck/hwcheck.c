@@ -198,6 +198,17 @@ void check_reg_ro(){
   xil_printf("Reg4 -- 0x%x  \r\n", Xil_In32(0x40000010));
 }
 
+void check_reg_rw(){
+  xil_printf("Reg0 -- 0x%x  \r\n", Xil_In32(0x40000000));
+  xil_printf("Reg1 -- 0x%x  \r\n", Xil_In32(0x40000004));
+  Xil_Out32(0x40000000, 0xFFFFFFFF);
+  Xil_Out32(0x40000004, 0xABCDABCD);
+  xil_printf("Reg0 -- 0x%x  \r\n", Xil_In32(0x40000000));
+  xil_printf("Reg1 -- 0x%x  \r\n", Xil_In32(0x40000004));
+  Xil_Out32(0x40000000, 0x0);
+  Xil_Out32(0x40000004, 0x0);
+}
+
 int main()
 {
     xil_printf("Pac-Man Card Low-Level Hardware Testing  (V1.3)\r\n");
@@ -210,7 +221,7 @@ int main()
     }
     while(1){
       xil_printf("choose an option:\r\n");
-      xil_printf("(1) blink LEDs  (2) check I2C (3) check RO registers \r\n");
+      xil_printf("(1) blink LEDs  (2) check I2C (3) check RO registers (4) check RW registers \r\n");
       unsigned char c=inbyte();
       xil_printf("pressed:  %c\n\r", c);
       switch(c){
@@ -222,6 +233,9 @@ int main()
 	break;
       case '3':
         check_reg_ro();
+	break;
+      case '4':
+        check_reg_rw();
 	break;
       default:
 	xil_printf("invalid selection...\n\r");
