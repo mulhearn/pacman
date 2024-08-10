@@ -27,10 +27,10 @@ set_property IOSTANDARD LVCMOS33 [get_ports HW_SYNC_TRIG]
 set_property IOSTANDARD LVCMOS33 [get_ports UART_TX_BUSY]
 set_property IOSTANDARD LVCMOS33 [get_ports UART_RX_BUSY]
 
-
 set_property PACKAGE_PIN J16 [get_ports ANALOG_PWR_EN]
 set_property PACKAGE_PIN C19 [get_ports CLK]
 set_property PACKAGE_PIN K18 [get_ports HW_SYNC_TRIG]
+
 set_property PACKAGE_PIN C20 [get_ports MISO_0[0]]
 set_property PACKAGE_PIN D20 [get_ports MISO_0[1]]
 set_property PACKAGE_PIN G16 [get_ports MISO_0[2]]
@@ -82,7 +82,6 @@ set_property PACKAGE_PIN U10 [get_ports MOSI_0[6]]
 set_property PACKAGE_PIN U9 [get_ports MOSI_0[7]]
 set_property PACKAGE_PIN AA7 [get_ports MOSI_0[8]]
 set_property PACKAGE_PIN AA6 [get_ports MOSI_0[9]]
-
 set_property PACKAGE_PIN Y6 [get_ports MOSI_0[10]]
 set_property PACKAGE_PIN Y5 [get_ports MOSI_0[11]]
 set_property PACKAGE_PIN C22 [get_ports MOSI_0[12]]
