@@ -1,3 +1,28 @@
 This approach is based on:
 
 https://www.fpgadeveloper.com/2014/08/version-control-for-vivado-projects.html/
+
+One pitfall of this approach is due to a known bug in Vivado (See
+Answer Record 75829).  The exported board files for designs that
+include some AXISTREAM interconnects due not correctly propogate the
+non-default automatically generated values.  The work-around is to
+remove the original settings from the board design tcl file, so the
+correct values are automatically generated.
+
+In our case, the work around was to remove the lines with - below:
+
+set axis_subset_converter_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_subset_converter:1.1 axis_subset_converter_0 ]
+- set_property -dict [list \
+- CONFIG.M_HAS_TSTRB {1} \
+- CONFIG.S_HAS_TREADY {1} \
+- CONFIG.S_TDATA_NUM_BYTES {16} \
+- CONFIG.TDATA_REMAP {tdata[127:0]} \
+- CONFIG.TKEEP_REMAP {tkeep[15:0]} \
+- CONFIG.TLAST_REMAP {tlast[0]} \
+- CONFIG.TSTRB_REMAP {tkeep[15:0]} \
+- ] $axis_subset_converter_0
+
+With these lines remove, the TCL-based build works perfectly.  And
+these lines are absent from subsequent generated TCL files.
+
+
