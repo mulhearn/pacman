@@ -1,4 +1,0 @@
-if [ ! -f "/tmp/initsh_ran" ]; then
-  touch /tmp/initsh_ran
-  startup.sh start
-fi
