@@ -5253,7 +5253,7 @@ proc create_hier_cell_axi_lite_reg_space_1 { parentCell nameHier } {
    CONFIG.C_RW_REG0_DEFAULT {0x00000002} \
    CONFIG.C_RW_REG1_DEFAULT {0x00000100} \
    CONFIG.C_RW_REG2_DEFAULT {0x3B9ACA00} \
-   CONFIG.C_RW_REG3_DEFAULT {0X00000004} \
+   CONFIG.C_RW_REG3_DEFAULT {0x00000004} \
  ] $axi_lite_reg_space_0
 
   # Create instance: clk_sel, and set properties
@@ -7023,15 +7023,6 @@ proc create_hier_cell_data_tx { parentCell nameHier } {
 
   # Create instance: axis_subset_converter_0, and set properties
   set axis_subset_converter_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_subset_converter:1.1 axis_subset_converter_0 ]
-  set_property -dict [ list \
-   CONFIG.M_HAS_TSTRB {1} \
-   CONFIG.S_HAS_TREADY {1} \
-   CONFIG.S_TDATA_NUM_BYTES {16} \
-   CONFIG.TDATA_REMAP {tdata[127:0]} \
-   CONFIG.TKEEP_REMAP {tkeep[15:0]} \
-   CONFIG.TLAST_REMAP {tlast[0]} \
-   CONFIG.TSTRB_REMAP {tkeep[15:0]} \
- ] $axis_subset_converter_0
 
   # Create interface connections
   connect_bd_intf_net -intf_net S_AXIS_1 [get_bd_intf_pins S_AXIS] [get_bd_intf_pins axis_subset_converter_0/S_AXIS]

@@ -56,7 +56,7 @@ begin
   data_update_LArPix <= update;
 
   -- Control state machine implementation
-  process (S_AXIS_ACLK) is
+  larpix_tx_fsm: process (S_AXIS_ACLK) is
   variable word_start : integer;
   variable word_end   : integer;
   begin
@@ -146,6 +146,5 @@ begin
         end case;
       end if;
     end if;
-  end process larpix_tx_fsm;
-
+  end process;
 end arch_imp;

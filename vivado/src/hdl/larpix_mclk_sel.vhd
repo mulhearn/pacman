@@ -1,21 +1,11 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use ieee.math_real.all;
-
+--use ieee.math_real.all;
 library UNISIM;
 use UNISIM.Vcomponents.all;
 
 entity larpix_mclk_sel is
-  generic(
-    C_ACLK_PERIOD : real := 10.000; -- ns (100MHz)
-    C_AUX_CLK_PERIOD : real := 50.000; -- ns (20MHz)
-    C_VCO_MAX_FREQ : real := 1.600; -- Ghz
-    C_PFD_MAX_FREQ : real := 0.450; -- Ghz
-    C_VCO_MIN_FREQ : real := 0.800; -- Ghz
-    C_PFD_MIN_FREQ : real := 0.019; -- Ghz
-    C_MCLK_PERIOD : real := 100.000 -- ns (10MHz)
-    );
   port (
     ACLK : in std_logic; -- default clock
     AUX_CLK : in std_logic; -- aux clock
@@ -36,14 +26,13 @@ entity larpix_mclk_sel is
 end larpix_mclk_sel;
 
 architecture arch_imp of larpix_mclk_sel is
-
-  constant C_PLL0_DIV : real := CEIL(1.000 / C_ACLK_PERIOD / C_PFD_MAX_FREQ);
-  constant C_PLL1_DIV : real := CEIL(1.000 / C_AUX_CLK_PERIOD / C_PFD_MAX_FREQ);
-  constant C_CLKFBOUT0_MULT : real := CEIL(C_VCO_MIN_FREQ * C_ACLK_PERIOD * C_PLL0_DIV);
-  constant C_CLKFBOUT1_MULT : real := CEIL(C_VCO_MIN_FREQ * C_AUX_CLK_PERIOD * C_PLL1_DIV);
-  constant C_MCLK0_DIV : real := C_MCLK_PERIOD / C_ACLK_PERIOD * C_CLKFBOUT0_MULT / C_PLL0_DIV;
-  constant C_MCLK1_DIV : real := C_MCLK_PERIOD / C_AUX_CLK_PERIOD * C_CLKFBOUT1_MULT / C_PLL1_DIV;
-
+  constant C_PLL0_DIV       : integer := 1;
+  constant C_PLL1_DIV       : integer := 1;
+  constant C_CLKFBOUT0_MULT : integer := 8;
+  constant C_CLKFBOUT1_MULT : integer := 40;
+  constant C_MCLK0_DIV      : integer := 80;
+  constant C_MCLK1_DIV      : integer := 80;
+  
   attribute ASYNC_REG : string;
   
   component PLLE2_BASE is 
@@ -158,12 +147,12 @@ begin
 
   -- Frequency generation for default clock
   pll0 : PLLE2_BASE generic map(
-    CLKIN1_PERIOD => C_ACLK_PERIOD,
-    CLKOUT0_DIVIDE => integer(C_MCLK0_DIV),
+    CLKIN1_PERIOD => 10.0,
+    CLKOUT0_DIVIDE => C_MCLK0_DIV,
     CLKOUT0_DUTY_CYCLE => 0.5,
     CLKOUT0_PHASE => 0.0,
-    DIVCLK_DIVIDE => integer(C_PLL0_DIV),
-    CLKFBOUT_MULT => integer(C_CLKFBOUT0_MULT)
+    DIVCLK_DIVIDE => C_PLL0_DIV,
+    CLKFBOUT_MULT => C_CLKFBOUT0_MULT
     )
     port map(
       CLKIN1 => ACLK,
@@ -182,12 +171,12 @@ begin
 
   -- Frequency generation for aux clock
   pll1 : PLLE2_BASE generic map(
-    CLKIN1_PERIOD => C_AUX_CLK_PERIOD,
-    CLKOUT0_DIVIDE => integer(C_MCLK1_DIV),
+    CLKIN1_PERIOD => 50.0,
+    CLKOUT0_DIVIDE => C_MCLK1_DIV,
     CLKOUT0_DUTY_CYCLE => 0.5,
     CLKOUT0_PHASE => 0.0,
-    DIVCLK_DIVIDE => integer(C_PLL1_DIV),
-    CLKFBOUT_MULT => integer(C_CLKFBOUT1_MULT)
+    DIVCLK_DIVIDE => C_PLL1_DIV,
+    CLKFBOUT_MULT => C_CLKFBOUT1_MULT
     )
     port map(
       CLKIN1 => AUX_CLK,

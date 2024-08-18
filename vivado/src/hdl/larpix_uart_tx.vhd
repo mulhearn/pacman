@@ -11,7 +11,7 @@ entity larpix_uart_tx is
     C_LARPIX_DATA_WIDTH : integer := 64;
     C_CHANNEL : std_logic_vector(7 downto 0) := x"FF";
     C_DATA_TYPE : std_logic_vector(7 downto 0) := x"44";
-    C_FIFO_COUNT_WIDTH : integer := 9
+    C_FIFO_COUNT_WIDTH : integer := 4
     );
   port (
     --C_CHANNEL : in std_logic_vector(7 downto 0) := x"FF";
@@ -24,7 +24,7 @@ entity larpix_uart_tx is
     UART_TX_OUT : out std_logic;
     CLKOUT_RATIO : in std_logic_vector (7 downto 0);
     CLKOUT_PHASE : in std_logic_vector (3 downto 0);    
-    FIFO_COUNT : out std_logic_vector (C_FIFO_COUNT_WIDTH-1 downto 0);
+    FIFO_COUNT : out std_logic_vector (8 downto 0) := (others => '0');
     UART_TX_BUSY : out std_logic;
     
     -- axi-stream slave
@@ -153,7 +153,7 @@ begin
     wr_ack => fifo_wr_ack,
     empty => fifo_empty,
     valid => fifo_valid,
-    wr_data_count => FIFO_COUNT
+    wr_data_count => FIFO_COUNT(3 downto 0)
     );
 
   -- drive uart pin
