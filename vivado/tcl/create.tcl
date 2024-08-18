@@ -6,7 +6,7 @@
 set origin_dir [file dirname [info script]]/..
 
 # Set the project name
-set proj_name "trenz-fw"
+set proj_name "pacman-fw"
 
 # Create project
 create_project $proj_name $origin_dir/$proj_name -part xc7z010clg400-1
