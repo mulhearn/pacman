@@ -2,6 +2,8 @@
 
 SPEC=vanilla
 PROJ=$SPEC
+#PROJ=proj
+
 
 # create project in the correct location no matter where the script is run from:
 cd "$(dirname "$0")/.."

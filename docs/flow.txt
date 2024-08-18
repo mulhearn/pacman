@@ -27,49 +27,57 @@ xsct run.tcl
 xsct apps/hwcheck/install.tcl
 cd hwcheck
 xsct run.tcl
+#  Run "check RO registers" test to read these out.
 
-# write hello world to flash
-# untested ... start with:
+
+# install hello world to qspi flash demo (also shows creating BOOT.bin with bootgen)
 xsct apps/flash/install.tcl
-
-# install various first stage boot loaders
-xsct apps/fsbl/install.tcl
+# you can now copy flash/BOOT.bin onto the BOOT partition of an SD card to boot hello world from SD card, and/or:
+# write BOOT.bin to QSPI flash:
+cd flash
+source program.sh
+# switch to QSPI boot mode (boots hello world)
 
 # petalinux ramdisk (uses RAM for root fs)
 source /tools/Xilinx/PetaLinux/2022.2/bin/settings.sh
 cd petalinux
-source scripts/create_ramdisk.sh
-cd ramdisk
-source ../scripts/config.sh
-source ../scripts/build.sh
-source ../scripts/package.sh
+scripts/create_trenz.sh
+cd trenz
+../scripts/config.sh
+../scripts/build.sh
 cd images/linux
-ls -alh BOOT.BIN image.ub
 
+# not generated in 2020.2, so copy this over once:
+cp ../../../src/trenz/changes/bootgen.bif .
 
+# create the BOOT.BIN file:
+bootgen -arch zynq -image bootgen.bif -w -o BOOT.BIN
+ls -alh BOOT.BIN image.ub boot.scr
 
+#
+# put those files on partition 1 (vfat) of an SD card,
+# insert in module and boot to Linux...
+#
 
+# Read out the AXI-Lite secondary address (read only registers) via devmen:
 
+# NOTE:  starting address was noted by reading the address editor in Vivado for the block diagram.
 
+root@Trenz:~# /sbin/devmem 0x40000000     
+0x00000000
+root@Trenz:~# /sbin/devmem 0x40000004
+0x00000000
+root@Trenz:~# /sbin/devmem 0x40000008
+0x11111111
+root@Trenz:~# /sbin/devmem 0x4000000C
+0x22222222
+root@Trenz:~# /sbin/devmem 0x40000000 32 0xABCDFFFF
+root@Trenz:~# /sbin/devmem 0x40000004 32 0x77777777
+root@Trenz:~# /sbin/devmem 0x40000000              
+0xABCDFFFF
+root@Trenz:~# /sbin/devmem 0x40000004
+0x77777777
 
-
-
-
-#xsct tcl/build_sw.tcl
-
-# building petalinux (initramdisk version) for first time:
-# !!! Make sure custom FSBL is uptodate via build_sw.tcl  !!!
-source /tools/Xilinx/petalinux/2018.3/settings.sh
-mv petalinux-initramdisk petalinux-initramdisk.old
-./petalinux/initramdisk/scratch_build.sh
-# check if the scratch build is out of date:
-git diff --name-only petalinux-initramdisk/jtag_boot.sh petalinux-initramdisk
-# if so, resolve first via "updating petalinux scratch build"
-
-# to build
-cd petalinux-initramdisk
-./build.sh 
-# with board in SD card mode, and no SD card inserted:
-# to test new image over JTAG:
-./jtag_boot.sh
+Alignment trap: devmem (681) PC=0x004911b4 Instr=0x59eb Address=0xb6f71015 FSR 0x011
+0xFFFFFFFF
 

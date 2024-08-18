@@ -1,5 +1,7 @@
+.svn/
 /.Xil
-/pacman-fw
+vivado/pacman-fw
+vivado/trenz-fw
 vivado*.jou
 vivado*.log
 *.aux
@@ -20,5 +22,7 @@ vivado*.log
 /*/project-spec/hw-description/zsys_wrapper.bit
 /petalinux/ramdisk
 /petalinux/vanilla
+/petalinux/trenz
 /petalinux/full
+/petalinux/ref
 

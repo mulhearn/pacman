@@ -2,7 +2,7 @@
 # hardware.tcl  run synthesis,implementation,annd write bitstream, then export.
 #
 
-set proj_name "pacman-fw"
+set proj_name "trenz-fw"
 
 set origin_dir [file dirname [info script]]/..
 
@@ -20,4 +20,4 @@ open_run impl_1
 launch_runs impl_1 -to_step write_bitstream -jobs 6
 wait_on_run impl_1
 
-write_hw_platform -fixed -include_bit -force -file ${origin_dir}/../products/pacman.xsa
+write_hw_platform -fixed -include_bit -force -file ${origin_dir}/../products/trenz.xsa

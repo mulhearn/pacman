@@ -5,3 +5,8 @@
 *.tcl
 *.html
 *.elf
+sysdef.xml
+xsa.json
+xsa.xml
+zsys.bda
+zsys.hwh
