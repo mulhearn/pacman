@@ -23,30 +23,10 @@ xsct apps/hello/install.tcl
 cd hello
 xsct run.tcl
 
-# run hwcheck
-xsct apps/hwcheck/install.tcl
-cd hwcheck
-xsct run.tcl
-#  Run "check RO registers" test to read these out.
-
-
-# install hello world to qspi flash demo (also shows creating BOOT.bin with bootgen)
-xsct apps/flash/install.tcl
-# you can now copy flash/BOOT.bin onto the BOOT partition of an SD card to boot hello world from SD card, and/or:
-# write BOOT.bin to QSPI flash:
-cd flash
-source program.sh
-# switch to QSPI boot mode (boots hello world)
-
-# petalinux ramdisk (uses RAM for root fs)
-source /tools/Xilinx/PetaLinux/2022.2/bin/settings.sh
-cd petalinux
-source scripts/create_ramdisk.sh
-cd ramdisk
-source ../scripts/config.sh
-source ../scripts/build.sh
-# source ../scripts/package.sh
-cd images/linux
+# Build a BOOT.BIN file from prebuilt petalinux:
+cd petalinux_prebuilt
+# obtain prebuilt_fsbl.elf prebuiltu-boot.elf image.ub rootfs.tar.gz 
+unzip ../products/pacman.xsa pacman.bit
 bootgen -arch zynq -image bootgen.bif -w -o BOOT.BIN
 ls -alh BOOT.BIN image.ub boot.scr
 
@@ -76,4 +56,7 @@ root@Trenz:~# /sbin/devmem 0x40000004
 
 Alignment trap: devmem (681) PC=0x004911b4 Instr=0x59eb Address=0xb6f71015 FSR 0x011
 0xFFFFFFFF
+
+
+
 

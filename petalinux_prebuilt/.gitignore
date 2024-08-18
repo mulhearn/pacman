@@ -1,0 +1,5 @@
+*.elf
+image.ub
+rootfs.tar.gz
+BOOT.BIN
+pacman.bit

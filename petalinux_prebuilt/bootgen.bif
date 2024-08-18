@@ -1,0 +1,6 @@
+the_ROM_image:
+{
+    [bootloader]prebuilt_fsbl.elf
+    pacman.bit
+    prebuiltu-boot.elf
+}
