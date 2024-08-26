@@ -252,19 +252,20 @@ void check_fifo(){
 
 void check_bram(){
   xil_printf("INFO:  checking BRAM  \r\n");  
-  Xil_Out32(ADDR_AXI_BRAM+0x0,    0x0);
-  Xil_Out32(ADDR_AXI_BRAM+0x4,    0x1);
-  Xil_Out32(ADDR_AXI_BRAM+0x8,    0xABCD);
-  Xil_Out32(ADDR_AXI_BRAM+0xC,    0x7777);
-  Xil_Out32(ADDR_AXI_BRAM+0x10,   0xCAFE);
-  xil_printf("READ BRAM    0x%x  0x%x \r\n", 0x0,  Xil_In32(ADDR_AXI_BRAM+0x0));
-  xil_printf("READ BRAM    0x%x  0x%x \r\n", 0x4,  Xil_In32(ADDR_AXI_BRAM+0x4));
-  xil_printf("READ BRAM    0x%x  0x%x \r\n", 0x8,  Xil_In32(ADDR_AXI_BRAM+0x8));
-  xil_printf("READ BRAM    0x%x  0x%x \r\n", 0xC,  Xil_In32(ADDR_AXI_BRAM+0xC));
-  xil_printf("READ BRAM    0x%x  0x%x \r\n", 0x10, Xil_In32(ADDR_AXI_BRAM+0x10));
+  Xil_Out64(ADDR_AXI_BRAM+0x0,   0x1234567890ABCDEF);
+  Xil_Out64(ADDR_AXI_BRAM+0x8,   0x1);
+  Xil_Out64(ADDR_AXI_BRAM+0x10,  0xFEEDDADA00000000);
+  Xil_Out64(ADDR_AXI_BRAM+0x18,  0x7777777711111111);
+  Xil_Out64(ADDR_AXI_BRAM+0x20,  0x0000000033333333);
+  
+  for (int i=0; i<5; i++){
+    u64 value = Xil_In64(ADDR_AXI_BRAM+0x8*i);
+    u32 upper  = (value >> 32) & 0xFFFFFFFF;
+    u32 lower  = (value >> 0 ) & 0xFFFFFFFF;  
+    xil_printf("READ BRAM    0x%x  0x%x 0x%x \r\n", 0x4*i, upper, lower);
+  }
   xil_printf("INFO:  checking BRAM  (DONE) \r\n");  
 }
-
 
 
 int main()
