@@ -1,0 +1,22 @@
+To create the txfifo.tcl file, I did:
+
+start a new project.
+open the IP catalog.
+double click the IP.
+Customize the IP.
+Generate the IP.
+
+Then:
+
+get_ips
+
+write_ip_tcl -no_ip_version -ip_name txfifo [get_ips <name chosen from above>] txfifo.tcl
+
+delete the preamble to the file which checks vivado version and creates a project
+
+source in the project creation tcl script.
+
+Load the project, and issue the following tcl, to generate vhdl (as guide for instantiating the IP in RTL):
+
+create_ip_run [get_ips txfifo]
+launch_run txfifo_synth_1

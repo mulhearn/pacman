@@ -8,7 +8,6 @@
 #include "xil_printf.h"
 #include "sleep.h"
 
-
 // MIO pinout:
 #define LED0 12
 #define LED1 13
@@ -190,24 +189,83 @@ void blink(){
 void check_iic(){
 }
 
+// these are the addresses for the interfaces as read off from the address editor of the block diagram in vivado
+#define ADDR_AXI_BRAM   0x40000000
+#define ADDR_AXIL_REGS  0x43C00000
+#define ADDR_AXIL_FIFO  0x43C10000
+#define ADDR_AXIF_FIFO  0x43C20000
+
 void check_reg_ro(){
-  xil_printf("Reg0 -- 0x%x  \r\n", Xil_In32(0x40000000));
-  xil_printf("Reg1 -- 0x%x  \r\n", Xil_In32(0x40000004));
-  xil_printf("Reg2 -- 0x%x  \r\n", Xil_In32(0x40000008));
-  xil_printf("Reg3 -- 0x%x  \r\n", Xil_In32(0x4000000C));
-  xil_printf("Reg4 -- 0x%x  \r\n", Xil_In32(0x40000010));
+  xil_printf("Reg0 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x00));
+  xil_printf("Reg1 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x04));
+  xil_printf("Reg2 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x08));
+  xil_printf("Reg3 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x0C));
+  xil_printf("Reg4 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x10));
 }
 
 void check_reg_rw(){
-  xil_printf("Reg0 -- 0x%x  \r\n", Xil_In32(0x40000000));
-  xil_printf("Reg1 -- 0x%x  \r\n", Xil_In32(0x40000004));
-  Xil_Out32(0x40000000, 0xFFFFFFFF);
-  Xil_Out32(0x40000004, 0xABCDABCD);
-  xil_printf("Reg0 -- 0x%x  \r\n", Xil_In32(0x40000000));
-  xil_printf("Reg1 -- 0x%x  \r\n", Xil_In32(0x40000004));
-  Xil_Out32(0x40000000, 0x0);
-  Xil_Out32(0x40000004, 0x0);
+  xil_printf("Reg0 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x00));
+  xil_printf("Reg1 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x04));
+  Xil_Out32(ADDR_AXIL_REGS+0x00, 0xFFFFFFFF);
+  Xil_Out32(ADDR_AXIL_REGS+0x04, 0xABCDABCD);
+  xil_printf("Reg0 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x00));
+  xil_printf("Reg1 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x04));
+  Xil_Out32(ADDR_AXIL_REGS+0x00, 0x0);
+  Xil_Out32(ADDR_AXIL_REGS+0x04, 0x0);
 }
+
+void check_fifo(){
+  xil_printf("TX Vacancy   0x%x  \r\n", Xil_In32(ADDR_AXIL_FIFO+0x0C));
+  xil_printf("RX Occupancy 0x%x  \r\n", Xil_In32(ADDR_AXIL_FIFO+0x1C));
+
+  Xil_Out32(ADDR_AXIL_FIFO+0x18,   0xA5);
+  Xil_Out32(ADDR_AXIL_FIFO+0x28,   0xA5);  
+  //Xil_Out32(ADDR_AXIL_FIFO+0x0000, 0x0);  
+  
+  xil_printf("TX Vacancy   0x%x  \r\n", Xil_In32(ADDR_AXIL_FIFO+0x0C));
+  xil_printf("RX Occupancy 0x%x  \r\n", Xil_In32(ADDR_AXIL_FIFO+0x1C));
+
+  //Xil_Out64(ADDR_AXIF_FIFO+0x0000, 0x1234567890ABCDEF);
+
+  for (int i=0; i<5; i++){
+    Xil_Out64(ADDR_AXIF_FIFO+0x0000, 0x1234567890ABCDEF);
+    Xil_Out32(ADDR_AXIL_FIFO+0x0014, 0x8);  
+    xil_printf("TX Vacancy   0x%x  \r\n", Xil_In32(ADDR_AXIL_FIFO+0x0C));
+    xil_printf("RX Occupancy 0x%x  \r\n", Xil_In32(ADDR_AXIL_FIFO+0x1C));
+    Xil_Out64(ADDR_AXIF_FIFO+0x0000, i);
+    Xil_Out32(ADDR_AXIL_FIFO+0x0014, 0x8);  
+    xil_printf("TX Vacancy   0x%x  \r\n", Xil_In32(ADDR_AXIL_FIFO+0x0C));
+    xil_printf("RX Occupancy 0x%x  \r\n", Xil_In32(ADDR_AXIL_FIFO+0x1C));
+  }  
+  xil_printf("RLENGTH      0x%x  \r\n", Xil_In32(ADDR_AXIL_FIFO+0x24));
+
+  for (int i=0 ; i< 10; i++){
+    u64 value = Xil_In64(ADDR_AXIF_FIFO+0x1000);
+    u32 upper  = (value >> 32) & 0xFFFFFFFF;
+    u32 lower  = (value >> 0 ) & 0xFFFFFFFF;
+    xil_printf("READ FIFO    0x%x  0x%x \r\n", upper, lower);
+    xil_printf("RX Occupancy 0x%x  \r\n", Xil_In32(ADDR_AXIL_FIFO+0x1C));
+  }
+  xil_printf("TX Vacancy   0x%x  \r\n", Xil_In32(ADDR_AXIL_FIFO+0x0C));
+  xil_printf("RX Occupancy 0x%x  \r\n", Xil_In32(ADDR_AXIL_FIFO+0x1C));
+}
+
+void check_bram(){
+  xil_printf("INFO:  checking BRAM  \r\n");  
+  Xil_Out32(ADDR_AXI_BRAM+0x0,    0x0);
+  Xil_Out32(ADDR_AXI_BRAM+0x4,    0x1);
+  Xil_Out32(ADDR_AXI_BRAM+0x8,    0xABCD);
+  Xil_Out32(ADDR_AXI_BRAM+0xC,    0x7777);
+  Xil_Out32(ADDR_AXI_BRAM+0x10,   0xCAFE);
+  xil_printf("READ BRAM    0x%x  0x%x \r\n", 0x0,  Xil_In32(ADDR_AXI_BRAM+0x0));
+  xil_printf("READ BRAM    0x%x  0x%x \r\n", 0x4,  Xil_In32(ADDR_AXI_BRAM+0x4));
+  xil_printf("READ BRAM    0x%x  0x%x \r\n", 0x8,  Xil_In32(ADDR_AXI_BRAM+0x8));
+  xil_printf("READ BRAM    0x%x  0x%x \r\n", 0xC,  Xil_In32(ADDR_AXI_BRAM+0xC));
+  xil_printf("READ BRAM    0x%x  0x%x \r\n", 0x10, Xil_In32(ADDR_AXI_BRAM+0x10));
+  xil_printf("INFO:  checking BRAM  (DONE) \r\n");  
+}
+
+
 
 int main()
 {
@@ -221,7 +279,7 @@ int main()
     }
     while(1){
       xil_printf("choose an option:\r\n");
-      xil_printf("(1) blink LEDs  (2) check I2C (3) check RO registers (4) check RW registers \r\n");
+      xil_printf("(1) blink LEDs  (2) check I2C (3) read registers (4) check RW registers (5) check FIFO (6) check BRAM \r\n");
       unsigned char c=inbyte();
       xil_printf("pressed:  %c\n\r", c);
       switch(c){
@@ -236,6 +294,12 @@ int main()
 	break;
       case '4':
         check_reg_rw();
+	break;
+      case '5':
+        check_fifo();
+	break;
+      case '6':
+        check_bram();
 	break;
       default:
 	xil_printf("invalid selection...\n\r");

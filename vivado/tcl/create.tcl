@@ -35,6 +35,9 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
   create_fileset -srcset sources_1
 }
 
+# Create the txfifo IP:
+source $origin_dir/tcl/txfifo.tcl
+
 # Set IP repository paths
 set obj [get_filesets sources_1]
 if { $obj != {} } {
