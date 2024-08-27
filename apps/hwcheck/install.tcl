@@ -13,6 +13,7 @@ app create -name hwcheck -hw products/pacman.xsa -os standalone -proc ps7_cortex
 file rename hwcheck/hwcheck/src/helloworld.c hwcheck/hwcheck/src/hwcheck.c
 
 file copy apps/hwcheck/run.tcl hwcheck/
+file copy apps/hwcheck/build.tcl hwcheck/
 
 # Copy the application file over the hello world stub:
 file copy -force apps/hwcheck/hwcheck.c hwcheck/hwcheck/src/hwcheck.c

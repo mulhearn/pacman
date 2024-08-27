@@ -395,7 +395,7 @@ void read_voltages(){
   iic_set(ADDR_ADC_TILES+4, 1, 0b10000101, 0x0);
   iic_set(ADDR_ADC_BOARD, 1, 0b10000101, 0x0);
 
-  xil_printf("READ VOLTAGES:  sending refesh to ADCs:\r\n");
+  xil_printf("READ VOLTAGES:  sending refesh to ADCs (convert):\r\n");
   iic_send(ADDR_ADC_TILES+0, 0);
   iic_send(ADDR_ADC_TILES+1, 0);
   iic_send(ADDR_ADC_TILES+2, 0);
@@ -403,8 +403,18 @@ void read_voltages(){
   iic_send(ADDR_ADC_TILES+4, 0);
   iic_send(ADDR_ADC_BOARD,   0); 
   
-  usleep(50000);
+  usleep(5000);
 
+  xil_printf("READ VOLTAGES:  sending refesh to ADCs (read):\r\n");
+  iic_send(ADDR_ADC_TILES+0, 0);
+  iic_send(ADDR_ADC_TILES+1, 0);
+  iic_send(ADDR_ADC_TILES+2, 0);
+  iic_send(ADDR_ADC_TILES+3, 0);
+  iic_send(ADDR_ADC_TILES+4, 0);
+  iic_send(ADDR_ADC_BOARD,   0); 
+
+  usleep(5000);
+  
   unsigned addr = ADDR_ADC_BOARD;
   xil_printf("READ_VOLTAGES:  reading board voltages:\r\n");
   val = iic_recv(addr, 0x7, 2);
