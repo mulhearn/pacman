@@ -7,7 +7,7 @@
 #include "addr_conf.hh"
 
 #define I2C_MAJOR_VERSION 5
-#define I2C_MINOR_VERSION 1
+#define I2C_MINOR_VERSION 2
 
 #define I2C_DEV "/dev/i2c-0"
 

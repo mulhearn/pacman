@@ -261,20 +261,127 @@ uint32_t i2c_set_vddd(int fh, uint32_t lower, uint32_t val){
   return 1;
 }
 
-uint32_t i2c_mon_vdda(int fh, uint32_t lower){  
-  return 0;
+uint32_t i2c_mon_vdda(int fh, uint32_t lower){
+  const int full_scale = 9000; // 9 V = 9000 mV full scale
+  const uint8_t addr   = 0x10+lower/2;
+  const uint8_t reg    = 0x7 + 0x2*(lower%2);
+
+  if (lower > 0xa) 
+    return 0;
+  
+  const uint8_t nbytes = 2;
+  uint8_t buf[nbytes];  
+
+  int status = 0;
+  status |= (i2c_set(fh, addr, 1, 0x8500, nbytes) != (nbytes+1));
+  status |= (i2c_set(fh, addr, 0) != 1);
+  sleep(1);
+  status |= (i2c_set(fh, addr, reg) != 1);
+  status |= (i2c_recv(fh, addr, reg, buf, nbytes)!=nbytes);
+
+  if (status){
+    printf("**ERROR** i2c_mon_vdda:  I2C error.\n");
+    return 0;
+  }
+  
+  uint32_t val = 0;
+  for (int i=0 ; i< nbytes; i++){
+    val = (val<<8) | buf[i];
+  }  
+  return full_scale*val/0xFFFF;
 }
 
 uint32_t i2c_mon_vddd(int fh, uint32_t lower){
-  return 0;
+  const int full_scale = 9000; // 9 V = 9000 mV full scale
+  const uint8_t addr   = 0x10+lower/2;
+  const uint8_t reg    = 0x8 + 0x2*(lower%2);
+
+  if (lower > 0xa) 
+    return 0;
+
+  const uint8_t nbytes = 2;
+  uint8_t buf[nbytes];  
+
+  int status = 0;
+  status |= (i2c_set(fh, addr, 1, 0x8500, nbytes) != (nbytes+1));
+  status |= (i2c_set(fh, addr, 0) != 1);
+  sleep(1);
+  status |= (i2c_set(fh, addr, reg) != 1);
+  status |= (i2c_recv(fh, addr, reg, buf, nbytes)!=nbytes);
+
+  if (status){
+    printf("**ERROR** i2c_mon_vddd:  I2C error.\n");
+    return 0;
+  }
+  
+  uint32_t val = 0;
+  for (int i=0 ; i< nbytes; i++){
+    val = (val<<8) | buf[i];
+  }  
+  return full_scale*val/0xFFFF;
 }
 
-uint32_t i2c_mon_idda(int fh, uint32_t lower){  
-  return 0;
+uint32_t i2c_mon_idda(int fh, uint32_t lower){
+  const int full_scale = 20000; // 20 A = 20000 mA full scale
+  const uint8_t addr   = 0x10+lower/2;
+  const uint8_t reg    = 0xB + 0x2*(lower%2);
+
+  if (lower > 0xa) 
+    return 0;
+  
+  const uint8_t nbytes = 2;
+  uint8_t buf[nbytes];  
+
+  int status = 0;
+  status |= (i2c_set(fh, addr, 1, 0x8500, nbytes) != (nbytes+1));
+  status |= (i2c_set(fh, addr, 0) != 1);
+  sleep(1);
+  status |= (i2c_set(fh, addr, reg) != 1);
+  status |= (i2c_recv(fh, addr, reg, buf, nbytes)!=nbytes);
+
+  if (status){
+    printf("**ERROR** i2c_mon_idda:  I2C error.\n");
+    return 0;
+  }
+  
+  uint32_t val = 0;
+  for (int i=0 ; i< nbytes; i++){
+    val = (val<<8) | buf[i];
+  }  
+  return full_scale*val/0xFFFF;
+
+  
 }
 
 uint32_t i2c_mon_iddd(int fh, uint32_t lower){
-  return 0;
+  const int full_scale = 20000; // 20 A = 20000 mA full scale
+  const uint8_t addr   = 0x10+lower/2;
+  const uint8_t reg    = 0xC + 0x2*(lower%2);
+
+  if (lower > 0xa) 
+    return 0;
+  
+  const uint8_t nbytes = 2;
+  uint8_t buf[nbytes];  
+
+  int status = 0;
+  status |= (i2c_set(fh, addr, 1, 0x8500, nbytes) != (nbytes+1));
+  status |= (i2c_set(fh, addr, 0) != 1);
+  sleep(1);
+  status |= (i2c_set(fh, addr, reg) != 1);
+  status |= (i2c_recv(fh, addr, reg, buf, nbytes)!=nbytes);
+
+  if (status){
+    printf("**ERROR** i2c_mon_iddd:  I2C error.\n");
+    return 0;
+  }
+  
+  uint32_t val = 0;
+  for (int i=0 ; i< nbytes; i++){
+    val = (val<<8) | buf[i];
+  }  
+  return full_scale*val/0xFFFF;
+  
 }
 
 uint32_t i2c_version(int fh, uint32_t lower){  
