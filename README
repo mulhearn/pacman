@@ -23,8 +23,8 @@ mkdir tmp
 cd tmp
 rpm2cpio ../pacman-server-latest.rpm | cpio -idmv
 ls
-tar -czvf pacman.tar.gz * 
-mv pacman.tar.gz ..
+tar -czvf pacman-server-latest.tar.gz * 
+mv pacman-server-latest.tar.gz ..
 cd ..
 rm -fr tmp
 

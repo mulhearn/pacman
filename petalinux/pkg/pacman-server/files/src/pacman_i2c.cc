@@ -273,9 +273,15 @@ uint32_t i2c_mon_vdda(int fh, uint32_t lower){
   uint8_t buf[nbytes];  
 
   int status = 0;
+  // set config registers for single shot mode:
   status |= (i2c_set(fh, addr, 1, 0x8500, nbytes) != (nbytes+1));
+  // send refresh to start conversions:
   status |= (i2c_set(fh, addr, 0) != 1);
-  sleep(1);
+  usleep(5000);
+  // send second refresh to move most recent conversions into output registers:
+  status |= (i2c_set(fh, addr, 0) != 1);
+  usleep(5000);
+  // read requested value:
   status |= (i2c_set(fh, addr, reg) != 1);
   status |= (i2c_recv(fh, addr, reg, buf, nbytes)!=nbytes);
 
@@ -303,9 +309,15 @@ uint32_t i2c_mon_vddd(int fh, uint32_t lower){
   uint8_t buf[nbytes];  
 
   int status = 0;
+  // set config registers for single shot mode:
   status |= (i2c_set(fh, addr, 1, 0x8500, nbytes) != (nbytes+1));
+  // send refresh to start conversions:
   status |= (i2c_set(fh, addr, 0) != 1);
-  sleep(1);
+  usleep(5000);
+  // send second refresh to move most recent conversions into output registers:
+  status |= (i2c_set(fh, addr, 0) != 1);
+  usleep(5000);
+  // read requested value:
   status |= (i2c_set(fh, addr, reg) != 1);
   status |= (i2c_recv(fh, addr, reg, buf, nbytes)!=nbytes);
 
@@ -333,9 +345,15 @@ uint32_t i2c_mon_idda(int fh, uint32_t lower){
   uint8_t buf[nbytes];  
 
   int status = 0;
+  // set config registers for single shot mode:
   status |= (i2c_set(fh, addr, 1, 0x8500, nbytes) != (nbytes+1));
+  // send refresh to start conversions:
   status |= (i2c_set(fh, addr, 0) != 1);
-  sleep(1);
+  usleep(5000);
+  // send second refresh to move most recent conversions into output registers:
+  status |= (i2c_set(fh, addr, 0) != 1);
+  usleep(5000);
+  // read requested value:
   status |= (i2c_set(fh, addr, reg) != 1);
   status |= (i2c_recv(fh, addr, reg, buf, nbytes)!=nbytes);
 
@@ -365,9 +383,15 @@ uint32_t i2c_mon_iddd(int fh, uint32_t lower){
   uint8_t buf[nbytes];  
 
   int status = 0;
+  // set config registers for single shot mode:
   status |= (i2c_set(fh, addr, 1, 0x8500, nbytes) != (nbytes+1));
+  // send refresh to start conversions:
   status |= (i2c_set(fh, addr, 0) != 1);
-  sleep(1);
+  usleep(5000);
+  // send second refresh to move most recent conversions into output registers:
+  status |= (i2c_set(fh, addr, 0) != 1);
+  usleep(5000);
+  // read requested value:
   status |= (i2c_set(fh, addr, reg) != 1);
   status |= (i2c_recv(fh, addr, reg, buf, nbytes)!=nbytes);
 
