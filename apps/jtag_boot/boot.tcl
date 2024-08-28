@@ -11,11 +11,11 @@ targets -set -nocase -filter {name =~ "ARM*#0"}
 # CONFIG_SUBSYSTEM_UBOOT_DEVICETREE_OFFSET="0x100000"
 
 set DEVICETREE_OFFSET 0x100000
-dow -data "../petalinux/trenz/images/linux/system.dtb" ${DEVICETREE_OFFSET}
+dow -data "../petalinux/ramdisk/images/linux/system.dtb" ${DEVICETREE_OFFSET}
 
-dow "../petalinux/trenz/images/linux/u-boot.elf"
+dow "../petalinux/ramdisk/images/linux/u-boot.elf"
 
-dow -data  "../petalinux/trenz/images/linux/image.ub" 0x10000000
+dow -data  "../petalinux/ramdisk/images/linux/image.ub" 0x10000000
 
 con
 
