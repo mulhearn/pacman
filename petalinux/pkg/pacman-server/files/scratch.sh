@@ -1,0 +1,7 @@
+
+PACMAN_UTIL=./pacman_util.py
+
+$PACMAN_UTIL --write 0x24100 0xAA
+$PACMAN_UTIL --write 0x24101 0x1
+$PACMAN_UTIL --read 0x24100 
+$PACMAN_UTIL --read 0x24101

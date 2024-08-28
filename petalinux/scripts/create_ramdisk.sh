@@ -30,26 +30,12 @@ cp -r $SRC/trenz/project-spec $PROJ/
 
 # Our changes:
 echo "our changes:"
-cp -v $SRC/ramdisk/system-user.dtsi $PROJ/project-spec/meta-user/recipes-bsp/device-tree/files/system-user.dtsi
-cp -v $SRC/ramdisk/user-rootfsconfig $PROJ/project-spec/meta-user/conf/
-cp -v $SRC/ramdisk/user-rootfsconfig $PROJ/project-spec/meta-user/conf/
-cp -v $SRC/ramdisk/rootfs_config     $PROJ/project-spec/configs/rootfs_config
-
-# add configs specfic to this option
-#cp -v $SRC/config-$SPEC                $PROJ/project-spec/configs/config
-#cp -v $SRC/rootfs_config-$SPEC         $PROJ/project-spec/configs/rootfs_config
-
-# add configs not specific to this option
-#cp -v $SRC/platform-top.h       $PROJ/project-spec/meta-user/recipes-bsp/u-boot/files/
-#cp -v $SRC/system-user.dtsi     $PROJ/project-spec/meta-user/recipes-bsp/device-tree/files/
-#cp -v $SRC/system-user.dtsi     $PROJ/project-spec/meta-user/meta-xilinx-tools/recipes-bsp/uboot-device-tree/files/
-#cp -v $SRC/user-rootfsconfig    $PROJ/project-spec/meta-user/conf/
+cp -v $SRC/$SPEC/system-user.dtsi $PROJ/project-spec/meta-user/recipes-bsp/device-tree/files/system-user.dtsi
+cp -v $SRC/$SPEC/user-rootfsconfig $PROJ/project-spec/meta-user/conf/
+cp -v $SRC/$SPEC/user-rootfsconfig $PROJ/project-spec/meta-user/conf/
+cp -v $SRC/$SPEC/rootfs_config     $PROJ/project-spec/configs/rootfs_config
 
 # add custom software packages
-#cp -v -r $PKG/startup            $PROJ/project-spec/meta-user/recipes-apps/
-#cp -v -r $PKG/webfwu             $PROJ/project-spec/meta-user/recipes-apps/
 #cp -v -r $PKG/pacman-server      $PROJ/project-spec/meta-user/recipes-apps/
+cp -v -r $PKG/hwutil      $PROJ/project-spec/meta-user/recipes-apps/
 
-#cd $PROJ
-#source build.sh
-#cd ..
