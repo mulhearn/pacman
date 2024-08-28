@@ -266,7 +266,7 @@ uint32_t i2c_mon_vdda(int fh, uint32_t lower){
   const uint8_t addr   = 0x10+lower/2;
   const uint8_t reg    = 0x7 + 0x2*(lower%2);
 
-  if (lower > 0xa) 
+  if (lower > 0xb) 
     return 0;
   
   const uint8_t nbytes = 2;
@@ -302,7 +302,7 @@ uint32_t i2c_mon_vddd(int fh, uint32_t lower){
   const uint8_t addr   = 0x10+lower/2;
   const uint8_t reg    = 0x8 + 0x2*(lower%2);
 
-  if (lower > 0xa) 
+  if (lower > 0xb) 
     return 0;
 
   const uint8_t nbytes = 2;
@@ -338,7 +338,7 @@ uint32_t i2c_mon_idda(int fh, uint32_t lower){
   const uint8_t addr   = 0x10+lower/2;
   const uint8_t reg    = 0xB + 0x2*(lower%2);
 
-  if (lower > 0xa) 
+  if (lower > 0xb) 
     return 0;
   
   const uint8_t nbytes = 2;
@@ -376,7 +376,7 @@ uint32_t i2c_mon_iddd(int fh, uint32_t lower){
   const uint8_t addr   = 0x10+lower/2;
   const uint8_t reg    = 0xC + 0x2*(lower%2);
 
-  if (lower > 0xa) 
+  if (lower > 0xb) 
     return 0;
   
   const uint8_t nbytes = 2;
