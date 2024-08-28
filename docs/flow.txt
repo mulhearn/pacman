@@ -47,10 +47,8 @@ cd trenz
 ../scripts/build.sh
 cd images/linux
 
-# not generated in 2020.2, so copy this over once:
-cp ../../../src/trenz/changes/bootgen.bif .
-
 # create the BOOT.BIN file:
+cp ../../../src/bootgen.bif .
 bootgen -arch zynq -image bootgen.bif -w -o BOOT.BIN
 ls -alh BOOT.BIN image.ub boot.scr
 
