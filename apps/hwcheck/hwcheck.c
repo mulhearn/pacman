@@ -191,27 +191,50 @@ void check_iic(){
 
 // these are the addresses for the interfaces as read off from the address editor of the block diagram in vivado
 #define ADDR_AXI_BRAM   0x40000000
-#define ADDR_AXIL_REGS  0x43C00000
+#define ADDR_AXIL_REGS  0x40010000
 #define ADDR_AXIL_FIFO  0x43C10000
 #define ADDR_AXIF_FIFO  0x43C20000
 
 void check_reg_ro(){
-  xil_printf("Reg0 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x00));
-  xil_printf("Reg1 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x04));
-  xil_printf("Reg2 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x08));
-  xil_printf("Reg3 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x0C));
-  xil_printf("Reg4 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x10));
+  xil_printf("Reg0 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xFF00));
+  xil_printf("Reg1 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xFF04));
+  xil_printf("Reg2 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xFF08));
+  xil_printf("Reg3 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xFF0C));
+  xil_printf("Reg4 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xFF10));
+
+  xil_printf("Reg0 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x0000));
+  xil_printf("Reg1 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x0004));
+  xil_printf("Reg2 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x0008));
+  xil_printf("Reg3 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x000C));
+  xil_printf("Reg4 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x0010));
+
+  xil_printf("Reg0 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x1000));
+  xil_printf("Reg1 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x1004));
+  xil_printf("Reg2 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x1008));
+  xil_printf("Reg3 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x100C));
+  xil_printf("Reg4 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x1010));
+
 }
 
 void check_reg_rw(){
-  xil_printf("Reg0 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x00));
-  xil_printf("Reg1 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x04));
-  Xil_Out32(ADDR_AXIL_REGS+0x00, 0xFFFFFFFF);
-  Xil_Out32(ADDR_AXIL_REGS+0x04, 0xABCDABCD);
-  xil_printf("Reg0 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x00));
-  xil_printf("Reg1 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x04));
-  Xil_Out32(ADDR_AXIL_REGS+0x00, 0x0);
-  Xil_Out32(ADDR_AXIL_REGS+0x04, 0x0);
+  static unsigned count=0;
+  
+  xil_printf("Count is 0x%x  \r\n", count);
+
+  if ((count % 2)){
+    Xil_Out32(ADDR_AXIL_REGS+0xFF00, 0x0);
+    Xil_Out32(ADDR_AXIL_REGS+0x0000, 0x0);
+    Xil_Out32(ADDR_AXIL_REGS+0x1000, 0x0);    
+  } else {
+    Xil_Out32(ADDR_AXIL_REGS+0xFF00, 0xAAAA1111);
+    Xil_Out32(ADDR_AXIL_REGS+0x0000, 0xBBBB2222);
+    Xil_Out32(ADDR_AXIL_REGS+0x1000, 0xCCCC4444);        
+  }
+  Xil_Out32(ADDR_AXIL_REGS+0xFF04, 0xDDDD0000 + count);
+  Xil_Out32(ADDR_AXIL_REGS+0x0004, 0xEEEE0000 + count*2);
+  Xil_Out32(ADDR_AXIL_REGS+0x1004, 0xFFFF0000 + count);        
+
+  count = (count + 1)&0xF;
 }
 
 void check_fifo(){

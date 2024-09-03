@@ -1,0 +1,86 @@
+A proposal to organize the PACMAN register space.
+
+The general purpose PACMAN 32-bit registers are organized in one AXI
+LITE 16-bit address space.
+
+The registers are arranged in a hierachical structure:
+
+SCOPE (4 bits, values 0-15)  ADDR(15 downto 12)
+ROLE  (4 bits, values 0-15)  ADDR(11 downto 8)
+REG   (8 bits, values 0-255) ADDR(7 downto 0)
+
+In principle, ROLE interpretation could depedent on SCOPE, but let's try
+to avoid that if possible.  REG interpretation will depend on ROLE.
+
+The SCOPE bits are intepreted as:
+TILE0:  0x0
+TILE1:  0x1
+TILE2:  0x2
+...
+TILE9:  0x9
+GLOBAL: 0xF
+RESERVED:  0xA-0xE
+
+The UART Roles are:
+UART0 TX: 0b0000 (0x0)
+UART1 TX: 0b0100 (0x4)
+UART2 TX: 0b1000 (0x8)
+UART3 TX: 0b1100 (0xC)
+UART0 RX: 0b0010 (0x2)
+UART1 RX: 0b0110 (0x6)
+UART2 RX: 0b1010 (0xA)
+UART3 RX: 0b1110 (0xE)
+
+In this way, for UART related registers, an alternative intepretation is:
+
+CHANNEL(6 bits 0 - 63) DATA(15 downto 10)
+TX/RX(1 bit)           DATA(9)
+UARTN(1 bit)           DATA(8)   => 0 IFF a UART role
+
+The non-UART Roles are:
+GLOBAL:     0b1111 (0xF)
+TIMING:     0b1101 (0xD)
+ADC:        0b1011 (0xB)
+RESERVED:   0b1001 (0x9) 
+RESERVED:   0b0111 (0x7)
+RESERVED:   0b0101 (0x5)
+RESERVED:   0b0011 (0x3)
+DEBUG:      0b0001 (0x1)
+
+(0x1)
+
+Specific Registers (Not Exhaustive)
+
+UART registers:
+Status:            0x00 (R)
+Ratio and Phase:   0x04 (RW)
+Count:             0x08 (R) <-- Clears on Read
+Max Buffer Usage:  0x0A (R) <-- Clears on Read
+
+Global SCOPE and ROLE registers:
+Status           0x00 (R)   <-- Any transient errors clear on read 
+Firmware Major   0x04 (R)
+Firmware Minor   0x08 (R)
+Build Timestamp  0x0C (R)
+Enable           0x10 (RW)  <-- Combines Analog PWR Enable and TILE Enables
+
+Error Code:      0xF0 (R)  <-- Error Code from most recent error
+Debug:           0xFF (R)  <-- Debugging output
+
+Clock Registers:
+Status           0x00 (R)  
+Select           0x04
+...
+Start Count       0xE0 (CMD) <-- start a counter on each clock
+Stop  Count       0xE4 (CMD) <-- stop a counter on each clock
+Fast  Count       0xE8 (R)   <-- 100 MHz counter     
+Slow  Count       0xEC (R)   <-- 10 MHz counter
+Debug:            0xFF (R)   <-- Debugging output
+
+Other considerations:
+
+All writeable registers should be readable.
+
+For any command registers (e.g. ADC) ideally the read should of the
+previous command, and then clear.
+
