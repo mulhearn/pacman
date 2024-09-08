@@ -59,8 +59,8 @@ architecture behaviour of regbus_mux_tb is
     );
   end component;
 
-  signal show_write : std_logic := '1';
-  signal show_read  : std_logic := '0';
+  signal show_write : std_logic := '0';
+  signal show_read  : std_logic := '1';
   
   signal aclk     : std_logic;
   signal aresetn  : std_logic;

@@ -46,7 +46,7 @@ if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
 
 # The design that will be created by this Tcl script contains the following 
 # module references:
-# axil_to_regbus, registers_scratch, regbus_mux, registers_scratch, registers_scratch
+# axil_to_regbus, regbus_mux, rx_unit, tx_unit, registers_scratch
 
 # Please add the sources of those modules before sourcing this Tcl script.
 
@@ -170,9 +170,9 @@ set bCheckModules 1
 if { $bCheckModules == 1 } {
    set list_check_mods "\ 
 axil_to_regbus\
-registers_scratch\
 regbus_mux\
-registers_scratch\
+rx_unit\
+tx_unit\
 registers_scratch\
 "
 
@@ -322,6 +322,7 @@ proc create_root_design { parentCell } {
     CONFIG.PCW_ENET0_PERIPHERAL_ENABLE {1} \
     CONFIG.PCW_ENET0_PERIPHERAL_FREQMHZ {1000 Mbps} \
     CONFIG.PCW_ENET_RESET_ENABLE {0} \
+    CONFIG.PCW_EN_CLK1_PORT {1} \
     CONFIG.PCW_EN_EMIO_CD_SDIO1 {0} \
     CONFIG.PCW_EN_EMIO_I2C1 {1} \
     CONFIG.PCW_EN_EMIO_SDIO1 {0} \
@@ -343,8 +344,11 @@ proc create_root_design { parentCell } {
     CONFIG.PCW_EN_UART1 {1} \
     CONFIG.PCW_EN_USB0 {1} \
     CONFIG.PCW_EN_WDT {1} \
+    CONFIG.PCW_FCLK_CLK1_BUF {TRUE} \
     CONFIG.PCW_FPGA0_PERIPHERAL_FREQMHZ {100} \
+    CONFIG.PCW_FPGA1_PERIPHERAL_FREQMHZ {10} \
     CONFIG.PCW_FPGA_FCLK0_ENABLE {1} \
+    CONFIG.PCW_FPGA_FCLK1_ENABLE {1} \
     CONFIG.PCW_GPIO_MIO_GPIO_ENABLE {1} \
     CONFIG.PCW_GPIO_MIO_GPIO_IO {MIO} \
     CONFIG.PCW_I2C0_GRP_INT_ENABLE {0} \
@@ -592,22 +596,6 @@ proc create_root_design { parentCell } {
      return 1
    }
   
-  # Create instance: registers_scratch_0, and set properties
-  set block_name registers_scratch
-  set block_cell_name registers_scratch_0
-  if { [catch {set registers_scratch_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
-     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
-     return 1
-   } elseif { $registers_scratch_0 eq "" } {
-     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
-     return 1
-   }
-    set_property -dict [list \
-    CONFIG.C_ROLE {15} \
-    CONFIG.C_VAL_ROB {0xAAAAAAAA} \
-  ] $registers_scratch_0
-
-
   # Create instance: regbus_mux_0, and set properties
   set block_name regbus_mux
   set block_cell_name regbus_mux_0
@@ -619,42 +607,39 @@ proc create_root_design { parentCell } {
      return 1
    }
   
-  # Create instance: registers_scratch_1, and set properties
-  set block_name registers_scratch
-  set block_cell_name registers_scratch_1
-  if { [catch {set registers_scratch_1 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+  # Create instance: rx_unit_0, and set properties
+  set block_name rx_unit
+  set block_cell_name rx_unit_0
+  if { [catch {set rx_unit_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
      catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
      return 1
-   } elseif { $registers_scratch_1 eq "" } {
+   } elseif { $rx_unit_0 eq "" } {
      catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
      return 1
    }
-    set_property -dict [list \
-    CONFIG.C_ROLE {0} \
-    CONFIG.C_SCOPE {0} \
-    CONFIG.C_VAL_ROA {0x22222222} \
-    CONFIG.C_VAL_ROB {0xBBBBBBBB} \
-  ] $registers_scratch_1
-
-
-  # Create instance: registers_scratch_2, and set properties
-  set block_name registers_scratch
-  set block_cell_name registers_scratch_2
-  if { [catch {set registers_scratch_2 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+  
+  # Create instance: tx_unit_0, and set properties
+  set block_name tx_unit
+  set block_cell_name tx_unit_0
+  if { [catch {set tx_unit_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
      catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
      return 1
-   } elseif { $registers_scratch_2 eq "" } {
+   } elseif { $tx_unit_0 eq "" } {
      catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
      return 1
    }
-    set_property -dict [list \
-    CONFIG.C_ROLE {0} \
-    CONFIG.C_SCOPE {1} \
-    CONFIG.C_VAL_ROA {0x33333333} \
-    CONFIG.C_VAL_ROB {0xCCCCCCCC} \
-  ] $registers_scratch_2
-
-
+  
+  # Create instance: registers_scratch_0, and set properties
+  set block_name registers_scratch
+  set block_cell_name registers_scratch_0
+  if { [catch {set registers_scratch_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $registers_scratch_0 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
   # Create interface connections
   connect_bd_intf_net -intf_net axi_bram_ctrl_0_BRAM_PORTA [get_bd_intf_pins axi_bram_ctrl_0/BRAM_PORTA] [get_bd_intf_pins axi_bram_ctrl_0_bram/BRAM_PORTA]
   connect_bd_intf_net -intf_net axi_bram_ctrl_0_BRAM_PORTB [get_bd_intf_pins axi_bram_ctrl_0/BRAM_PORTB] [get_bd_intf_pins axi_bram_ctrl_0_bram/BRAM_PORTB]
@@ -668,9 +653,9 @@ proc create_root_design { parentCell } {
   connect_bd_intf_net -intf_net ps7_0_axi_periph_M01_AXI [get_bd_intf_pins axi_fifo_mm_s_0/S_AXI_FULL] [get_bd_intf_pins ps7_0_axi_periph/M01_AXI]
   connect_bd_intf_net -intf_net ps7_0_axi_periph_M02_AXI [get_bd_intf_pins ps7_0_axi_periph/M02_AXI] [get_bd_intf_pins axil_to_regbus_0/S_AXI]
   connect_bd_intf_net -intf_net ps7_0_axi_periph_M03_AXI [get_bd_intf_pins axi_bram_ctrl_0/S_AXI] [get_bd_intf_pins ps7_0_axi_periph/M03_AXI]
-  connect_bd_intf_net -intf_net regbus_mux_0_PA_REGBUS [get_bd_intf_pins regbus_mux_0/PA_REGBUS] [get_bd_intf_pins registers_scratch_0/S_REGBUS]
-  connect_bd_intf_net -intf_net regbus_mux_0_PB_REGBUS [get_bd_intf_pins regbus_mux_0/PB_REGBUS] [get_bd_intf_pins registers_scratch_1/S_REGBUS]
-  connect_bd_intf_net -intf_net regbus_mux_0_PC_REGBUS [get_bd_intf_pins regbus_mux_0/PC_REGBUS] [get_bd_intf_pins registers_scratch_2/S_REGBUS]
+  connect_bd_intf_net -intf_net regbus_mux_0_PA_REGBUS [get_bd_intf_pins regbus_mux_0/PA_REGBUS] [get_bd_intf_pins rx_unit_0/S_REGBUS]
+  connect_bd_intf_net -intf_net regbus_mux_0_PB_REGBUS [get_bd_intf_pins regbus_mux_0/PB_REGBUS] [get_bd_intf_pins tx_unit_0/S_REGBUS]
+  connect_bd_intf_net -intf_net regbus_mux_0_PC_REGBUS [get_bd_intf_pins regbus_mux_0/PC_REGBUS] [get_bd_intf_pins registers_scratch_0/S_REGBUS]
 
   # Create port connections
   connect_bd_net -net PHY_LEDs [get_bd_pins xlconcat_0/dout] [get_bd_pins vio_0/probe_in0]
@@ -686,9 +671,11 @@ proc create_root_design { parentCell } {
   connect_bd_net -net SC0720_0_PL_pin_K20 [get_bd_pins SC0720_0/PL_pin_K20] [get_bd_ports PL_pin_K20]
   connect_bd_net -net SC0720_0_PL_pin_L16 [get_bd_pins SC0720_0/PL_pin_L16] [get_bd_ports PL_pin_L16]
   connect_bd_net -net SC0720_0_PL_pin_N22 [get_bd_pins SC0720_0/PL_pin_N22] [get_bd_ports PL_pin_N22]
-  connect_bd_net -net processing_system7_0_FCLK_CLK0 [get_bd_pins processing_system7_0/FCLK_CLK0] [get_bd_pins processing_system7_0/M_AXI_GP0_ACLK] [get_bd_pins axi_bram_ctrl_0/s_axi_aclk] [get_bd_pins axi_fifo_mm_s_0/s_axi_aclk] [get_bd_pins ps7_0_axi_periph/ACLK] [get_bd_pins ps7_0_axi_periph/S00_ACLK] [get_bd_pins ps7_0_axi_periph/M00_ACLK] [get_bd_pins ps7_0_axi_periph/M01_ACLK] [get_bd_pins ps7_0_axi_periph/M02_ACLK] [get_bd_pins ps7_0_axi_periph/M03_ACLK] [get_bd_pins rst_ps7_0_100M/slowest_sync_clk] [get_bd_pins vio_0/clk] [get_bd_pins axil_to_regbus_0/S_AXI_ACLK] [get_bd_pins regbus_mux_0/ACLK] [get_bd_pins registers_scratch_0/ACLK] [get_bd_pins registers_scratch_1/ACLK] [get_bd_pins registers_scratch_2/ACLK]
+  connect_bd_net -net processing_system7_0_FCLK_CLK0 [get_bd_pins processing_system7_0/FCLK_CLK0] [get_bd_pins processing_system7_0/M_AXI_GP0_ACLK] [get_bd_pins axi_bram_ctrl_0/s_axi_aclk] [get_bd_pins axi_fifo_mm_s_0/s_axi_aclk] [get_bd_pins ps7_0_axi_periph/ACLK] [get_bd_pins ps7_0_axi_periph/S00_ACLK] [get_bd_pins ps7_0_axi_periph/M00_ACLK] [get_bd_pins ps7_0_axi_periph/M01_ACLK] [get_bd_pins ps7_0_axi_periph/M02_ACLK] [get_bd_pins ps7_0_axi_periph/M03_ACLK] [get_bd_pins rst_ps7_0_100M/slowest_sync_clk] [get_bd_pins vio_0/clk] [get_bd_pins axil_to_regbus_0/S_AXI_ACLK] [get_bd_pins regbus_mux_0/ACLK] [get_bd_pins registers_scratch_0/ACLK] [get_bd_pins rx_unit_0/ACLK] [get_bd_pins tx_unit_0/ACLK]
+  connect_bd_net -net processing_system7_0_FCLK_CLK1 [get_bd_pins processing_system7_0/FCLK_CLK1] [get_bd_pins tx_unit_0/UCLK_I]
   connect_bd_net -net processing_system7_0_FCLK_RESET0_N [get_bd_pins processing_system7_0/FCLK_RESET0_N] [get_bd_pins rst_ps7_0_100M/ext_reset_in]
-  connect_bd_net -net rst_ps7_0_100M_peripheral_aresetn [get_bd_pins rst_ps7_0_100M/peripheral_aresetn] [get_bd_pins axi_bram_ctrl_0/s_axi_aresetn] [get_bd_pins axi_fifo_mm_s_0/s_axi_aresetn] [get_bd_pins ps7_0_axi_periph/ARESETN] [get_bd_pins ps7_0_axi_periph/S00_ARESETN] [get_bd_pins ps7_0_axi_periph/M00_ARESETN] [get_bd_pins ps7_0_axi_periph/M01_ARESETN] [get_bd_pins ps7_0_axi_periph/M02_ARESETN] [get_bd_pins ps7_0_axi_periph/M03_ARESETN] [get_bd_pins axil_to_regbus_0/S_AXI_ARESETN] [get_bd_pins regbus_mux_0/ARESETN] [get_bd_pins registers_scratch_0/ARESETN] [get_bd_pins registers_scratch_1/ARESETN] [get_bd_pins registers_scratch_2/ARESETN]
+  connect_bd_net -net rst_ps7_0_100M_peripheral_aresetn [get_bd_pins rst_ps7_0_100M/peripheral_aresetn] [get_bd_pins axi_bram_ctrl_0/s_axi_aresetn] [get_bd_pins axi_fifo_mm_s_0/s_axi_aresetn] [get_bd_pins ps7_0_axi_periph/ARESETN] [get_bd_pins ps7_0_axi_periph/S00_ARESETN] [get_bd_pins ps7_0_axi_periph/M00_ARESETN] [get_bd_pins ps7_0_axi_periph/M01_ARESETN] [get_bd_pins ps7_0_axi_periph/M02_ARESETN] [get_bd_pins ps7_0_axi_periph/M03_ARESETN] [get_bd_pins axil_to_regbus_0/S_AXI_ARESETN] [get_bd_pins regbus_mux_0/ARESETN] [get_bd_pins registers_scratch_0/ARESETN] [get_bd_pins rx_unit_0/ARESETN] [get_bd_pins tx_unit_0/ARESETN]
+  connect_bd_net -net tx_unit_0_POSI_O [get_bd_pins tx_unit_0/POSI_O] [get_bd_pins rx_unit_0/LOOPBACK_I] [get_bd_pins rx_unit_0/PISO_I]
 
   # Create address segments
   assign_bd_address -offset 0x40000000 -range 0x00002000 -target_address_space [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs axi_bram_ctrl_0/S_AXI/Mem0] -force

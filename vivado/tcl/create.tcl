@@ -35,8 +35,9 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
   create_fileset -srcset sources_1
 }
 
+# Example IP generation but not needed in current design
 # Create the txfifo IP:
-source $origin_dir/tcl/txfifo.tcl
+#source $origin_dir/tcl/txfifo.tcl
 
 # Create the txfifo IP:
 source $origin_dir/tcl/regbus.tcl

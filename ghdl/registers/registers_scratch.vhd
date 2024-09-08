@@ -1,11 +1,11 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+library work;
+use work.common.all;
 
 entity registers_scratch is
   generic (
-    C_DATA_WIDTH  : integer  := 32;
-    C_ADDR_WIDTH  : integer  := 16;
     C_SCOPE       : integer  := 16#F#;  -- GLOBAL
     C_ROLE        : integer  := 16#1#;  -- DEBUGGING
     C_REG_SCRA    : integer  := 16#0#;
@@ -21,19 +21,19 @@ entity registers_scratch is
     ARESETN	        : in std_logic;
 
     S_REGBUS_RB_RUPDATE : in  std_logic;
-    S_REGBUS_RB_RADDR	: in  std_logic_vector(C_ADDR_WIDTH-1 downto 0);
-    S_REGBUS_RB_RDATA	: out std_logic_vector(C_DATA_WIDTH-1 downto 0);      
+    S_REGBUS_RB_RADDR	: in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
+    S_REGBUS_RB_RDATA	: out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);      
     S_REGBUS_RB_RACK    : out  std_logic;
     
     S_REGBUS_RB_WUPDATE : in  std_logic;
-    S_REGBUS_RB_WADDR	: in  std_logic_vector(C_ADDR_WIDTH-1 downto 0);
-    S_REGBUS_RB_WDATA	: in  std_logic_vector(C_DATA_WIDTH-1 downto 0);
+    S_REGBUS_RB_WADDR	: in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
+    S_REGBUS_RB_WDATA	: in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     S_REGBUS_RB_WACK    : out  std_logic;
     --
-    DEBUG               : out  std_logic_vector(C_DATA_WIDTH-1 downto 0)
+    DEBUG               : out  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
     );
 begin
-  assert C_ADDR_WIDTH>=8;
+  assert C_RB_ADDR_WIDTH>=8;
 end;
 
 architecture behavioral of registers_scratch is
@@ -41,19 +41,19 @@ architecture behavioral of registers_scratch is
   signal rst      : std_logic;
 
   signal rupdate  : std_logic;
-  signal raddr    : std_logic_vector(C_ADDR_WIDTH-1 downto 0);
-  signal rdata    : std_logic_vector(C_DATA_WIDTH-1 downto 0);
+  signal raddr    : std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
+  signal rdata    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
   signal rack     : std_logic := '0';
   
   signal wupdate  : std_logic;
-  signal waddr    : std_logic_vector(C_ADDR_WIDTH-1 downto 0);
-  signal wdata    : std_logic_vector(C_DATA_WIDTH-1 downto 0);
+  signal waddr    : std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
+  signal wdata    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
   signal wack     : std_logic := '0';
 
   -- registers
-  signal scra    : std_logic_vector(C_DATA_WIDTH-1 downto 0) := (others => '0');
-  signal scrb    : std_logic_vector(C_DATA_WIDTH-1 downto 0) := (others => '1');
-  signal stat    : std_logic_vector(C_DATA_WIDTH-1 downto 0) := (others => '0');
+  signal scra    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
+  signal scrb    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '1');
+  signal stat    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   
 begin
   DEBUG <= scra;

@@ -213,7 +213,6 @@ void check_reg_ro(){
   xil_printf("Reg2 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x1008));
   xil_printf("Reg3 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x100C));
   xil_printf("Reg4 -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x1010));
-
 }
 
 void check_reg_rw(){
@@ -290,6 +289,232 @@ void check_bram(){
   xil_printf("INFO:  checking BRAM  (DONE) \r\n");  
 }
 
+//  -- RX Unit Registers --
+//  -- UART channel  (C = 0bCCCCCC 0<=C<40)
+//  -- Broadcast at C=63=0b111111 on indicated registers only
+//  -- Full (32 bit) Address: 0bCCCCCC10RRRRRRRR
+#define C_ADDR_RX_STATUS      0x00
+#define C_ADDR_RX_CONFIG      0x04
+//  -- 128 RX register (LSB) A B C D (MSB)
+#define C_ADDR_RX_LOOK_A      0x10
+#define C_ADDR_RX_LOOK_B      0x14
+#define C_ADDR_RX_LOOK_C      0x18
+#define C_ADDR_RX_LOOK_D      0x1C
+#define C_ADDR_RX_COMMAND     0x20
+//  -- Counters (via start/stop command)
+
+#define C_ADDR_RX_CNT_CYCLES  0x30
+#define C_ADDR_RX_CNT_BUSY    0x34
+#define C_ADDR_RX_CNT_RCVD    0x38
+#define C_ADDR_RX_CNT_LOST    0x3C
+//  -- Channel number (loopback test of channel id)
+
+#define C_ADDR_RX_NCHAN       0x40
+
+
+void check_rx(){
+  xil_printf(" *** READING RX REGISTERS *** \r\n");
+  
+  for (unsigned chan=0; chan<40; chan++){    
+    unsigned chan_off = (chan<<10) + (0x1<<9);
+    unsigned addr = 0;
+    
+    xil_printf("UART RX channel:  %d   Address Offset:  0x%x \r\n", chan, chan_off);
+    addr = ADDR_AXIL_REGS+chan_off+C_ADDR_RX_STATUS;
+    xil_printf("status (0x%x) -- 0x%x  \r\n", addr, Xil_In32(addr));
+    addr = ADDR_AXIL_REGS+chan_off+C_ADDR_RX_CONFIG;
+    xil_printf("config (0x%x) -- 0x%x  \r\n", addr, Xil_In32(addr));
+    addr = ADDR_AXIL_REGS+chan_off+C_ADDR_RX_LOOK_A;
+    xil_printf("reg A (0x%x) -- 0x%x  \r\n", addr, Xil_In32(addr));
+    addr = ADDR_AXIL_REGS+chan_off+C_ADDR_RX_LOOK_B;
+    xil_printf("reg B (0x%x) -- 0x%x  \r\n", addr, Xil_In32(addr));    
+    addr = ADDR_AXIL_REGS+chan_off+C_ADDR_RX_LOOK_C;
+    xil_printf("reg C (0x%x) -- 0x%x  \r\n", addr, Xil_In32(addr));
+    addr = ADDR_AXIL_REGS+chan_off+C_ADDR_RX_LOOK_D;
+    xil_printf("reg D (0x%x) -- 0x%x  \r\n", addr, Xil_In32(addr));
+    addr = ADDR_AXIL_REGS+chan_off+C_ADDR_RX_NCHAN;
+    xil_printf("nchan (0x%x) -- 0x%x  \r\n", addr, Xil_In32(addr));
+  }
+
+  xil_printf(" *** WRITING RX REGISTERS *** \r\n");
+  
+  for (unsigned chan=0; chan<40; chan++){    
+    unsigned chan_off = (chan<<10) + (0x1<<9);
+    unsigned addr = 0;
+    unsigned val = 0;
+    xil_printf("UART RX channel:  %d   Address Offset:  0x%x \r\n", chan, chan_off);
+
+    addr = ADDR_AXIL_REGS+chan_off+C_ADDR_RX_CONFIG;
+    val  = 0xFF000101 + (chan<<16);
+    xil_printf("setting config (0x%x) to 0x%x  \r\n", addr, val);
+    Xil_Out32(addr, val);  
+  }    
+
+  xil_printf(" *** READING RX REGISTERS *** \r\n");
+  
+  for (unsigned chan=0; chan<40; chan++){    
+    unsigned chan_off = (chan<<10) + (0x1<<9);
+    unsigned addr = 0;
+
+    xil_printf(" *** READING RX REGISTERS *** \r\n", chan, chan_off);
+
+    xil_printf("UART RX channel:  %d   Address Offset:  0x%x \r\n", chan, chan_off);
+    addr = ADDR_AXIL_REGS+chan_off+C_ADDR_RX_STATUS;
+    xil_printf("status (0x%x) -- 0x%x  \r\n", addr, Xil_In32(addr));
+    addr = ADDR_AXIL_REGS+chan_off+C_ADDR_RX_CONFIG;
+    xil_printf("config (0x%x) -- 0x%x  \r\n", addr, Xil_In32(addr));
+  }
+}
+
+//  -- TX Unit Registers --
+//  -- UART channel  (C = 0bCCCCCC 0<=C<40)
+//  -- Broadcast write at C=63=0b111111
+//  -- Full (32 bit) Address: 0bCCCCCC00RRRRRRRR
+#define C_ADDR_TX_STATUS    0x00
+#define C_ADDR_TX_CONFIG    0x04
+//  -- 64 RX register (LSB) C D (MSB) --
+#define C_ADDR_TX_SEND_C    0x10
+#define C_ADDR_TX_SEND_D    0x14
+//  -- 64 RX register (LSB) C D (MSB) --
+#define C_ADDR_TX_LOOK_C    0x18
+#define C_ADDR_TX_LOOK_D    0x1C
+#define C_ADDR_TX_COMMAND   0x20
+//  -- Counters (via start/stop command)
+#define C_ADDR_TX_CNT_CYCLES  0x30
+#define C_ADDR_TX_CNT_BUSY    0x34
+#define C_ADDR_TX_CNT_ACK     0x38
+//  -- Channel number (loopback test of channel id)
+#define C_ADDR_TX_NCHAN     0x40
+
+void read_tx(){
+
+  xil_printf(" *** READING TX REGISTERS *** \r\n");
+
+  unsigned chan=0;
+  //for (unsigned chan=0; chan<40; chan++){    
+  unsigned chan_off = (chan<<10);
+  unsigned addr = 0;
+  unsigned status, config;
+  xil_printf("UART TX channel:  %d   Address Offset:  0x%x \r\n", chan, chan_off);
+  addr   = ADDR_AXIL_REGS+chan_off+C_ADDR_TX_STATUS;
+  status = Xil_In32(addr);
+  xil_printf("status (0x%x) -- 0x%x  \r\n", addr, status);
+  addr = ADDR_AXIL_REGS+chan_off+C_ADDR_TX_CONFIG;
+  config = Xil_In32(addr);
+  xil_printf("config (0x%x) -- 0x%x  \r\n", addr, config);
+  addr = ADDR_AXIL_REGS+chan_off+C_ADDR_TX_SEND_C;
+  xil_printf("send C (0x%x) -- 0x%x  \r\n", addr, Xil_In32(addr));
+  addr = ADDR_AXIL_REGS+chan_off+C_ADDR_TX_SEND_D;
+  xil_printf("send D (0x%x) -- 0x%x  \r\n", addr, Xil_In32(addr));
+
+  addr = ADDR_AXIL_REGS+chan_off+C_ADDR_TX_SEND_C;
+  xil_printf("look C (0x%x) -- 0x%x  \r\n", addr, Xil_In32(addr));
+  addr = ADDR_AXIL_REGS+chan_off+C_ADDR_TX_SEND_D;
+  xil_printf("look D (0x%x) -- 0x%x  \r\n", addr, Xil_In32(addr));
+
+  addr = ADDR_AXIL_REGS+chan_off+C_ADDR_TX_NCHAN;
+  xil_printf("nchan (0x%x) -- 0x%x  \r\n", addr, Xil_In32(addr));
+
+  xil_printf("status(0)  -       valid - %d\r\n", (status&0x001)!=0);
+  xil_printf("status(1)  -        busy - %d\r\n", (status&0x002)!=0);
+  xil_printf("status(2)  -         ack - %d\r\n", (status&0x004)!=0);
+  xil_printf("status(3)  -          tx - %d\r\n", (status&0x008)!=0);
+  xil_printf("\r\n");
+  xil_printf("status(4)  -  valid_seen - %d\r\n", (status&0x010)!=0); 
+  xil_printf("status(5)  -   busy_seen - %d\r\n", (status&0x020)!=0); 
+  xil_printf("status(6)  -    ack_seen - %d\r\n", (status&0x040)!=0);  
+  xil_printf("status(7)  -     tx_seen - %d\r\n", (status&0x080)!=0);   
+  xil_printf("\r\n");
+  xil_printf("status(8)  - single_seen - %d\r\n", (status&0x100)!=0);
+  xil_printf("status(9)  -  start_seen - %d\r\n", (status&0x200)!=0); 
+  xil_printf("status(10) -  stop_seen  - %d\r\n", (status&0x400)!=0);  
+  xil_printf("status(11) -    running  - %d\r\n", (status&0x800)!=0);  
+  xil_printf("\r\n");
+  unsigned count = (0xFFFF0000&status)>>16;
+  xil_printf("status(31 ... 16) -- count:  0x%x (%d)\r\n", count, count);
+  //}
+}
+
+void single_tx(){
+  static int count = 0;
+  count = count + 1;
+
+  unsigned chan=0;
+  //for (unsigned chan=0; chan<40; chan++){    
+  unsigned chan_off = (chan<<10);
+  unsigned val = 0;
+  unsigned addr = 0;
+
+  
+  addr = ADDR_AXIL_REGS+chan_off+C_ADDR_RX_CONFIG;
+  val  = 0x00002001;
+  xil_printf("setting config (0x%x) to 0x%x  \r\n", addr, val);
+  Xil_Out32(addr, val);
+
+  addr = ADDR_AXIL_REGS+chan_off+C_ADDR_TX_SEND_C;
+  val  = 0xCCCC0000 + count;
+  xil_printf("setting config (0x%x) to 0x%x  \r\n", addr, val);
+  Xil_Out32(addr, val);  
+
+  addr = ADDR_AXIL_REGS+chan_off+C_ADDR_TX_SEND_D;
+  val  = 0xDDDD0000 + count;
+  xil_printf("setting config (0x%x) to 0x%x  \r\n", addr, val);
+  Xil_Out32(addr, val);  
+
+  addr = ADDR_AXIL_REGS+chan_off+C_ADDR_TX_COMMAND;
+  val  = 0x1;
+  xil_printf("sending command(0x%x) with value 0x%x  \r\n", addr, val);
+  Xil_Out32(addr, val);  
+  //}
+}
+
+void send_tx_command(unsigned mask){
+  for (unsigned chan=0; chan<40; chan++){    
+    unsigned chan_off = (chan<<10);
+    unsigned val = 0;
+    unsigned addr = 0;
+
+    addr = ADDR_AXIL_REGS+chan_off+C_ADDR_TX_COMMAND;
+    val  = mask;
+    xil_printf("sending command(0x%x) with value 0x%x  \r\n", addr, val);
+    Xil_Out32(addr, val);  
+  }
+}
+
+
+void continuous_tx(){
+
+  unsigned chan=0;
+  //for (unsigned chan=0; chan<40; chan++){    
+  unsigned chan_off = (chan<<10);
+  unsigned val = 0;
+  unsigned addr = 0;
+
+  addr = ADDR_AXIL_REGS+chan_off+C_ADDR_TX_SEND_C;
+  val  = 0xCCCC1111;
+  xil_printf("setting config (0x%x) to 0x%x  \r\n", addr, val);
+  Xil_Out32(addr, val);  
+
+  addr = ADDR_AXIL_REGS+chan_off+C_ADDR_TX_SEND_D;
+  val  = 0xDDDD2222;
+  xil_printf("setting config (0x%x) to 0x%x  \r\n", addr, val);
+  Xil_Out32(addr, val);  
+  
+  addr = ADDR_AXIL_REGS+chan_off+C_ADDR_RX_CONFIG;
+  val  = 0x00003001;
+  xil_printf("setting config (0x%x) to 0x%x  \r\n", addr, val);
+  Xil_Out32(addr, val);
+
+  //}
+}
+
+
+void toggle_tx_c(){  
+}
+
+void toggle_clear(){  
+}
+
 
 int main()
 {
@@ -303,27 +528,33 @@ int main()
     }
     while(1){
       xil_printf("choose an option:\r\n");
-      xil_printf("(1) blink LEDs  (2) check I2C (3) read registers (4) check RW registers (5) check FIFO (6) check BRAM \r\n");
+      xil_printf("(1) read TX registers (2) single TX (3) continuous TX\r\n");
+      xil_printf("(4) TX start (5) TX stop (6) TX clear\r\n");
+      xil_printf("(7) RX check \r\n");
+
       unsigned char c=inbyte();
       xil_printf("pressed:  %c\n\r", c);
       switch(c){
       case '1':
-	blink();
+        read_tx();
 	break;
       case '2':
-	check_iic();
+        single_tx();
 	break;
       case '3':
-        check_reg_ro();
+        continuous_tx();
 	break;
       case '4':
-        check_reg_rw();
+        send_tx_command(2);
 	break;
       case '5':
-        check_fifo();
+	send_tx_command(4);
 	break;
       case '6':
-        check_bram();
+	send_tx_command(8);
+	break;
+      case '7':
+        check_rx();
 	break;
       default:
 	xil_printf("invalid selection...\n\r");

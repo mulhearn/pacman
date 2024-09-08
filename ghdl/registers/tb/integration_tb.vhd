@@ -3,6 +3,8 @@ use std.textio.all;
 use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
 use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08 
+library work;
+use work.common.all;
 
 --  Defines a testbench (without any ports)
 entity integration_tb is
@@ -11,31 +13,34 @@ end integration_tb;
 architecture behaviour of integration_tb is
   component axil_to_regbus is
     port (
-      S_AXI_ACLK          : in std_logic;
-      S_AXI_ARESETN       : in std_logic;
-      S_AXI_ARADDR        : in std_logic_vector(15 downto 0);
-      S_AXI_ARVALID       : in std_logic;
-      S_AXI_ARREADY       : out std_logic;    
-      S_AXI_RDATA         : out std_logic_vector(31 downto 0);
-      S_AXI_RRESP         : out std_logic_vector(1 downto 0);
-      S_AXI_RVALID        : out std_logic;
-      S_AXI_RREADY        : in std_logic;
-      S_AXI_AWADDR        : in std_logic_vector(15 downto 0);      
-      S_AXI_AWVALID       : in std_logic;                                    
-      S_AXI_AWREADY       : out std_logic;
-      S_AXI_WDATA         : in std_logic_vector(31 downto 0);      
-      S_AXI_WVALID        : in std_logic;                                    
-      S_AXI_WREADY        : out std_logic;                                           
-      S_AXI_BRESP         : out std_logic_vector(1 downto 0);
-      S_AXI_BVALID        : out std_logic;
-      S_AXI_BREADY        : in std_logic;
+      S_AXI_ACLK         : in std_logic;
+      S_AXI_ARESETN      : in std_logic;
+      S_AXI_ARADDR       : in std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
+      S_AXI_ARPROT       : in std_logic_vector(2 downto 0) := (others => '0');                 
+      S_AXI_ARVALID      : in std_logic;
+      S_AXI_ARREADY      : out std_logic;    
+      S_AXI_RDATA        : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      S_AXI_RRESP        : out std_logic_vector(1 downto 0);
+      S_AXI_RVALID       : out std_logic;
+      S_AXI_RREADY       : in std_logic;
+      S_AXI_AWADDR       : in std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);      
+      S_AXI_AWPROT       : in std_logic_vector(2 downto 0) := (others => '0');                 
+      S_AXI_AWVALID      : in std_logic;                                    
+      S_AXI_AWREADY      : out std_logic;
+      S_AXI_WDATA        : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);      
+      S_AXI_WSTRB        : in std_logic_vector((C_RB_DATA_WIDTH/8)-1 downto 0) := (others => '0');                 
+      S_AXI_WVALID       : in std_logic;                                    
+      S_AXI_WREADY       : out std_logic;                                           
+      S_AXI_BRESP        : out std_logic_vector(1 downto 0);
+      S_AXI_BVALID       : out std_logic;
+      S_AXI_BREADY       : in std_logic;
       P_REGBUS_RB_RUPDATE      : out std_logic;
       P_REGBUS_RB_RADDR	       : out std_logic_vector(15 downto 0);
       P_REGBUS_RB_RDATA	       : in  std_logic_vector(31 downto 0);      
       P_REGBUS_RB_WUPDATE      : out std_logic;
       P_REGBUS_RB_WADDR	       : out std_logic_vector(15 downto 0);
       P_REGBUS_RB_WDATA	       : out  std_logic_vector(31 downto 0)
-      );
+    );
   end component;
 
   component regbus_mux is
@@ -160,30 +165,29 @@ architecture behaviour of integration_tb is
   constant rob_array   : t_data_array := (0=>x"AAAAAAAA",1=>x"BBBBBBBB",2=>x"CCCCCCCC"); 
 begin
   uuta: axil_to_regbus port map (
-      S_AXI_ACLK           => aclk,
-      S_AXI_ARESETN        => aresetn,
-      S_AXI_ARADDR         => xraddr,
-      S_AXI_ARVALID        => xarvalid,
-      S_AXI_ARREADY        => xarready,    
-      S_AXI_RDATA          => xrdata,
-      S_AXI_RVALID         => xrvalid,
-      S_AXI_RREADY         => xrready,
-      S_AXI_AWADDR         => xwaddr,
-      S_AXI_AWVALID        => xawvalid,
-      S_AXI_AWREADY        => xawready,    
-      S_AXI_WDATA          => xwdata,
-      S_AXI_WVALID         => xwvalid,
-      S_AXI_WREADY         => xwready,
-      S_AXI_BVALID         => xbvalid,
-      S_AXI_BREADY         => xbready,
-      
-      P_REGBUS_RB_RUPDATE  => rupdate,
-      P_REGBUS_RB_RADDR    => raddr,
-      P_REGBUS_RB_RDATA    => rdata,
-      P_REGBUS_RB_WUPDATE  => wupdate,
-      P_REGBUS_RB_WADDR    => waddr,
-      P_REGBUS_RB_WDATA    => wdata
-      );
+    S_AXI_ACLK    => aclk,
+    S_AXI_ARESETN => aresetn,
+    S_AXI_ARADDR  => xraddr,
+    S_AXI_ARVALID => xarvalid,
+    S_AXI_ARREADY => xarready,    
+    S_AXI_RDATA   => xrdata,
+    S_AXI_RVALID  => xrvalid,
+    S_AXI_RREADY  => xrready,
+    S_AXI_AWADDR  => xwaddr,
+    S_AXI_AWVALID => xawvalid,
+    S_AXI_AWREADY => xawready,    
+    S_AXI_WDATA   => xwdata,
+    S_AXI_WVALID  => xwvalid,
+    S_AXI_WREADY  => xwready,
+    S_AXI_BVALID  => xbvalid,
+    S_AXI_BREADY  => xbready,
+    P_REGBUS_RB_RUPDATE  => rupdate,
+    P_REGBUS_RB_RADDR    => raddr,
+    P_REGBUS_RB_RDATA    => rdata,
+    P_REGBUS_RB_WUPDATE  => wupdate,
+    P_REGBUS_RB_WADDR    => waddr,
+    P_REGBUS_RB_WDATA    => wdata
+  );
   
   u0: for i in 0 to 2 generate
     scratch0: registers_scratch
