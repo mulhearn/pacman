@@ -27,6 +27,9 @@ architecture behaviour of tx_registers_tb is
       S_REGBUS_RB_WACK       : out std_logic;
 
       STATUS_I               : in uart_reg_array_t;
+      CYCLES_I               : in uart_reg_array_t;
+      BUSYS_I                : in uart_reg_array_t;
+      ACKS_I                 : in uart_reg_array_t;
       CONFIG_O               : out uart_reg_array_t;
       SEND_O                 : out uart_tx_data_array_t;
       LOOK_I                 : in uart_tx_data_array_t;
@@ -62,6 +65,9 @@ begin
     S_REGBUS_RB_WDATA   => wdata,
     S_REGBUS_RB_WACK    => wack,
     STATUS_I  => (others => x"11111111"),
+    CYCLES_I  => (others => x"00000100"),
+    BUSYS_I   => (others => x"00000080"),
+    ACKS_I    => (others => x"00000010"),    
     LOOK_I  => (others => x"DDDDDDDDCCCCCCCC"),
     CONFIG_O  => config,
     COMMAND_O => cmd

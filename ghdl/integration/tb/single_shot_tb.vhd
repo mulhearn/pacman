@@ -51,7 +51,8 @@ architecture behaviour of single_shot_tb is
   signal status : std_logic_vector(31 downto 0);
   signal look_c : std_logic_vector(31 downto 0);
   signal look_d : std_logic_vector(31 downto 0);
-  
+  signal acks   : std_logic_vector(31 downto 0); 
+ 
 
 begin
   uut0: tx_unit port map (
@@ -110,12 +111,21 @@ begin
     rupdate <= '1';
     wait for 10 ns;
     look_d <= rdata;
+    raddr <= std_logic_vector(to_unsigned(C_ADDR_TX_ACKS, 16));
+    rupdate <= '1';
+    wait for 10 ns;
+    acks <= rdata;
+    raddr <= (others => '0');
+    rupdate <= '0';
+
     write (l, String'(" sta: 0x"));
     hwrite (l, status);
     write (l, String'(" lkc: 0x"));
     hwrite (l, look_c);
     write (l, String'(" lkd: 0x"));
     hwrite (l, look_d);
+    write (l, String'(" acks: 0x"));
+    hwrite (l, acks);
     write (l, String'(" valid: "));
     write (l, status(0));    
     writeline(output, l);
@@ -140,7 +150,7 @@ begin
     wupdate <= '1';
     wait for 10 ns;
     waddr <= std_logic_vector(to_unsigned(C_ADDR_TX_COMMAND, 16));
-    wdata   <= x"00000001";
+    wdata   <= x"00000003";
     wupdate <= '1';
     wait for 10 ns;    
     waddr   <= (others => '0');

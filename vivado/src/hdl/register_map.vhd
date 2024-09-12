@@ -19,10 +19,10 @@ package register_map is
   constant C_ADDR_RX_LOOK_D     : integer := 16#1C#; 
   constant C_ADDR_RX_COMMAND    : integer := 16#20#;
   -- Counters (via start/stop command)
-  constant C_ADDR_RX_CNT_CYCLES : integer := 16#30#;
-  constant C_ADDR_RX_CNT_BUSY   : integer := 16#34#;
-  constant C_ADDR_RX_CNT_RCVD   : integer := 16#38#;
-  constant C_ADDR_RX_CNT_LOST   : integer := 16#3C#;
+  constant C_ADDR_RX_CYCLES     : integer := 16#30#;
+  constant C_ADDR_RX_BUSYS      : integer := 16#34#;
+  constant C_ADDR_RX_ACKS       : integer := 16#38#;
+  constant C_ADDR_RX_LOSTS      : integer := 16#3C#;
   -- Channel number (loopback test of channel id)
   constant C_ADDR_RX_NCHAN      : integer := 16#40#;
 
@@ -41,9 +41,9 @@ package register_map is
   constant C_ADDR_TX_LOOK_D   : integer := 16#1C#; 
   constant C_ADDR_TX_COMMAND  : integer := 16#20#; 
   -- Counters (via start/stop command)
-  constant C_ADDR_TX_CNT_CYCLES : integer := 16#30#;
-  constant C_ADDR_TX_CNT_BUSY   : integer := 16#34#;
-  constant C_ADDR_TX_CNT_ACK    : integer := 16#38#;
+  constant C_ADDR_TX_CYCLES   : integer := 16#30#;
+  constant C_ADDR_TX_BUSYS    : integer := 16#34#;
+  constant C_ADDR_TX_ACKS     : integer := 16#38#;
   -- Channel number (loopback test of channel id)
   constant C_ADDR_TX_NCHAN    : integer := 16#40#;
 

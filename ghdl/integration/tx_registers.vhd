@@ -21,6 +21,9 @@ entity tx_registers is
     S_REGBUS_RB_WACK    : out std_logic;
 
     STATUS_I            : in uart_reg_array_t;
+    CYCLES_I            : in uart_reg_array_t;
+    BUSYS_I             : in uart_reg_array_t;
+    ACKS_I              : in uart_reg_array_t;
     LOOK_I              : in uart_tx_data_array_t;
 
     CONFIG_O            : out uart_reg_array_t;
@@ -102,7 +105,7 @@ begin
             elsif (reg=C_ADDR_TX_SEND_C) then
               rdata <= send(chan)(31 downto 0);
               rack  <= '1';
-            elsif (reg=C_ADDR_TX_SEND_D) then
+             elsif (reg=C_ADDR_TX_SEND_D) then
               rdata <= send(chan)(63 downto 32);
               rack  <= '1';
             elsif (reg=C_ADDR_TX_LOOK_C) then
@@ -110,6 +113,15 @@ begin
               rack  <= '1';
             elsif (reg=C_ADDR_TX_LOOK_D) then
               rdata <= LOOK_I(chan)(63 downto 32);
+              rack  <= '1';
+            elsif (reg=C_ADDR_TX_CYCLES) then
+              rdata <= CYCLES_I(chan);
+              rack  <= '1';
+            elsif (reg=C_ADDR_TX_BUSYS) then
+              rdata <= BUSYS_I(chan);
+              rack  <= '1';
+            elsif (reg=C_ADDR_TX_ACKS) then
+              rdata <= ACKS_I(chan);
               rack  <= '1';
             elsif (reg=C_ADDR_TX_NCHAN) then
               rdata <= std_logic_vector(to_unsigned(chan, rdata'length));

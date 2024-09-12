@@ -5,6 +5,7 @@ use ieee.std_logic_1164.all;
 use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08 
 library work;
 use work.common.all;
+use work.register_map.all;
 
 --  Defines a testbench (without any ports)
 entity rx_unit_tb is
@@ -34,6 +35,7 @@ architecture behaviour of rx_unit_tb is
   end component;
   
   signal aclk     : std_logic;
+  signal uclk     : std_logic;
   signal aresetn  : std_logic;
   -- read signals:
   signal raddr   : std_logic_vector(15 downto 0) := (others => '0');
@@ -46,10 +48,11 @@ architecture behaviour of rx_unit_tb is
   signal wdata   : std_logic_vector(31 downto 0) := (others => '0');
   signal wack    : std_logic := '0';  
 
-  signal output_registers : std_logic :='1';
-  signal output_tx        : std_logic :='1';
-
   signal debug  : std_logic_vector(31 downto 0);
+
+  signal rx     : std_logic := '1';
+
+  signal piso   : std_logic_vector(39 downto 0) := (others=>'1');
   
 begin
   uut0: rx_unit port map (
@@ -63,8 +66,8 @@ begin
     S_REGBUS_RB_WADDR   => waddr,
     S_REGBUS_RB_WDATA   => wdata,
     S_REGBUS_RB_WACK    => wack,
-    PISO_I              => (others => '0'),
-    LOOPBACK_I          => (others => '0'),
+    PISO_I              => piso,
+    LOOPBACK_I          => piso,
     DEBUG_O             => debug
   );
   
@@ -84,115 +87,114 @@ begin
     wait for 5 ns;
   end process;
 
-  rapid_read_process : process
+  uclk_process : process
   begin
-    wait for 1 ns;
-    raddr   <= x"0000";
-    rupdate <= '0';
-    wait for 30 ns;
-    raddr   <= x"0200";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"0204";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"0210";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"0214";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"0218";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"021C";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"0240";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"0640";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"0A40";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"0E40";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"0204";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"0000";
-    rupdate <= '0';
-    wait for 10 ns;
-
-    wait;
+    uclk <= '1';
+    wait for 50 ns;
+    uclk <= '0';
+    wait for 50 ns;
+  end process;
+  
+  rx_process : process
+    variable i      : integer := 0;
+    variable rxdata : std_logic_vector(159 downto 0) := x"FF33332222000011117FFF33331111000011117F";
+  begin
+    wait until rising_edge(uclk);
+    if (i<160) then
+      piso(0) <= rxdata(i);
+      i := i+1;
+    else
+      piso(0) <= '1';
+      wait for 500 ns;
+      i := 0;
+    end if;
   end process;
 
-  rapid_write_process : process
+  
+  read_process : process
   begin
+    raddr <= (others => '0');
+    rupdate <= '0';        
     wait for 1 ns;
-    wait for 50 ns;
-    waddr   <= x"0204";
-    wdata   <= x"ABCDABCD";
+    wait for 100 ns;
+    raddr <= std_logic_vector(to_unsigned(16#00200# + C_ADDR_RX_STATUS, 16));
+    rupdate <= '1';
+    wait for 100 ns;
+    raddr <= std_logic_vector(to_unsigned(16#00200# + C_ADDR_RX_CONFIG, 16));
+    rupdate <= '1';
+    wait for 100 ns;
+    raddr <= std_logic_vector(to_unsigned(16#00200# + C_ADDR_RX_LOOK_A, 16));
+    rupdate <= '1';
+    wait for 100 ns;
+    raddr <= std_logic_vector(to_unsigned(16#00200# + C_ADDR_RX_LOOK_B, 16));
+    rupdate <= '1';
+    wait for 100 ns;
+    raddr <= std_logic_vector(to_unsigned(16#00200# + C_ADDR_RX_LOOK_C, 16));
+    rupdate <= '1';
+    wait for 100 ns;
+    raddr <= std_logic_vector(to_unsigned(16#00200# + C_ADDR_RX_LOOK_D, 16));
+    rupdate <= '1';
+    wait for 100 ns;
+    raddr <= (others => '0');
+    rupdate <= '0';    
+  end process;
+
+
+  write_process : process
+    variable cnt : integer range 0 to 16#FFFF# := 0;
+  begin
+    cnt := cnt+1;
+    wait for 1 ns;
+    wait for 20 ns;
+    wait for 10 ns;
+    waddr <= std_logic_vector(to_unsigned(16#00200# + C_ADDR_RX_CONFIG, 16));
+    wdata   <= x"00002001";
+    wupdate <= '1';
+    wait for 8000 ns;
+    waddr <= std_logic_vector(to_unsigned(16#00200# + C_ADDR_RX_COMMAND, 16));
+    wdata   <= x"00000001";
     wupdate <= '1';
     wait for 10 ns;
-    waddr   <= x"0000";
-    wdata   <= x"00000000";
+    waddr   <= (others => '0');
+    wdata   <= (others => '0');
     wupdate <= '0';    
-    wait for 50 ns;
-    waddr   <= x"0220";
-    wdata   <= x"00000005";
-    wupdate <= '1';
-    wait for 10 ns;
-    waddr   <= x"0620";
-    wdata   <= x"00000005";
-    wupdate <= '1';
-    wait for 10 ns;
-    waddr   <= x"0000";
-    wdata   <= x"00000000";
-    wupdate <= '0';
-    wait;
+    wait for 1000 ns;
   end process;
+  
 
   output_process : process
     variable l : line;
   begin
-    --wait for 1 ns;
-    wait for 10 ns;
-    --wait for 100 ns;
-    if (output_registers='1') then 
-      write (l, String'("aclk: "));
-      write (l, aclk);
-      write (l, String'(" || ra: 0x"));
-      hwrite (l, raddr);
-      write (l, String'(" ru:"));
-      write (l, rupdate);
-      write (l, String'(" rd: 0x"));
-      hwrite (l, rdata);
-      write (l, String'(" rk:"));
-      write (l, rack);
-      write (l, String'(" || wa: 0x"));
-      hwrite (l, waddr);
-      write (l, String'(" wu:"));
-      write (l, wupdate);
-      write (l, String'(" wd: 0x"));
-      hwrite (l, wdata);
-      write (l, String'(" wk: "));
-      write (l, wack);
-    end if;
-    if (output_tx='1') then 
-      --write (l, String'(" posi: "));
-      --hwrite (l, posi);
-      --write (l, String'(" 0: "));
-      --write (l, posi(0));
-    end if;  
+    wait for 1 ns;
+    --wait for 10 ns;
+    wait for 100 ns;
+    write (l, String'("aclk: "));
+    write (l, aclk);
+    write (l, String'(" || ra: 0x"));
+    hwrite (l, raddr);
+    write (l, String'(" ru:"));
+    write (l, rupdate);
+    write (l, String'(" rd: 0x"));
+    hwrite (l, rdata);
+    write (l, String'(" rk:"));
+    write (l, rack);
+    write (l, String'(" || wa: 0x"));
+    hwrite (l, waddr);
+    write (l, String'(" wu:"));
+    write (l, wupdate);
+    write (l, String'(" wd: 0x"));
+    hwrite (l, wdata);
+    write (l, String'(" wk: "));
+    write (l, wack);
+    --write (l, String'(" posi: "));
+    --hwrite (l, posi);
+    --write (l, String'(" 0: "));
+    --write (l, posi(0));
     if (aresetn = '0') then
       write (l, String'(" (RESET)"));
     end if;
     writeline(output, l);
   end process;
-  
+
 end behaviour;
         

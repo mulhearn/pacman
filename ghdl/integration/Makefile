@@ -7,6 +7,7 @@ modules-a:
 	ghdl -a uart_tx.vhd
 	ghdl -a rx_buffer.vhd
 	ghdl -a rx_registers.vhd
+	ghdl -a rx_chan.vhd
 	ghdl -a rx_unit.vhd
 	ghdl -a tx_buffer.vhd
 	ghdl -a tx_registers.vhd
@@ -17,6 +18,7 @@ modules-e:
 	ghdl -e uart_tx
 	ghdl -e rx_buffer
 	ghdl -e rx_registers
+	ghdl -e rx_chan
 	ghdl -e rx_unit
 	ghdl -e tx_buffer
 	ghdl -e tx_registers
@@ -26,6 +28,7 @@ testbenches:
 	ghdl -a -fsynopsys tb/uart_rx_tb.vhd
 	ghdl -a -fsynopsys tb/rx_buffer_tb.vhd
 	ghdl -a -fsynopsys tb/rx_registers_tb.vhd
+	ghdl -a -fsynopsys tb/rx_chan_tb.vhd
 	ghdl -a -fsynopsys tb/rx_unit_tb.vhd
 	ghdl -a -fsynopsys tb/tx_buffer_tb.vhd
 	ghdl -a -fsynopsys tb/tx_registers_tb.vhd
@@ -35,7 +38,8 @@ testbenches:
 	ghdl -a -fsynopsys tb/single_shot_tb.vhd
 	ghdl -e -fsynopsys uart_rx_tb 
 	ghdl -e -fsynopsys rx_buffer_tb 
-	ghdl -e -fsynopsys rx_registers_tb 
+	ghdl -e -fsynopsys rx_registers_tb
+	ghdl -e -fsynopsys rx_chan_tb 
 	ghdl -e -fsynopsys rx_unit_tb 
 	ghdl -e -fsynopsys tx_buffer_tb 
 	ghdl -e -fsynopsys tx_registers_tb 
@@ -51,7 +55,10 @@ run:
 	ghdl -r -fsynopsys rx_unit_tb --stop-time=300ns
 	ghdl -r -fsynopsys tx_buffer_tb --stop-time=7000ns
 	ghdl -r -fsynopsys tx_registers_tb --stop-time=300ns
+	ghdl -r -fsynopsys tx_chan_tb --stop-time=300ns
 	ghdl -r -fsynopsys tx_unit_tb --stop-time=300ns
 	ghdl -r -fsynopsys uart_loopback_tb --stop-time=7000ns
+	ghdl -r -fsynopsys single_shot_tb --stop-time=30000ns
 focus: all
 	ghdl -r -fsynopsys single_shot_tb --stop-time=30000ns
+

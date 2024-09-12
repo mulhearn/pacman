@@ -34,7 +34,10 @@ architecture behavioral of tx_unit is
       UCLK_I      : in std_logic;
       CONFIG_I    : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       COMMAND_I   : in  std_logic_vector(C_COMMAND_WIDTH-1 downto 0);
-      STATUS_O    : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);    
+      STATUS_O    : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      CYCLES_O    : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      BUSYS_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      ACKS_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);    
       LOOK_O      : out std_logic_vector(C_TX_CHAN_DATA_WIDTH-1 downto 0);        
       SEND_I      : in std_logic_vector(C_TX_CHAN_DATA_WIDTH-1 downto 0);
       TX_O        : out std_logic;
@@ -58,6 +61,10 @@ architecture behavioral of tx_unit is
       S_REGBUS_RB_WACK    : out  std_logic;
 
       STATUS_I            : in uart_reg_array_t;
+      CYCLES_I            : in uart_reg_array_t;
+      BUSYS_I             : in uart_reg_array_t;
+      ACKS_I              : in uart_reg_array_t;
+
       CONFIG_O            : out uart_reg_array_t;
       SEND_O              : out uart_tx_data_array_t;
       LOOK_I              : in uart_tx_data_array_t;
@@ -69,6 +76,10 @@ architecture behavioral of tx_unit is
 
   -- tx registers
   signal status    : uart_reg_array_t := (others => x"FFFFFFFF");
+  signal cycles    : uart_reg_array_t := (others => (others => '0'));
+  signal busys     : uart_reg_array_t := (others => (others => '0'));
+  signal acks      : uart_reg_array_t := (others => (others => '0'));
+  
   signal config    : uart_reg_array_t;
   signal send      : uart_tx_data_array_t;
   signal cmd       : uart_command_array_t;
@@ -89,11 +100,14 @@ begin
     S_REGBUS_RB_WADDR   => S_REGBUS_RB_WADDR,
     S_REGBUS_RB_WDATA   => S_REGBUS_RB_WDATA,
     S_REGBUS_RB_WACK    => S_REGBUS_RB_WACK,    
-    STATUS_I              => status,
-    CONFIG_O              => config,
-    SEND_O                => send,
-    LOOK_I                => look,
-    COMMAND_O             => cmd
+    STATUS_I            => status,
+    CYCLES_I            => cycles,
+    BUSYS_I             => busys,
+    ACKS_I              => acks,   
+    CONFIG_O            => config,
+    SEND_O              => send,
+    LOOK_I              => look,
+    COMMAND_O           => cmd
     );
 
   gtxchan0: for i in 0 to 39 generate
@@ -104,7 +118,10 @@ begin
         UCLK_I     => UCLK_I,    
         CONFIG_I   => config(i),
         COMMAND_I  => cmd(i),   
-        STATUS_O   => status(i),   
+        STATUS_O   => status(i),
+        CYCLES_O   => cycles(i),
+        BUSYS_O    => busys(i),
+        ACKS_O     => acks(i),   
         LOOK_O     => look(i),      
         SEND_I     => send(i),    
         TX_O       => POSI_O(i) 

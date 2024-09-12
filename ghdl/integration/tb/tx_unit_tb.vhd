@@ -94,7 +94,7 @@ begin
   end process;
 
 
-  rapid_read_process : process
+  read_process : process
   begin
     wait for 1 ns;
     wait for 100 ns;

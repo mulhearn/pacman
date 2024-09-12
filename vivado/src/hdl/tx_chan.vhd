@@ -9,22 +9,22 @@ entity tx_chan is
     constant C_UART_CHANNEL    : integer  range 0 to C_NUM_UART-1 := 0
   );
   port (
-    ACLK        : in std_logic;
-    ARESETN     : in std_logic;
-    UCLK_I      : in std_logic;
+    ACLK          : in std_logic;
+    ARESETN       : in std_logic;
+    UCLK_I        : in std_logic;
 
-    CONFIG_I    : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    COMMAND_I   : in  std_logic_vector(C_COMMAND_WIDTH-1 downto 0);
-    STATUS_O    : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);    
+    CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+    COMMAND_I     : in  std_logic_vector(C_COMMAND_WIDTH-1 downto 0);
+    STATUS_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);    
+    CYCLES_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+    BUSYS_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+    ACKS_O        : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);    
 
-    --BRAM ACCESS NOT YET IMPLEMENTED
-    -- TURN : in  std_logic_vector(C_RB_ADDR_WIDTH);
+    LOOK_O        : out std_logic_vector(C_TX_CHAN_DATA_WIDTH-1 downto 0);        
+    SEND_I        : in std_logic_vector(C_TX_CHAN_DATA_WIDTH-1 downto 0);
+    TX_O          : out std_logic;
 
-    LOOK_O      : out std_logic_vector(C_TX_CHAN_DATA_WIDTH-1 downto 0);        
-    SEND_I      : in std_logic_vector(C_TX_CHAN_DATA_WIDTH-1 downto 0);
-    TX_O        : out std_logic;
-
-    DEBUG_O     : out  std_logic_vector(15 downto 0)
+    DEBUG_O       : out  std_logic_vector(15 downto 0)
   );
 end;
 
@@ -175,6 +175,7 @@ begin
     end if;
     
     if (rst='1' or rst_q='1' or clear='1') then
+      running       <= '0';          
       valid_seen    <= '0';    
       busy_seen     <= '0';    
       ack_seen      <= '0';    
@@ -214,8 +215,41 @@ begin
     end if;
   end process;
 
-  DEBUG_O(0) <= busy;
-  DEBUG_O(15 downto 1) <= (others => '0');
+
+
+  -- counters --
+  process(clk)
+    variable cycles  : integer := 0;
+    variable busys   : integer := 0;
+    variable acks    : integer := 0;
+  begin
+    if (rst='1' or clear='1') then
+      cycles := 0;
+      busys  := 0;
+      acks   := 0;
+    else
+      if (rising_edge(clk)) then
+        CYCLES_O  <= std_logic_vector(to_unsigned(cycles, C_RB_DATA_WIDTH));
+        BUSYS_O   <= std_logic_vector(to_unsigned(busys,   C_RB_DATA_WIDTH));
+        ACKS_O    <= std_logic_vector(to_unsigned(acks,   C_RB_DATA_WIDTH));
+        if (running='1') then
+          cycles := cycles + 1;
+          if (busy='1') then
+            busys := busys + 1;
+          end if;
+          if (ack='1') then
+            acks := acks + 1;
+          end if;
+        end if;
+      end if;    
+    end if;
+  end process;
+  
+  DEBUG_O(0) <= single;
+  DEBUG_O(1) <= start;
+  DEBUG_O(2) <= stop;
+  DEBUG_O(3) <= clear;
+  DEBUG_O(15 downto 4) <= (others => '0');
   
 end;  
 
