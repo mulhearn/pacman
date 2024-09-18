@@ -55,7 +55,7 @@ if { $obj != {} } {
 set obj [get_filesets sources_1]
 # add all vhd files in src/hdl to project:
 set files {}
-foreach file [glob src/hdl/*.vhd] {lappend files [file normalize $file]}
+foreach file [glob src/hdl/*.vhd src/hdl/demos/*.vhd] {lappend files [file normalize $file]}
 puts "HDL files:  $files"
 add_files -norecurse -fileset sources_1 $files
 #update_compile_order -fileset sources_1

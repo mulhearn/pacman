@@ -7,18 +7,18 @@ library work;
 use work.common.all;
 
 --  Defines a testbench (without any ports)
-entity axis_demo_tb is
-end axis_demo_tb;
+entity axis_write_demo_tb is
+end axis_write_demo_tb;
      
-architecture behaviour of axis_demo_tb is
-  component axis_demo is
+architecture behaviour of axis_write_demo_tb is
+  component axis_write_demo is
     port (
       M_AXIS_ACLK        : in std_logic;
       M_AXIS_ARESETN     : in std_logic;      
       M_AXIS_TDATA       : out std_logic_vector(127 downto 0);      
       M_AXIS_TVALID      : out std_logic;
       M_AXIS_TREADY      : in std_logic;
-      M_AXIS_TKEEP       : out std_logic_vector(3 downto 0);      
+      M_AXIS_TKEEP       : out std_logic_vector(15 downto 0);      
       M_AXIS_TLAST       : out std_logic;
 
       S_REGBUS_RB_RUPDATE : in  std_logic;
@@ -55,7 +55,7 @@ architecture behaviour of axis_demo_tb is
   signal wack     : std_logic;
 
 begin
-  uut: axis_demo port map (
+  uut: axis_write_demo port map (
     M_AXIS_ACLK         => aclk,
     M_AXIS_ARESETN      => aresetn,
     M_AXIS_TDATA        => tdata,

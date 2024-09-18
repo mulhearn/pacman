@@ -3,6 +3,7 @@ all: modules-a modules-e testbenches
 modules-a:
 	ghdl -a common.vhd
 	ghdl -a register_map.vhd
+	ghdl -a ../axi/axis_write.vhd
 	ghdl -a uart_rx.vhd
 	ghdl -a uart_tx.vhd
 	ghdl -a rx_buffer.vhd
@@ -14,6 +15,7 @@ modules-a:
 	ghdl -a tx_chan.vhd
 	ghdl -a tx_unit.vhd
 modules-e:
+	ghdl -e axis_write
 	ghdl -e uart_rx
 	ghdl -e uart_tx
 	ghdl -e rx_buffer
@@ -60,5 +62,4 @@ run:
 	ghdl -r -fsynopsys uart_loopback_tb --stop-time=7000ns
 	ghdl -r -fsynopsys single_shot_tb --stop-time=30000ns
 focus: all
-	ghdl -r -fsynopsys single_shot_tb --stop-time=30000ns
-
+	ghdl -r -fsynopsys rx_unit_tb --stop-time=30000ns

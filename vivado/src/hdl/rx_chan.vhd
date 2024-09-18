@@ -15,15 +15,13 @@ entity rx_chan is
     CONFIG_I    : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     COMMAND_I   : in  std_logic_vector(C_COMMAND_WIDTH-1 downto 0);
     STATUS_O    : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);    
-    CYCLES_O    : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    BUSYS_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    ACKS_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    LOSTS_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);    
-
+    COUNT_O     : out std_logic_vector(C_RX_CHAN_COUNT_WIDTH-1 downto 0);
     
-    --FIFO ACCESS NOT YET IMPLEMENTED
-    -- TURN : in  std_logic_vector();
-    LOOK_O      : out std_logic_vector(C_RX_CHAN_DATA_WIDTH-1 downto 0);        
+    BUSY_I      : in  std_logic;
+    TURN_I      : in  std_logic_vector(C_UART_CHAN_ADDR_WIDTH-1 downto 0);
+    WEN_O       : out std_logic;
+
+    DATA_O      : out std_logic_vector(C_RX_CHAN_DATA_WIDTH-1 downto 0);        
     RX_I        : in  std_logic;
 
     DEBUG_O     : out  std_logic_vector(15 downto 0)
@@ -55,13 +53,14 @@ architecture behavioral of rx_chan is
   
   signal rx          : std_logic;
   signal data        : std_logic_vector(C_RX_CHAN_DATA_WIDTH-1 downto 0) := (others => '0');
-  signal look        : std_logic_vector(C_RX_CHAN_DATA_WIDTH-1 downto 0) := (others => '0');
 
+  signal wen         : std_logic := '0';
+  
   -- RX DATA CONTROL SIGNALS:
   signal valid        : std_logic;
   signal lost         : std_logic;
   signal ack          : std_logic := '0';
-  signal busy         : std_logic;
+  signal mon_busy         : std_logic;
 
   -- COMMANDS:
   signal clear        : std_logic := '0';
@@ -85,6 +84,8 @@ architecture behavioral of rx_chan is
   
 begin
 
+  WEN_O <= wen;
+  
   urx: rx_buffer port map (
     ACLK    => ACLK,
     ARESETN => ARESETN,
@@ -95,16 +96,15 @@ begin
     ACK_I => ack,
     RX_I => rx,
     TIMESTAMP_I => x"00000EE0",
-    CHANNEL_I   => x"11",
-    HEADER_I    => x"44",    
-    MON_BUSY_O => busy
+    CHANNEL_I   => std_logic_vector(to_unsigned(C_UART_CHANNEL,8)),                              
+    HEADER_I    => x"44",     
+    MON_BUSY_O => mon_busy
   );
    
   clk <= ACLK;
   rst   <= not ARESETN;
   rx <= RX_I;
-  LOOK_O <= look;
-
+  
   -- Fill the LOOK buffer as long as the data is valid:  
   process(clk)
     variable mode : integer range 0 to 9 := 0;
@@ -118,38 +118,19 @@ begin
     end if;   
   end process;
 
-  -- Send ack according to the mode:  
   process(clk)
     variable mode : integer range 0 to 9 := 0;
   begin
     mode := to_integer(unsigned(CONFIG_I(14 downto 12)));      
+
     if (rst='1') then
+      wen <= '0';
       ack <= '0';
-      look  <= (others => '0');
-    else
-      if (rising_edge(clk)) then
-        if (mode = 3) then
-          -- Mode 3:  Continuous Acceptance
-          if (ack = '1') then
-            ack <= '0';
-          elsif (valid='1') then
-            look <= data;
-            ack <= '1';
-          end if;
-        elsif (mode = 2) then
-          -- Mode 2:  Single Shot Transmission
-          if (ack='1') then
-            ack <= '0';
-          elsif (single='1' and valid='1') then
-            look <= data;
-            ack <= '1';
-          end if;
-        else
-          -- Mode 0: Disable RX
-          look <= (others => '0');
-          ack <= '0';          
-        end if;
-      end if;
+      DATA_O  <= (others => '0');      
+    else      
+      ack <= '0';
+      wen <= '1';
+      DATA_O <= data;
     end if;   
   end process;
 
@@ -163,7 +144,7 @@ begin
 
     
   STATUS_O(0) <= valid;
-  STATUS_O(1) <= busy;
+  STATUS_O(1) <= mon_busy;
   STATUS_O(2) <= ack;
   STATUS_O(3) <= rx;
 
@@ -203,7 +184,7 @@ begin
         if (valid='1') then
           valid_seen    <= '1';    
         end if;
-        if (busy='1') then
+        if (mon_busy='1') then
           busy_seen    <= '1';    
         end if;
         if (ack='1') then
@@ -243,13 +224,13 @@ begin
       losts  := 0;
     else
       if (rising_edge(clk)) then
-        CYCLES_O  <= std_logic_vector(to_unsigned(cycles, C_RB_DATA_WIDTH));
-        BUSYS_O   <= std_logic_vector(to_unsigned(busys,   C_RB_DATA_WIDTH));
-        ACKS_O    <= std_logic_vector(to_unsigned(acks,   C_RB_DATA_WIDTH));
-        LOSTS_O   <= std_logic_vector(to_unsigned(losts,   C_RB_DATA_WIDTH));
+        COUNT_O(4*C_RB_DATA_WIDTH-1 downto 3*C_RB_DATA_WIDTH) <= std_logic_vector(to_unsigned(cycles, C_RB_DATA_WIDTH));
+        COUNT_O(3*C_RB_DATA_WIDTH-1 downto 2*C_RB_DATA_WIDTH) <= std_logic_vector(to_unsigned(busys,  C_RB_DATA_WIDTH));
+        COUNT_O(2*C_RB_DATA_WIDTH-1 downto 1*C_RB_DATA_WIDTH) <= std_logic_vector(to_unsigned(acks,   C_RB_DATA_WIDTH));
+        COUNT_O(1*C_RB_DATA_WIDTH-1 downto 0*C_RB_DATA_WIDTH) <= std_logic_vector(to_unsigned(losts,  C_RB_DATA_WIDTH));
         if (running='1') then
           cycles := cycles + 1;
-          if (busy='1') then
+          if (mon_busy='1') then
             busys := busys + 1;
           end if;
           if (ack='1') then
@@ -262,7 +243,6 @@ begin
       end if;    
     end if;
   end process;
-
   
   DEBUG_O(0) <= single;
   DEBUG_O(1) <= start;

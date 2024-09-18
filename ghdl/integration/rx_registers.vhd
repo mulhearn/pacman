@@ -21,14 +21,11 @@ entity rx_registers is
     S_REGBUS_RB_WACK    : out  std_logic;
 
     STATUS_I            : in  uart_reg_array_t;
-    CYCLES_I            : in uart_reg_array_t;
-    BUSYS_I             : in uart_reg_array_t;
-    ACKS_I              : in uart_reg_array_t;
-    LOSTS_I             : in uart_reg_array_t;
+    COUNT_I             : in uart_rx_count_array_t;
 
-    CONFIG_O              : out uart_reg_array_t;
-    LOOK_I                : in  uart_rx_data_array_t;
-    COMMAND_O             : out uart_command_array_t
+    CONFIG_O            : out uart_reg_array_t;
+    LOOK_I              : in  uart_rx_data_array_t;
+    COMMAND_O           : out uart_command_array_t
   );
 end;
 
@@ -107,19 +104,19 @@ begin
               rack  <= '1';
             elsif (reg=C_ADDR_RX_LOOK_D) then
               rdata <= LOOK_I(chan)(127 downto 96);
-              rack  <= '1';              
+              rack  <= '1';
             elsif (reg=C_ADDR_RX_CYCLES) then
-              rdata <= CYCLES_I(chan);
+              rdata <= COUNT_I(chan)(4*C_RB_DATA_WIDTH-1 downto 3*C_RB_DATA_WIDTH);
               rack  <= '1';
             elsif (reg=C_ADDR_RX_BUSYS) then
-              rdata <= BUSYS_I(chan);
-              rack  <= '1'; 
+              rdata <= COUNT_I(chan)(3*C_RB_DATA_WIDTH-1 downto 2*C_RB_DATA_WIDTH);
+              rack  <= '1';
             elsif (reg=C_ADDR_RX_ACKS) then
-              rdata <= ACKS_I(chan);
+              rdata <= COUNT_I(chan)(2*C_RB_DATA_WIDTH-1 downto 1*C_RB_DATA_WIDTH);
               rack  <= '1';
             elsif (reg=C_ADDR_RX_LOSTS) then
-              rdata <= LOSTS_I(chan);
-              rack  <= '1';             
+              rdata <= COUNT_I(chan)(1*C_RB_DATA_WIDTH-1 downto 0*C_RB_DATA_WIDTH);
+              rack  <= '1';
             elsif (reg=C_ADDR_RX_NCHAN) then
               rdata <= std_logic_vector(to_unsigned(chan, rdata'length));
               rack  <= '1';

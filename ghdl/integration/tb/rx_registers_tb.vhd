@@ -26,11 +26,8 @@ architecture behaviour of rx_registers_tb is
       S_REGBUS_RB_WDATA	     : in  std_logic_vector(31 downto 0);
       S_REGBUS_RB_WACK       : out std_logic;
 
-      STATUS_I               : in  uart_reg_array_t;
-      CYCLES_I            : in uart_reg_array_t;
-      BUSYS_I             : in uart_reg_array_t;
-      ACKS_I              : in uart_reg_array_t;
-      LOSTS_I             : in uart_reg_array_t;
+      STATUS_I               : in uart_reg_array_t;
+      COUNT_I                : in uart_rx_count_array_t;
 
       CONFIG_O               : out uart_reg_array_t;
       LOOK_I                 : in  uart_rx_data_array_t;
@@ -67,10 +64,7 @@ begin
       S_REGBUS_RB_WACK    => wack,
       STATUS_I => (others => x"11111111"),
       CONFIG_O => config,
-      CYCLES_I => (others => (others=>'0')),
-      BUSYS_I => (others => (others=>'0')),
-      ACKS_I => (others => (others=>'0')),
-      LOSTS_I => (others => (others=>'0')),
+      COUNT_I => (others => (others=>'0')),
       LOOK_I => (others => x"4444DDDD3333CCCC2222BBBB1111AAAA"),
       COMMAND_O => cmd
     );

@@ -210,26 +210,7 @@ begin
   rdata <= mux(racks, rdata_array);
 
   clk <= ACLK;
-    
-  process(clk)
-  begin
-    if (falling_edge(clk)) then
-      rst <= not ARESETN;
-    end if;
-  end process;
+  rst <= not ARESETN;
 
-  --process(clk)
-  --variable scope   : integer;
-  --variable role    : integer;
-  --variable reg     : integer;
-  --begin  
-  --if (rst = '1') then
-       --
-    --elsif (rising_edge(clk)) then
-      --scope := to_integer(unsigned(waddr(15 downto 12)));
-      --role  := to_integer(unsigned(waddr(11 downto 8)));
-      --reg   := to_integer(unsigned(waddr(7 downto 0)));          
-    --end if;
-  --end process;
 end;  
 

@@ -13,6 +13,7 @@ entity registers_scratch is
     C_REG_STAT    : integer  := 16#8#;
     C_REG_ROA     : integer  := 16#C#;
     C_REG_ROB     : integer  := 16#10#;
+    C_VAL_STAT    : unsigned(31 downto 0)  := x"1000F001";
     C_VAL_ROA     : unsigned(31 downto 0)  := x"11111111";
     C_VAL_ROB     : unsigned(31 downto 0)  := x"22222222"
     );      
@@ -52,12 +53,13 @@ architecture behavioral of registers_scratch is
 
   -- registers
   signal scra    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
-  signal scrb    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '1');
+  signal scrb    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal stat    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   
 begin
   DEBUG <= scra;
   clk <= ACLK;
+  rst <= not ARESETN;
   
   --outputs:
   S_REGBUS_RB_RDATA	 <= rdata;
@@ -71,15 +73,8 @@ begin
   waddr    <= S_REGBUS_RB_WADDR;
   wdata    <= S_REGBUS_RB_WDATA;
     
-  process(clk)
-  begin
-    if (falling_edge(clk)) then
-      rst <= not ARESETN;
-    end if;
-  end process;
-
   -- Handle Read Request:
-  process(clk)
+  process(clk,rst)
   variable scope   : integer;
   variable role    : integer;
   variable reg     : integer;
@@ -90,7 +85,7 @@ begin
     else
       if (rising_edge(clk)) then
         if (rupdate='0') then
-          rdata <= x"00000000";
+          --rdata is registered until the next update or reset.
           rack <= '0';
         else
           scope := to_integer(unsigned(raddr(15 downto 12)));
@@ -128,7 +123,7 @@ begin
   end process;
 
   -- Handle Write Request:
-  process(clk)
+  process(clk,rst)
   variable scope   : integer;
   variable role    : integer;
   variable reg     : integer;
@@ -136,6 +131,7 @@ begin
     if (rst = '1') then
       scra <= x"00000000";
       scrb <= x"00000000";
+      stat <= std_logic_vector(C_VAL_STAT);
     else
       if (rising_edge(clk)) then
         if (wupdate='0') then

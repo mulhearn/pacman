@@ -8,6 +8,7 @@ vivado*.log
 *~
 /fsbl
 /hello
+/demo
 /flash
 /hwcheck
 /jtag_boot

@@ -27,6 +27,12 @@ architecture behaviour of rx_unit_tb is
       S_REGBUS_RB_WDATA	     : in  std_logic_vector(31 downto 0);
       S_REGBUS_RB_WACK       : out std_logic;
 
+      M_AXIS_TDATA           : out std_logic_vector(C_RX_CHAN_DATA_WIDTH-1 downto 0);      
+      M_AXIS_TVALID          : out std_logic;
+      M_AXIS_TREADY          : in std_logic;
+      M_AXIS_TKEEP           : out std_logic_vector(C_RX_CHAN_DATA_WIDTH/8-1 downto 0);      
+      M_AXIS_TLAST           : out std_logic;
+
       LOOPBACK_I             : in std_logic_vector(C_NUM_UART-1 downto 0);
       PISO_I                 : in std_logic_vector(C_NUM_UART-1 downto 0);
       --
@@ -47,12 +53,12 @@ architecture behaviour of rx_unit_tb is
   signal wupdate : std_logic := '0';
   signal wdata   : std_logic_vector(31 downto 0) := (others => '0');
   signal wack    : std_logic := '0';  
-
   signal debug  : std_logic_vector(31 downto 0);
-
   signal rx     : std_logic := '1';
-
   signal piso   : std_logic_vector(39 downto 0) := (others=>'1');
+  signal tdata  : std_logic_vector(C_RX_CHAN_DATA_WIDTH-1 downto 0);      
+  signal tvalid : std_logic;
+
   
 begin
   uut0: rx_unit port map (
@@ -66,6 +72,10 @@ begin
     S_REGBUS_RB_WADDR   => waddr,
     S_REGBUS_RB_WDATA   => wdata,
     S_REGBUS_RB_WACK    => wack,
+
+    M_AXIS_TDATA        => tdata,
+    M_AXIS_TVALID       => tvalid,
+    M_AXIS_TREADY       => '1',
     PISO_I              => piso,
     LOOPBACK_I          => piso,
     DEBUG_O             => debug
@@ -148,7 +158,7 @@ begin
     wait for 20 ns;
     wait for 10 ns;
     waddr <= std_logic_vector(to_unsigned(16#00200# + C_ADDR_RX_CONFIG, 16));
-    wdata   <= x"00002001";
+    wdata   <= x"00001001";
     wupdate <= '1';
     wait for 8000 ns;
     waddr <= std_logic_vector(to_unsigned(16#00200# + C_ADDR_RX_COMMAND, 16));
@@ -166,30 +176,44 @@ begin
     variable l : line;
   begin
     wait for 1 ns;
-    --wait for 10 ns;
-    wait for 100 ns;
+    wait for 10 ns;
+    --wait for 100 ns;
     write (l, String'("aclk: "));
     write (l, aclk);
-    write (l, String'(" || ra: 0x"));
-    hwrite (l, raddr);
-    write (l, String'(" ru:"));
-    write (l, rupdate);
-    write (l, String'(" rd: 0x"));
-    hwrite (l, rdata);
-    write (l, String'(" rk:"));
-    write (l, rack);
-    write (l, String'(" || wa: 0x"));
-    hwrite (l, waddr);
-    write (l, String'(" wu:"));
-    write (l, wupdate);
-    write (l, String'(" wd: 0x"));
-    hwrite (l, wdata);
-    write (l, String'(" wk: "));
-    write (l, wack);
+    --write (l, String'(" || ra: 0x"));
+    --hwrite (l, raddr);
+    --write (l, String'(" ru:"));
+    --write (l, rupdate);
+    --write (l, String'(" rd: 0x"));
+    --hwrite (l, rdata);
+    --write (l, String'(" rk:"));
+    --write (l, rack);
+    --write (l, String'(" || wa: 0x"));
+    --hwrite (l, waddr);
+    --write (l, String'(" wu:"));
+    --write (l, wupdate);
+    --write (l, String'(" wd: 0x"));
+    --hwrite (l, wdata);
+    --write (l, String'(" wk: "));
+    --write (l, wack);
     --write (l, String'(" posi: "));
     --hwrite (l, posi);
     --write (l, String'(" 0: "));
     --write (l, posi(0));
+    write (l, String'(" td: 0x"));
+    hwrite (l, tdata);
+    write (l, String'(" tv: 0x"));
+    write (l, tvalid);
+    write (l, String'(" t: 0x"));
+    hwrite (l, debug(7 downto 0));
+    write (l, String'(" d0: 0x"));
+    hwrite (l, debug(15 downto 8));
+    write (l, String'(" dt: 0x"));
+    hwrite (l, debug(23 downto 16));
+    write (l, String'(" w0: "));
+    write (l, debug(24));
+    write (l, String'(" wt: "));
+    write (l, debug(25));
     if (aresetn = '0') then
       write (l, String'(" (RESET)"));
     end if;

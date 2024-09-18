@@ -3,46 +3,54 @@ use std.textio.all;
 use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
 use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08 
-library work;
-use work.common.all;
 
 --  Defines a testbench (without any ports)
 entity axis_write_tb is
+  generic (
+    constant C_AXIS_WIDTH  : integer  := 32;
+    constant C_DEBUG_WIDTH : integer  := 8
+    );
+begin
+  assert(C_AXIS_WIDTH >= 16) severity failure; -- Assumed for test output  
 end axis_write_tb;
      
 architecture behaviour of axis_write_tb is
   component axis_write is
+    generic (
+      constant C_AXIS_WIDTH  : integer  := C_AXIS_WIDTH;
+      constant C_DEBUG_WIDTH : integer  := C_DEBUG_WIDTH
+    );
     port (
       M_AXIS_ACLK        : in std_logic;
       M_AXIS_ARESETN     : in std_logic;
       
-      M_AXIS_TDATA       : out std_logic_vector(127 downto 0);      
+      M_AXIS_TDATA       : out std_logic_vector(C_AXIS_WIDTH-1 downto 0);      
       M_AXIS_TVALID      : out std_logic;
       M_AXIS_TREADY      : in std_logic;
       
-      M_AXIS_TKEEP       : out std_logic_vector(3 downto 0);      
+      M_AXIS_TKEEP       : out std_logic_vector(C_AXIS_WIDTH/8-1 downto 0);      
       M_AXIS_TLAST       : out std_logic;
       
       BUSY_O             : out std_logic;
       WEN_I              : in  std_logic;
       LAST_I             : in  std_logic;    
-      DATA_I             : in  std_logic_vector(127 downto 0);
-      DEBUG_O            : out std_logic_vector(7 downto 0)
-    );  
+      DATA_I             : in  std_logic_vector(C_AXIS_WIDTH-1 downto 0);
+      DEBUG_O            : out std_logic_vector(C_DEBUG_WIDTH-1 downto 0)
+      );
   end component;
 
   signal aclk     : std_logic;
   signal aresetn  : std_logic;
   
-  signal odat     : std_logic_vector(127 downto 0);      
+  signal odat     : std_logic_vector(C_AXIS_WIDTH-1 downto 0);      
   signal val      : std_logic;
   signal rdy      : std_logic;
   signal last     : std_logic;
   
   signal busy     : std_logic;
   signal wen      : std_logic;
-  signal idat     : std_logic_vector(127 downto 0);
-  signal debug    : std_logic_vector(7 downto 0);
+  signal idat     : std_logic_vector(C_AXIS_WIDTH-1 downto 0);
+  signal debug    : std_logic_vector(C_DEBUG_WIDTH-1 downto 0);
     
 begin
   uut: axis_write port map (

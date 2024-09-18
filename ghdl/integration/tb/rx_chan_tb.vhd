@@ -18,12 +18,13 @@ architecture behaviour of rx_chan_tb is
       CONFIG_I    : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       COMMAND_I   : in  std_logic_vector(C_COMMAND_WIDTH-1 downto 0);
       STATUS_O    : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      CYCLES_O    : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      BUSYS_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      ACKS_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      LOSTS_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);    
+      COUNT_O     : out std_logic_vector(C_RX_CHAN_COUNT_WIDTH-1 downto 0);
 
-      LOOK_O      : out std_logic_vector(C_RX_CHAN_DATA_WIDTH-1 downto 0);        
+      BUSY_I      : in  std_logic;
+      TURN_I      : in  std_logic_vector(C_UART_CHAN_ADDR_WIDTH-1 downto 0);
+      WEN_O       : out std_logic;
+      
+      DATA_O      : out std_logic_vector(C_RX_CHAN_DATA_WIDTH-1 downto 0);        
       RX_I        : in  std_logic;
       DEBUG_O     : out  std_logic_vector(15 downto 0)
     );  
@@ -32,10 +33,11 @@ architecture behaviour of rx_chan_tb is
   signal aclk      : std_logic;
   signal uclk      : std_logic;
   signal aresetn   : std_logic;
+  signal wen       : std_logic;
   signal config    : std_logic_vector(31  downto 0)  := x"00000601";  
   signal command   : std_logic_vector(7 downto 0);
   signal status    : std_logic_vector(31  downto 0) := (others => '0');    
-  signal look      : std_logic_vector(127 DOWNTO 0);
+  signal data      : std_logic_vector(127 DOWNTO 0);
   signal rx        : std_logic := '1';
   signal debug     : std_logic_vector(15 downto 0);
   
@@ -46,7 +48,10 @@ begin
     CONFIG_I   => config,
     COMMAND_I  => command,
     STATUS_O   => status,
-    LOOK_O     => look,
+    BUSY_I     => '0',
+    TURN_I     => (others => '0'),
+    WEN_O      => wen,
+    DATA_O     => data,
     RX_I       => rx,
     DEBUG_O    => debug
   );
@@ -77,7 +82,7 @@ begin
   
   config_process : process
   begin
-    config <= x"00002001";  
+    config <= x"00001001";  
     wait;
   end process;
 
@@ -96,7 +101,7 @@ begin
     end if;
   end process;
 
-  look_process : process
+  data_process : process
   begin
     command <= x"00";
     wait for 7500 ns;
@@ -131,8 +136,10 @@ begin
     write (l, status(1));
     write  (l, String'(" a: "));
     write (l, status(2));
-write  (l, String'(" || look: 0x"));
-    hwrite (l, look);
+write  (l, String'(" || data: 0x"));
+    hwrite (l, data);
+    write  (l, String'(" wen: "));
+    write  (l, wen);    
     write  (l, String'(" rx: "));
     write  (l, rx);
     write  (l, String'(" s: "));

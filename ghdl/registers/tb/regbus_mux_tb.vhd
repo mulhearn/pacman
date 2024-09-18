@@ -61,7 +61,8 @@ architecture behaviour of regbus_mux_tb is
 
   signal show_write : std_logic := '0';
   signal show_read  : std_logic := '1';
-  
+
+  signal count    : integer := 0;
   signal aclk     : std_logic;
   signal aresetn  : std_logic;
   -- secondary interface:
@@ -152,6 +153,7 @@ begin
   
   aclk_process : process
   begin
+    count <= count + 1;    
     aclk <= '1';
     wait for 5 ns;
     aclk <= '0';
@@ -283,7 +285,14 @@ begin
     variable l : line;
   begin
     --wait for 1 ns;
-    wait for 10 ns;
+    if (count < 10) then
+      wait for 10 ns;
+    else
+      wait;
+    end if;
+    
+    write (l, String'("c: "));
+    write (l, count, left, 4);  
     write (l, String'("aclk: "));
     write (l, aclk);
     if (show_read='1') then

@@ -25,40 +25,43 @@ architecture behaviour of tx_buffer_tb is
     );  
   end component;
 
-  signal aclk      : std_logic;
-  signal uclk     : std_logic;
+  signal count    : integer := 0;
+  signal aclk     : std_logic;
   signal aresetn  : std_logic;
+  signal uclk     : std_logic;
   signal config   : std_logic_vector(11 downto 0) := x"601";  
   signal data     : std_logic_vector(63 DOWNTO 0) := (others => '0');
   signal valid    : std_logic := '0';
   signal ack      : std_logic;
-  signal debug    : std_logic_vector(15 DOWNTO 0);
   signal tx       : std_logic;
   signal busy     : std_logic;
+  signal debug    : std_logic_vector(15 DOWNTO 0);
+
 begin
   uut: tx_buffer port map (
-    ACLK => aclk,
-    ARESETN => aresetn,
-    UCLK_I => uclk,
-    CONFIG_I => config,
-    DATA_I => data,
-    VALID_I => valid,
-    ACK_O => ack,
-    TX_O => tx,   
+    ACLK       => aclk,
+    ARESETN    => aresetn,
+    UCLK_I     => uclk,
+    CONFIG_I   => config,
+    DATA_I     => data,
+    VALID_I    => valid,
+    ACK_O      => ack,
+    TX_O       => tx,   
     MON_BUSY_O => busy,    
-    DEBUG_O => debug    
-  );
+    DEBUG_O    => debug    
+    );
 
   aresetn_process : process
   begin
     aresetn <= '0';
-    wait for 20 ns;
+    wait for 10 ns;
     aresetn <= '1';
     wait;
   end process;
   
   aclk_process : process
   begin
+    count <= count + 1;
     aclk <= '1';
     wait for 5 ns;
     aclk <= '0';
@@ -96,12 +99,19 @@ begin
     variable l : line;
   begin
     --wait for 1 ns;
-    wait for 10 ns;
-    --wait for 100 ns;
-    write  (l, String'("aclk: "));
-    write  (l, aclk);
-    write  (l, String'(" uclk: "));
-    write  (l, uclk);
+    if (count < 10) then
+      wait for 10 ns;
+    elsif (count < 1400) then
+      wait for 100 ns;    
+    else
+      wait;
+    end if;
+    write (l, String'("c: "));
+    write (l, count, left, 4);  
+    --write  (l, String'("aclk: "));
+    --write  (l, aclk);
+    --write  (l, String'(" uclk: "));
+    --write  (l, uclk);
     write  (l, String'(" || txdata: 0x"));
     hwrite (l, data(7 downto 0));
     write  (l, String'(" valid: "));
@@ -114,7 +124,6 @@ begin
     write  (l, tx);
     write  (l, String'(" || busy: "));
     write  (l, debug(1));
-
     
     if (aresetn = '0') then
       write (l, String'(" (RESET)"));

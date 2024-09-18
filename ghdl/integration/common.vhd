@@ -11,6 +11,11 @@ package common is
   constant C_RB_DATA_WIDTH       : integer  := 32;
   constant C_RB_ADDR_WIDTH       : integer  := 16;
 
+  -- DMA stream data widths:
+  constant C_TX_AXIS_WIDTH     : integer    := 512;
+  constant C_TX_AXIS_BEATS     : integer    := 5;
+  constant C_RX_AXIS_WIDTH     : integer    := 128;
+  
   constant C_NUM_UART              : integer  := 40;
   constant C_UART_DATA_WIDTH       : integer  := 64;
   constant C_TX_CHAN_DATA_WIDTH    : integer  := C_UART_DATA_WIDTH;

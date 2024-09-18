@@ -142,8 +142,9 @@ void check_dma(){
   unsigned rx_base = 0x1100000;
   u32 *rx_buf = (u32 *)rx_base;
   unsigned timeout;
-  unsigned bytes = 4; // bytes per word
-  unsigned words = 16*4; // words per packet
+  unsigned bytes = 4; // bytes per word (32 bit words)
+  unsigned words = 4; // words per reponse (128 bit responses)
+  unsigned responses = 32; // responses per packet 
   unsigned packets = 1024; // packets to read
   XTime start_time;
   XTime stop_time;
@@ -158,15 +159,15 @@ void check_dma(){
   dma_status();
   start_demo(0xF);
 
-  for (int i=0; i<words*packets; i++)
+  for (int i=0; i<packets*responses*words; i++)
     rx_buf[i] = 0x0;  
-  Xil_DCacheFlushRange((UINTPTR)rx_buf, packets*words*bytes);
+  Xil_DCacheFlushRange((UINTPTR)rx_buf, packets*responses*words*bytes);
 
   XTime_GetTime(&start_time);
   
   for (int i=0;i<packets; i++){
-    Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x48, (u32) &rx_buf[words*i]);
-    Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x58, words*bytes);
+    Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x48, (u32) &rx_buf[responses*words*i]);
+    Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x58, responses*words*bytes);
     
     timeout = 10000;
     while(timeout){
@@ -183,24 +184,32 @@ void check_dma(){
   }
   XTime_GetTime(&stop_time);
   
-  Xil_DCacheInvalidateRange((UINTPTR) rx_buf, packets*words*bytes);
+  Xil_DCacheInvalidateRange((UINTPTR) rx_buf, packets*responses*words*bytes);
 
 
   stop_demo();
   reset_dma();
   
-  for (int i=0; i<packets*words; i++){
+  for (int i=0; i<packets*responses*words; i++){
     xil_printf("received[%d]:  0x%x\r\n", i, rx_buf[i]);
     if (i==5*words) {
       xil_printf("...\r\n");
-      i=(packets-5)*words; 
+      i=(packets*responses*words - 5*words); 
     }  
   }
 
   u32 delta = (u32) (stop_time - start_time);
   xil_printf("elapsed timer counts:    %d (0x%x)\r\n", delta, delta);
   xil_printf("counts per second:       %d\r\n", COUNTS_PER_SECOND);
-  xil_printf("packets:                 %d\r\n", packets);  
+  xil_printf("reponses per packet:     %d\r\n", responses);  
+  xil_printf("packets:                 %d\r\n", packets);
+
+
+  unsigned r = ((COUNTS_PER_SECOND / 1000) * responses / delta ) * packets;
+  unsigned m = 40*10000/64;
+  xil_printf("achieved throughput:  %d responses (128-bit) per ms\r\n", r);
+  xil_printf("maximum demand:       %d responses (128-bit) per ms\r\n", m);
+  
 }
 
 		

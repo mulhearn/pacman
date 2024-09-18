@@ -4,46 +4,56 @@ use ieee.std_logic_1164.all;
 library work;
 use work.common.all;
 
-entity axis_demo is
+entity axis_write_demo is
+  generic (
+    constant C_AXIS_WIDTH  : integer  := C_RX_AXIS_WIDTH;
+    constant C_DEBUG_WIDTH : integer  := 8;
+    constant C_DATA_WIDTH  : integer  := C_RB_DATA_WIDTH;
+    constant C_ADDR_WIDTH  : integer  := C_RB_ADDR_WIDTH
+  );  
   port (
     M_AXIS_ACLK         : in std_logic;
     M_AXIS_ARESETN      : in std_logic;      
-    M_AXIS_TDATA        : out std_logic_vector(127 downto 0);      
+    M_AXIS_TDATA        : out std_logic_vector(C_AXIS_WIDTH-1 downto 0);      
     M_AXIS_TVALID       : out std_logic;
     M_AXIS_TREADY       : in std_logic;
-    M_AXIS_TKEEP        : out std_logic_vector(3 downto 0);      
+    M_AXIS_TKEEP        : out std_logic_vector(15 downto 0);      
     M_AXIS_TLAST        : out std_logic;
 
     S_REGBUS_RB_RUPDATE : in  std_logic;
-    S_REGBUS_RB_RADDR   : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
-    S_REGBUS_RB_RDATA   : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);      
+    S_REGBUS_RB_RADDR   : in  std_logic_vector(C_ADDR_WIDTH-1 downto 0);
+    S_REGBUS_RB_RDATA   : out std_logic_vector(C_DATA_WIDTH-1 downto 0);      
     S_REGBUS_RB_RACK    : out  std_logic;
     
     S_REGBUS_RB_WUPDATE : in  std_logic;
-    S_REGBUS_RB_WADDR   : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
-    S_REGBUS_RB_WDATA   : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+    S_REGBUS_RB_WADDR   : in  std_logic_vector(C_ADDR_WIDTH-1 downto 0);
+    S_REGBUS_RB_WDATA   : in  std_logic_vector(C_DATA_WIDTH-1 downto 0);
     S_REGBUS_RB_WACK    : out  std_logic;
 
-    REGA_I              : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    REGB_I              : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+    REGA_I              : in  std_logic_vector(C_DATA_WIDTH-1 downto 0);
+    REGB_I              : in  std_logic_vector(C_DATA_WIDTH-1 downto 0)
   );
-end axis_demo;
+end axis_write_demo;
      
-architecture behaviour of axis_demo is
+architecture behaviour of axis_write_demo is
   component axis_write is
+    generic (
+      constant C_AXIS_WIDTH  : integer  := C_AXIS_WIDTH;
+      constant C_DEBUG_WIDTH : integer  := C_DEBUG_WIDTH
+    );  
     port (
-      M_AXIS_ACLK        : in std_logic;
-      M_AXIS_ARESETN     : in std_logic;    
-      M_AXIS_TDATA       : out std_logic_vector(127 downto 0);      
+      M_AXIS_ACLK        : in  std_logic;
+      M_AXIS_ARESETN     : in  std_logic;    
+      M_AXIS_TDATA       : out std_logic_vector(C_AXIS_WIDTH-1 downto 0);      
       M_AXIS_TVALID      : out std_logic;
-      M_AXIS_TREADY      : in std_logic;
-      M_AXIS_TKEEP       : out std_logic_vector(3 downto 0);      
+      M_AXIS_TREADY      : in  std_logic;
+      M_AXIS_TKEEP       : out std_logic_vector(C_AXIS_WIDTH/8-1 downto 0);      
       M_AXIS_TLAST       : out std_logic;      
       BUSY_O             : out std_logic;
       WEN_I              : in  std_logic;
       LAST_I             : in  std_logic;    
-      DATA_I             : in  std_logic_vector(127 downto 0);
-      DEBUG_O            : out std_logic_vector(7 downto 0)
+      DATA_I             : in  std_logic_vector(C_AXIS_WIDTH-1 downto 0);
+      DEBUG_O            : out std_logic_vector(C_DEBUG_WIDTH-1 downto 0)
     );  
   end component;
 
@@ -52,20 +62,19 @@ architecture behaviour of axis_demo is
   signal busy     : std_logic;
   signal wen      : std_logic := '0';
   signal last     : std_logic := '0';    
-  signal idat     : std_logic_vector(127 downto 0) := (others => '0');
-
+  signal idat     : std_logic_vector(C_AXIS_WIDTH-1 downto 0) := (others => '0');
 
   signal rupdate  : std_logic;
-  signal raddr    : std_logic_vector(15 downto 0) := (others => '0');
-  signal rdata    : std_logic_vector(31 downto 0) := (others => '0');
+  signal raddr    : std_logic_vector(C_ADDR_WIDTH-1 downto 0) := (others => '0');
+  signal rdata    : std_logic_vector(C_DATA_WIDTH-1 downto 0) := (others => '0');
   signal rack     : std_logic;
 
   signal wupdate  : std_logic;
-  signal waddr    : std_logic_vector(15 downto 0) := (others => '0');
-  signal wdata    : std_logic_vector(31 downto 0) := (others => '0');
+  signal waddr    : std_logic_vector(C_ADDR_WIDTH-1 downto 0) := (others => '0');
+  signal wdata    : std_logic_vector(C_DATA_WIDTH-1 downto 0) := (others => '0');
   signal wack     : std_logic;
 
-  signal config   : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
+  signal config   : std_logic_vector(C_DATA_WIDTH-1 downto 0) := (others => '0');
 
 begin
   uut: axis_write port map (
@@ -108,7 +117,7 @@ begin
       else
         wen <= '1';
         idat <= std_logic_vector(to_unsigned(count, idat'length));
-        if ((std_logic_vector(to_unsigned(count, 16)) and config(31 downto 16)) = x"0000") then
+        if ((std_logic_vector(to_unsigned(count, 16)) and config(C_DATA_WIDTH-1 downto 16)) = x"0000") then
           last <= '1';
         else
           last <= '0';
