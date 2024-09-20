@@ -18,6 +18,14 @@ void read_demo_reg(){
   
 }
 
+
+void send_ready(){
+  xil_printf("Sending ready to clear valid TX buffer \r\n");
+  Xil_Out32(ADDR_AXIL_REGS+0x0204,0x0);
+}
+
+
+
 void dma_status(){
   unsigned cr, sr;
   cr = Xil_In32(XPAR_AXI_DMA_0_BASEADDR+0x30);
@@ -167,6 +175,9 @@ void check_dma(){
   
   for (int i=0;i<packets; i++){
 
+    // send ready:
+    Xil_Out32(ADDR_AXIL_REGS+0x0204,0x0);
+
     Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x18, ((u32) tx_buf)+i*payloads*words*bytes);
     Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x28, payloads*words*4);
 
@@ -209,9 +220,9 @@ int main(){
   
   while(1){
     xil_printf("choose an option:\r\n");
-    xil_printf("(1) read demo registers (2) DMA status \r\n");
-    xil_printf("(3) reset DMA (4) single DMA write \r\n");
-    xil_printf("(5) run DMA benchmark \r\n");
+    xil_printf("(1) read demo registers (2) send READY (3) DMA status \r\n");
+    xil_printf("(4) reset DMA (5) single DMA write \r\n");
+    xil_printf("(6) run DMA benchmark \r\n");
       
     unsigned char c=inbyte();
     xil_printf("pressed:  %c\n\r", c);
@@ -219,16 +230,19 @@ int main(){
     case '1':
       read_demo_reg();
       break;
-    case '2':
-      dma_status();
+   case '2':
+      send_ready();
       break;
     case '3':
-      reset_dma();
+      dma_status();
       break;
     case '4':
-      single_write_dma();
+      reset_dma();
       break;
     case '5':
+      single_write_dma();
+      break;
+    case '6':
       check_dma();
       break;
     default:

@@ -94,7 +94,7 @@ begin
     wait for 20 ns;
     raddr   <= x"0200";
     rupdate <= '1';
-    wait for 50 ns;
+    wait for 60 ns;
     raddr   <= x"0000";
     rupdate <= '1';
     wait for 10 ns;
@@ -110,13 +110,26 @@ begin
     raddr   <= x"0100";
     rupdate <= '1';    
     wait for 10 ns;
-    raddr   <= x"0000";
-    rupdate <= '0';    
+    raddr   <= x"0200";
+    rupdate <= '1';    
     wait;
   end process;
 
-  
   write_process : process
+  begin
+    wait for 1 ns;
+    wait for 130 ns;
+    waddr   <= x"0204";
+    wdata   <= (others => '0');
+    wupdate <= '1';
+    wait for 60 ns;
+    waddr   <= x"0000";
+    wdata   <= (others => '0');
+    wupdate <= '0';
+    wait;
+  end process;
+  
+  stream_process : process
   begin
     wait for 1 ns;
     wait for 20 ns;
@@ -142,7 +155,7 @@ begin
     wait for 10 ns;
     tdata(15 downto 0) <= x"0000";
     tvalid <= '0';
-    tlast  <= '0';    
+    tlast  <= '0';
     wait;
   end process;
   

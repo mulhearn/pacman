@@ -70,8 +70,8 @@ BEGIN  -- ARCHITECTURE uart_tx_arch
     if (RST = '1') then -- asynchronous reset (active high)
       state <= IDLE;
       tx_out <= '1';
-      busy_out <= '1';
-
+      busy_out <= '0'; -- mm change
+      
     elsif (rising_edge(CLK)) then
       case state is
         when IDLE =>
@@ -79,7 +79,7 @@ BEGIN  -- ARCHITECTURE uart_tx_arch
           srg <= '1' & data & '0';
           if (data_update = '1') then
             state <= WT;
-            busy_out <= '1';
+            --mm change: keep busy low during IDLE
             bit_cnt <= to_unsigned(DATA_WIDTH + 2, bit_cnt'length);
             baud_cnt <= to_unsigned(0, baud_cnt'length);
             phase_cnt <= unsigned(CLKOUT_PHASE);

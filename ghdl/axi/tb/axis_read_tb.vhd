@@ -34,7 +34,8 @@ architecture behaviour of axis_read_tb is
       S_AXIS_TLAST       : in std_logic;
     
       DATA_O             : out std_logic_vector(C_AXIS_WIDTH*C_AXIS_BEATS-1 downto 0);
-      VAL_O              : out std_logic
+      VALID_O            : out std_logic;
+      READY_I            : in std_logic
     );  
   end component;
 
@@ -59,7 +60,8 @@ begin
     S_AXIS_TKEEP    => (others=>'1'),
     S_AXIS_TLAST    => tlast,
     DATA_O          => odat,
-    VAL_O           => oval
+    VALID_O         => oval,
+    READY_I         => '0'
   );
   
   aresetn_process : process

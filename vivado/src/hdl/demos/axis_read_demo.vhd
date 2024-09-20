@@ -50,7 +50,8 @@ architecture behaviour of axis_read_demo is
       S_AXIS_TLAST       : in std_logic;
       
       DATA_O             : out std_logic_vector(C_AXIS_WIDTH*C_AXIS_BEATS-1 downto 0);
-      VAL_O              : out std_logic
+      VALID_O            : out std_logic;
+      READY_I            : in std_logic
       );  
   end component;
 
@@ -67,8 +68,9 @@ architecture behaviour of axis_read_demo is
   signal wdata    : std_logic_vector(31 downto 0) := (others => '0');
   signal wack     : std_logic;
   
-  signal odat     : std_logic_vector(C_AXIS_WIDTH*C_AXIS_BEATS-1 downto 0);
-  signal oval     : std_logic; 
+  signal pdata    : std_logic_vector(C_AXIS_WIDTH*C_AXIS_BEATS-1 downto 0);
+  signal pvalid   : std_logic;
+  signal pready   : std_logic; 
 
   signal stat     : std_logic_vector(C_DATA_WIDTH-1 downto 0) := (others => '0');
 begin
@@ -80,8 +82,9 @@ begin
     S_AXIS_TREADY   => S_AXIS_TREADY,
     S_AXIS_TKEEP    => S_AXIS_TKEEP,
     S_AXIS_TLAST    => S_AXIS_TLAST,
-    DATA_O          => odat,
-    VAL_O           => oval
+    DATA_O          => pdata,
+    VALID_O         => pvalid,
+    READY_I         => pready
   );
   
   clk <= S_AXIS_ACLK;
@@ -98,7 +101,7 @@ begin
   S_REGBUS_RB_WACK <= wack;
 
 
-  stat(0) <= oval;
+  stat(0) <= pvalid;
   stat(C_DATA_WIDTH-1 downto 1) <= (others => '0');
   
   -- Handle Read Request:
@@ -119,7 +122,7 @@ begin
           if (reg < 16#200#) then
             word := to_integer(unsigned(raddr(8 downto 2)));
             if (word < 80) then
-              rdata <= odat((word+1)*C_DATA_WIDTH-1 downto word*C_DATA_WIDTH);
+              rdata <= pdata((word+1)*C_DATA_WIDTH-1 downto word*C_DATA_WIDTH);
               rack  <= '1';
             else
               rdata <= x"EEEEEEEE";
@@ -137,11 +140,30 @@ begin
     end if;
   end process;
 
-  -- No Register Writes:
-  wack <= '0';
-
-  
-
+  -- Handle Write Request:
+  process(clk)
+  variable reg     : integer;
+  begin  
+    if (rst = '1') then
+      pready <= '0';
+      wack   <= '0';          
+    else
+      if (rising_edge(clk)) then
+        pready <= '0';
+        wack   <= '0';          
+        if (wupdate <= '1') then
+          reg   := to_integer(unsigned(waddr(11 downto 0)));          
+          if (reg=16#204#) then
+            pready <= '1';
+            wack  <= '1';
+          else
+            -- this is an error, invalid register
+            wack  <= '0';
+          end if;
+        end if;
+      end if;   
+    end if;
+  end process;
   
 end behaviour;
         
