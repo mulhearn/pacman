@@ -54,6 +54,18 @@ architecture behaviour of regbus_mux_tb is
       PC_REGBUS_RB_WADDR   : out  std_logic_vector(15 downto 0);
       PC_REGBUS_RB_WDATA   : out  std_logic_vector(31 downto 0);
       PC_REGBUS_RB_WACK    : in   std_logic;
+      
+      -- Primary D REGBUS
+      PD_REGBUS_RB_RUPDATE : out  std_logic;
+      PD_REGBUS_RB_RADDR   : out  std_logic_vector(15 downto 0);
+      PD_REGBUS_RB_RDATA   : in   std_logic_vector(31 downto 0);      
+      PD_REGBUS_RB_RACK    : in   std_logic;
+    
+      PD_REGBUS_RB_WUPDATE : out  std_logic;
+      PD_REGBUS_RB_WADDR   : out  std_logic_vector(15 downto 0);
+      PD_REGBUS_RB_WDATA   : out  std_logic_vector(31 downto 0);
+      PD_REGBUS_RB_WACK    : in   std_logic;
+
       --
       DEBUG               : out  std_logic_vector(31 downto 0)
     );
@@ -102,6 +114,15 @@ architecture behaviour of regbus_mux_tb is
   signal c_wdata   : std_logic_vector(31 downto 0) := (others => '0');
   signal c_wack    : std_logic := '0';  
 
+  signal d_raddr   : std_logic_vector(15 downto 0) := (others => '0');
+  signal d_rupdate : std_logic := '0';
+  signal d_rdata   : std_logic_vector(31 downto 0);
+  signal d_rack    : std_logic := '0';
+  signal d_waddr   : std_logic_vector(15 downto 0) := (others => '0');
+  signal d_wupdate : std_logic := '0';
+  signal d_wdata   : std_logic_vector(31 downto 0) := (others => '0');
+  signal d_wack    : std_logic := '0';  
+
 begin
   uut: regbus_mux port map (
       ACLK           => aclk,
@@ -140,7 +161,16 @@ begin
       PC_REGBUS_RB_WUPDATE => c_wupdate,
       PC_REGBUS_RB_WADDR   => c_waddr,
       PC_REGBUS_RB_WDATA   => c_wdata,
-      PC_REGBUS_RB_WACK    => c_wack
+      PC_REGBUS_RB_WACK    => c_wack,
+
+      PD_REGBUS_RB_RUPDATE => d_rupdate,
+      PD_REGBUS_RB_RADDR   => d_raddr,
+      PD_REGBUS_RB_RDATA   => d_rdata,
+      PD_REGBUS_RB_RACK    => d_rack,
+      PD_REGBUS_RB_WUPDATE => d_wupdate,
+      PD_REGBUS_RB_WADDR   => d_waddr,
+      PD_REGBUS_RB_WDATA   => d_wdata,
+      PD_REGBUS_RB_WACK    => d_wack
       );
   
   aresetn_process : process
@@ -217,6 +247,9 @@ begin
     c_rdata   <= x"00000000";
     c_rack    <= '0';
     c_wack    <= '0';    
+    d_rdata   <= x"00000000";
+    d_rack    <= '0';
+    d_wack    <= '0';    
     wait for 20 ns;
     a_rdata   <= x"00000000";
     a_rack    <= '0';

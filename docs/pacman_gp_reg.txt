@@ -3,7 +3,42 @@ A proposal to organize the PACMAN register space.
 The general purpose PACMAN 32-bit registers are organized in one AXI
 LITE 16-bit address space.
 
-The registers are arranged in a hierachical structure:
+The registers are arranged in a hierachical structure, with the first
+four bits determining the SCOPE:
+
+SCOPE (4 bits) ADDR(15 downto 12)
+
+1111 Global
+1110 Timing System
+1101 (Reserved)
+1100 (Reserved)
+01XX UART RX
+00XX UART TX
+
+Within the UART TX/TX SCOPE, the lower two bits of the scope combine with the next four bits define the channel:
+
+CHANNEL (6 bits) ADDR (13 downto 8)
+
+Within the Global SCOPE, the next four bits determine the role.  The GLOBAL roles are:
+
+1111 Global
+1110 ADC
+
+with remaining roles reserved.
+
+Within all scopes and roles, the lower 8-bits are the REGISTER.  The
+interpretation of REGISTER is scope and role dependent.
+
+
+
+
+
+
+
+
+
+PREVIOUS VERSION:
+
 
 SCOPE (4 bits, values 0-15)  ADDR(15 downto 12)
 ROLE  (4 bits, values 0-15)  ADDR(11 downto 8)

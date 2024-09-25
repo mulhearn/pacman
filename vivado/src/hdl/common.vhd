@@ -3,9 +3,10 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 package common is
-  
-  constant C_BYTE                : integer  := 8;
 
+  constant C_NUM_TILE          : integer  := 10;
+  constant C_NUM_UART          : integer  := 40;
+  
   -- register bus data is 32 bits, address 16 bits.
   constant C_RB_DATA_WIDTH       : integer  := 32;
   constant C_RB_ADDR_WIDTH       : integer  := 16;
@@ -15,7 +16,7 @@ package common is
   constant C_TX_AXIS_BEATS     : integer    := 21;
   constant C_RX_AXIS_WIDTH     : integer    := 128;
 
-  constant C_NUM_UART          : integer  := 40;
+
   constant C_UART_DATA_WIDTH   : integer  := 64;
   constant C_TX_DATA_WIDTH     : integer  := C_UART_DATA_WIDTH;
   constant C_RX_DATA_WIDTH     : integer  := 2*C_UART_DATA_WIDTH;
@@ -40,6 +41,6 @@ package common is
   constant C_TX_GFLAGS_WIDTH : integer  := 2;
   constant C_RX_GFLAGS_WIDTH : integer  := 2;
   
-
+  constant C_BYTE              : integer  := 8;
   
 end package common;

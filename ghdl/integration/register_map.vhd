@@ -4,7 +4,33 @@ use ieee.numeric_std.all;
 
 package register_map is
 
-  -- Lower (8-BIT) Offset Registers (R = 0bRRRRRRRR)
+  -- Top Level SCOPE (4 - bits)
+  constant C_SCOPE_GLOBAL  : integer := 2#1111#;
+  constant C_SCOPE_UART_TX : integer := 2#00#;   -- UART_TX = 00XX
+  constant C_SCOPE_UART_RX : integer := 2#01#;   -- UART_RX = 01XX 
+
+  -- ROLES (next 4-bits) within the GLOBAL SCOPE:
+  constant C_ROLE_GLOBAL   : integer := 2#1111#;
+  constant C_ROLE_TIMING   : integer := 2#1110#; 
+  constant C_ROLE_ADC      : integer := 2#1101#;
+
+  -- Registers with SCOPE=GLOBAL ROLE=GLOBAL
+  constant C_ADDR_GLOBAL_SCRA      : integer := 16#00#;
+  constant C_ADDR_GLOBAL_SCRB      : integer := 16#04#;
+
+  constant C_ADDR_GLOBAL_FW_MAJOR  : integer := 16#10#; -- Read Only
+  constant C_ADDR_GLOBAL_FW_MINOR  : integer := 16#14#; -- Read Only
+  constant C_ADDR_GLOBAL_FW_BUILD  : integer := 16#18#; -- Read Only
+  constant C_ADDR_GLOBAL_HW_CODE   : integer := 16#1C#; -- Read Only
+
+  constant C_ADDR_GLOBAL_ENABLES   : integer := 16#20#;
+
+  -- Registers with SCOPE=GLOBAL ROLE=TIMING
+  constant C_ADDR_TIMING_STATUS  : integer := 16#00#;
+  constant C_ADDR_TIMING_TRIG    : integer := 16#20#;
+  constant C_ADDR_TIMING_SYNC    : integer := 16#24#;
+
+  -- Registers with SCOPE=UART_RX
 
   -- RX Unit Registers --
   constant C_ADDR_RX_STATUS     : integer := 16#00#;
@@ -36,7 +62,9 @@ package register_map is
   -- DMA Interrupt bit (S2MM)
   constant C_ADDR_RX_DMAITR     : integer := 16#B8#;
 
-  -- TX Unit Registers --
+  -- Registers with SCOPE=UART_TX
+  -- TODO:  needs sync with RX registers, e.g. GSTATUS.
+
   constant C_ADDR_TX_STATUS   : integer := 16#00#;
   constant C_ADDR_TX_CONFIG   : integer := 16#04#; 
   -- 64 RX register (LSB) C D (MSB) -- 
@@ -47,7 +75,5 @@ package register_map is
 
   -- Channel number (loopback test of channel id)
   constant C_ADDR_TX_NCHAN    : integer := 16#50#;
-
-
 
 end package register_map;

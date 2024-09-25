@@ -10,6 +10,11 @@
 
 
 #define ADDR_AXIL_REGS  XPAR_AXIL_TO_REGBUS_0_BASEADDR 
+
+#define SCOPE_GLOBAL 0xF000
+#define ROLE_GLOBAL  0x0F00
+#define ROLE_TIMING  0x0E00
+
 #define SCOPE_TX  0x0000
 #define SCOPE_RX  0x4000
 #define GLOBAL_TX 0x3F00
@@ -43,6 +48,77 @@
 
 u32 rx_mask_b = 0xFF;
 u32 rx_mask_a = 0xFFFFFFFF;
+
+#define C_ADDR_GLOBAL_SCRA      0x00
+#define C_ADDR_GLOBAL_SCRB      0x04
+#define C_ADDR_GLOBAL_FW_MAJOR  0x10
+#define C_ADDR_GLOBAL_FW_MINOR  0x14
+#define C_ADDR_GLOBAL_FW_BUILD  0x18
+#define C_ADDR_GLOBAL_HW_CODE   0x1C
+#define C_ADDR_GLOBAL_ENABLES   0x20
+
+#define C_ADDR_TIMING_STATUS  0x00
+#define C_ADDR_TIMING_TRIG    0x20
+#define C_ADDR_TIMING_SYNC    0x24
+
+void read_global_status(){
+  xil_printf("fw major----------- %d   \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_FW_MAJOR));
+  xil_printf("fw minor----------- %d   \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_FW_MINOR));
+  xil_printf("fw build----------- 0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_FW_BUILD));
+  xil_printf("hw code------------ 0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_HW_CODE));
+  xil_printf("scratch a---------- 0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_SCRA));
+  xil_printf("scratch b---------- 0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_SCRB));
+  xil_printf("\r\n");
+  xil_printf("enables------------ 0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_ENABLES));
+  xil_printf("\r\n");
+  xil_printf("timing status-------0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_STATUS));
+  xil_printf("trig config---------0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_TRIG));
+  xil_printf("sync config---------0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_SYNC));
+}
+
+void check_trig_sync(){
+  xil_printf("timing status-------0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_STATUS));
+  xil_printf("trig config---------0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_TRIG));
+  xil_printf("sync config---------0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_SYNC));
+
+  Xil_Out32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_TRIG, 0x00FF03FF);
+  Xil_Out32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_SYNC, 0x00FF03FF);
+  unsigned status = Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_STATUS);
+  xil_printf("timing status-------0x%x \r\n", status);
+}
+
+
+void toggle_scratch(){
+  unsigned scra, scrb;
+  static int mode = 0;
+  mode = (mode + 1) % 3;  
+  switch(mode){
+    case 1:
+      scra = 0xAAAAAAAA;
+      scrb = 0xBBBBBBBB;
+      break;
+    case 2:
+      scra = 0x12341234;
+      scrb = 0x7777FFFF;
+      break;
+    default:
+      scra = 0x0;
+      scrb = 0x0;
+  }
+  xil_printf("INFO: setting scratch a to 0x%08x and scratch b to 0x%08x \r\n", scra, scrb);  
+  Xil_Out32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_SCRA, scra);
+  Xil_Out32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_SCRB, scrb);
+}
+
+void toggle_enables(){
+  unsigned enables[] = {0x00000000, 0x00010000, 0x00010001,  0x000103FF, 0x010103FF};
+  static int mode = 0;
+  mode = (mode + 1) % 5;  
+  xil_printf("INFO: setting enables to 0x%08x \r\n", enables[mode]);
+  Xil_Out32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_ENABLES, enables[mode]);
+}
+
+
 
 void read_rx_status(){
   for (int i=0; i<40; i++){
@@ -606,6 +682,7 @@ int main(){
     xil_printf("RX: (4) read rx status (5) read rx look (6) single rx (7) toggle_rx_mask \r\n");
     xil_printf("Both: (8) zero counts (9) toggle dcache \r\n");
     xil_printf("DMA:  (a) read DMA status (b) DMA reset (c) benchmark DMA loopback (d) benchmark DMA write \r\n");
+    xil_printf("(e) read global status (f) toggle scratch (g) toggle enables (h) test trig and sync  \r\n");
     
     unsigned char c=inbyte();
     xil_printf("pressed:  %c\n\r", c);
@@ -648,6 +725,18 @@ int main(){
       break;      
     case 'd':
       benchmark_dma_write();
+      break;      
+    case 'e':
+      read_global_status();
+      break;      
+    case 'f':
+      toggle_scratch();
+      break;      
+    case 'g':
+      toggle_enables();
+      break;      
+    case 'h':
+      check_trig_sync();
       break;      
     default:
       xil_printf("invalid selection...\n\r");

@@ -79,7 +79,7 @@ begin
     raddr <= x"FF00";
     wait for 10 ns;
     rupdate <= '1';
-    raddr <= x"FF04";
+    raddr <= x"FE04";
     wait for 10 ns;
     rupdate <= '1';
     raddr <= x"FF08";
@@ -94,7 +94,7 @@ begin
     raddr <= x"FF00";
     wait for 10 ns;
     rupdate <= '1';
-    raddr <= x"FF04";
+    raddr <= x"FE04";
     wait for 10 ns;    
     rupdate <= '0';
     raddr <= x"0000";
@@ -148,7 +148,7 @@ begin
     wdata <= x"12345678";
     wait for 10 ns;
     wupdate <= '1';
-    waddr <= x"FF04";
+    waddr <= x"FE04";
     wdata <= x"90ABCDEF";
     wait for 10 ns;
     wupdate <= '1';
@@ -260,12 +260,6 @@ begin
       writeline(output, l);      
       wait;
     end if;
-      --assert(results(0) = x"11111111") report("read 1 failed") severity failure;
-      --assert(results(1) = x"00000000") report("read 2 failed") severity failure;
-      --write (l, String'("*** Test results were all SUCCESSFUL!!! ***"));
-      --writeline(output, l);      
-      --wait;
-  --end if;      
   end process;
 end behaviour;
         

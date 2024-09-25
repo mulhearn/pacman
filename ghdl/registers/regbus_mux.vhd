@@ -6,7 +6,7 @@ entity regbus_mux is
   generic (
     C_DATA_WIDTH  : integer  := 32;
     C_ADDR_WIDTH  : integer  := 16;
-    N_PRIMARY     : integer  := 3
+    N_PRIMARY     : integer  := 4
   );      
   port (
     ACLK	        : in std_logic;
@@ -57,15 +57,15 @@ entity regbus_mux is
     PC_REGBUS_RB_WACK    : in   std_logic;
 
     -- Primary D REGBUS
-    --PD_REGBUS_RB_RUPDATE : out  std_logic;
-    --PD_REGBUS_RB_RADDR	 : out  std_logic_vector(C_ADDR_WIDTH-1 downto 0);
-    --PD_REGBUS_RB_RDATA	 : in   std_logic_vector(C_DATA_WIDTH-1 downto 0);      
-    --PD_REGBUS_RB_RACK    : in   std_logic;
+    PD_REGBUS_RB_RUPDATE : out  std_logic;
+    PD_REGBUS_RB_RADDR	 : out  std_logic_vector(C_ADDR_WIDTH-1 downto 0);
+    PD_REGBUS_RB_RDATA	 : in   std_logic_vector(C_DATA_WIDTH-1 downto 0);      
+    PD_REGBUS_RB_RACK    : in   std_logic;
     
-    --PD_REGBUS_RB_WUPDATE : out  std_logic;
-    --PD_REGBUS_RB_WADDR	 : out  std_logic_vector(C_ADDR_WIDTH-1 downto 0);
-    --PD_REGBUS_RB_WDATA	 : out  std_logic_vector(C_DATA_WIDTH-1 downto 0);
-    --PD_REGBUS_RB_WACK    : in   std_logic;
+    PD_REGBUS_RB_WUPDATE : out  std_logic;
+    PD_REGBUS_RB_WADDR	 : out  std_logic_vector(C_ADDR_WIDTH-1 downto 0);
+    PD_REGBUS_RB_WDATA	 : out  std_logic_vector(C_DATA_WIDTH-1 downto 0);
+    PD_REGBUS_RB_WACK    : in   std_logic;
 
     -- Primary E REGBUS
     --PE_REGBUS_RB_RUPDATE : out  std_logic;
@@ -161,11 +161,11 @@ begin
   PC_REGBUS_RB_WADDR	 <= waddr;
   PC_REGBUS_RB_WDATA	 <= wdata;
 
-  --PD_REGBUS_RB_RUPDATE   <= rupdate;
-  --PD_REGBUS_RB_RADDR	 <= raddr;
-  --PD_REGBUS_RB_WUPDATE   <= wupdate;
-  --PD_REGBUS_RB_WADDR	 <= waddr;
-  --PD_REGBUS_RB_WDATA	 <= wdata;
+  PD_REGBUS_RB_RUPDATE   <= rupdate;
+  PD_REGBUS_RB_RADDR	 <= raddr;
+  PD_REGBUS_RB_WUPDATE   <= wupdate;
+  PD_REGBUS_RB_WADDR	 <= waddr;
+  PD_REGBUS_RB_WDATA	 <= wdata;
 
   --PE_REGBUS_RB_RUPDATE   <= rupdate;
   --PE_REGBUS_RB_RADDR	 <= raddr;
@@ -187,21 +187,21 @@ begin
   racks(0) <= PA_REGBUS_RB_RACK;
   racks(1) <= PB_REGBUS_RB_RACK;
   racks(2) <= PC_REGBUS_RB_RACK;
-  --racks(3) <= PD_REGBUS_RB_RACK;
+  racks(3) <= PD_REGBUS_RB_RACK;
   --racks(4) <= PE_REGBUS_RB_RACK;
   --racks(5) <= PF_REGBUS_RB_RACK;
 
   wacks(0) <= PA_REGBUS_RB_WACK;
   wacks(1) <= PB_REGBUS_RB_WACK;
   wacks(2) <= PC_REGBUS_RB_WACK;
-  --wacks(3) <= PD_REGBUS_RB_WACK;
+  wacks(3) <= PD_REGBUS_RB_WACK;
   --wacks(4) <= PE_REGBUS_RB_WACK;
   --wacks(5) <= PF_REGBUS_RB_WACK;
 
   rdata_array(0) <= PA_REGBUS_RB_RDATA;
   rdata_array(1) <= PB_REGBUS_RB_RDATA;
   rdata_array(2) <= PC_REGBUS_RB_RDATA;
-  --rdata_array(3) <= PD_REGBUS_RB_RDATA;
+  rdata_array(3) <= PD_REGBUS_RB_RDATA;
   --rdata_array(4) <= PE_REGBUS_RB_RDATA;
   --rdata_array(5) <= PF_REGBUS_RB_RDATA;
 

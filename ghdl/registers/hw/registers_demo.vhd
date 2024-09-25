@@ -69,6 +69,17 @@ architecture behaviour of registers_demo is
       PC_REGBUS_RB_WADDR   : out  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
       PC_REGBUS_RB_WDATA   : out  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       PC_REGBUS_RB_WACK    : in   std_logic;
+
+      -- Primary D REGBUS
+      PD_REGBUS_RB_RUPDATE : out  std_logic;
+      PD_REGBUS_RB_RADDR   : out  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
+      PD_REGBUS_RB_RDATA   : in   std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);      
+      PD_REGBUS_RB_RACK    : in   std_logic;    
+      PD_REGBUS_RB_WUPDATE : out  std_logic;
+      PD_REGBUS_RB_WADDR   : out  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
+      PD_REGBUS_RB_WDATA   : out  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      PD_REGBUS_RB_WACK    : in   std_logic;
+
       --
       DEBUG               : out  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
     );
@@ -98,7 +109,7 @@ architecture behaviour of registers_demo is
   end component;
 
 
-  constant NUM_SCRATCH : integer := 3;
+  constant NUM_SCRATCH : integer := 4;
   type t_data_array is array (0 to NUM_SCRATCH-1) of std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
   type t_addr_array is array (0 to NUM_SCRATCH-1) of std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
   signal raddr_array   : t_addr_array;
@@ -110,15 +121,14 @@ architecture behaviour of registers_demo is
   signal wdata_array   : t_data_array;
   signal wack_array    : std_logic_vector(NUM_SCRATCH-1 downto 0);
   
-
   type t_integer_array is array (0 to NUM_SCRATCH-1) of integer;
-  constant scope_array : t_integer_array := (0=>16#F#, 1=>0, 2=>1);
-  constant role_array  : t_integer_array := (0=>16#F#, 1=>0, 2=>0);
-  constant roa_array   : t_data_array := (0=>x"11111111",1=>x"22222222",2=>x"33333333");
-  constant rob_array   : t_data_array := (0=>x"AAAAAAAA",1=>x"BBBBBBBB",2=>x"CCCCCCCC"); 
+  constant scope_array : t_integer_array := (0=>16#F#, 1=>0, 2=>1, 3=>16#F#);
+  constant role_array  : t_integer_array := (0=>16#F#, 1=>0, 2=>0, 3=>16#E#);
+  constant roa_array   : t_data_array := (0=>x"11111111",1=>x"22222222",2=>x"33333333",3=>x"44444444");
+  constant rob_array   : t_data_array := (0=>x"AAAAAAAA",1=>x"BBBBBBBB",2=>x"CCCCCCCC",3=>x"DDDDDDDD") ; 
 begin
   
-  u0: for i in 0 to 2 generate
+  u0: for i in 0 to NUM_SCRATCH-1 generate
     scratch0: registers_scratch
       generic map (
         C_SCOPE => scope_array(i),
@@ -177,7 +187,17 @@ begin
     PC_REGBUS_RB_WUPDATE => wupdate_array(2),
     PC_REGBUS_RB_WADDR   => waddr_array(2),
     PC_REGBUS_RB_WDATA   => wdata_array(2),
-    PC_REGBUS_RB_WACK    => wack_array(2)
+    PC_REGBUS_RB_WACK    => wack_array(2),
+
+    PD_REGBUS_RB_RUPDATE => rupdate_array(3),
+    PD_REGBUS_RB_RADDR   => raddr_array(3),
+    PD_REGBUS_RB_RDATA   => rdata_array(3),
+    PD_REGBUS_RB_RACK    => rack_array(3),
+    PD_REGBUS_RB_WUPDATE => wupdate_array(3),
+    PD_REGBUS_RB_WADDR   => waddr_array(3),
+    PD_REGBUS_RB_WDATA   => wdata_array(3),
+    PD_REGBUS_RB_WACK    => wack_array(3)
+
     );
     
 end behaviour;

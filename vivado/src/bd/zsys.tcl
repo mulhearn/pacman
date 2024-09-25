@@ -46,7 +46,7 @@ if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
 
 # The design that will be created by this Tcl script contains the following 
 # module references:
-# axil_to_regbus, tx_unit, rx_unit, regbus_mux, registers_scratch
+# axil_to_regbus, tx_unit, rx_unit, global_registers, timing_unit, regbus_mux
 
 # Please add the sources of those modules before sourcing this Tcl script.
 
@@ -172,8 +172,9 @@ if { $bCheckModules == 1 } {
 axil_to_regbus\
 tx_unit\
 rx_unit\
+global_registers\
+timing_unit\
 regbus_mux\
-registers_scratch\
 "
 
    set list_mods_missing ""
@@ -592,28 +593,6 @@ proc create_root_design { parentCell } {
      return 1
    }
   
-  # Create instance: regbus_mux_0, and set properties
-  set block_name regbus_mux
-  set block_cell_name regbus_mux_0
-  if { [catch {set regbus_mux_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
-     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
-     return 1
-   } elseif { $regbus_mux_0 eq "" } {
-     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
-     return 1
-   }
-  
-  # Create instance: registers_scratch_0, and set properties
-  set block_name registers_scratch
-  set block_cell_name registers_scratch_0
-  if { [catch {set registers_scratch_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
-     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
-     return 1
-   } elseif { $registers_scratch_0 eq "" } {
-     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
-     return 1
-   }
-  
   # Create instance: ps7_0_axi_periph, and set properties
   set ps7_0_axi_periph [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 ps7_0_axi_periph ]
   set_property CONFIG.NUM_MI {2} $ps7_0_axi_periph
@@ -656,6 +635,39 @@ proc create_root_design { parentCell } {
   ] $xlconstant_0
 
 
+  # Create instance: global_registers_0, and set properties
+  set block_name global_registers
+  set block_cell_name global_registers_0
+  if { [catch {set global_registers_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $global_registers_0 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
+  # Create instance: timing_unit_0, and set properties
+  set block_name timing_unit
+  set block_cell_name timing_unit_0
+  if { [catch {set timing_unit_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $timing_unit_0 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
+  # Create instance: regbus_mux_0, and set properties
+  set block_name regbus_mux
+  set block_cell_name regbus_mux_0
+  if { [catch {set regbus_mux_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $regbus_mux_0 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
   # Create interface connections
   connect_bd_intf_net -intf_net axi_dma_0_M_AXIS_MM2S [get_bd_intf_pins tx_unit_0/S_AXIS] [get_bd_intf_pins axi_dma_0/M_AXIS_MM2S]
   connect_bd_intf_net -intf_net axi_dma_0_M_AXI_MM2S [get_bd_intf_pins axi_dma_0/M_AXI_MM2S] [get_bd_intf_pins axi_mem_intercon/S00_AXI]
@@ -669,9 +681,10 @@ proc create_root_design { parentCell } {
   connect_bd_intf_net -intf_net processing_system7_0_M_AXI_GP0 [get_bd_intf_pins processing_system7_0/M_AXI_GP0] [get_bd_intf_pins ps7_0_axi_periph/S00_AXI]
   connect_bd_intf_net -intf_net ps7_0_axi_periph_M00_AXI [get_bd_intf_pins ps7_0_axi_periph/M00_AXI] [get_bd_intf_pins axi_dma_0/S_AXI_LITE]
   connect_bd_intf_net -intf_net ps7_0_axi_periph_M01_AXI [get_bd_intf_pins ps7_0_axi_periph/M01_AXI] [get_bd_intf_pins axil_to_regbus_0/S_AXI]
-  connect_bd_intf_net -intf_net regbus_mux_0_PA_REGBUS [get_bd_intf_pins regbus_mux_0/PA_REGBUS] [get_bd_intf_pins rx_unit_0/S_REGBUS]
-  connect_bd_intf_net -intf_net regbus_mux_0_PB_REGBUS [get_bd_intf_pins regbus_mux_0/PB_REGBUS] [get_bd_intf_pins tx_unit_0/S_REGBUS]
-  connect_bd_intf_net -intf_net regbus_mux_0_PC_REGBUS [get_bd_intf_pins regbus_mux_0/PC_REGBUS] [get_bd_intf_pins registers_scratch_0/S_REGBUS]
+  connect_bd_intf_net -intf_net regbus_mux_0_PA_REGBUS [get_bd_intf_pins rx_unit_0/S_REGBUS] [get_bd_intf_pins regbus_mux_0/PA_REGBUS]
+  connect_bd_intf_net -intf_net regbus_mux_0_PB_REGBUS [get_bd_intf_pins tx_unit_0/S_REGBUS] [get_bd_intf_pins regbus_mux_0/PB_REGBUS]
+  connect_bd_intf_net -intf_net regbus_mux_0_PC_REGBUS [get_bd_intf_pins global_registers_0/S_REGBUS] [get_bd_intf_pins regbus_mux_0/PC_REGBUS]
+  connect_bd_intf_net -intf_net regbus_mux_0_PD_REGBUS [get_bd_intf_pins timing_unit_0/S_REGBUS] [get_bd_intf_pins regbus_mux_0/PD_REGBUS]
   connect_bd_intf_net -intf_net rx_unit_0_M_AXIS [get_bd_intf_pins rx_unit_0/M_AXIS] [get_bd_intf_pins axis_data_fifo_0/S_AXIS]
 
   # Create port connections
@@ -691,10 +704,10 @@ proc create_root_design { parentCell } {
   connect_bd_net -net axi_dma_0_s2mm_introut [get_bd_pins axi_dma_0/s2mm_introut] [get_bd_pins rx_unit_0/DMA_ITR_I]
   connect_bd_net -net axis_data_fifo_0_axis_rd_data_count [get_bd_pins axis_data_fifo_0/axis_rd_data_count] [get_bd_pins rx_unit_0/FIFO_RCNT_I]
   connect_bd_net -net axis_data_fifo_0_axis_wr_data_count [get_bd_pins axis_data_fifo_0/axis_wr_data_count] [get_bd_pins rx_unit_0/FIFO_WCNT_I]
-  connect_bd_net -net processing_system7_0_FCLK_CLK0 [get_bd_pins processing_system7_0/FCLK_CLK0] [get_bd_pins processing_system7_0/M_AXI_GP0_ACLK] [get_bd_pins ps7_0_axi_periph/S00_ACLK] [get_bd_pins rst_ps7_0_100M/slowest_sync_clk] [get_bd_pins axi_dma_0/s_axi_lite_aclk] [get_bd_pins ps7_0_axi_periph/M00_ACLK] [get_bd_pins ps7_0_axi_periph/ACLK] [get_bd_pins axil_to_regbus_0/S_AXI_ACLK] [get_bd_pins ps7_0_axi_periph/M01_ACLK] [get_bd_pins axi_dma_0/m_axi_mm2s_aclk] [get_bd_pins axi_mem_intercon/S00_ACLK] [get_bd_pins processing_system7_0/S_AXI_HP0_ACLK] [get_bd_pins axi_mem_intercon/M00_ACLK] [get_bd_pins axi_mem_intercon/ACLK] [get_bd_pins regbus_mux_0/ACLK] [get_bd_pins registers_scratch_0/ACLK] [get_bd_pins rx_unit_0/M_AXIS_ACLK] [get_bd_pins axi_dma_0/m_axi_s2mm_aclk] [get_bd_pins tx_unit_0/S_AXIS_ACLK] [get_bd_pins vio_0/clk] [get_bd_pins axi_mem_intercon/S01_ACLK] [get_bd_pins axis_data_fifo_0/s_axis_aclk]
-  connect_bd_net -net processing_system7_0_FCLK_CLK1 [get_bd_pins processing_system7_0/FCLK_CLK1] [get_bd_pins tx_unit_0/UCLK_I]
+  connect_bd_net -net processing_system7_0_FCLK_CLK0 [get_bd_pins processing_system7_0/FCLK_CLK0] [get_bd_pins processing_system7_0/M_AXI_GP0_ACLK] [get_bd_pins ps7_0_axi_periph/S00_ACLK] [get_bd_pins rst_ps7_0_100M/slowest_sync_clk] [get_bd_pins axi_dma_0/s_axi_lite_aclk] [get_bd_pins ps7_0_axi_periph/M00_ACLK] [get_bd_pins ps7_0_axi_periph/ACLK] [get_bd_pins axil_to_regbus_0/S_AXI_ACLK] [get_bd_pins ps7_0_axi_periph/M01_ACLK] [get_bd_pins axi_dma_0/m_axi_mm2s_aclk] [get_bd_pins axi_mem_intercon/S00_ACLK] [get_bd_pins processing_system7_0/S_AXI_HP0_ACLK] [get_bd_pins axi_mem_intercon/M00_ACLK] [get_bd_pins axi_mem_intercon/ACLK] [get_bd_pins rx_unit_0/M_AXIS_ACLK] [get_bd_pins axi_dma_0/m_axi_s2mm_aclk] [get_bd_pins tx_unit_0/S_AXIS_ACLK] [get_bd_pins vio_0/clk] [get_bd_pins axi_mem_intercon/S01_ACLK] [get_bd_pins axis_data_fifo_0/s_axis_aclk] [get_bd_pins global_registers_0/ACLK] [get_bd_pins regbus_mux_0/ACLK] [get_bd_pins timing_unit_0/ACLK]
+  connect_bd_net -net processing_system7_0_FCLK_CLK1 [get_bd_pins processing_system7_0/FCLK_CLK1] [get_bd_pins tx_unit_0/UCLK_I] [get_bd_pins timing_unit_0/UCLK_I]
   connect_bd_net -net processing_system7_0_FCLK_RESET0_N [get_bd_pins processing_system7_0/FCLK_RESET0_N] [get_bd_pins rst_ps7_0_100M/ext_reset_in]
-  connect_bd_net -net rst_ps7_0_100M_peripheral_aresetn [get_bd_pins rst_ps7_0_100M/peripheral_aresetn] [get_bd_pins ps7_0_axi_periph/S00_ARESETN] [get_bd_pins axi_dma_0/axi_resetn] [get_bd_pins ps7_0_axi_periph/M00_ARESETN] [get_bd_pins ps7_0_axi_periph/ARESETN] [get_bd_pins axil_to_regbus_0/S_AXI_ARESETN] [get_bd_pins ps7_0_axi_periph/M01_ARESETN] [get_bd_pins axi_mem_intercon/S00_ARESETN] [get_bd_pins axi_mem_intercon/M00_ARESETN] [get_bd_pins axi_mem_intercon/ARESETN] [get_bd_pins regbus_mux_0/ARESETN] [get_bd_pins registers_scratch_0/ARESETN] [get_bd_pins rx_unit_0/M_AXIS_ARESETN] [get_bd_pins tx_unit_0/S_AXIS_ARESETN] [get_bd_pins axi_mem_intercon/S01_ARESETN] [get_bd_pins axis_data_fifo_0/s_axis_aresetn]
+  connect_bd_net -net rst_ps7_0_100M_peripheral_aresetn [get_bd_pins rst_ps7_0_100M/peripheral_aresetn] [get_bd_pins ps7_0_axi_periph/S00_ARESETN] [get_bd_pins axi_dma_0/axi_resetn] [get_bd_pins ps7_0_axi_periph/M00_ARESETN] [get_bd_pins ps7_0_axi_periph/ARESETN] [get_bd_pins axil_to_regbus_0/S_AXI_ARESETN] [get_bd_pins ps7_0_axi_periph/M01_ARESETN] [get_bd_pins axi_mem_intercon/S00_ARESETN] [get_bd_pins axi_mem_intercon/M00_ARESETN] [get_bd_pins axi_mem_intercon/ARESETN] [get_bd_pins rx_unit_0/M_AXIS_ARESETN] [get_bd_pins tx_unit_0/S_AXIS_ARESETN] [get_bd_pins axi_mem_intercon/S01_ARESETN] [get_bd_pins axis_data_fifo_0/s_axis_aresetn] [get_bd_pins global_registers_0/ARESETN] [get_bd_pins regbus_mux_0/ARESETN] [get_bd_pins timing_unit_0/ARESETN]
   connect_bd_net -net tx_unit_0_POSI_O [get_bd_pins tx_unit_0/POSI_O] [get_bd_pins rx_unit_0/PISO_I]
   connect_bd_net -net xlconstant_0_dout [get_bd_pins xlconstant_0/dout] [get_bd_pins rx_unit_0/TIMESTAMP_I]
 
