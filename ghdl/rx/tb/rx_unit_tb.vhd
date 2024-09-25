@@ -36,7 +36,8 @@ architecture behaviour of rx_unit_tb is
       FIFO_WCNT_I            : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       DMA_ITR_I              : in  std_logic;
 
-      PISO_I                 : in  std_logic_vector(C_NUM_UART-1 downto 0)
+      PISO_I                 : in  std_logic_vector(C_NUM_UART-1 downto 0);
+      LOOPBACK_I             : in  std_logic_vector(C_NUM_UART-1 downto 0)
       );
   end component;
 
@@ -89,7 +90,8 @@ begin
     FIFO_RCNT_I         => x"CCCCCCCC",
     FIFO_WCNT_I         => x"CCCCCCCC",
     DMA_ITR_I           => '1',
-    PISO_I              => piso
+    PISO_I              => piso,
+    LOOPBACK_I          => piso
   );
 
   aclk_process : process

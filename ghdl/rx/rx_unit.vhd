@@ -29,7 +29,8 @@ entity rx_unit is
     FIFO_WCNT_I            : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     DMA_ITR_I              : in  std_logic;
 
-    PISO_I                 : in  std_logic_vector(C_NUM_UART-1 downto 0)
+    PISO_I                 : in  std_logic_vector(C_NUM_UART-1 downto 0);
+    LOOPBACK_I             : in  std_logic_vector(C_NUM_UART-1 downto 0)
   );
 end rx_unit;
 
@@ -162,7 +163,7 @@ begin
         DATA_O        => data(i),
         VALID_O       => valid(i),
         READY_I       => ready(i),
-        RX_I          => PISO_I(i),
+        RX_I          => LOOPBACK_I(i),
         TIMESTAMP_I   => TIMESTAMP_I
       );
   end generate grxchan0;
