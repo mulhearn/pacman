@@ -21,15 +21,16 @@ architecture behaviour of slow_broadcast_tb is
     );
     port (
       -- Clock Domain A: (Fast Clock)
-      CLK_A_I	        : in  std_logic;
-      RST_A_I	        : in  std_logic;
-      UPDATE_A_I	        : in  std_logic;
+      CLK_A_I	          : in  std_logic;
+      RSTN_A_I	          : in  std_logic;
+      UPDATE_A_I	  : in  std_logic;
       CONFIG_A_I          : in  std_logic_vector(C_CONFIG_WIDTH-1 downto 0);
-      BUSY_A_O	        : out std_logic;
+      BUSY_A_O	          : out std_logic;
 
       -- Clock Domain B: (Slow Clock)
       CLK_B_I             : in  std_logic;
-      BROADCAST_B_O          : out std_logic_vector(C_BROADCAST_WIDTH-1 downto 0);
+      BROADCAST_B_O       : out std_logic_vector(C_BROADCAST_WIDTH-1 downto 0);
+      SINGLE_B_O          : out std_logic;
 
       DEBUG_O             : out std_logic_vector(7 downto 0)
     );
@@ -43,19 +44,21 @@ architecture behaviour of slow_broadcast_tb is
 
   signal update    : std_logic := '0';
   signal busy      : std_logic;
-  signal bcast    : std_logic_vector(C_BROADCAST_WIDTH-1 downto 0);
-  signal debug    : std_logic_vector(7 downto 0);
+  signal bcast     : std_logic_vector(C_BROADCAST_WIDTH-1 downto 0);
+  signal single    : std_logic;
+  signal debug     : std_logic_vector(7 downto 0);
   
   signal show_output : std_logic := '0';
 begin
   uut: slow_broadcast port map (
     CLK_A_I  => aclk,
-    RST_A_I  => rst,
+    RSTN_A_I  => aresetn,
     UPDATE_A_I => update,
     CONFIG_A_I => x"0008007A",
     BUSY_A_O => busy,
     CLK_B_I => uclk,
     BROADCAST_B_O => bcast,
+    SINGLE_B_O => single,
     DEBUG_O => debug
   );
 
@@ -125,6 +128,9 @@ begin
       write  (l, busy);
       write  (l, String'(" bcast: "));
       hwrite  (l,  ("00" & bcast));
+
+      write  (l, String'(" single: "));
+      write  (l, single);
 
       write  (l, String'("| u: "));
       write  (l, debug(0));

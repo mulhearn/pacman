@@ -26,8 +26,10 @@ entity timing_registers is
 
     SYNC_UPDATE_O       : out std_logic;
     SYNC_CONFIG_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    SYNC_BUSY_I         : in std_logic
-    
+    SYNC_BUSY_I         : in std_logic;
+
+    STATUS_I            : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+    TIMESTAMP_I         : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)    
     );
 end;
 
@@ -86,9 +88,10 @@ begin
         if (scope=C_SCOPE_GLOBAL) and (role=C_ROLE_TIMING) then
           rdata <= x"EEEEEEEE";
           if (reg=C_ADDR_TIMING_STATUS) then
-            rdata <= (others => '0');
-            rdata(0) <= TRIG_BUSY_I;
-            rdata(1) <= SYNC_BUSY_I;
+            rdata <= STATUS_I;
+            rack  <= '1';
+          elsif (reg=C_ADDR_TIMING_STAMP) then
+            rdata <= TIMESTAMP_I;
             rack  <= '1';
           elsif (reg=C_ADDR_TIMING_TRIG) then
             rdata <= trig_cfg;

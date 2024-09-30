@@ -32,7 +32,10 @@ architecture behaviour of timing_registers_tb is
 
       SYNC_UPDATE_O          : out std_logic;
       SYNC_CONFIG_O          : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      SYNC_BUSY_I            : in std_logic
+      SYNC_BUSY_I            : in std_logic;
+
+      STATUS_I            : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      TIMESTAMP_I         : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)    
     );
   end component;
 
@@ -74,7 +77,9 @@ begin
     TRIG_BUSY_I         => '1',
     SYNC_UPDATE_O       => sync_update,
     SYNC_CONFIG_O       => sync_config,
-    SYNC_BUSY_I         => '1'
+    SYNC_BUSY_I         => '1',
+    STATUS_I            => x"ABCDEF12",
+    TIMESTAMP_I         => x"0000A435"
   );
 
   aresetn_process : process
@@ -101,6 +106,9 @@ begin
     wait for 1 ns;
     wait for 20 ns;
     raddr   <= x"FE00";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"FE04";
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"FE20";

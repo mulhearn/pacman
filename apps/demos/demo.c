@@ -15,10 +15,12 @@
 #define ROLE_GLOBAL  0x0F00
 #define ROLE_TIMING  0x0E00
 
-#define SCOPE_TX  0x0000
-#define SCOPE_RX  0x4000
-#define GLOBAL_TX 0x3F00
-#define GLOBAL_RX 0x3F00
+#define SCOPE_TX       0x0000
+#define SCOPE_RX       0x4000
+#define UART_GLOBAL    0x3F00
+#define UART_BROADCAST 0x3B00
+
+
 
 #define C_ADDR_RX_STATUS    0x00
 #define C_ADDR_RX_CONFIG    0x04
@@ -46,8 +48,8 @@
 #define C_ADDR_TX_STARTS    0x30
 #define C_ADDR_TX_NCHAN     0x40
 
-u32 rx_mask_b = 0xFF;
-u32 rx_mask_a = 0xFFFFFFFF;
+u32 tx_mask_b = 0xFF;
+u32 tx_mask_a = 0xFFFFFFFF;
 
 #define C_ADDR_GLOBAL_SCRA      0x00
 #define C_ADDR_GLOBAL_SCRB      0x04
@@ -58,6 +60,7 @@ u32 rx_mask_a = 0xFFFFFFFF;
 #define C_ADDR_GLOBAL_ENABLES   0x20
 
 #define C_ADDR_TIMING_STATUS  0x00
+#define C_ADDR_TIMING_STAMP   0x04
 #define C_ADDR_TIMING_TRIG    0x20
 #define C_ADDR_TIMING_SYNC    0x24
 
@@ -74,17 +77,25 @@ void read_global_status(){
   xil_printf("timing status-------0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_STATUS));
   xil_printf("trig config---------0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_TRIG));
   xil_printf("sync config---------0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_SYNC));
+  xil_printf("\r\n");
+  xil_printf("timestamp-----------0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_STAMP));
 }
 
 void check_trig_sync(){
-  xil_printf("timing status-------0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_STATUS));
+  unsigned stat, tstamp;
+  stat   = Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_STATUS);
+  tstamp = Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_STAMP);
+  xil_printf("timing status-------0x%x \r\n", stat);
+  xil_printf("time stamp----------0x%x \r\n", tstamp);
   xil_printf("trig config---------0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_TRIG));
   xil_printf("sync config---------0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_SYNC));
 
   Xil_Out32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_TRIG, 0x00FF03FF);
   Xil_Out32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_SYNC, 0x00FF03FF);
-  unsigned status = Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_STATUS);
-  xil_printf("timing status-------0x%x \r\n", status);
+  stat   = Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_STATUS);
+  tstamp = Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_STAMP);
+  xil_printf("timing status-------0x%x \r\n", stat);
+  xil_printf("time stamp----------0x%x \r\n", tstamp);  
 }
 
 
@@ -117,6 +128,34 @@ void toggle_enables(){
   xil_printf("INFO: setting enables to 0x%08x \r\n", enables[mode]);
   Xil_Out32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_ENABLES, enables[mode]);
 }
+
+
+
+void toggle_rx_config(){
+  static int mode = 0;
+  mode = (mode + 1) % 3;
+  if (mode==0){
+    unsigned config = 0x00001001;
+    xil_printf("INFO: No internal loopback.  Broadcasting rx config write 0x%08x \r\n", config);
+    Xil_Out32(ADDR_AXIL_REGS+SCOPE_RX+UART_BROADCAST+C_ADDR_RX_CONFIG, config);
+  } else if (mode==1) {
+    unsigned config = 0x00011001;
+    xil_printf("INFO: Full internal loopback.  Broadcasting rx configs write 0x%08x \r\n", config);
+    Xil_Out32(ADDR_AXIL_REGS+SCOPE_RX+UART_BROADCAST+C_ADDR_RX_CONFIG, config);
+  } else if (mode==2) {
+    unsigned config;
+    config = 0x00011001;
+    xil_printf("INFO: Tiles 2-10 use internal loopback.  Broadcasting rx configs t 0x%08x \r\n", config);
+    Xil_Out32(ADDR_AXIL_REGS+SCOPE_RX+UART_BROADCAST+C_ADDR_RX_CONFIG, config);
+    config = 0x00001001;
+    xil_printf("INFO: Tile 1 does not use internal loopback.  Setting Tile 1 rx config 0x%08x \r\n", config);
+    Xil_Out32(ADDR_AXIL_REGS+SCOPE_RX+(0<<8)+C_ADDR_RX_CONFIG, config);
+    Xil_Out32(ADDR_AXIL_REGS+SCOPE_RX+(1<<8)+C_ADDR_RX_CONFIG, config);
+    Xil_Out32(ADDR_AXIL_REGS+SCOPE_RX+(2<<8)+C_ADDR_RX_CONFIG, config);
+    Xil_Out32(ADDR_AXIL_REGS+SCOPE_RX+(3<<8)+C_ADDR_RX_CONFIG, config);
+  }
+}
+
 
 
 
@@ -173,23 +212,23 @@ void read_tx_look(){
   }
 }
 
-void toggle_rx_mask(){
+void toggle_tx_mask(){
   static int mode = 0;
   mode = (mode + 1) % 3;  
   switch(mode){
     case 1:
-      rx_mask_b = 0x0;
-      rx_mask_a = 0xFFFFFFFF;      
+      tx_mask_b = 0x0;
+      tx_mask_a = 0xFFFFFFFF;      
       break;
     case 2:
-      rx_mask_b = 0x0;
-      rx_mask_a = 0x1;
+      tx_mask_b = 0x0;
+      tx_mask_a = 0x1;
       break;
     default:
-      rx_mask_b = 0xFF;
-      rx_mask_a = 0xFFFFFFFF;      
+      tx_mask_b = 0xFF;
+      tx_mask_a = 0xFFFFFFFF;      
   }
-  xil_printf("RX mask:  0x%08x %08x \r\n", rx_mask_b, rx_mask_a);
+  xil_printf("RX mask:  0x%08x %08x \r\n", tx_mask_b, tx_mask_a);
 }
 
 void zero_counts(){
@@ -319,8 +358,8 @@ void single_tx(){
 
   dma_status();
 
-  tx_buf[0]= rx_mask_a;
-  tx_buf[1]= rx_mask_b;
+  tx_buf[0]= tx_mask_a;
+  tx_buf[1]= tx_mask_b;
   tx_buf[2]=0x00000000;
   tx_buf[3]=0x00000000;
   
@@ -678,11 +717,11 @@ int main(){
   
   while(1){
     xil_printf("choose an option:\r\n");
-    xil_printf("TX: (1) read tx status (2) read tx look (3) single tx \r\n");
-    xil_printf("RX: (4) read rx status (5) read rx look (6) single rx (7) toggle_rx_mask \r\n");
-    xil_printf("Both: (8) zero counts (9) toggle dcache \r\n");
-    xil_printf("DMA:  (a) read DMA status (b) DMA reset (c) benchmark DMA loopback (d) benchmark DMA write \r\n");
-    xil_printf("(e) read global status (f) toggle scratch (g) toggle enables (h) test trig and sync  \r\n");
+    xil_printf("TX: (1) read tx status (2) read tx look (3) single tx (4) toggle_tx_mask \r\n");
+    xil_printf("RX: (5) read rx status (6) read rx look (7) single rx (8) toggle_rx_config \r\n");
+    xil_printf("Both: (9) zero counts (a) toggle dcache \r\n");
+    xil_printf("DMA:  (b) read DMA status (c) DMA reset (d) benchmark DMA loopback (e) benchmark DMA write \r\n");
+    xil_printf("(f) read global status (g) toggle scratch (h) toggle enables (i) test trig and sync  \r\n");
     
     unsigned char c=inbyte();
     xil_printf("pressed:  %c\n\r", c);
@@ -695,47 +734,50 @@ int main(){
       break;
     case '3':
       single_tx();
-      break;      
+      break;
     case '4':
+      toggle_tx_mask();
+      break;            
+    case '5':
       read_rx_status();
       break;
-    case '5':
+    case '6':
       read_rx_look();
       break;
-    case '6':
-      single_rx();
-      break;      
     case '7':
-      toggle_rx_mask();
-      break;      
+      single_rx();
+      break;
     case '8':
+      toggle_rx_config();
+      break;      
+    case '9':
       zero_counts();
       break;
-    case '9':
+    case 'a':
       toggle_dcache();
       break;
-    case 'a':
+    case 'b':
       dma_status();
       break;
-    case 'b':
+    case 'c':
       reset_dma();
       break;      
-    case 'c':
+    case 'd':
       benchmark_dma_loopback();
       break;      
-    case 'd':
+    case 'e':
       benchmark_dma_write();
       break;      
-    case 'e':
+    case 'f':
       read_global_status();
       break;      
-    case 'f':
+    case 'g':
       toggle_scratch();
       break;      
-    case 'g':
+    case 'h':
       toggle_enables();
       break;      
-    case 'h':
+    case 'i':
       check_trig_sync();
       break;      
     default:

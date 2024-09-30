@@ -22,6 +22,7 @@ architecture behaviour of rx_chan_tb is
       VALID_O       : out std_logic;
       READY_I       : in  std_logic;
       RX_I          : in  std_logic;
+      LOOPBACK_I    : in  std_logic;
       TIMESTAMP_I   : in  std_logic_vector(31 downto 0);
       DEBUG_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)    
     );
@@ -45,12 +46,13 @@ begin
   uut: rx_chan port map (
     ACLK        => aclk,
     ARESETN     => aresetn,
-    CONFIG_I    => x"00001001",
+    CONFIG_I    => x"00011001",
     GFLAGS_I    => "00",
     DATA_O      => data,
     VALID_O     => valid,
     READY_I     => ready,
-    RX_I        => rx,
+    RX_I        => '1',
+    LOOPBACK_I  => rx,
     TIMESTAMP_I => x"12345678",
     DEBUG_O     => status
     --STATUS_O     => status
@@ -171,6 +173,8 @@ begin
       hwrite (l, data);
       write  (l, String'(" | rx: "));
       write  (l, rx);
+      write  (l, String'(" | sel: "));
+      write  (l, status(8));
       if (start = '1') then
         write (l, String'(" --- "));
       end if;

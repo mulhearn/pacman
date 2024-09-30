@@ -6,14 +6,15 @@ use ieee.numeric_std.all;
 
 entity slow_broadcast is
   generic (
-    constant C_BROADCAST_WIDTH : integer := 10;
-    constant C_CONFIG_WIDTH : integer := 32
+    constant C_ACTIVE           : std_logic := '1';
+    constant C_BROADCAST_WIDTH  : integer := 10;
+    constant C_CONFIG_WIDTH     : integer := 32
   );
 
   port (
     -- Clock Domain A: (Fast Clock)
     CLK_A_I	        : in  std_logic;
-    RST_A_I	        : in  std_logic;
+    RSTN_A_I	        : in  std_logic;
     UPDATE_A_I	        : in  std_logic;
     CONFIG_A_I          : in  std_logic_vector(C_CONFIG_WIDTH-1 downto 0);
     BUSY_A_O	        : out std_logic;
@@ -21,6 +22,7 @@ entity slow_broadcast is
     -- Clock Domain B: (Slow Clock)
     CLK_B_I             : in  std_logic;
     BROADCAST_B_O       : out std_logic_vector(C_BROADCAST_WIDTH-1 downto 0);
+    SINGLE_B_O          : out std_logic;
     DEBUG_O             : out std_logic_vector(7 downto 0)
   );
 end;
@@ -55,7 +57,7 @@ architecture behavioral of slow_broadcast is
 
 begin
   clk_a    <= CLK_A_I;
-  rst_a    <= RST_A_I;
+  rst_a    <= not RSTN_A_I;
   update_a <= UPDATE_A_I;
   BUSY_A_O <= busy_a;
 
@@ -122,7 +124,8 @@ begin
     variable counter : integer := 0;
   begin
     if (rst_a = '1') then
-      BROADCAST_B_O <= (others => '0');      
+      BROADCAST_B_O <= (others => not C_ACTIVE);
+      SINGLE_B_O <= not C_ACTIVE;
       ack <= '0';
       counter := counter - 1;
     elsif (rising_edge(clk_b)) then
@@ -134,10 +137,16 @@ begin
         ack <= '0';
       end if;
       if (counter > 0) then
-        BROADCAST_B_O <= config(C_BROADCAST_WIDTH-1 downto 0);
+        if (C_ACTIVE='1') then
+          BROADCAST_B_O <= config(C_BROADCAST_WIDTH-1 downto 0);
+        else
+          BROADCAST_B_O <= not config(C_BROADCAST_WIDTH-1 downto 0);
+        end if;
+        SINGLE_B_O <= C_ACTIVE;
         counter := counter - 1;
       else
-        BROADCAST_B_O <= (others => '0');
+        BROADCAST_B_O <= (others => not C_ACTIVE);
+        SINGLE_B_O <= not C_ACTIVE;
       end if;
     end if;
   end process;

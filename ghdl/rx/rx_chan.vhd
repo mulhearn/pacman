@@ -19,6 +19,7 @@ entity rx_chan is
     VALID_O       : out  std_logic;
     READY_I       : in std_logic;
     RX_I          : in std_logic;
+    LOOPBACK_I    : in std_logic;
     TIMESTAMP_I   : in  std_logic_vector(31 downto 0);
     DEBUG_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)    
   );
@@ -75,10 +76,15 @@ begin
 
   VALID_O <= valid;
   ready <= READY_I;
-  rx <= RX_I;
 
   mode <= to_integer(unsigned(CONFIG_I(13 downto 12)));
-  
+
+  with CONFIG_I(17 downto 16) select
+    rx <= RX_I when "00",
+    LOOPBACK_I when "01",
+    '0' when "10",
+    '1' when others;
+    
   process(clk,rst)    
   begin
     if (rst='1') then
@@ -120,6 +126,8 @@ begin
   status(4) <= start;
   status(5) <= update;
   status(6) <= lost;
+
+  status(8) <= rx;
   
   process(clk,rst)
   begin

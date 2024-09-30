@@ -143,7 +143,6 @@ xilinx.com:ip:xlconcat:2.1\
 xilinx.com:ip:axi_dma:7.1\
 xilinx.com:ip:proc_sys_reset:5.0\
 xilinx.com:ip:axis_data_fifo:2.0\
-xilinx.com:ip:xlconstant:1.1\
 "
 
    set list_ips_missing ""
@@ -634,14 +633,6 @@ proc create_root_design { parentCell } {
   ] $axis_data_fifo_0
 
 
-  # Create instance: xlconstant_0, and set properties
-  set xlconstant_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_0 ]
-  set_property -dict [list \
-    CONFIG.CONST_VAL {3435973836} \
-    CONFIG.CONST_WIDTH {32} \
-  ] $xlconstant_0
-
-
   # Create instance: global_registers_0, and set properties
   set block_name global_registers
   set block_cell_name global_registers_0
@@ -720,9 +711,9 @@ proc create_root_design { parentCell } {
   connect_bd_net -net rst_ps7_0_100M_peripheral_aresetn [get_bd_pins rst_ps7_0_100M/peripheral_aresetn] [get_bd_pins ps7_0_axi_periph/S00_ARESETN] [get_bd_pins axi_dma_0/axi_resetn] [get_bd_pins ps7_0_axi_periph/M00_ARESETN] [get_bd_pins ps7_0_axi_periph/ARESETN] [get_bd_pins axil_to_regbus_0/S_AXI_ARESETN] [get_bd_pins ps7_0_axi_periph/M01_ARESETN] [get_bd_pins axi_mem_intercon/S00_ARESETN] [get_bd_pins axi_mem_intercon/M00_ARESETN] [get_bd_pins axi_mem_intercon/ARESETN] [get_bd_pins rx_unit_0/M_AXIS_ARESETN] [get_bd_pins tx_unit_0/S_AXIS_ARESETN] [get_bd_pins axi_mem_intercon/S01_ARESETN] [get_bd_pins axis_data_fifo_0/s_axis_aresetn] [get_bd_pins global_registers_0/ARESETN] [get_bd_pins regbus_mux_0/ARESETN] [get_bd_pins timing_unit_0/ARESETN]
   connect_bd_net -net timing_unit_0_GLB_CLK_O [get_bd_pins timing_unit_0/GLB_CLK_O] [get_bd_ports GLB_CLK_O_0]
   connect_bd_net -net timing_unit_0_SYNC_O [get_bd_pins timing_unit_0/SYNC_O] [get_bd_ports SYNC_O_0]
+  connect_bd_net -net timing_unit_0_TIMESTAMP_O [get_bd_pins timing_unit_0/TIMESTAMP_O] [get_bd_pins rx_unit_0/TIMESTAMP_I]
   connect_bd_net -net timing_unit_0_TRIG_O [get_bd_pins timing_unit_0/TRIG_O] [get_bd_ports TRIG_O_0]
   connect_bd_net -net tx_unit_0_POSI_O [get_bd_pins tx_unit_0/POSI_O] [get_bd_ports POSI_O_0] [get_bd_pins rx_unit_0/LOOPBACK_I]
-  connect_bd_net -net xlconstant_0_dout [get_bd_pins xlconstant_0/dout] [get_bd_pins rx_unit_0/TIMESTAMP_I]
 
   # Create address segments
   assign_bd_address -offset 0x40400000 -range 0x00010000 -target_address_space [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs axi_dma_0/S_AXI_LITE/Reg] -force

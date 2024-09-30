@@ -24,7 +24,7 @@ entity rx_unit is
     S_REGBUS_RB_WDATA      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     S_REGBUS_RB_WACK       : out std_logic;
 
-    TIMESTAMP_I            : in  std_logic_vector(31 downto 0);
+    TIMESTAMP_I            : in  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
     FIFO_RCNT_I            : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     FIFO_WCNT_I            : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     DMA_ITR_I              : in  std_logic;
@@ -106,6 +106,7 @@ architecture behaviour of rx_unit is
       VALID_O       : out  std_logic;
       READY_I       : in std_logic;
       RX_I          : in std_logic;
+      LOOPBACK_I    : in std_logic;
       TIMESTAMP_I   : in  std_logic_vector(31 downto 0);
       DEBUG_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
       );
@@ -163,7 +164,8 @@ begin
         DATA_O        => data(i),
         VALID_O       => valid(i),
         READY_I       => ready(i),
-        RX_I          => LOOPBACK_I(i),
+        RX_I          => PISO_I(i),
+        LOOPBACK_I    => LOOPBACK_I(i),
         TIMESTAMP_I   => TIMESTAMP_I
       );
   end generate grxchan0;

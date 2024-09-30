@@ -6,6 +6,8 @@ package common is
 
   constant C_NUM_TILE          : integer  := 10;
   constant C_NUM_UART          : integer  := 40;
+
+  constant C_TIMESTAMP_WIDTH   : integer  := 32;
   
   -- register bus data is 32 bits, address 16 bits.
   constant C_RB_DATA_WIDTH       : integer  := 32;

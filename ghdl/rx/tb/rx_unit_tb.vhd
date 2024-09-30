@@ -91,7 +91,7 @@ begin
     FIFO_WCNT_I         => x"CCCCCCCC",
     DMA_ITR_I           => '1',
     PISO_I              => piso,
-    LOOPBACK_I          => piso
+    LOOPBACK_I          => (others => '1')
   );
 
   aclk_process : process

@@ -26,7 +26,8 @@ architecture behaviour of timing_unit_tb is
       S_REGBUS_RB_WADDR	 : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
       S_REGBUS_RB_WDATA	 : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_WACK     : out std_logic;
-      
+
+      TIMESTAMP_O          : out std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
       GLB_CLK_O            : out std_logic;
       TRIG_O               : out std_logic_vector(C_NUM_TILE-1 downto 0);
       SYNC_O               : out std_logic_vector(C_NUM_TILE-1 downto 0)
@@ -49,10 +50,11 @@ architecture behaviour of timing_unit_tb is
   signal wack     : std_logic := '0';
 
   -- dut outputs
-  signal glb_clk  : std_logic;
-  signal trig     : std_logic_vector(C_NUM_TILE-1 downto 0);
-  signal sync     : std_logic_vector(C_NUM_TILE-1 downto 0);
-
+  signal glb_clk   : std_logic;
+  signal trig      : std_logic_vector(C_NUM_TILE-1 downto 0);
+  signal sync      : std_logic_vector(C_NUM_TILE-1 downto 0);
+  signal timestamp : std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
+  
   signal show_output : std_logic := '0';
 begin
   uut0: timing_unit port map (
@@ -66,7 +68,8 @@ begin
     S_REGBUS_RB_WUPDATE => wupdate,
     S_REGBUS_RB_WADDR   => waddr,   
     S_REGBUS_RB_WDATA   => wdata,   
-    S_REGBUS_RB_WACK    => wack,     
+    S_REGBUS_RB_WACK    => wack,
+    TIMESTAMP_O         => timestamp,
     GLB_CLK_O           => glb_clk,
     TRIG_O              => trig,
     SYNC_O              => sync                        
@@ -175,11 +178,13 @@ begin
       hwrite (l, wdata);
       write (l, String'(" wk:"));
       write (l, wack);
+      write (l, String'(" | ts: 0x"));
+      hwrite (l, timestamp);
       write (l, String'(" | trig: 0x"));
       hwrite (l, "00" & trig);
-      write (l, String'(" | sync: 0x"));
+      write (l, String'("  sync: 0x"));
       hwrite (l, "00" & sync);
-      if (sync(0) = '1') then
+      if (sync(0) = '0') then
         write (l, String'(" --- "));
       end if;
       if (trig(0) = '1') then
