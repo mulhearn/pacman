@@ -47,6 +47,9 @@ cd trenz
 ../scripts/build.sh
 cd images/linux
 
+*** Don't Forget the Following Step ***
+*** The build script does not create the BOOT.BIN file ***
+
 # create the BOOT.BIN file:
 cp ../../../src/bootgen.bif .
 bootgen -arch zynq -image bootgen.bif -w -o BOOT.BIN

@@ -1,5 +1,5 @@
 #  
-#  build_pacman_server.sh
+#  build_hwutil.sh
 #
 # Cross-compile only the pacman-server application and grab the produced rpm.
 #

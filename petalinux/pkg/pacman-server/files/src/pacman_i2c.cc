@@ -4,10 +4,8 @@
 #include <stdio.h>
 #include <sys/ioctl.h>
 #include <cstdint>
-extern "C" {
 #include <linux/i2c-dev.h>
-#include <i2c/smbus.h>
-}
+#include <linux/i2c.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
@@ -90,29 +88,11 @@ int i2c_set(int fh, uint8_t addr, uint8_t reg, uint32_t val, uint8_t nbytes) {
     #endif
     return write(fh,buf,nbytes+1);
 }
-
-
-int i2c_smbus_recv(int fh, uint8_t addr, uint8_t reg, uint8_t* buf, uint32_t nbytes) {
-    // perform smbus read byte data
-    if (i2c_addr(fh, addr) < 0) return -1;
-    int rv = i2c_smbus_read_byte_data(fh, reg);
-    if (rv < 0) {
-        printf("***ERROR*** i2c_smbus_recv:  Failed to rw register!\n");
-        return rv;
-    }
-    buf[0] = (uint8_t)(rv);
-    #if VERBOSE
-    printf("i2c_smbus_recv addr 0x%02x reg 0x%02x read: ",addr,reg);
-    for (int i = 0; i < nbytes; i++) printf("0x%02x ",buf[i]);
-    printf("\n");
-    #endif
-    return 1;
-}
         
 int i2c_rw(int fh, uint8_t addr, uint8_t reg, uint8_t* buf, uint32_t nbytes) {
     // perform read from register with repeated start
     if (i2c_addr(fh, addr) < 0) return -1;
-    struct i2c_msg msgs[2];
+        struct i2c_msg msgs[2];
     msgs[0].addr = addr;
     msgs[0].flags = 0;
     msgs[0].len = 1;
@@ -263,26 +243,158 @@ uint32_t i2c_set_vddd(int fh, uint32_t lower, uint32_t val){
   return 1;
 }
 
-uint32_t i2c_mon_vdda(int fh, uint32_t lower){  
-  return 0;
+uint32_t i2c_mon_vdda(int fh, uint32_t lower){
+  const int full_scale = 9000; // 9 V = 9000 mV full scale
+  const uint8_t addr   = 0x10+lower/2;
+  const uint8_t reg    = 0x7 + 0x2*(lower%2);
+
+  if (lower > 0xb) 
+    return 0;
+  
+  const uint8_t nbytes = 2;
+  uint8_t buf[nbytes];  
+
+  int status = 0;
+  // set config registers for single shot mode:
+  status |= (i2c_set(fh, addr, 1, 0x8500, nbytes) != (nbytes+1));
+  // send refresh to start conversions:
+  status |= (i2c_set(fh, addr, 0) != 1);
+  usleep(5000);
+  // send second refresh to move most recent conversions into output registers:
+  status |= (i2c_set(fh, addr, 0) != 1);
+  usleep(5000);
+  // read requested value:
+  status |= (i2c_set(fh, addr, reg) != 1);
+  status |= (i2c_recv(fh, addr, reg, buf, nbytes)!=nbytes);
+
+  if (status){
+    printf("**ERROR** i2c_mon_vdda:  I2C error.\n");
+    return 0;
+  }
+  
+  uint32_t val = 0;
+  for (int i=0 ; i< nbytes; i++){
+    val = (val<<8) | buf[i];
+  }  
+  return full_scale*val/0xFFFF;
 }
 
 uint32_t i2c_mon_vddd(int fh, uint32_t lower){
-  return 0;
+  const int full_scale = 9000; // 9 V = 9000 mV full scale
+  const uint8_t addr   = 0x10+lower/2;
+  const uint8_t reg    = 0x8 + 0x2*(lower%2);
+
+  if (lower > 0xb) 
+    return 0;
+
+  const uint8_t nbytes = 2;
+  uint8_t buf[nbytes];  
+
+  int status = 0;
+  // set config registers for single shot mode:
+  status |= (i2c_set(fh, addr, 1, 0x8500, nbytes) != (nbytes+1));
+  // send refresh to start conversions:
+  status |= (i2c_set(fh, addr, 0) != 1);
+  usleep(5000);
+  // send second refresh to move most recent conversions into output registers:
+  status |= (i2c_set(fh, addr, 0) != 1);
+  usleep(5000);
+  // read requested value:
+  status |= (i2c_set(fh, addr, reg) != 1);
+  status |= (i2c_recv(fh, addr, reg, buf, nbytes)!=nbytes);
+
+  if (status){
+    printf("**ERROR** i2c_mon_vddd:  I2C error.\n");
+    return 0;
+  }
+  
+  uint32_t val = 0;
+  for (int i=0 ; i< nbytes; i++){
+    val = (val<<8) | buf[i];
+  }  
+  return full_scale*val/0xFFFF;
 }
 
-uint32_t i2c_mon_idda(int fh, uint32_t lower){  
-  return 0;
+uint32_t i2c_mon_idda(int fh, uint32_t lower){
+  const int full_scale = 20000; // 20 A = 20000 mA full scale
+  const uint8_t addr   = 0x10+lower/2;
+  const uint8_t reg    = 0xB + 0x2*(lower%2);
+
+  if (lower > 0xb) 
+    return 0;
+  
+  const uint8_t nbytes = 2;
+  uint8_t buf[nbytes];  
+
+  int status = 0;
+  // set config registers for single shot mode:
+  status |= (i2c_set(fh, addr, 1, 0x8500, nbytes) != (nbytes+1));
+  // send refresh to start conversions:
+  status |= (i2c_set(fh, addr, 0) != 1);
+  usleep(5000);
+  // send second refresh to move most recent conversions into output registers:
+  status |= (i2c_set(fh, addr, 0) != 1);
+  usleep(5000);
+  // read requested value:
+  status |= (i2c_set(fh, addr, reg) != 1);
+  status |= (i2c_recv(fh, addr, reg, buf, nbytes)!=nbytes);
+
+  if (status){
+    printf("**ERROR** i2c_mon_idda:  I2C error.\n");
+    return 0;
+  }
+  
+  uint32_t val = 0;
+  for (int i=0 ; i< nbytes; i++){
+    val = (val<<8) | buf[i];
+  }  
+  return full_scale*val/0xFFFF;
+
+  
 }
 
 uint32_t i2c_mon_iddd(int fh, uint32_t lower){
-  return 0;
+  const int full_scale = 20000; // 20 A = 20000 mA full scale
+  const uint8_t addr   = 0x10+lower/2;
+  const uint8_t reg    = 0xC + 0x2*(lower%2);
+
+  if (lower > 0xb) 
+    return 0;
+  
+  const uint8_t nbytes = 2;
+  uint8_t buf[nbytes];  
+
+  int status = 0;
+  // set config registers for single shot mode:
+  status |= (i2c_set(fh, addr, 1, 0x8500, nbytes) != (nbytes+1));
+  // send refresh to start conversions:
+  status |= (i2c_set(fh, addr, 0) != 1);
+  usleep(5000);
+  // send second refresh to move most recent conversions into output registers:
+  status |= (i2c_set(fh, addr, 0) != 1);
+  usleep(5000);
+  // read requested value:
+  status |= (i2c_set(fh, addr, reg) != 1);
+  status |= (i2c_recv(fh, addr, reg, buf, nbytes)!=nbytes);
+
+  if (status){
+    printf("**ERROR** i2c_mon_iddd:  I2C error.\n");
+    return 0;
+  }
+  
+  uint32_t val = 0;
+  for (int i=0 ; i< nbytes; i++){
+    val = (val<<8) | buf[i];
+  }  
+  return full_scale*val/0xFFFF;
+  
 }
 
 uint32_t i2c_version(int fh, uint32_t lower){  
   if (lower == 0) return I2C_MAJOR_VERSION;
   if (lower == 1) return I2C_MINOR_VERSION;
   if (lower == 2) return I2C_DEBUG_TAG;
+  return 0;
 }
 uint32_t get_mux_code(uint32_t val){
   uint32_t switch_disabled = 0x10;

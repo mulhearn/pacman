@@ -37,6 +37,6 @@ cp -v $SRC/$SPEC/rootfs_config     $PROJ/project-spec/configs/rootfs_config
 cp -v $SRC/$SPEC/config            $PROJ/project-spec/configs/config
 
 # add custom software packages
-#cp -v -r $PKG/pacman-server      $PROJ/project-spec/meta-user/recipes-apps/
-cp -v -r $PKG/hwutil      $PROJ/project-spec/meta-user/recipes-apps/
+cp -v -r $PKG/pacman-server      $PROJ/project-spec/meta-user/recipes-apps/
+cp -v -r $PKG/hwutil             $PROJ/project-spec/meta-user/recipes-apps/
 
