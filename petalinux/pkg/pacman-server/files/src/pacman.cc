@@ -19,6 +19,8 @@
 #include "tx_buffer.hh"
 #include "rx_buffer.hh"
 #include "pacman_i2c.hh"
+#include "message_format.hh"
+
 
 static uint32_t * G_PACMAN_AXIL = NULL;
 static uint32_t * dma  = NULL;
@@ -169,8 +171,6 @@ int pacman_init_rx(int verbose, int skip_reset){
 
 int pacman_poll_rx(){
   // unused in this version...
-
-
   
   return EXIT_SUCCESS;
 }
@@ -178,18 +178,30 @@ int pacman_poll_rx(){
 int pacman_poll_tx(){
 
   uint32_t output[TX_BUFFER_BYTES/4];
-
+  int tx_words = 0;
+  char tx_t = WORD_TYPE_TX;
+  char io_c = 0;
   if (tx_buffer_out(output)==1){
     printf("DEBUG: transmitting data \n");
     tx_buffer_print_output(output);
+    for (int i=0; i<40; i++){
+      if ((output[i/32]>>(i%32))&1==1){
+	io_c = i+1;
+	tx_words++;
+	memcpy(&curr->word[WORD_TYPE_OFFSET], &tx_t, 1);
+	memcpy(&curr->word[IO_CHANNEL_OFFSET],&io_c, 1);
+	memcpy(&curr->word[LARPIX_DATA_OFFSET], (char*)&output[4+2*i], 8);
+	dma_set(curr->desc, DESC_STAT, 0);
+	curr = curr->next;
+      }
+    }
   }
  
-  //memcpy(&curr->word[WORD_TYPE_OFFSET], word_type, 1);
-  //memcpy(&curr->word[IO_CHANNEL_OFFSET], io_channel, 1);
-  //memcpy(&curr->word[LARPIX_DATA_OFFSET], (char*)data, sizeof(*data));
-  //dma_set(curr->desc, DESC_STAT, 0);
-  //curr = curr->next;
-
+  // transmit
+  printf("INFO: transmitting %d TX words", tx_words);
+  transmit_data(dma, prev, tx_words);
+  prev = curr;
+  
   return EXIT_SUCCESS;
 }
 

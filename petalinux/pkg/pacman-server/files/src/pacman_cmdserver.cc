@@ -135,7 +135,7 @@ int main(int argc, char* argv[]){
 	uint64_t* pdata = get_req_word_tx_data(word);
 	uint64_t data = *pdata;
 
-	printf("DEBUG:  DATA REQUEST:  0x%lx", data);
+	printf("DEBUG:  DATA REQUEST:  %d 0x%lx\n", *io_channel, data);
 	
 	uint32_t dat[2] = {0,0};
 	dat[0] = (data & 0x00000000FFFFFFFF);
