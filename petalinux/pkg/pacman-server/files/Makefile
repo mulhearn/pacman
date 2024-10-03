@@ -1,12 +1,15 @@
-APP := pacman_cmdserver
-APP += pacman_dataserver
+APPS := pacman_cmdserver
+APPS += pacman_dataserver
+APPS += pacman_units
 
 INCLUDE_DIR := include
 SRC_DIR := src
 OBJ_DIR := obj
 
+INC := $(wildcard $(INCLUDE_DIR)/*.hh)
 SRC := $(wildcard $(SRC_DIR)/*.cc)
 OBJ := $(SRC:$(SRC_DIR)/%.cc=$(OBJ_DIR)/%.o)
+ABJ := $(filter-out $(APPS:%=$(OBJ_DIR)/%.o), $(OBJ))
 
 CPPFLAGS += -I${INCLUDE_DIR}
 
@@ -14,12 +17,15 @@ LDLIBS += -lzmq -lstdc++
 
 all: build
 
-build: $(APP)
+debug:
+	echo $(OBJ)
 
-$(APP): $(OBJ)
-	$(CC) $(LDFLAGS) $(filter-out $(OBJ_DIR)/$(filter-out $@, $(APP)).o, $^) $(LDLIBS) -o $@
+build: $(APPS)
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cc | $(OBJ_DIR)
+$(APPS): $(OBJ)
+	$(CC) $(LDFLAGS) $(ABJ) $(OBJ_DIR)/$@.o $(LDLIBS) -o $@
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cc $(INC) | $(OBJ_DIR) 
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR):
