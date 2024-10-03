@@ -1,4 +1,4 @@
-#define SIMULATED_PACMAN
+//#define SIMULATED_PACMAN
 #ifdef SIMULATED_PACMAN
 
 #include <stdlib.h>
