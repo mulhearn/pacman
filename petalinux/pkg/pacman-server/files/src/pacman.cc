@@ -176,13 +176,11 @@ int pacman_poll_rx(){
 }
 
 int pacman_poll_tx(){
-
   uint32_t output[TX_BUFFER_BYTES/4];
   int tx_words = 0;
   char tx_t = WORD_TYPE_TX;
   char io_c = 0;
-  if (tx_buffer_out(output)==1){
-    printf("DEBUG: transmitting data \n");
+  while (tx_buffer_out(output)==1){
     tx_buffer_print_output(output);
     for (int i=0; i<40; i++){
       if ((output[i/32]>>(i%32))&1==1){
@@ -195,13 +193,11 @@ int pacman_poll_tx(){
 	curr = curr->next;
       }
     }
-  }
- 
+  } 
   // transmit
-  printf("INFO: transmitting %d TX words", tx_words);
+  printf("INFO: transmitting %d TX words\n", tx_words);
   transmit_data(dma, prev, tx_words);
-  prev = curr;
-  
+  prev = curr;  
   return EXIT_SUCCESS;
 }
 
