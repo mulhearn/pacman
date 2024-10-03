@@ -4,7 +4,9 @@
 #include <stdio.h>
 #include <sys/ioctl.h>
 #include <cstdint>
-#include <linux/i2c-dev-user.h>
+#include <linux/i2c.h>
+#include <linux/i2c-dev.h>
+//#include <linux/i2c-dev-user.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
@@ -88,23 +90,6 @@ int i2c_set(int fh, uint8_t addr, uint8_t reg, uint32_t val, uint8_t nbytes) {
     return write(fh,buf,nbytes+1);
 }
 
-
-int i2c_smbus_recv(int fh, uint8_t addr, uint8_t reg, uint8_t* buf, uint32_t nbytes) {
-    // perform smbus read byte data
-    if (i2c_addr(fh, addr) < 0) return -1;
-    int rv = i2c_smbus_read_byte_data(fh, reg);
-    if (rv < 0) {
-        printf("***ERROR*** i2c_smbus_recv:  Failed to rw register!\n");
-        return rv;
-    }
-    buf[0] = (uint8_t)(rv);
-    #if VERBOSE
-    printf("i2c_smbus_recv addr 0x%02x reg 0x%02x read: ",addr,reg);
-    for (int i = 0; i < nbytes; i++) printf("0x%02x ",buf[i]);
-    printf("\n");
-    #endif
-    return 1;
-}
         
 int i2c_rw(int fh, uint8_t addr, uint8_t reg, uint8_t* buf, uint32_t nbytes) {
     // perform read from register with repeated start
@@ -114,12 +99,14 @@ int i2c_rw(int fh, uint8_t addr, uint8_t reg, uint8_t* buf, uint32_t nbytes) {
     msgs[0].addr = addr;
     msgs[0].flags = 0;
     msgs[0].len = 1;
-    msgs[0].buf = &reg_char;
+    //msgs[0].buf = &reg_char;
+    msgs[0].buf = &reg;
 
     msgs[1].addr = addr;
     msgs[1].flags = I2C_M_RD | I2C_M_NOSTART;
     msgs[1].len = nbytes;
-    msgs[1].buf = (char*)buf;
+    //msgs[1].buf = (char*)buf;
+    msgs[1].buf = buf;
     
     struct i2c_rdwr_ioctl_data data;
     data.msgs = msgs;
@@ -412,6 +399,7 @@ uint32_t i2c_version(int fh, uint32_t lower){
   if (lower == 0) return I2C_MAJOR_VERSION;
   if (lower == 1) return I2C_MINOR_VERSION;
   if (lower == 2) return I2C_DEBUG_TAG;
+  return 0;
 }
 uint32_t get_mux_code(uint32_t val){
   uint32_t switch_disabled = 0x10;
