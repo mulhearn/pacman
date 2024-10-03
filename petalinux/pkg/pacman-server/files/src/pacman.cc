@@ -20,10 +20,10 @@
 #include "rx_buffer.hh"
 #include "pacman_i2c.hh"
 
-static volatile uint32_t * G_PACMAN_AXIL = NULL;
-static volatile uint32_t * G_PACMAN_DMA  = NULL;
-static volatile uint32_t * G_PACMAN_DMA_TX_BUFFER = NULL;
-static volatile uint32_t * G_PACMAN_DMA_RX_BUFFER = NULL;
+static uint32_t * G_PACMAN_AXIL = NULL;
+static uint32_t * dma  = NULL;
+static uint32_t * dma_tx = NULL;
+static uint32_t * G_PACMAN_DMA_RX_BUFFER = NULL;
 
 int G_I2C_FH = -1;
 
@@ -84,18 +84,6 @@ int pacman_init(int verbose){
     printf("INFO:  Running I2C firmware version %d.%d (Debug Code:  0x%x)\n", i2cmajor, i2cminor, i2cdebug);
   }
 
-  // initialize dma
-  uint32_t* dma = (uint32_t*)mmap(NULL, DMA_LEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_ADDR);
-  uint32_t* dma_tx = (uint32_t*)mmap(NULL, DMA_TX_MAXLEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_TX_ADDR);
-  dma_desc* curr = init_circular_buffer(dma_tx, DMA_TX_ADDR, DMA_TX_MAXLEN, LARPIX_PACKET_LEN);
-  dma_desc* prev = curr;
-  dma_restart(dma, curr);
-  uint32_t dma_status = dma_get(dma, DMA_MM2S_STAT_REG);
-  if ( dma_status & DMA_HALTED ) {
-    printf("Error starting DMA\n");
-    return 2;
-  }
-  printf("DMA started\n");
   
   return EXIT_SUCCESS;
 }
@@ -153,6 +141,23 @@ int pacman_init_tx(int verbose, int skip_reset){
     printf("INFO:  Initializing PACMAN DMA TX interface.\n");
     printf("INFO:  Initializing DMA contol interface (AXIL).\n");
   }
+
+
+  // initialize dma
+  int dh = open("/dev/mem", O_RDWR|O_SYNC);
+  dma = (uint32_t*)mmap(NULL, DMA_LEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_ADDR);
+  dma_tx = (uint32_t*)mmap(NULL, DMA_TX_MAXLEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_TX_ADDR);
+  dma_desc* curr = init_circular_buffer(dma_tx, DMA_TX_ADDR, DMA_TX_MAXLEN, LARPIX_PACKET_LEN);
+  dma_desc* prev = curr;
+  dma_restart(dma, curr);
+  uint32_t dma_status = dma_get(dma, DMA_MM2S_STAT_REG);
+  if ( dma_status & DMA_HALTED ) {
+    printf("Error starting DMA\n");
+    return 2;
+  }
+  printf("DMA started\n");
+
+
   
   return EXIT_SUCCESS;
 }
