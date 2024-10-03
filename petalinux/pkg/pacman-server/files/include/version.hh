@@ -1,7 +1,7 @@
 #ifndef version_hh
 #define version_hh
 
-#define PACMAN_SERVER_MAJOR_VERSION 2
+#define PACMAN_SERVER_MAJOR_VERSION 0
 #define PACMAN_SERVER_MINOR_VERSION 1
 
 #define PACMAN_FW_MAJOR_VERSION_TARGET 1

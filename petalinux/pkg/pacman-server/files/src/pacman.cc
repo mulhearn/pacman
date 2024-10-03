@@ -68,13 +68,12 @@ int pacman_init(int verbose){
   G_PACMAN_AXIL = (uint32_t*)mmap(NULL, PACMAN_LEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, PACMAN_ADDR);
 
   //unsigned fwversion = G_PACMAN_AXIL[TBD>>2];
-  unsigned fwversion = 11;
   
   if (verbose){
     printf("INFO:  Running pacman-server version %d.%d\n", PACMAN_SERVER_MAJOR_VERSION, PACMAN_SERVER_MINOR_VERSION);
-    printf("INFO:  Running pacman firmware version 1.%d\n", fwversion);
+    printf("INFO:  Running pacman firmware version (LEGACY) \n");
   }
-
+  
   // I2C
   if (verbose){
     printf("INFO:  Initializing PACMAN I2C interface.\n");
