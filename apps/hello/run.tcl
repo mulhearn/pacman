@@ -9,10 +9,10 @@ targets -set -nocase -filter {name =~ "ARM*#0"}
 # System Reset
 rst -system
 # Configure the FPGA
-fpga  trenz/hw/trenz.bit
+fpga  pacman/hw/pacman.bit
 
 # PS7 initialization
-source trenz/hw/ps7_init.tcl
+source pacman/hw/ps7_init.tcl
 ps7_init
 ps7_post_config
 dow bareapp/Debug/bareapp.elf

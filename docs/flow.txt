@@ -47,10 +47,11 @@ cd trenz
 ../scripts/build.sh
 cd images/linux
 
-# not generated in 2020.2, so copy this over once:
-cp ../../../src/trenz/changes/bootgen.bif .
+*** Don't Forget the Following Step ***
+*** The build script does not create the BOOT.BIN file ***
 
 # create the BOOT.BIN file:
+cp ../../../src/bootgen.bif .
 bootgen -arch zynq -image bootgen.bif -w -o BOOT.BIN
 ls -alh BOOT.BIN image.ub boot.scr
 
@@ -80,4 +81,19 @@ root@Trenz:~# /sbin/devmem 0x40000004
 
 Alignment trap: devmem (681) PC=0x004911b4 Instr=0x59eb Address=0xb6f71015 FSR 0x011
 0xFFFFFFFF
+
+# building just the hwutil (or pacman-server):
+
+
+../scripts/build_hwutil.sh
+
+# Convert the RPM from into a gzipped tar file:
+mkdir tmp
+cd tmp
+rpm2cpio ../hwutil-latest.rpm | cpio -idmv
+ls
+tar -czvf hwutil-latest.tar.gz * 
+mv hwutil-latest.tar.gz ..
+cd ..
+rm -fr tmp
 

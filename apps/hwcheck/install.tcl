@@ -7,7 +7,7 @@ if {[file exists "hwcheck"] == 1} {
 # Set SDK workspace
 setws hwcheck
 
-app create -name hwcheck -hw products/trenz.xsa -os standalone -proc ps7_cortexa9_0 -lang C -template {Hello World}
+app create -name hwcheck -hw products/pacman.xsa -os standalone -proc ps7_cortexa9_0 -lang C -template {Hello World}
 
 # rename hello world app to hardware check:
 file rename hwcheck/hwcheck/src/helloworld.c hwcheck/hwcheck/src/hwcheck.c

@@ -6,7 +6,7 @@
 set origin_dir [file dirname [info script]]/..
 
 # Set the project name
-set proj_name "trenz-fw"
+set proj_name "pacman-fw"
 
 # Create project
 create_project $proj_name $origin_dir/$proj_name -part xc7z010clg400-1
@@ -35,10 +35,17 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
   create_fileset -srcset sources_1
 }
 
+# Example IP generation but not needed in current design
+# Create the txfifo IP:
+#source $origin_dir/tcl/txfifo.tcl
+
+# Create the txfifo IP:
+source $origin_dir/tcl/regbus.tcl
+
 # Set IP repository paths
 set obj [get_filesets sources_1]
 if { $obj != {} } {
-   set_property "ip_repo_paths" "[file normalize "$origin_dir/ip_repo"]" $obj
+   set_property "ip_repo_paths" "[file normalize "$origin_dir/ip_repo"] [file normalize "$origin_dir/gen/ip"]" $obj
 
    # Rebuild user ip_repo's index before adding any source files
    update_ip_catalog -rebuild
@@ -48,7 +55,7 @@ if { $obj != {} } {
 set obj [get_filesets sources_1]
 # add all vhd files in src/hdl to project:
 set files {}
-foreach file [glob src/hdl/*.vhd] {lappend files [file normalize $file]}
+foreach file [glob src/hdl/*.vhd src/hdl/demos/*.vhd] {lappend files [file normalize $file]}
 puts "HDL files:  $files"
 add_files -norecurse -fileset sources_1 $files
 #update_compile_order -fileset sources_1

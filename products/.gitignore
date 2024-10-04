@@ -5,6 +5,7 @@
 *.tcl
 *.html
 *.elf
+*.mmi
 sysdef.xml
 xsa.json
 xsa.xml
