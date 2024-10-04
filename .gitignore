@@ -8,8 +8,10 @@ vivado*.log
 *~
 /fsbl
 /hello
+/demo
 /flash
 /hwcheck
+/jtag_boot
 /*.old
 /*/.petalinux
 /*/project-spec/hw-description/ps7_init.c
