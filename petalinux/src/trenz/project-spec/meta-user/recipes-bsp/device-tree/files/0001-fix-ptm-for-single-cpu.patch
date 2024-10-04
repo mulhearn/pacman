@@ -1,0 +1,25 @@
+From d66481bf6be648a646041d6dc15bd49b5abc1157 Mon Sep 17 00:00:00 2001
+From: Markus Kirberg <m.kirberg@trenz-electronic.de>
+Date: Wed, 24 Jan 2024 09:56:10 +0000
+Subject: [PATCH] fix ptm for single cpu
+
+---
+ device_tree/data/device_tree.tcl | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/device_tree/data/device_tree.tcl b/device_tree/data/device_tree.tcl
+index 4b019ed..7ce05b2 100644
+--- a/device_tree/data/device_tree.tcl
++++ b/device_tree/data/device_tree.tcl
+@@ -990,6 +990,11 @@ proc update_cpu_node {os_handle} {
+         if {[llength $proc_name] == 0} {
+             set cpu_node [add_or_get_dt_node -n "cpus" -d ${default_dts} -p ${system_root_node}]
+             hsi::utils::add_new_dts_param "${cpu_node}" "/delete-node/ cpu@$i" "" boolean
++
++             #also treat ptm
++             set axi_node [add_or_get_dt_node -n "&amba" -d ${default_dts}]
++             set ptm [add_or_get_dt_node -n "ptm@f889d000" -d ${default_dts} -p $axi_node]
++             hsi::utils::add_new_dts_param "${ptm}" "cpu" "cpu0" aliasref
+             continue
+         }
+        if {[string match -nocase [get_property IP_NAME [get_cells -hier $proc_name]] "microblaze"]} {
