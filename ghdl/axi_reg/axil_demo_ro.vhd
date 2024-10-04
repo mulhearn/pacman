@@ -47,6 +47,8 @@ architecture behavioral of axil_demo_ro is
   signal rdata    : std_logic_vector(C_DATA_WIDTH-1 downto 0);
   signal rready   : std_logic;
   signal rvalid	  : std_logic := '0';
+
+  signal rupdate  : std_logic;
 begin
   S_AXI_ARREADY <= arready;
   S_AXI_RDATA   <= rdata;
@@ -81,12 +83,14 @@ begin
     end if;
   end process;
 
+
   -- Read only version: 
 
   -- We will not assert ready until a previous read has completed.
   -- (This simplification limits throughput to 50% of maximum, but doesn't
   -- require anything fancy e.g. a "skid buffer")  
   arready <= not rvalid;  
+  rupdate <= (arready and arvalid);
   
   -- Determine rvalid:
   process(clk)
@@ -110,8 +114,8 @@ begin
       rdata <= (others => '0');
     else
       -- we update the read data on the request only (arready and arvalid)
-      -- and latch it until the next request
-      if (rising_edge(clk) and arready='1' and arvalid='1') then
+      -- and register it until the next request
+      if (rising_edge(clk) and (rupdate='1')) then
         -- ignoring upper but could check they are zero
         lowaddr := araddr(7 downto 0);
         case lowaddr is 
