@@ -1,7 +1,0 @@
-//arch = zynq; split = false; format = BIN
-the_ROM_image:
-{
-	[bootloader]fsbl_zynq/Debug/fsbl_zynq.elf
-	trenz/hw/trenz.bit 
-	hello/Debug/hello.elf
-}

@@ -7,7 +7,7 @@ if {[file exists "hello"] == 1} {
 # Set SDK workspace
 setws hello
 
-app create -name bareapp -hw products/trenz.xsa -os standalone -proc ps7_cortexa9_0 -lang C -template {Hello World}
+app create -name bareapp -hw products/pacman.xsa -os standalone -proc ps7_cortexa9_0 -lang C -template {Hello World}
 # this version builds from prebuilt:
 #app create -name bareapp -hw products_prebuilt/test_board_1cf_1gb.xsa -os standalone -proc ps7_cortexa9_0 -lang C -template {Hello World}
 
