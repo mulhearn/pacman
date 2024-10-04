@@ -1,0 +1,7 @@
+the_ROM_image:
+{
+	[bootloader] /home/mulhearn/research/trenz/pacman/petalinux/trenz/images/linux/zynq_fsbl.elf
+	/home/mulhearn/research/trenz/pacman/petalinux/trenz/images/linux/system.bit
+	/home/mulhearn/research/trenz/pacman/petalinux/trenz/images/linux/u-boot.elf
+	[load=0x00100000] /home/mulhearn/research/trenz/pacman/petalinux/trenz/images/linux/system.dtb
+}

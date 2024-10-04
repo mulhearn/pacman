@@ -1,0 +1,101 @@
+-------------------------------------------------------------------
+These notes describe how the TRENZ reference design, test_board for
+TE020, was setup and them imported into git.  Not needed if you are
+simply starting from this repository.
+-------------------------------------------------------------------
+
+unzip trenz/TE0720-test_board_noprebuilt-vivado_2018.3-build_01_20190304100755.zip
+mv test_board pacman
+cd pacman
+chmod ugo+x _create_linux_setup.sh
+
+In case of BASH/DASH issues present in e.g. Ubuntu 16.04 (Syntax error: "(" unexpected)
+simply edit the first line of _create_linux_setup.sh to replace sh explicitly with bash:
+
+   #! /bin/sh  ==(replace)==>  #! /bin/bash
+
+./_create_linux_setup.sh
+Select option (0) then answer questions to build your particular board
+
+Wait for Vivado to finish...
+
+Next we need to extract some sources that Vivado owns, less we will inevitably encounter infinite recursion from Xilinx's perverted insistence on absolute pathnames:
+
+From the shell:
+cp vivado/pacman.srcs/sources_1/bd/zsys/hdl/zsys_wrapper.vhd srcs
+
+From Vivado GUI, Design Sources:
+-> zsys_wrapper -> remove file from project
+From Vivado GUI, File Add Sources, Add or Create Design Sources, Next,
+-> Add Files: ../srcs/zsys_wrapper.vhd (OK)
+Finish
+
+Check you can Run Synthesis and Run Implementation successfully. ???
+
+Now you are ready to let vivado create a tcl script that will allow you to recreate the entire project from just the external sources.  In the tcl console, move back one directory, make sure you are in the root of your project (e.g. whatever you renamed test_board too), then write the project tcl file there:
+
+cd ..
+pwd
+write_project_tcl recreate.tcl
+
+Now you can exit Vivado.
+
+cd ..
+mv pacman pacman-old
+mkdir pacman
+mv pacman-old/recreate.tcl pacman/
+mv pacman-old/srcs pacman/
+mv pacman-old/constraints pacman/
+mv pacman-old/ip_lib pacman/
+# also some files useful for petalinux:
+mv pacman-old/misc pacman/
+mv pacman-old/os pacman/
+mv pacman-old/sw_lib/ pacman/
+mv pacman-old junk
+
+
+Now is a good time to clean up the recreate tcl to do a few things:
+ - assuming you've added the TE board files to Xilinx, you can now get rid of the board_repo line, since you won't be keeping it local 
+set_property -name "board_part_repo_paths" -value "/space/home/benchtop/projects/sandbox/pacman/board_files" -objects $obj
+ - remove the orig_proj_dir, since it won't exist
+ 
+ 
+
+# now test you have everything:
+tar -czf pacman.tgz pacman
+rm -fr pacman
+tar -xzf pacman.tgz
+cd pacman
+vivado -mode batch -source recreate.tcl
+
+vivado
+(open project file e.g. packman/packman/packman.xpr)
+(See what I mean about Xilinx and recursion!  At least we held them to three!)
+
+Check that you can Run Synthesis and Run Implementation on your project...
+
+Now, the whole trick here is that Xilinx can reproduce this whole
+shebank from your little tar ball, so blow away your test pacman
+directory, remake it clean from the tar ball, and commit everything
+into your repository of choice before compiling again.
+
+
+
+# petalinux:
+For petalinux, I build following the instructions from:
+
+
+   https://wiki.trenz-electronic.de/display/PD/PetaLinux+KICKstart
+
+leading to the steps documented in the README.txt.  After the initial
+build, I adjusted the petalinux/.gitignore based on:
+
+    https://www.xilinx.com/support/answers/69415.html
+
+plus adding some additional files clearly automatically generated
+(which is potentially dangerous...and so noted in the .gitignore)
+
+
+
+
+

@@ -1,0 +1,362 @@
+Pac-Man Card (v1) Testing Log
+
+----------------------------------------------------------------
+2 Apr 2020:
+----------------------------------------------------------------
+
+This is a weird one.  Suddenly petalinux-config started failing with:
+
+ERROR: Failed to source bitbake
+
+After digging throught the logfile build/config.log I see:
+
+ERROR: No space left on device or exceeds fs.inotify.max_user_watches?
+
+This is an odd one... the solution is to simply add more:
+
+> cat /proc/sys/fs/inotify/max_user_watches
+# see current threshold and double it:
+> echo 16384 | sudo tee /proc/sys/fs/inotify/max_user_watches
+
+----------------------------------------------------------------
+1 Apr 2020:
+----------------------------------------------------------------
+
+I've been digging into the boot sequence and clock setting of the Zynq
+to see if there is a software work-around for the unreliable SD card.
+
+I'm now able to build a BOOT.bin file and load it into QSPI flash.
+For instance, I've been able to put U-boot into QSPI to reliably bring
+up u-boot even under cold conditions.
+
+There are a number of places where there are settings for the SD clock
+speed.
+
+1) In the firmware, by modifying the Peripheral clock setting in the
+Recustomize-IP GUI of the Zynq processor.
+
+2) In project-spec/meta-user/recipes-bsp/device-tree/files/system-user.dtsi
+there are vary settings, most relevant being:
+
+&sdhci0 {
+   max-frequency = <20000000>;
+};
+
+3) I also noticed that in:
+
+petalinux/project-spec/meta-plnx-generated/recipes-bsp/u-boot/configs/platform-auto.h
+
+there is a setting:
+
+#define CONFIG_ZYNQ_SDHCI_MAX_FREQ  52000000
+
+
+So far, I've only confirmed an effect from (1).  Using the "clk" utility from the U-boot prompt.
+
+The largest divisor I can put on the SD clk is 63, which results in a
+clock rate of about 15 MHz, confirmed via "clk", but not yet with
+scope probes.
+
+I've discovered that I can push this down to 10 MHz by adjusting the
+IO_PLL divisor.  However, this is interfering with the QSPI clock
+rate, which I see is correctly set by HW, but flash operation still
+fails now.  Work in progress.
+
+
+
+
+----------------------------------------------------------------
+30 Mar 2020:
+----------------------------------------------------------------
+
+I just noticed that the entry from Mar 4 is incomplete.  I went on to
+test that putting the ADC into powerdown mode did reduce the leakage
+current.  So the combination of adding a load resistor and placing the
+ADC in powerdown mode when voltage is off should bring the output
+voltage to within mV of zero.
+
+Today I performed more systematic tests of the SD card performance,
+and found that reliably booting from SD card requires a warm card
+*and* the timing reduced (currently at 15 MHz).
+
+I'm going to hang some scope probes tomorrow after I retrieve my scope
+from the lab, and check signal integrity and clock speed.  I'd like to
+make sure the software interventions are in fact causing the clock to
+run at reduced rate.
+
+----------------------------------------------------------------
+29 Mar 2020:
+----------------------------------------------------------------
+
+Since moving the Pac-Man card to my home from the office, the problems
+with the SD card have suddenly reasserting themselves.
+
+
+I've confirmed that the firmware still has the clock set to 25 MHz,
+which appeared to cure the problem in the past.
+
+To the useful discussions here:
+http://zedboard.org/sites/default/files/documentations/PicoZed_7010_7020_RevC_Errata_v1_1.pdf
+https://www.xilinx.com/support/answers/59999.html
+
+I have found a Trenz specific related discussion here:
+https://forum.trenz-electronic.de/index.php/topic,795.msg3504.html#msg3504
+
+And have tried setting project-spec/meta-user/recipes-bsp/device-tree/files/system-user.dtsi to include:
+
+&sdhci0 {
+   max-frequency = <25000000>;
+   //disable-wp;
+   no-1-8-v;
+};
+
+and related variations with no effect.  I can boot to Linux from JTAG and then see the SD card, but with many errors like:
+
+mmcblk0: error -84 transferring data, sector 995391, nr 376, cmd response 0x900, card status 0xb00
+
+
+
+
+
+
+----------------------------------------------------------------
+4 Mar 2020:
+----------------------------------------------------------------
+
+I've been pouring through the specs of the ADCs here:
+
+  http://www.ti.com/lit/ds/symlink/ina219.pdf
+
+and think I understand what is going on and have a good solution that
+doesn't require pulling the ADC chips.
+
+The input leakage current is 20 uA in the specs, but in the footnotes
+it says "Negative leakage currents can occur under different input
+conditions".  I think we simply have a negative leakage current when
+the voltage is set to zero.  In the specs, the input leakage drops
+from 20 uA to 0.1 uA when going to Power-down mode.  I suspect that if
+we simply set the ADC into power down mode when we turn the power off,
+we will reduce the leakage current by a factor of 1.0/0.1=10 or even
+20/0.1=200.
+
+I've also sorted out how to calculate the voltage and current from the
+register values correctly.  At least for the bus voltage, I can now
+reproduce the measured values quite precisely.  The current
+measurements are still off by about 10% wrt the benchtop supply, and I
+can't see where the crazy high shunt voltage measurements are coming
+from.  I thought these might be two-complement negative voltages, but
+it appears the sign bit is much higher.
+
+***
+
+Booting Linux from SD has been 100% reliable since changing SDIO
+frequency to 25 MHz.
+
+The full set of hardware features can not be tested with the "hwcheck"
+bare-metal app, running with minimal firmware which routes GPIO to the
+digital outputs:
+
+mulhearn@vonnegut:~/research/pacman/hwcheck$ busybox microcom -s 115200 /dev/ttyUSB1
+Pac-Man Card Low-Level Hardware Testing
+initializing PS GPIO interface (MIO and EMIO pins)...success.
+initializing AXI GPIO interface (HR pins)...success.
+initializing I2C interface...success.
+perfomring I2C selftest...success.
+setting IIC clk rate to 200000...success.
+choose an option:
+   (1) blink LEDs          (2) read voltage levels
+   (3) power up tile 1     (4) power down tile 1
+   (5) init and check I2C  (6) check digital I/O 
+BLINK LEDS:  blinking LED 1 (MIO pin)...
+BLINK LEDS:  blinking LED 2 (MIO pin)...
+BLINK LEDS:  blinking LED 3 (HR pin)...
+BLINK LEDS:  blinking LED 4 (HR pin)...
+BLINK LEDS:  done.
+choose an option:
+   (1) blink LEDs          (2) read voltage levels
+   (3) power up tile 1     (4) power down tile 1
+   (5) init and check I2C  (6) check digital I/O 
+
+I2C is working to control the DACs:
+
+https://datasheets.maximintegrated.com/en/ds/MAX5215-MAX5217.pdf
+
+and the ADCs:
+
+http://www.ti.com/lit/ds/symlink/ina219.pdf
+
+
+, and we are able to enable and control VDDD and VDDA.
+
+
+There are some caveats:
+
+1) The range of VDDA and VDDD exceeds design specs (0 -> 1.8 V).
+Output can reach 2 V if software is configured incorrectly.
+
+2) The DACs require some configuration before setting the DAC value.
+The config register must be set to 0x00, which differes from it's
+default value (at cold start) of 0x08 by the AUX* mode: disabled
+versus the default (CLR*).  The pin 5 (AUX*) is not-connected in
+Pac-Man, I suspect that by pulling it high (or maybe low?), the
+default config should work, but this is not yet confirmed.  In either
+case, this is already handled in software by configuring it to disable
+the AUX*.
+
+3) The ground filtering has an orientation mistake, which we have
+worked around.
+
+4) It seems that the voltage and current monitoring devices leak a few
+uA into VDDA and VDDD even when they are turned off.  This is an
+unpleasant surprise which we don't yet understand.  We have confirmed
+that pulling the chip removes the source os the leakage current.
+
+5) The voltage and current monitoring devices report:
+
+with VDDA/VDDD off:
+SUMMARY:  V+:    V=19497 mV I=175 mA   <-- benchtop supply says 19.9V at 400 mA
+SUMMARY:  VDDD:  V=864 mV I=28923 mA   <-- DMM says 863 mV (leakage current!).. crazy current reading!
+SUMMARY:  VDDA:  V=0 mV I=0 mA         <-- chip removed!
+
+with VDDA/VDDD on:
+SUMMARY:  V+:    V=19493 mV I=187 mA   <-- benchtop supply says 19.9V at 400 mA
+SUMMARY:  VDDD:  V=2028 mV I=28916 mA  <-- DMM says 2.07 V ... crazy current reading!
+SUMMARY:  VDDA:  V=0 mV I=0 mA         <-- chip removed!
+
+The crazy current readings are possibly two's complement negative
+values, and this might be related to the observed leakage current.  I
+also need to understand why the values are different from the DMM
+values.  These devices are using the default configuration (e.g. 32 V)
+and from cursory reading of specs, should be much more accurate than
+this.  These devices aren't show stoppers, we can simply pull them,
+but it would be nice to understand before next revision.
+
+The digital I/O also appears to be working... I can control CLK, TRIG,
+RESET, MOSI0-3 through the AXI GPIO interface, bit banging at up to
+100 kHZ from the processsor (PS).
+
+Setting TILE_EN to zero does not disable LVDS digital I/O.
+
+I was able to do some simple loopback testing using the available TPs for MISO_1 and MISO_2.
+
+
+----------------------------------------------------------------
+27 Feb 2020:
+----------------------------------------------------------------
+
+I tried to reproduce the problems booting from SD card by rebooting 
+several times, and eventually encountering this error:
+
+reading image.ub
+sdhci_transfer_data: Error detected in status(0x208000)!
+Error reading cluster
+** Unable to read file image.ub **
+Zynq> <INTERRUPT>
+Zynq> 
+
+Which led me to find these references:
+
+http://zedboard.org/sites/default/files/documentations/PicoZed_7010_7020_RevC_Errata_v1_1.pdf
+https://www.xilinx.com/support/answers/59999.html
+
+The solution is to use SSM at a maximum rate of 25 MHz.  Note that it
+is associated with cold starts.
+
+The "dirty-bit" was a red-herring.  It was likely simply warming up
+that allowed it to boot!  Still, I should change FS type on the boot
+partition to avoid the dirty-bit warning.
+
+Looking at latest project TCL file, indeed it seems we are exceeding 25 MHz.
+
+   CONFIG.PCW_ACT_SDIO_PERIPHERAL_FREQMHZ {100.000000} \
+   CONFIG.PCW_EN_EMIO_CD_SDIO1 {0} \
+   CONFIG.PCW_EN_EMIO_SDIO1 {0} \
+   CONFIG.PCW_EN_EMIO_WP_SDIO1 {0} \
+   CONFIG.PCW_EN_SDIO0 {1} \
+   CONFIG.PCW_EN_SDIO1 {0} \
+   CONFIG.PCW_SDIO_PERIPHERAL_DIVISOR0 {10} \
+   CONFIG.PCW_SDIO_PERIPHERAL_FREQMHZ {100} \
+   CONFIG.PCW_SDIO_PERIPHERAL_VALID {1} \
+
+Using the IP customization GUI, I've now changed this to:
+
+   CONFIG.PCW_ACT_SDIO_PERIPHERAL_FREQMHZ {25.000000} \
+   CONFIG.PCW_EN_EMIO_CD_SDIO1 {0} \
+   CONFIG.PCW_EN_EMIO_SDIO1 {0} \
+   CONFIG.PCW_EN_EMIO_WP_SDIO1 {0} \
+   CONFIG.PCW_EN_SDIO0 {1} \
+   CONFIG.PCW_EN_SDIO1 {0} \
+   CONFIG.PCW_SDIO_PERIPHERAL_DIVISOR0 {40} \
+   CONFIG.PCW_SDIO_PERIPHERAL_FREQMHZ {25} \
+   CONFIG.PCW_SDIO_PERIPHERAL_VALID {1} \
+
+----------------------------------------------------------------
+25 Feb 2020:
+----------------------------------------------------------------
+
+Initial testing of newly assembled Pac-Man card:
+
+1) Using a bench-top power supply, measured power consumption of the
+Trenz TE0720 while on the TE0706.  Measured power consumption of bare
+PacMan card.  Based on these measurements, adjusted the current limits
+on bench-top supply to 0.5 A at 20 V.  Installed TRENZ on PacMan,
+powered it up, and observed 400 mA of current, near the expected
+value.
+
+2) On the Pac-Man's 12-pin header for JTAG/UART, installed a
+TE0790-03, a Trenz Daughter card which provides simultaneous access to
+JTAG and UART over a single USB cable.  The "Hello World" test ran
+over JTAG out of the box.  This shows UART and JTAG are both
+functional.
+
+3) Ran low-level hardware test over JTAG, blinked 3 out of 4 LEDs.
+Two LEDs are over MIO, and two on HR pins (connected via AXI GPIO).
+The non-working LED is due to an assembly problem, just ignoring this
+for now.
+
+4) Boot to Linux from SD card did not work.  Later, using a fsck'ed
+and cleanly unmounted SD card and a power-cycle of the Pac-Man, I was
+able to boot successfully from SD card.
+
+5) Using a petalinux image that uses initramfs as root filesystem, I
+was able to BOOT to linux over JTAG, like this:
+
+petalinux-boot --jtag --kernel --fpga
+
+6) Ethernet is working:
+
+root@petalinux:~# ifconfig eth0
+eth0      Link encap:Ethernet  HWaddr 54:10:EC:E2:DC:69
+          inet addr:169.237.43.122  Bcast:169.237.43.255  Mask:255.255.254.0
+          inet6 addr: fe80::5610:ecff:fee2:dc69/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:12683 errors:0 dropped:2748 overruns:0 frame:0
+          TX packets:202 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:2037195 (1.9 MiB)  TX bytes:33925 (33.1 KiB)
+          Interrupt:27 Base address:0xb000
+
+7) ssh is working, was able to login to pacman from my pc:
+
+mulhearn@vonnegut:/media/mulhearn$ ssh root@pacman-dev1
+root@pacman-dev1's password:
+root@petalinux:~# pwd
+/home/root
+root@petalinux:~#
+
+8) Despite inability to boot from SD card, the SD card is visible from Linux:
+
+root@petalinux:/run/media# cd mmcblk0p1/
+root@petalinux:/run/media/mmcblk0p1# ls
+BOOT.bin  flash     image.ub  latest    safe      working
+root@petalinux:/run/media/mmcblk0p1# cd ../mmcblk0p2/
+root@petalinux:/run/media/mmcblk0p2# ls
+bin    boot   dev    etc    home   lib    media  mnt    proc   run
+sbin   srv    sys    tmp    usr    var
+root@petalinux:/run/media/mmcblk0p2# dmesg | grep mmc
+mmc0: SDHCI controller on e0100000.mmc [e0100000.mmc] using ADMA
+mmc0: new high speed SDHC card at address 1388
+mmcblk0: mmc0:1388 USD00 14.7 GiB
+ mmcblk0: p1 p2
+EXT4-fs (mmcblk0p2): mounted filesystem with ordered data mode. Opts: (null)
+
