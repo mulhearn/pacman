@@ -10,21 +10,150 @@
 
 \begin{document}
 
-\title{Technical Reference Manual for the Pixel Array Control Monitor and Network (Pac-Man) Card}
+\title{Technical Reference Manual for the Pixel Array Control Monitor
+  and Network (PACMAN) Card}
+\author{Hans-Gerd Berns, Armin Karcher, Michael Mulhearn}
 
 \maketitle
 
-\section{Requirements for Demonstrator PACMAN}
+\section{Introduction}
 
-This section describes the requirements of the PACMAN card intended to
-drive the demonstrator systems through the ArgonCube 2x2 demonstrator.
+The Pixel Array Control Monitor and Network (PACMAN) card is the warm
+electronics (located outside of the cryostat) for the pixellated
+liquid argon (LAr) time projection chamber (TPC) based on the LArPix
+ASIC.  The PACMAN card provides power and digital I/O to arrays of
+LArPix ASICs hosted on pixel tile cards located within the cryostat.
+In the production system, each PACMAN card handles up to ten pixel
+tile cards.  The PACMAN card provides analog test and monitor signals
+as well as digital control signals for clock, exernal trigger, and
+reset, and sync.  The PACMAN card serves as a timing system end point,
+hosts a linux CPU, and is connected to the data acquisition system via
+ethernet.
+
+The PACMAN card plays a supporting role in the LArPix system.  It does
+not face technical challenges as severe as the cold electronics of the
+LArPix system and therefore a basic design constraint is that it in no
+way limits the performance of the supported system.
+
+\section{Prototype Results}
+
+Many of the specifications for the PACMAN are driven by measurements,
+using prototype devices, as described in this section.
+
+The Intrinsic RMS noise on the LArPix ASIC was
+benchtested\footnote{Reported 6 Mar 2020, Brooke} at $~\sim 3~\rm mV$.
+
+The PACMAN card provides digital (VDDD) and analog (VDDA) power for
+the LArPix ASICs.  The ASIC power draw during power up was
+measured\footnote{Reported 13 Feb 2020, Brooke} as follows:
+\captionof{table}{ASIC Current Draw at Power-up}
+\begin{center}
+\begin{tabular}{lllll}
+   & Voltage (V) & Current (mA) & Power (mW) & Power ($\rm \mu W / chan$)\\
+VDDA  & 1.8 & 1.4  & 2.5  & 39\\
+VDDD  & 1.8 & 6.92 & 12.5 & 195\\
+\end{tabular}
+\end{center}
+
+\newpage
+The 10x10 pixel-tile power draw was measured \footnote{Reported 14 Jan 2021, Brooke} as follows:
+\captionof{table}{10x10 Power Draw}
+\begin{center}
+\begin{tabular}{llll}
+   & Voltage (V) & Current (mA) & Power (W) \\
+VDDA  & 1.8 & 166  & 0.3  \\
+VDDD  & 1.8 & 611  & 1.1  \\
+\end{tabular}
+\end{center}
+
+\section{Specifications for the PACMAN Card}
+
+\subsection{Overview}
+
+Each PACMAN card provides power, digital I/O, and analog test and
+monitoring signals to up to ten pixel tile cards.  Each pixel tile
+card will consist of 160 ASICs.
+
+\subsection{Power}
+
+The PACMAN card provides digital and analog power to up to ten pixel
+tile cards.  The digital voltage level (VDDD) and analog voltage level
+(VDDA) are digitally controlled independently for each pixel tile
+card, within the limits and at the stability specified below.
+
+The power requirements of the PACMAN are based on scaling the measured
+power consumption of the 100 ASIC pixel tile cards to 160 ASIC pixel
+tile cards of the production system, a scale factor of 1.6.  An
+additional (minimum) safety factor of $10\%$ is added to these
+extrapolated power requirements to derive the following
+specifications:
+\captionof{table}{Digital and Analog Power Requirements (per tile card)}
+\begin{center}
+\begin{tabular}{llllll}
+      & Stability & Min (V) & Max (V) & Max Current (A) & Max Power (W) \\
+VDDA  & $1\%$ & 0 & 1.8 & 0.3 & 0.7\\
+VDDD  & $1\%$ & 0 & 1.8 & 1.1 & 2.2\\
+\end{tabular}
+\end{center}
+
+Reaching a $1\%$ stability on VDDA and VDDD requires linear regulation
+and so the power requirements at the input of the PACMAN are derived
+from a higher voltage level of $3~\rm V$.  This implies that the initial
+switching voltage requirement must provide at least 42 W at $3~\rm V$.
+
+The PACMAN power is provided by a single nominal 48~V 2~A DC input.
+The power connection is the four position terminal connector (Phenoix
+Contact P/N 5444660).  The inner two pins provide power and the outer
+two are for sense:
+\captionof{table}{Input Power Connections}
+\begin{tabular}{ll}
+pin & function \\
+1 & V+ sense  \\
+2 & V+ \\
+3 & V- \\
+4 & V- sense \\ 
+\end{tabular}\\
+The connector is rated for 8 A and 300 V.  The PACMAN is fused at 2.5
+A and has over voltage protection at 60 V.  The sense pins are fused
+at 0.5 A.
+
+\subsection{Digital Signals}
+
+The LArPix-v2 ASIC uses a bit-serial protocol to transmit and receive
+data.  The PACMAN is the primary and the LARPix ASIC the secondary, so
+that the PACMAN transmits POSI and receives PISO signals.
+
+The PACMAN shall provide the following digital IO signals to each
+pixel tile card:
+\captionof{table}{Digital Signals (per pixel tile card)}
+\begin{center}
+\begin{tabular}{llllll}
+Signal & Quantity & Description \\
+  POSI & 4 & Bit serial transmission to pixel tile \\
+  PISO & 4 & Bit serial reception from pixel tile \\
+  CLK  & 1 & Clock \\
+  TRIG & 1 & Trigger \\
+  SYNC & 1 & Multiplexed Synchronization and Reset \\
+\end{tabular}
+\end{center}
+
+Each POSI signal is received by a single ASIC, but the clock, trigger,
+and sync signals are fanned out to every ASIC on the tile card.  The
+PACMAN must be capable of driving the resulting capacitive load.
+
+The nominal clock rate is $10~\rm MHz$ with a maximum of $40~\rm MHz$.
+The LArPix ASIC uses an LVDS signal with custom voltage level which
+the PACMAN is capable of transmitting and receiving.
+
+\subsection{Noise}
+
+The noise injected into the pixel tile from the controller is less than $1~\rm mV$.
 
 \subsection{Pixel Tile Interface}
 
-A single PACMAN card shall drive up to eight pixel tile cards through
-a single flange card.  The interface to the eight-tile flange card
-used in demonstrator systems and subsequent pixel tile cards is
-through a single 6 row by 50 pin high-desnity SAMTEC connector {\tt
+A single PACMAN card drive up to ten pixel tile cards through a single
+flange card.  The interface to the eight-tile flange card is through a
+6 row by 50 pin high-desnity SAMTEC connector {\tt
   SEAF-50-01-L-06-1-RA-K-TR} on the PACMAN card.
 
 The PACMAN card shall provide a footprint for an optional 2x17
@@ -33,8 +162,8 @@ card.
 
 \subsection{Front Panel Interface}
 
-The PACMAN card shall implement the following front panel interfaces
-in specified quantity with specified routing.  When routing to
+The PACMAN card implements the front-panel interfaces listed below in
+the specified quantity with specified routing.  When routing to
 programmable logic (PL) is specified, the specified purpose is nominal
 and can be repurposed through firmware changes.
 
@@ -50,113 +179,23 @@ LED         & 4 & PL: General Purpose
 \end{tabular}
 \end{center}
 
+
 \subsection{Timing System Endpoint}
 
-The PACMAN card shall implement a ProtoDUNE-SP timing system
-endpoint\footnote{DUNE-doc-1651-v3} of a single fiber-optic link.  The
-simplest hardware implementation of such an endpoint includes a PIN
-diode (photodetector), transimpedance amplifier, and a clock and data
-recovery IC such as ADN2814.
+The PACMAN card implement a ProtoDUNE-SP timing system
+endpoint\footnote{DUNE-doc-1651-v3} of a single fiber-optic link.
 
-\subsection{Linux System and Peripherals}
+\subsection{Embedded Linux}
 
-The PACMAN card shall provide a linux host with system peripherals:
-\captionof{table}{Required Peripherals}
-\begin{center}
-\begin{tabular}{ll}
-         & Notes \\
-SD Card  & Firmware, linux images, linux root filesytem\\
-Ethernet & Gigabit\\
-JTAG     & Configure FPGA\\
-UART     & Linux terminal\\
-\end{tabular}
-\end{center}
-
-\subsection{Power Requirements}
-
-The PACMAN card shall provide digital and analog power to each pixel
-tile card.  The digital voltage level (VDDD) and analog voltage level
-(VDDA) are digitally controlled independently for each pixel tile, within the limits and at the stability specified below.
-\captionof{table}{Digital and Analog Power Requirements}
-\begin{center}
-\begin{tabular}{llllll}
-      & Stability & Min (V) & Max (V) & Max Current (A) & Max Power (W) \\
-VDDA  & $1\%$ & 0 & 1.8 & 0.5 & 0.9\\
-VDDD  & $1\%$ & 0 & 1.8 & 1   & 1.8 W\\
-\end{tabular}
-\end{center}
-
-\subsection{Digital Signals}
-
-The LArPix-v2 ASIC uses a bit-serial protocol to transmit and receive
-data.  The PACMAN is the primary and the LARPix ASIC the secondary, so
-that the PACMAN transmits POSI and receives PISO signals.
-
-The PACMAN shall provide the following digital IO signals to each
-pixel tile card:
-\captionof{table}{Digital and Analog Power Requirements}
-\begin{center}
-\begin{tabular}{llllll}
-Signal & Quantity & Description \\
-  POSI & 4 & Bit serial transmission to pixel tile \\
-  PISO & 4 & Bit serial reception from pixel tile \\
-  CLK  & 1 & Clock \\
-  TRIG & 1 & Trigger \\
-  SYNC & 1 & Multiplexed Synchronization and Reset \\
-\end{tabular}
-\end{center}
-
-Each POSI signal is received by a single ASIC, but the clock, trigger,
-and sync signals are fanned out to every ASIC on the tile card.  The
-PACMAN must be capable of driving the resulting capacitive load
-($XXX\rm~pF$) with XXX.
-
-The nominal clock rate is $10~\rm MHz$ with a maximum $40~\rm MHz$.
-
-The LArPix-v2 ASIC uses an LVDS-like pseudo-differential CMOS signal
-which the PACMAN shall be capable of transmitting and receiving.
-
-\subsection{Noise}
-
-The noise injected into the pixel tile from the controller shall be
-less than $1~\rm mV$.
-
-\subsection{Monitoring}
-
-\section{Test-Bench Results}
-
-\subsection{Power}
-
-Benchtests\footnote{Reported 13 Feb 2020, Brooke} of ASIC power drawer during power up.
-\captionof{table}{ASIC Current Draw at Power-up}
-\begin{center}
-\begin{tabular}{lllll}
-   & Voltage (V) & Current (mA) & Power (mW) & Power ($\rm \mu W / chan$)\\
-VDDA  & 1.8 & 1.4  & 2.5  & 39\\
-VDDD  & 1.8 & 6.92 & 12.5 & 195\\
-\end{tabular}
-\end{center}
-
-Benchtests\footnote{Reported 14 Jan 2021, Brooke} of 10x10 pixel-tile power draw:
-\captionof{table}{10x10 Power Draw}
-\begin{center}
-\begin{tabular}{llll}
-   & Voltage (V) & Current (mA) & Power (W) \\
-VDDA  & 1.8 & 166  & 0.3  \\
-VDDD  & 1.8 & {\color{red} 611}  & 1.1  \\
-\end{tabular}
-\end{center}
-
-When driving the 10x10 tile, the PACMAN v1r3 drew $611~\rm mA$ through
-the LT3045 with nominal limit of $500~\rm mA$.  When driving eight tiles the XXXX was overpowered.  To drive eight pixel tiles with PACMAN v1r3, VDDD was reduced to $1.6~\rm V$ on v1r3, and one 2 A regulator was bypassed.  In this configuration, PACMAN draws $1.4~\rm A$ from the supplies.
-
-
-\subsection{Low-Noise Requirements}
-
-Intrinsic RMS noise on ASIC was benchtested\footnote{Reported 6 Mar
-  2020, Brooke} at $~\sim 3~\rm mV$.
-
-
+The PACMAN is an embedded Linux system and supports several standard embedded Linux interfaces:\\
+\begin{tabular}{lll}
+Interface & P/N & Notes \\ 
+Ethernet & & Gigabit \\
+SD Card & & Bootable from SD card\\
+JTAG & & SoC Configuration\\
+UART & & Linux Terminal\\
+\end{tabular}\\  
+The JTAG and UART interface are multiplexed to provide a linux terminal and firmware configuration over a single USB port. 
 
 \appendix
 
@@ -167,257 +206,14 @@ Intrinsic RMS noise on ASIC was benchtested\footnote{Reported 6 Mar
 \vskip 0.5cm
 \begin{center}
 \begin{tabular}{llll}
-Card        & Designer      & Data & Notes \\
+Card        & Designer      & Date & Notes \\
 \hline
 PACMAN v1r1 & Hillbrand     & Feb 2020 & Initial Prototype \\
 PACMAN v1r2 & Karcher       & July 2020 & Single-tile capable\\
 PACMAN v1r3 & Berns/Karcher & Jan 2021 & Eight-tile capable - Module 0\\
-PACMAN v2 & Berns/Karcher   & July 2021 (Est) & LArPix-v2b, Power, TX\\
-PACMAN v3 & Berns/Karcher   & Feb 2022 (Est) & Ten-tile capable \\
+PACMAN v2 & Berns/Karcher   & Feb 2022 & LArPix-v2b, Power, TX\\
+PACMAN v3 & Berns/Karcher   & TBD & Ten-tile capable \\
 \end{tabular}
 \end{center}
 
-
-\newpage
-\section{Trenz Connector Pinout}
-\label{app:bigpinout}
-
-\begin{tabular}{llll}
-\hline
-Logical & Trenz & Pin & Note\\  
-\hline
-TILE6\_POSI\_0     & B33\_L7\_P   & JB2-12 & EVAL\\
-TILE6\_POSI\_1     & B33\_L7\_N   & JB2-14 & EVAL\\
-TILE6\_POSI\_2     & B33\_L8\_P   & JB2-16 & EVAL\\
-TILE6\_POSI\_3     & B33\_L8\_N   & JB2-18 & EVAL\\
-\hline
-TILE6\_PISO\_0     & B33\_L11\_P  & JB2-22 & EVAL\\
-TILE6\_PISO\_1     & B33\_L11\_N  & JB2-24 & EVAL\\
-TILE6\_PISO\_2     & B33\_L12\_P  & JB2-26 & EVAL\\
-TILE6\_PISO\_3     & B33\_L12\_N  & JB2-28 & EVAL\\
-\hline
-TILE7\_POSI\_0     & B33\_L17\_P  & JB2-32 & \\
-TILE7\_POSI\_1     & B33\_L17\_N  & JB2-34 & \\
-TILE7\_POSI\_2     & B33\_L18\_P  & JB2-36 & \\
-TILE7\_POSI\_3     & B33\_L18\_N  & JB2-38 & \\
-\hline
-TILE7\_PISO\_0     & B13\_L7\_P   & JB2-42& \\
-TILE7\_PISO\_1     & B13\_L7\_N   & JB2-44& \\
-TILE7\_PISO\_2     & B13\_L8\_P   & JB2-46& \\
-TILE7\_PISO\_3     & B13\_L8\_N   & JB2-48& \\
-\hline
-TILE4\_POSI\_0     & B13\_L11\_P  & JB2-52 & \\
-TILE4\_POSI\_1     & B13\_L11\_N  & JB2-54 & \\
-TILE4\_POSI\_2     & B13\_L9\_P   & JB2-56 & \\
-TILE4\_POSI\_3     & B13\_L9\_N   & JB2-58 & \\
-\hline
-TILE4\_PISO\_0     & B13\_L20\_P  & JB2-62 & \\
-TILE4\_PISO\_1     & B13\_L20\_N  & JB2-64 & \\
-TILE4\_PISO\_2     & B13\_L17\_P  & JB2-66 & \\
-TILE4\_PISO\_3     & B13\_L17\_N  & JB2-68 & \\
-\hline
-TILE1\_POSI\_0     & B13\_L16\_P  & JB2-72 & \\
-TILE1\_POSI\_1     & B13\_L16\_N  & JB2-74 & \\
-TILE1\_POSI\_2     & B13\_L18\_P  & JB2-76 & \\
-TILE1\_POSI\_3     & B13\_L18\_N  & JB2-78 & \\
-\hline
-TILE1\_PISO\_0     & B13\_L15\_P  & JB2-82& \\
-TILE1\_PISO\_1     & B13\_L15\_N  & JB2-84& \\
-TILE1\_PISO\_2     & B13\_L21\_P  & JB2-86& \\
-TILE1\_PISO\_3     & B13\_L21\_N  & JB2-88& \\
-\hline
-\end{tabular}
-
-\newpage
-\begin{tabular}{llll}
-\hline
-Logical & Trenz & Pin & Note\\  
-\hline
-TILE3\_POSI\_3     & B33\_L13\_P  & JB2-21 & \\
-TILE3\_POSI\_2     & B33\_L13\_N  & JB2-23 & \\
-TILE3\_POSI\_1     & B33\_L14\_P  & JB2-25 & \\
-TILE3\_POSI\_0     & B33\_L14\_N  & JB2-27 & \\
-\hline
-TILE3\_PISO\_3     & B13\_L5\_P   & JB2-31 & \\
-TILE3\_PISO\_2     & B13\_L5\_N   & JB2-33 & \\
-TILE3\_PISO\_1     & B13\_L6\_P   & JB2-35 & \\
-TILE3\_PISO\_0     & B13\_L6\_N   & JB2-37 & \\
-\hline
-TILE2\_POSI\_3     & B13\_L1\_P   & JB2-41 & \\
-TILE2\_POSI\_2     & B13\_L1\_N   & JB2-43 & \\
-TILE2\_POSI\_1     & B13\_L12\_P  & JB2-45 & \\
-TILE2\_POSI\_0     & B13\_L12\_N  & JB2-47 & \\
-\hline
-TILE2\_PISO\_3     & B13\_L14\_P  & JB2-51 & \\
-TILE2\_PISO\_2     & B13\_L14\_N  & JB2-53 & \\
-TILE2\_PISO\_1     & B13\_L13\_P  & JB2-55 & \\
-TILE2\_PISO\_0     & B13\_L13\_N  & JB2-57 & \\
-\hline
-TILE5\_POSI\_3     & B13\_L4\_P   & JB2-61 & \\
-TILE5\_POSI\_2     & B13\_L4\_N   & JB2-63 & \\
-TILE5\_POSI\_1     & B13\_L3\_P   & JB2-65 & \\
-TILE5\_POSI\_0     & B13\_L3\_N   & JB2-67 & \\
-\hline
-TILE5\_PISO\_3     & B13\_L10\_P  & JB2-71 & \\
-TILE5\_PISO\_2     & B13\_L10\_N  & JB2-73 & \\
-TILE5\_PISO\_1     & B13\_L2\_P   & JB2-75 & \\
-TILE5\_PISO\_0     & B13\_L2\_N   & JB2-77 & \\
-\hline
-TILE8\_POSI\_3     & B13\_L23\_P  & JB2-81 & \\
-TILE8\_POSI\_2     & B13\_L23\_N  & JB2-83 & \\
-TILE8\_POSI\_1     & B13\_L24\_P  & JB2-85 & \\
-TILE8\_POSI\_0     & B13\_L24\_N  & JB2-87 & \\
-\hline
-TILE8\_PISO\_3     & B13\_L19\_P  & JB2-91 & \\
-TILE8\_PISO\_2     & B13\_L19\_N  & JB2-93 & \\
-TILE8\_PISO\_1     & B13\_L22\_P  & JB2-95 & \\
-TILE8\_PISO\_0     & B13\_L22\_N  & JB2-97 & \\
-\hline
-\end{tabular}
-
-\newpage
-\begin{tabular}{llll}
-\hline
-Logical & Trenz & Pin & Note\\  
-\hline
-TILE6\_SYNC\_DN    & B35\_L16\_N   & JB1-32 & EVAL \\
-TILE6\_SYNC\_DP    & B35\_L16\_P   & JB1-34 & EVAL \\
-TILE6\_TRIG\_DN    & B35\_L24\_N   & JB1-36 & EVAL \\
-TILE6\_TRIG\_DP    & B35\_L24\_P   & JB1-38 & EVAL \\
-TILE6\_CLK\_DN     & B35\_L18\_N   & JB1-42 & EVAL \\
-TILE6\_CLK\_DP     & B35\_L18\_P   & JB1-44 & EVAL \\
-\hline
-TILE7\_SYNC\_DN    & B35\_L15\_N   & JB1-46 & \\
-TILE7\_SYNC\_DP    & B35\_L15\_P   & JB1-48 & \\
-TILE7\_TRIG\_DN    & B35\_L22\_N   & JB1-50 & \\
-TILE7\_TRIG\_DP    & B35\_L22\_P   & JB1-52 & \\
-TILE7\_CLK\_DN     & B35\_L17\_N   & JB1-56 & \\
-TILE7\_CLK\_DP     & B35\_L17\_P   & JB1-58 & \\
-\hline
-TILE4\_SYNC\_DN    & B35\_L13\_N   & JB1-60 & \\
-TILE4\_SYNC\_DP    & B35\_L13\_P   & JB1-62 & \\
-TILE4\_TRIG\_DN    & B35\_L14\_N   & JB1-66 & \\
-TILE4\_TRIG\_DP    & B35\_L14\_P   & JB1-68 & \\
-TILE4\_CLK\_DN     & B35\_L4\_N    & JB1-70 & \\
-TILE4\_CLK\_DP     & B35\_L4\_P    & JB1-72 & \\
-\hline
-TILE1\_SYNC\_DN    & B35\_L12\_N   & JB1-76 & \\
-TILE1\_SYNC\_DP    & B35\_L12\_P   & JB1-78 & \\
-TILE1\_TRIG\_DN    & B35\_L20\_N   & JB1-82 & \\
-TILE1\_TRIG\_DP    & B35\_L20\_P   & JB1-84 & \\
-TILE1\_CLK\_DN     & B35\_L19\_N   & JB1-97 & non-contiguous\\
-TILE1\_CLK\_DP     & B35\_L19\_P   & JB1-99 & non-contiguous\\
-\hline
-TILE3\_CLK\_DN      & B35\_L10\_N  & JB1-35 & \\
-TILE3\_CLK\_DP      & B35\_L10\_P  & JB1-37 & \\
-TILE3\_TRIG\_DN     & B35\_L9\_N   & JB1-39 & \\
-TILE3\_TRIG\_DP     & B35\_L9\_P   & JB1-41 & \\
-TILE3\_SYNC\_DN     & B35\_L7\_N   & JB1-45 & \\
-TILE3\_SYNC\_DP     & B35\_L7\_P   & JB1-47 & \\
-\hline
-TILE2\_CLK\_DN      & B35\_L2\_N   & JB1-49 & \\
-TILE2\_CLK\_DP      & B35\_L2\_P   & JB1-51 & \\
-TILE2\_TRIG\_DN     & B35\_L8\_N   & JB1-55 & \\
-TILE2\_TRIG\_DP     & B35\_L8\_P   & JB1-57 & \\
-TILE2\_SYNC\_DN     & B35\_L21\_N  & JB1-59 & \\
-TILE2\_SYNC\_DP     & B35\_L21\_P  & JB1-61 & \\
-\hline
-TILE5\_CLK\_DN      & B35\_L11\_N  & JB1-65 & \\
-TILE5\_CLK\_DP      & B35\_L11\_P  & JB1-67 & \\
-TILE5\_TRIG\_DN     & B35\_L23\_N  & JB1-69 & \\
-TILE5\_TRIG\_DP     & B35\_L23\_P  & JB1-71 & \\
-TILE5\_SYNC\_DN     & B35\_L5\_N   & JB1-75 & \\
-TILE5\_SYNC\_DP     & B35\_L5\_P   & JB1-77 & \\
-\hline
-TILE8\_CLK\_DN      & B35\_L3\_N   & JB1-79 & \\
-TILE8\_CLK\_DP      & B35\_L3\_P   & JB1-81 & \\
-TILE8\_TRIG\_DN     & B35\_L6\_N   & JB1-85 & \\
-TILE8\_TRIG\_DP     & B35\_L6\_P   & JB1-87 & \\
-TILE8\_SYNC\_DN     & B35\_L1\_N   & JB1-93 & \\
-TILE8\_SYNC\_DP     & B35\_L1\_P   & JB1-95 & \\
-\end{tabular}
-
-\newpage
-\begin{tabular}{llll}
-\hline
-Logical & Trenz & Pin & Note\\  
-\hline
-TILE1\_EN & B34\_L1\_P    & JB3-7  & \\
-TILE4\_EN & B34\_L1\_N    & JB3-9  & \\
-TILE7\_EN & B34\_L18\_P   & JB3-13 & \\
-TILE6\_EN & B34\_L18\_N   & JB3-15 & \\
-TILE3\_EN & B34\_L20\_P   & JB3-19 & \\
-TILE2\_EN & B34\_L20\_N   & JB3-21 & \\
-TILE5\_EN & B34\_L10\_P   & JB3-25 & \\
-TILE8\_EN & B34\_L10\_N   & JB3-27 & \\
-\hline
-\end{tabular}
-
-\newpage
-
-\begin{tabular}{lll}
-\hline
-Logical & Trenz & Package Pin \\  
-\hline
-SCL-1          & MIO10        & \\
-SDA-1          & MIO11        & \\
-SCL-LOOPBACK   & B34\_L8\_P   & \\
-SDA-LOOPBACK   & B34\_L8\_N   & \\
-SCL-2          & B34\_L9\_P   & \\
-SDA-2          & B34\_L9\_N   & \\
-LED            & MIO12        & \\
-LED            & MIO13        & \\
-LED            & B34\_L22\_P  & \\
-LED            & B34\_L22\_N  & \\
-ANALOG\_PWR\_EN  & B34\_L2\_P & JB3-14 \\ 
-TRIG\_ISO       & B34\_L7\_P & JB3-8 \\
-SYNC\_ISO       & B34\_L7\_N & JB3-10 \\
-CLK  & TBD & \\
-TRIG & TBD & \\
-SYNC & TBD & \\
-\hline
-\end{tabular}
-
-\newpage
-
-\end{document}
-
-\begin{tabular}{|ll|l|l|l|}
-\hline
-   & FPGA        & Front Panel & (Connection) & Example Use  \\  
-\hline
-1  & PANEL\_1     & PANEL\_1     & Lemo?      & External Trigger \\
-\hline
-2  & PANEL\_2     & PANEL\_2     & Lemo?      & External Clock \\
-\hline
-3  & PANEL\_3     & PANEL\_3     & Lemo?      & External Sync \\
-\hline
-4  & PANEL\_4     & PANEL\_4     & Lemo?      & - \\
-\hline
-5  & LED\_1       & LED\_1       & LED        & Power \\
-\hline
-6  & LED\_2       & LED\_2       & LED        & Zynq Power \\
-\hline
-7  & LED\_3       & LED\_3       & LED        & Tile Analog Power \\
-\hline
-8  & LED\_4       & LED\_4       & LED        & Tile Digital Power \\
-\hline
-9  & LED\_5       & LED\_5       & LED        & UART Status \\
-\hline
-10  & LED\_6       & LED\_6       & LED        & FIFO full detected \\
-\hline
-11  & LED\_7       & LED\_7       & LED        & - \\
-\hline
-12  & LED\_8       & LED\_8       & LED        & - \\
-\hline
-13 & BUTTON\_1    & BUTTON\_1    & Button     & Sync \\
-\hline
-14  & BUTTON\_2    & BUTTON\_2    & Button     & Soft Reset \\
-\hline
-15  & BUTTON\_3    & BUTTON\_3    & Button     & Hard Reset \\
-\hline
-16  & BUTTON\_4    & BUTTON\_4    & Button     & - \\
-\hline
-\end{tabular}
- 
 \end{document}
