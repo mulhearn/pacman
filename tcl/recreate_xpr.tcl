@@ -1709,7 +1709,7 @@ if { [get_files obuft_out.vhd] == "" } {
 proc cr_bd_zsys { parentCell } {
 # The design that will be created by this Tcl proc contains the following 
 # module references:
-# axi_lite_reg_space, larpix_clk_to_axi_stream, larpix_counter, larpix_mclk_sel, larpix_reset_gen, larpix_periodic_trig_gen, larpix_trig_gen, larpix_trig_to_axi_stream, axi_lite_reg_space, axi_lite_reg_space, uart_channel, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, obuft_out, uart_channel, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, obuft_out, obuft_out, obuft_out, obuft_out, obuft_out, obuft_out, uart_channel, obuft_out, obuft_out, obuft_out, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, uart_channel, uart_channel, uart_channel, uart_channel, uart_channel, uart_channel, uart_channel, uart_channel, obuft_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out
+# axi_lite_reg_space, larpix_clk_to_axi_stream, larpix_counter, larpix_mclk_sel, larpix_reset_gen, larpix_periodic_trig_gen, larpix_trig_gen, larpix_trig_to_axi_stream, axi_lite_reg_space, axi_lite_reg_space, uart_channel, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, obuft_out, uart_channel, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, obuft_out, obuft_out, obuft_out, obuft_out, obuft_out, obuft_out, uart_channel, obuft_out, obuft_out, obuft_out, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, uart_channel, uart_channel, uart_channel, uart_channel, uart_channel, uart_channel, uart_channel, uart_channel, obuft_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out
 
 
 
@@ -1901,6 +1901,22 @@ proc cr_bd_zsys { parentCell } {
   obuftds_out\
   obuft_out\
   obuftds_out\
+  clk_ddr_out\
+  clk_ddr_out\
+  obuft_out\
+  obuftds_out\
+  obuft_out\
+  obuftds_out\
+  obuft_out\
+  obuftds_out\
+  clk_ddr_out\
+  clk_ddr_out\
+  obuft_out\
+  obuftds_out\
+  obuft_out\
+  obuftds_out\
+  obuft_out\
+  obuftds_out\
   "
 
    set list_mods_missing ""
@@ -1924,6 +1940,510 @@ proc cr_bd_zsys { parentCell } {
     return 3
   }
 
+  
+# Hierarchical cell: TRIG_OUT
+proc create_hier_cell_TRIG_OUT_9 { parentCell nameHier } {
+
+  variable script_folder
+
+  if { $parentCell eq "" || $nameHier eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_TRIG_OUT_9() - Empty argument(s)!"}
+     return
+  }
+
+  # Get object for parentCell
+  set parentObj [get_bd_cells $parentCell]
+  if { $parentObj == "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
+     return
+  }
+
+  # Make sure parentObj is hier blk
+  set parentType [get_property TYPE $parentObj]
+  if { $parentType ne "hier" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     return
+  }
+
+  # Save current instance; Restore later
+  set oldCurInst [current_bd_instance .]
+
+  # Set parent object as current
+  current_bd_instance $parentObj
+
+  # Create cell and set as current instance
+  set hier_obj [create_bd_cell -type hier $nameHier]
+  current_bd_instance $hier_obj
+
+  # Create interface pins
+
+  # Create pins
+  create_bd_pin -dir I I_TRIG
+  create_bd_pin -dir O O_TRIG
+  create_bd_pin -dir O O_TRIG_N
+  create_bd_pin -dir O O_TRIG_P
+  create_bd_pin -dir I TILE_EN
+
+  # Create instance: obuft_out_6, and set properties
+  set block_name obuft_out
+  set block_cell_name obuft_out_6
+  if { [catch {set obuft_out_6 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $obuft_out_6 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
+  # Create instance: obuftds_out_2, and set properties
+  set block_name obuftds_out
+  set block_cell_name obuftds_out_2
+  if { [catch {set obuftds_out_2 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $obuftds_out_2 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
+  # Create port connections
+  connect_bd_net -net O_TILE_EN_1 [get_bd_pins TILE_EN] [get_bd_pins obuft_out_6/en] [get_bd_pins obuftds_out_2/en]
+  connect_bd_net -net TRIG_0_SLICE_Dout [get_bd_pins I_TRIG] [get_bd_pins obuft_out_6/i] [get_bd_pins obuftds_out_2/i]
+  connect_bd_net -net obuft_out_6_o [get_bd_pins O_TRIG] [get_bd_pins obuft_out_6/o]
+  connect_bd_net -net obuftds_out_2_o_n [get_bd_pins O_TRIG_N] [get_bd_pins obuftds_out_2/o_n]
+  connect_bd_net -net obuftds_out_2_o_p [get_bd_pins O_TRIG_P] [get_bd_pins obuftds_out_2/o_p]
+
+  # Restore current instance
+  current_bd_instance $oldCurInst
+}
+  
+# Hierarchical cell: RESETN_OUT
+proc create_hier_cell_RESETN_OUT_9 { parentCell nameHier } {
+
+  variable script_folder
+
+  if { $parentCell eq "" || $nameHier eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_RESETN_OUT_9() - Empty argument(s)!"}
+     return
+  }
+
+  # Get object for parentCell
+  set parentObj [get_bd_cells $parentCell]
+  if { $parentObj == "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
+     return
+  }
+
+  # Make sure parentObj is hier blk
+  set parentType [get_property TYPE $parentObj]
+  if { $parentType ne "hier" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     return
+  }
+
+  # Save current instance; Restore later
+  set oldCurInst [current_bd_instance .]
+
+  # Set parent object as current
+  current_bd_instance $parentObj
+
+  # Create cell and set as current instance
+  set hier_obj [create_bd_cell -type hier $nameHier]
+  current_bd_instance $hier_obj
+
+  # Create interface pins
+
+  # Create pins
+  create_bd_pin -dir I I_RESETN
+  create_bd_pin -dir O O_RESETN
+  create_bd_pin -dir O O_RESETN_N
+  create_bd_pin -dir O O_RESETN_P
+  create_bd_pin -dir I TILE_EN
+
+  # Create instance: obuft_out_6, and set properties
+  set block_name obuft_out
+  set block_cell_name obuft_out_6
+  if { [catch {set obuft_out_6 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $obuft_out_6 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
+  # Create instance: obuftds_out_2, and set properties
+  set block_name obuftds_out
+  set block_cell_name obuftds_out_2
+  if { [catch {set obuftds_out_2 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $obuftds_out_2 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
+  # Create port connections
+  connect_bd_net -net O_TILE_EN_1 [get_bd_pins TILE_EN] [get_bd_pins obuft_out_6/en] [get_bd_pins obuftds_out_2/en]
+  connect_bd_net -net TRIG_0_SLICE_Dout [get_bd_pins I_RESETN] [get_bd_pins obuft_out_6/i] [get_bd_pins obuftds_out_2/i]
+  connect_bd_net -net obuft_out_6_o [get_bd_pins O_RESETN] [get_bd_pins obuft_out_6/o]
+  connect_bd_net -net obuftds_out_2_o_n [get_bd_pins O_RESETN_N] [get_bd_pins obuftds_out_2/o_n]
+  connect_bd_net -net obuftds_out_2_o_p [get_bd_pins O_RESETN_P] [get_bd_pins obuftds_out_2/o_p]
+
+  # Restore current instance
+  current_bd_instance $oldCurInst
+}
+  
+# Hierarchical cell: CLK_OUT
+proc create_hier_cell_CLK_OUT_9 { parentCell nameHier } {
+
+  variable script_folder
+
+  if { $parentCell eq "" || $nameHier eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_CLK_OUT_9() - Empty argument(s)!"}
+     return
+  }
+
+  # Get object for parentCell
+  set parentObj [get_bd_cells $parentCell]
+  if { $parentObj == "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
+     return
+  }
+
+  # Make sure parentObj is hier blk
+  set parentType [get_property TYPE $parentObj]
+  if { $parentType ne "hier" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     return
+  }
+
+  # Save current instance; Restore later
+  set oldCurInst [current_bd_instance .]
+
+  # Set parent object as current
+  current_bd_instance $parentObj
+
+  # Create cell and set as current instance
+  set hier_obj [create_bd_cell -type hier $nameHier]
+  current_bd_instance $hier_obj
+
+  # Create interface pins
+
+  # Create pins
+  create_bd_pin -dir I I_CLK
+  create_bd_pin -dir O O_CLK
+  create_bd_pin -dir O O_CLK_N
+  create_bd_pin -dir O O_CLK_P
+  create_bd_pin -dir I TILE_EN
+
+  # Create instance: clk_ddr_out_0, and set properties
+  set block_name clk_ddr_out
+  set block_cell_name clk_ddr_out_0
+  if { [catch {set clk_ddr_out_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $clk_ddr_out_0 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
+  # Create instance: clk_ddr_out_1, and set properties
+  set block_name clk_ddr_out
+  set block_cell_name clk_ddr_out_1
+  if { [catch {set clk_ddr_out_1 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $clk_ddr_out_1 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
+  # Create instance: obuft_out_0, and set properties
+  set block_name obuft_out
+  set block_cell_name obuft_out_0
+  if { [catch {set obuft_out_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $obuft_out_0 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
+  # Create instance: obuftds_out_0, and set properties
+  set block_name obuftds_out
+  set block_cell_name obuftds_out_0
+  if { [catch {set obuftds_out_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $obuftds_out_0 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
+  # Create port connections
+  connect_bd_net -net I_CLK_1 [get_bd_pins I_CLK] [get_bd_pins clk_ddr_out_0/i] [get_bd_pins clk_ddr_out_1/i]
+  connect_bd_net -net O_MOSI_EN_P_1 [get_bd_pins TILE_EN] [get_bd_pins obuft_out_0/en] [get_bd_pins obuftds_out_0/en]
+  connect_bd_net -net clk_ddr_out_0_o [get_bd_pins clk_ddr_out_0/o] [get_bd_pins obuft_out_0/i]
+  connect_bd_net -net clk_ddr_out_1_o [get_bd_pins clk_ddr_out_1/o] [get_bd_pins obuftds_out_0/i]
+  connect_bd_net -net obuft_out_0_o [get_bd_pins O_CLK] [get_bd_pins obuft_out_0/o]
+  connect_bd_net -net obuftds_out_0_o_n [get_bd_pins O_CLK_N] [get_bd_pins obuftds_out_0/o_n]
+  connect_bd_net -net obuftds_out_0_o_p [get_bd_pins O_CLK_P] [get_bd_pins obuftds_out_0/o_p]
+
+  # Restore current instance
+  current_bd_instance $oldCurInst
+}
+  
+# Hierarchical cell: TRIG_OUT
+proc create_hier_cell_TRIG_OUT_8 { parentCell nameHier } {
+
+  variable script_folder
+
+  if { $parentCell eq "" || $nameHier eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_TRIG_OUT_8() - Empty argument(s)!"}
+     return
+  }
+
+  # Get object for parentCell
+  set parentObj [get_bd_cells $parentCell]
+  if { $parentObj == "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
+     return
+  }
+
+  # Make sure parentObj is hier blk
+  set parentType [get_property TYPE $parentObj]
+  if { $parentType ne "hier" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     return
+  }
+
+  # Save current instance; Restore later
+  set oldCurInst [current_bd_instance .]
+
+  # Set parent object as current
+  current_bd_instance $parentObj
+
+  # Create cell and set as current instance
+  set hier_obj [create_bd_cell -type hier $nameHier]
+  current_bd_instance $hier_obj
+
+  # Create interface pins
+
+  # Create pins
+  create_bd_pin -dir I I_TRIG
+  create_bd_pin -dir O O_TRIG
+  create_bd_pin -dir O O_TRIG_N
+  create_bd_pin -dir O O_TRIG_P
+  create_bd_pin -dir I TILE_EN
+
+  # Create instance: obuft_out_6, and set properties
+  set block_name obuft_out
+  set block_cell_name obuft_out_6
+  if { [catch {set obuft_out_6 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $obuft_out_6 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
+  # Create instance: obuftds_out_2, and set properties
+  set block_name obuftds_out
+  set block_cell_name obuftds_out_2
+  if { [catch {set obuftds_out_2 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $obuftds_out_2 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
+  # Create port connections
+  connect_bd_net -net O_TILE_EN_1 [get_bd_pins TILE_EN] [get_bd_pins obuft_out_6/en] [get_bd_pins obuftds_out_2/en]
+  connect_bd_net -net TRIG_0_SLICE_Dout [get_bd_pins I_TRIG] [get_bd_pins obuft_out_6/i] [get_bd_pins obuftds_out_2/i]
+  connect_bd_net -net obuft_out_6_o [get_bd_pins O_TRIG] [get_bd_pins obuft_out_6/o]
+  connect_bd_net -net obuftds_out_2_o_n [get_bd_pins O_TRIG_N] [get_bd_pins obuftds_out_2/o_n]
+  connect_bd_net -net obuftds_out_2_o_p [get_bd_pins O_TRIG_P] [get_bd_pins obuftds_out_2/o_p]
+
+  # Restore current instance
+  current_bd_instance $oldCurInst
+}
+  
+# Hierarchical cell: RESETN_OUT
+proc create_hier_cell_RESETN_OUT_8 { parentCell nameHier } {
+
+  variable script_folder
+
+  if { $parentCell eq "" || $nameHier eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_RESETN_OUT_8() - Empty argument(s)!"}
+     return
+  }
+
+  # Get object for parentCell
+  set parentObj [get_bd_cells $parentCell]
+  if { $parentObj == "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
+     return
+  }
+
+  # Make sure parentObj is hier blk
+  set parentType [get_property TYPE $parentObj]
+  if { $parentType ne "hier" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     return
+  }
+
+  # Save current instance; Restore later
+  set oldCurInst [current_bd_instance .]
+
+  # Set parent object as current
+  current_bd_instance $parentObj
+
+  # Create cell and set as current instance
+  set hier_obj [create_bd_cell -type hier $nameHier]
+  current_bd_instance $hier_obj
+
+  # Create interface pins
+
+  # Create pins
+  create_bd_pin -dir I I_RESETN
+  create_bd_pin -dir O O_RESETN
+  create_bd_pin -dir O O_RESETN_N
+  create_bd_pin -dir O O_RESETN_P
+  create_bd_pin -dir I TILE_EN
+
+  # Create instance: obuft_out_6, and set properties
+  set block_name obuft_out
+  set block_cell_name obuft_out_6
+  if { [catch {set obuft_out_6 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $obuft_out_6 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
+  # Create instance: obuftds_out_2, and set properties
+  set block_name obuftds_out
+  set block_cell_name obuftds_out_2
+  if { [catch {set obuftds_out_2 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $obuftds_out_2 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
+  # Create port connections
+  connect_bd_net -net O_TILE_EN_1 [get_bd_pins TILE_EN] [get_bd_pins obuft_out_6/en] [get_bd_pins obuftds_out_2/en]
+  connect_bd_net -net TRIG_0_SLICE_Dout [get_bd_pins I_RESETN] [get_bd_pins obuft_out_6/i] [get_bd_pins obuftds_out_2/i]
+  connect_bd_net -net obuft_out_6_o [get_bd_pins O_RESETN] [get_bd_pins obuft_out_6/o]
+  connect_bd_net -net obuftds_out_2_o_n [get_bd_pins O_RESETN_N] [get_bd_pins obuftds_out_2/o_n]
+  connect_bd_net -net obuftds_out_2_o_p [get_bd_pins O_RESETN_P] [get_bd_pins obuftds_out_2/o_p]
+
+  # Restore current instance
+  current_bd_instance $oldCurInst
+}
+  
+# Hierarchical cell: CLK_OUT
+proc create_hier_cell_CLK_OUT_8 { parentCell nameHier } {
+
+  variable script_folder
+
+  if { $parentCell eq "" || $nameHier eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_CLK_OUT_8() - Empty argument(s)!"}
+     return
+  }
+
+  # Get object for parentCell
+  set parentObj [get_bd_cells $parentCell]
+  if { $parentObj == "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
+     return
+  }
+
+  # Make sure parentObj is hier blk
+  set parentType [get_property TYPE $parentObj]
+  if { $parentType ne "hier" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     return
+  }
+
+  # Save current instance; Restore later
+  set oldCurInst [current_bd_instance .]
+
+  # Set parent object as current
+  current_bd_instance $parentObj
+
+  # Create cell and set as current instance
+  set hier_obj [create_bd_cell -type hier $nameHier]
+  current_bd_instance $hier_obj
+
+  # Create interface pins
+
+  # Create pins
+  create_bd_pin -dir I I_CLK
+  create_bd_pin -dir O O_CLK
+  create_bd_pin -dir O O_CLK_N
+  create_bd_pin -dir O O_CLK_P
+  create_bd_pin -dir I TILE_EN
+
+  # Create instance: clk_ddr_out_0, and set properties
+  set block_name clk_ddr_out
+  set block_cell_name clk_ddr_out_0
+  if { [catch {set clk_ddr_out_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $clk_ddr_out_0 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
+  # Create instance: clk_ddr_out_1, and set properties
+  set block_name clk_ddr_out
+  set block_cell_name clk_ddr_out_1
+  if { [catch {set clk_ddr_out_1 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $clk_ddr_out_1 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
+  # Create instance: obuft_out_0, and set properties
+  set block_name obuft_out
+  set block_cell_name obuft_out_0
+  if { [catch {set obuft_out_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $obuft_out_0 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
+  # Create instance: obuftds_out_0, and set properties
+  set block_name obuftds_out
+  set block_cell_name obuftds_out_0
+  if { [catch {set obuftds_out_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $obuftds_out_0 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
+  # Create port connections
+  connect_bd_net -net I_CLK_1 [get_bd_pins I_CLK] [get_bd_pins clk_ddr_out_0/i] [get_bd_pins clk_ddr_out_1/i]
+  connect_bd_net -net O_MOSI_EN_P_1 [get_bd_pins TILE_EN] [get_bd_pins obuft_out_0/en] [get_bd_pins obuftds_out_0/en]
+  connect_bd_net -net clk_ddr_out_0_o [get_bd_pins clk_ddr_out_0/o] [get_bd_pins obuft_out_0/i]
+  connect_bd_net -net clk_ddr_out_1_o [get_bd_pins clk_ddr_out_1/o] [get_bd_pins obuftds_out_0/i]
+  connect_bd_net -net obuft_out_0_o [get_bd_pins O_CLK] [get_bd_pins obuft_out_0/o]
+  connect_bd_net -net obuftds_out_0_o_n [get_bd_pins O_CLK_N] [get_bd_pins obuftds_out_0/o_n]
+  connect_bd_net -net obuftds_out_0_o_p [get_bd_pins O_CLK_P] [get_bd_pins obuftds_out_0/o_p]
+
+  # Restore current instance
+  current_bd_instance $oldCurInst
+}
   
 # Hierarchical cell: TRIG_OUT
 proc create_hier_cell_TRIG_OUT_7 { parentCell nameHier } {
@@ -6917,6 +7437,164 @@ proc create_hier_cell_axi_lite_reg_space_1 { parentCell nameHier } {
   current_bd_instance $oldCurInst
 }
   
+# Hierarchical cell: tile_aux_9
+proc create_hier_cell_tile_aux_9 { parentCell nameHier } {
+
+  variable script_folder
+
+  if { $parentCell eq "" || $nameHier eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_tile_aux_9() - Empty argument(s)!"}
+     return
+  }
+
+  # Get object for parentCell
+  set parentObj [get_bd_cells $parentCell]
+  if { $parentObj == "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
+     return
+  }
+
+  # Make sure parentObj is hier blk
+  set parentType [get_property TYPE $parentObj]
+  if { $parentType ne "hier" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     return
+  }
+
+  # Save current instance; Restore later
+  set oldCurInst [current_bd_instance .]
+
+  # Set parent object as current
+  current_bd_instance $parentObj
+
+  # Create cell and set as current instance
+  set hier_obj [create_bd_cell -type hier $nameHier]
+  current_bd_instance $hier_obj
+
+  # Create interface pins
+
+  # Create pins
+  create_bd_pin -dir I I_CLK
+  create_bd_pin -dir I I_RESETN
+  create_bd_pin -dir I I_TRIG
+  create_bd_pin -dir O O_CLK
+  create_bd_pin -dir O O_CLK_N
+  create_bd_pin -dir O O_CLK_P
+  create_bd_pin -dir O O_RESETN
+  create_bd_pin -dir O O_RESETN_N
+  create_bd_pin -dir O O_RESETN_P
+  create_bd_pin -dir O O_TRIG
+  create_bd_pin -dir O O_TRIG_N
+  create_bd_pin -dir O O_TRIG_P
+  create_bd_pin -dir I TILE_EN
+
+  # Create instance: CLK_OUT
+  create_hier_cell_CLK_OUT_9 $hier_obj CLK_OUT
+
+  # Create instance: RESETN_OUT
+  create_hier_cell_RESETN_OUT_9 $hier_obj RESETN_OUT
+
+  # Create instance: TRIG_OUT
+  create_hier_cell_TRIG_OUT_9 $hier_obj TRIG_OUT
+
+  # Create port connections
+  connect_bd_net -net CLK_OUT_O_CLK [get_bd_pins O_CLK] [get_bd_pins CLK_OUT/O_CLK]
+  connect_bd_net -net CLK_OUT_O_CLK_N [get_bd_pins O_CLK_N] [get_bd_pins CLK_OUT/O_CLK_N]
+  connect_bd_net -net CLK_OUT_O_CLK_P [get_bd_pins O_CLK_P] [get_bd_pins CLK_OUT/O_CLK_P]
+  connect_bd_net -net I_CLK_1 [get_bd_pins I_CLK] [get_bd_pins CLK_OUT/I_CLK]
+  connect_bd_net -net I_RESETN_1 [get_bd_pins I_RESETN] [get_bd_pins RESETN_OUT/I_RESETN]
+  connect_bd_net -net I_TRIG_1 [get_bd_pins I_TRIG] [get_bd_pins TRIG_OUT/I_TRIG]
+  connect_bd_net -net RESETN_OUT_O_RESETN [get_bd_pins O_RESETN] [get_bd_pins RESETN_OUT/O_RESETN]
+  connect_bd_net -net RESETN_OUT_O_RESETN_N [get_bd_pins O_RESETN_N] [get_bd_pins RESETN_OUT/O_RESETN_N]
+  connect_bd_net -net RESETN_OUT_O_RESETN_P [get_bd_pins O_RESETN_P] [get_bd_pins RESETN_OUT/O_RESETN_P]
+  connect_bd_net -net TILE_EN_1 [get_bd_pins TILE_EN] [get_bd_pins CLK_OUT/TILE_EN] [get_bd_pins RESETN_OUT/TILE_EN] [get_bd_pins TRIG_OUT/TILE_EN]
+  connect_bd_net -net TRIG_OUT_O_TRIG [get_bd_pins O_TRIG] [get_bd_pins TRIG_OUT/O_TRIG]
+  connect_bd_net -net TRIG_OUT_O_TRIG_N [get_bd_pins O_TRIG_N] [get_bd_pins TRIG_OUT/O_TRIG_N]
+  connect_bd_net -net TRIG_OUT_O_TRIG_P [get_bd_pins O_TRIG_P] [get_bd_pins TRIG_OUT/O_TRIG_P]
+
+  # Restore current instance
+  current_bd_instance $oldCurInst
+}
+  
+# Hierarchical cell: tile_aux_8
+proc create_hier_cell_tile_aux_8 { parentCell nameHier } {
+
+  variable script_folder
+
+  if { $parentCell eq "" || $nameHier eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_tile_aux_8() - Empty argument(s)!"}
+     return
+  }
+
+  # Get object for parentCell
+  set parentObj [get_bd_cells $parentCell]
+  if { $parentObj == "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
+     return
+  }
+
+  # Make sure parentObj is hier blk
+  set parentType [get_property TYPE $parentObj]
+  if { $parentType ne "hier" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     return
+  }
+
+  # Save current instance; Restore later
+  set oldCurInst [current_bd_instance .]
+
+  # Set parent object as current
+  current_bd_instance $parentObj
+
+  # Create cell and set as current instance
+  set hier_obj [create_bd_cell -type hier $nameHier]
+  current_bd_instance $hier_obj
+
+  # Create interface pins
+
+  # Create pins
+  create_bd_pin -dir I I_CLK
+  create_bd_pin -dir I I_RESETN
+  create_bd_pin -dir I I_TRIG
+  create_bd_pin -dir O O_CLK
+  create_bd_pin -dir O O_CLK_N
+  create_bd_pin -dir O O_CLK_P
+  create_bd_pin -dir O O_RESETN
+  create_bd_pin -dir O O_RESETN_N
+  create_bd_pin -dir O O_RESETN_P
+  create_bd_pin -dir O O_TRIG
+  create_bd_pin -dir O O_TRIG_N
+  create_bd_pin -dir O O_TRIG_P
+  create_bd_pin -dir I TILE_EN
+
+  # Create instance: CLK_OUT
+  create_hier_cell_CLK_OUT_8 $hier_obj CLK_OUT
+
+  # Create instance: RESETN_OUT
+  create_hier_cell_RESETN_OUT_8 $hier_obj RESETN_OUT
+
+  # Create instance: TRIG_OUT
+  create_hier_cell_TRIG_OUT_8 $hier_obj TRIG_OUT
+
+  # Create port connections
+  connect_bd_net -net CLK_OUT_O_CLK [get_bd_pins O_CLK] [get_bd_pins CLK_OUT/O_CLK]
+  connect_bd_net -net CLK_OUT_O_CLK_N [get_bd_pins O_CLK_N] [get_bd_pins CLK_OUT/O_CLK_N]
+  connect_bd_net -net CLK_OUT_O_CLK_P [get_bd_pins O_CLK_P] [get_bd_pins CLK_OUT/O_CLK_P]
+  connect_bd_net -net I_CLK_1 [get_bd_pins I_CLK] [get_bd_pins CLK_OUT/I_CLK]
+  connect_bd_net -net I_RESETN_1 [get_bd_pins I_RESETN] [get_bd_pins RESETN_OUT/I_RESETN]
+  connect_bd_net -net I_TRIG_1 [get_bd_pins I_TRIG] [get_bd_pins TRIG_OUT/I_TRIG]
+  connect_bd_net -net RESETN_OUT_O_RESETN [get_bd_pins O_RESETN] [get_bd_pins RESETN_OUT/O_RESETN]
+  connect_bd_net -net RESETN_OUT_O_RESETN_N [get_bd_pins O_RESETN_N] [get_bd_pins RESETN_OUT/O_RESETN_N]
+  connect_bd_net -net RESETN_OUT_O_RESETN_P [get_bd_pins O_RESETN_P] [get_bd_pins RESETN_OUT/O_RESETN_P]
+  connect_bd_net -net TILE_EN_1 [get_bd_pins TILE_EN] [get_bd_pins CLK_OUT/TILE_EN] [get_bd_pins RESETN_OUT/TILE_EN] [get_bd_pins TRIG_OUT/TILE_EN]
+  connect_bd_net -net TRIG_OUT_O_TRIG [get_bd_pins O_TRIG] [get_bd_pins TRIG_OUT/O_TRIG]
+  connect_bd_net -net TRIG_OUT_O_TRIG_N [get_bd_pins O_TRIG_N] [get_bd_pins TRIG_OUT/O_TRIG_N]
+  connect_bd_net -net TRIG_OUT_O_TRIG_P [get_bd_pins O_TRIG_P] [get_bd_pins TRIG_OUT/O_TRIG_P]
+
+  # Restore current instance
+  current_bd_instance $oldCurInst
+}
+  
 # Hierarchical cell: tile_aux_7
 proc create_hier_cell_tile_aux_7 { parentCell nameHier } {
 
@@ -7821,7 +8499,6 @@ proc create_hier_cell_larpix_trig { parentCell nameHier } {
   create_bd_pin -dir I TRIG1_IN
   create_bd_pin -dir I TRIG2_IN
   create_bd_pin -dir I TRIG3_IN
-  create_bd_pin -dir O -from 7 -to 0 TRIG_MASKED
   create_bd_pin -dir O -from 3 -to 0 TRIG_TYPE
 
   # Create instance: axi_lite_reg_space
@@ -7895,7 +8572,6 @@ proc create_hier_cell_larpix_trig { parentCell nameHier } {
   connect_bd_net -net axi_lite_reg_space_trig_len [get_bd_pins axi_lite_reg_space/trig_len] [get_bd_pins larpix_trig_gen_0/TRIG_LEN]
   connect_bd_net -net larpix_periodic_trig_0_O [get_bd_pins larpix_periodic_trig_0/O] [get_bd_pins larpix_trig_gen_0/TRIG0_IN]
   connect_bd_net -net larpix_trig_gen_0_TRIG [get_bd_pins TRIG] [get_bd_pins larpix_trig_gen_0/TRIG]
-  connect_bd_net -net larpix_trig_gen_0_TRIG_MASKED [get_bd_pins TRIG_MASKED] [get_bd_pins larpix_trig_gen_0/TRIG_MASKED]
   connect_bd_net -net larpix_trig_gen_0_TRIG_TYPE [get_bd_pins TRIG_TYPE] [get_bd_pins larpix_trig_gen_0/TRIG_TYPE] [get_bd_pins xlconcat_0/In0]
   connect_bd_net -net xlconcat_0_dout [get_bd_pins larpix_trig_to_axi_s_0/TRIG_TYPE] [get_bd_pins xlconcat_0/dout]
   connect_bd_net -net xlconstant_0_dout [get_bd_pins xlconcat_0/In1] [get_bd_pins xlconstant_0/dout]
@@ -8082,17 +8758,10 @@ proc create_hier_cell_io { parentCell nameHier } {
   # Create pins
   create_bd_pin -dir I I_CLK
   create_bd_pin -dir I I_RESETN
-  create_bd_pin -dir I -from 7 -to 0 I_TILE_EN
-  create_bd_pin -dir I -from 7 -to 0 I_TRIG
-  create_bd_pin -dir O -from 7 -to 0 O_CLK
-  create_bd_pin -dir O -from 7 -to 0 O_CLK_N
-  create_bd_pin -dir O -from 7 -to 0 O_CLK_P
-  create_bd_pin -dir O -from 7 -to 0 O_RESETN
-  create_bd_pin -dir O -from 7 -to 0 O_RESETN_N
-  create_bd_pin -dir O -from 7 -to 0 O_RESETN_P
-  create_bd_pin -dir O -from 7 -to 0 O_TRIG
-  create_bd_pin -dir O -from 7 -to 0 O_TRIG_N
-  create_bd_pin -dir O -from 7 -to 0 O_TRIG_P
+  create_bd_pin -dir I I_TRIG
+  create_bd_pin -dir I -from 9 -to 0 I_TS_EN
+  create_bd_pin -dir O -from 9 -to 0 SYNC
+  create_bd_pin -dir O -from 9 -to 0 TRIG
 
   # Create instance: tile_aux_0
   create_hier_cell_tile_aux_0 $hier_obj tile_aux_0
@@ -8118,66 +8787,30 @@ proc create_hier_cell_io { parentCell nameHier } {
   # Create instance: tile_aux_7
   create_hier_cell_tile_aux_7 $hier_obj tile_aux_7
 
-  # Create instance: xlconcat_0, and set properties
-  set xlconcat_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 xlconcat_0 ]
-  set_property -dict [ list \
-   CONFIG.NUM_PORTS {8} \
- ] $xlconcat_0
+  # Create instance: tile_aux_8
+  create_hier_cell_tile_aux_8 $hier_obj tile_aux_8
 
-  # Create instance: xlconcat_1, and set properties
-  set xlconcat_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 xlconcat_1 ]
-  set_property -dict [ list \
-   CONFIG.NUM_PORTS {8} \
- ] $xlconcat_1
-
-  # Create instance: xlconcat_2, and set properties
-  set xlconcat_2 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 xlconcat_2 ]
-  set_property -dict [ list \
-   CONFIG.NUM_PORTS {8} \
- ] $xlconcat_2
+  # Create instance: tile_aux_9
+  create_hier_cell_tile_aux_9 $hier_obj tile_aux_9
 
   # Create instance: xlconcat_3, and set properties
   set xlconcat_3 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 xlconcat_3 ]
   set_property -dict [ list \
-   CONFIG.NUM_PORTS {8} \
+   CONFIG.NUM_PORTS {10} \
  ] $xlconcat_3
-
-  # Create instance: xlconcat_4, and set properties
-  set xlconcat_4 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 xlconcat_4 ]
-  set_property -dict [ list \
-   CONFIG.NUM_PORTS {8} \
- ] $xlconcat_4
-
-  # Create instance: xlconcat_5, and set properties
-  set xlconcat_5 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 xlconcat_5 ]
-  set_property -dict [ list \
-   CONFIG.NUM_PORTS {8} \
- ] $xlconcat_5
 
   # Create instance: xlconcat_6, and set properties
   set xlconcat_6 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 xlconcat_6 ]
   set_property -dict [ list \
-   CONFIG.NUM_PORTS {8} \
+   CONFIG.NUM_PORTS {10} \
  ] $xlconcat_6
-
-  # Create instance: xlconcat_7, and set properties
-  set xlconcat_7 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 xlconcat_7 ]
-  set_property -dict [ list \
-   CONFIG.NUM_PORTS {8} \
- ] $xlconcat_7
-
-  # Create instance: xlconcat_8, and set properties
-  set xlconcat_8 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 xlconcat_8 ]
-  set_property -dict [ list \
-   CONFIG.NUM_PORTS {8} \
- ] $xlconcat_8
 
   # Create instance: xlslice_0, and set properties
   set xlslice_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 xlslice_0 ]
   set_property -dict [ list \
    CONFIG.DIN_FROM {0} \
    CONFIG.DIN_TO {0} \
-   CONFIG.DIN_WIDTH {8} \
+   CONFIG.DIN_WIDTH {10} \
  ] $xlslice_0
 
   # Create instance: xlslice_1, and set properties
@@ -8185,7 +8818,7 @@ proc create_hier_cell_io { parentCell nameHier } {
   set_property -dict [ list \
    CONFIG.DIN_FROM {1} \
    CONFIG.DIN_TO {1} \
-   CONFIG.DIN_WIDTH {8} \
+   CONFIG.DIN_WIDTH {10} \
    CONFIG.DOUT_WIDTH {1} \
  ] $xlslice_1
 
@@ -8194,7 +8827,7 @@ proc create_hier_cell_io { parentCell nameHier } {
   set_property -dict [ list \
    CONFIG.DIN_FROM {2} \
    CONFIG.DIN_TO {2} \
-   CONFIG.DIN_WIDTH {8} \
+   CONFIG.DIN_WIDTH {10} \
    CONFIG.DOUT_WIDTH {1} \
  ] $xlslice_2
 
@@ -8203,7 +8836,7 @@ proc create_hier_cell_io { parentCell nameHier } {
   set_property -dict [ list \
    CONFIG.DIN_FROM {3} \
    CONFIG.DIN_TO {3} \
-   CONFIG.DIN_WIDTH {8} \
+   CONFIG.DIN_WIDTH {10} \
    CONFIG.DOUT_WIDTH {1} \
  ] $xlslice_3
 
@@ -8212,7 +8845,7 @@ proc create_hier_cell_io { parentCell nameHier } {
   set_property -dict [ list \
    CONFIG.DIN_FROM {4} \
    CONFIG.DIN_TO {4} \
-   CONFIG.DIN_WIDTH {8} \
+   CONFIG.DIN_WIDTH {10} \
    CONFIG.DOUT_WIDTH {1} \
  ] $xlslice_4
 
@@ -8221,7 +8854,7 @@ proc create_hier_cell_io { parentCell nameHier } {
   set_property -dict [ list \
    CONFIG.DIN_FROM {5} \
    CONFIG.DIN_TO {5} \
-   CONFIG.DIN_WIDTH {8} \
+   CONFIG.DIN_WIDTH {10} \
    CONFIG.DOUT_WIDTH {1} \
  ] $xlslice_5
 
@@ -8230,7 +8863,7 @@ proc create_hier_cell_io { parentCell nameHier } {
   set_property -dict [ list \
    CONFIG.DIN_FROM {6} \
    CONFIG.DIN_TO {6} \
-   CONFIG.DIN_WIDTH {8} \
+   CONFIG.DIN_WIDTH {10} \
    CONFIG.DOUT_WIDTH {1} \
  ] $xlslice_6
 
@@ -8239,174 +8872,58 @@ proc create_hier_cell_io { parentCell nameHier } {
   set_property -dict [ list \
    CONFIG.DIN_FROM {7} \
    CONFIG.DIN_TO {7} \
-   CONFIG.DIN_WIDTH {8} \
+   CONFIG.DIN_WIDTH {10} \
    CONFIG.DOUT_WIDTH {1} \
  ] $xlslice_7
 
-  # Create instance: xlslice_8, and set properties
-  set xlslice_8 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 xlslice_8 ]
+  # Create instance: xlslice_16, and set properties
+  set xlslice_16 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 xlslice_16 ]
   set_property -dict [ list \
-   CONFIG.DIN_FROM {0} \
-   CONFIG.DIN_TO {0} \
-   CONFIG.DIN_WIDTH {8} \
- ] $xlslice_8
-
-  # Create instance: xlslice_9, and set properties
-  set xlslice_9 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 xlslice_9 ]
-  set_property -dict [ list \
-   CONFIG.DIN_FROM {1} \
-   CONFIG.DIN_TO {1} \
-   CONFIG.DIN_WIDTH {8} \
+   CONFIG.DIN_FROM {8} \
+   CONFIG.DIN_TO {8} \
+   CONFIG.DIN_WIDTH {10} \
    CONFIG.DOUT_WIDTH {1} \
- ] $xlslice_9
+ ] $xlslice_16
 
-  # Create instance: xlslice_10, and set properties
-  set xlslice_10 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 xlslice_10 ]
+  # Create instance: xlslice_17, and set properties
+  set xlslice_17 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 xlslice_17 ]
   set_property -dict [ list \
-   CONFIG.DIN_FROM {2} \
-   CONFIG.DIN_TO {2} \
-   CONFIG.DIN_WIDTH {8} \
+   CONFIG.DIN_FROM {9} \
+   CONFIG.DIN_TO {9} \
+   CONFIG.DIN_WIDTH {10} \
    CONFIG.DOUT_WIDTH {1} \
- ] $xlslice_10
-
-  # Create instance: xlslice_11, and set properties
-  set xlslice_11 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 xlslice_11 ]
-  set_property -dict [ list \
-   CONFIG.DIN_FROM {3} \
-   CONFIG.DIN_TO {3} \
-   CONFIG.DIN_WIDTH {8} \
-   CONFIG.DOUT_WIDTH {1} \
- ] $xlslice_11
-
-  # Create instance: xlslice_12, and set properties
-  set xlslice_12 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 xlslice_12 ]
-  set_property -dict [ list \
-   CONFIG.DIN_FROM {4} \
-   CONFIG.DIN_TO {4} \
-   CONFIG.DIN_WIDTH {8} \
-   CONFIG.DOUT_WIDTH {1} \
- ] $xlslice_12
-
-  # Create instance: xlslice_13, and set properties
-  set xlslice_13 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 xlslice_13 ]
-  set_property -dict [ list \
-   CONFIG.DIN_FROM {5} \
-   CONFIG.DIN_TO {5} \
-   CONFIG.DIN_WIDTH {8} \
-   CONFIG.DOUT_WIDTH {1} \
- ] $xlslice_13
-
-  # Create instance: xlslice_14, and set properties
-  set xlslice_14 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 xlslice_14 ]
-  set_property -dict [ list \
-   CONFIG.DIN_FROM {6} \
-   CONFIG.DIN_TO {6} \
-   CONFIG.DIN_WIDTH {8} \
-   CONFIG.DOUT_WIDTH {1} \
- ] $xlslice_14
-
-  # Create instance: xlslice_15, and set properties
-  set xlslice_15 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 xlslice_15 ]
-  set_property -dict [ list \
-   CONFIG.DIN_FROM {7} \
-   CONFIG.DIN_TO {7} \
-   CONFIG.DIN_WIDTH {8} \
-   CONFIG.DOUT_WIDTH {1} \
- ] $xlslice_15
+ ] $xlslice_17
 
   # Create port connections
-  connect_bd_net -net I_CLK_1 [get_bd_pins I_CLK] [get_bd_pins tile_aux_0/I_CLK] [get_bd_pins tile_aux_1/I_CLK] [get_bd_pins tile_aux_2/I_CLK] [get_bd_pins tile_aux_3/I_CLK] [get_bd_pins tile_aux_4/I_CLK] [get_bd_pins tile_aux_5/I_CLK] [get_bd_pins tile_aux_6/I_CLK] [get_bd_pins tile_aux_7/I_CLK]
-  connect_bd_net -net I_RESETN_1 [get_bd_pins I_RESETN] [get_bd_pins tile_aux_0/I_RESETN] [get_bd_pins tile_aux_1/I_RESETN] [get_bd_pins tile_aux_2/I_RESETN] [get_bd_pins tile_aux_3/I_RESETN] [get_bd_pins tile_aux_4/I_RESETN] [get_bd_pins tile_aux_5/I_RESETN] [get_bd_pins tile_aux_6/I_RESETN] [get_bd_pins tile_aux_7/I_RESETN]
-  connect_bd_net -net I_TILE_EN_1 [get_bd_pins I_TILE_EN] [get_bd_pins xlslice_0/Din] [get_bd_pins xlslice_1/Din] [get_bd_pins xlslice_2/Din] [get_bd_pins xlslice_3/Din] [get_bd_pins xlslice_4/Din] [get_bd_pins xlslice_5/Din] [get_bd_pins xlslice_6/Din] [get_bd_pins xlslice_7/Din]
-  connect_bd_net -net I_TRIG_1 [get_bd_pins I_TRIG] [get_bd_pins xlslice_10/Din] [get_bd_pins xlslice_11/Din] [get_bd_pins xlslice_12/Din] [get_bd_pins xlslice_13/Din] [get_bd_pins xlslice_14/Din] [get_bd_pins xlslice_15/Din] [get_bd_pins xlslice_8/Din] [get_bd_pins xlslice_9/Din]
-  connect_bd_net -net tile_aux_0_O_CLK [get_bd_pins tile_aux_0/O_CLK] [get_bd_pins xlconcat_0/In0]
-  connect_bd_net -net tile_aux_0_O_CLK_N [get_bd_pins tile_aux_0/O_CLK_N] [get_bd_pins xlconcat_2/In0]
-  connect_bd_net -net tile_aux_0_O_CLK_P [get_bd_pins tile_aux_0/O_CLK_P] [get_bd_pins xlconcat_1/In0]
+  connect_bd_net -net Din_0_1 [get_bd_pins I_TS_EN] [get_bd_pins xlslice_0/Din] [get_bd_pins xlslice_1/Din] [get_bd_pins xlslice_16/Din] [get_bd_pins xlslice_17/Din] [get_bd_pins xlslice_2/Din] [get_bd_pins xlslice_3/Din] [get_bd_pins xlslice_4/Din] [get_bd_pins xlslice_5/Din] [get_bd_pins xlslice_6/Din] [get_bd_pins xlslice_7/Din]
+  connect_bd_net -net I_CLK_1 [get_bd_pins I_CLK] [get_bd_pins tile_aux_0/I_CLK] [get_bd_pins tile_aux_1/I_CLK] [get_bd_pins tile_aux_2/I_CLK] [get_bd_pins tile_aux_3/I_CLK] [get_bd_pins tile_aux_4/I_CLK] [get_bd_pins tile_aux_5/I_CLK] [get_bd_pins tile_aux_6/I_CLK] [get_bd_pins tile_aux_7/I_CLK] [get_bd_pins tile_aux_8/I_CLK] [get_bd_pins tile_aux_9/I_CLK]
+  connect_bd_net -net I_RESETN_1 [get_bd_pins I_RESETN] [get_bd_pins tile_aux_0/I_RESETN] [get_bd_pins tile_aux_1/I_RESETN] [get_bd_pins tile_aux_2/I_RESETN] [get_bd_pins tile_aux_3/I_RESETN] [get_bd_pins tile_aux_4/I_RESETN] [get_bd_pins tile_aux_5/I_RESETN] [get_bd_pins tile_aux_6/I_RESETN] [get_bd_pins tile_aux_7/I_RESETN] [get_bd_pins tile_aux_8/I_RESETN] [get_bd_pins tile_aux_9/I_RESETN]
+  connect_bd_net -net I_TRIG_1 [get_bd_pins I_TRIG] [get_bd_pins tile_aux_0/I_TRIG] [get_bd_pins tile_aux_1/I_TRIG] [get_bd_pins tile_aux_2/I_TRIG] [get_bd_pins tile_aux_3/I_TRIG] [get_bd_pins tile_aux_4/I_TRIG] [get_bd_pins tile_aux_5/I_TRIG] [get_bd_pins tile_aux_6/I_TRIG] [get_bd_pins tile_aux_7/I_TRIG] [get_bd_pins tile_aux_8/I_TRIG] [get_bd_pins tile_aux_9/I_TRIG]
   connect_bd_net -net tile_aux_0_O_RESETN [get_bd_pins tile_aux_0/O_RESETN] [get_bd_pins xlconcat_6/In0]
-  connect_bd_net -net tile_aux_0_O_RESETN_N [get_bd_pins tile_aux_0/O_RESETN_N] [get_bd_pins xlconcat_8/In0]
-  connect_bd_net -net tile_aux_0_O_RESETN_P [get_bd_pins tile_aux_0/O_RESETN_P] [get_bd_pins xlconcat_7/In0]
   connect_bd_net -net tile_aux_0_O_TRIG [get_bd_pins tile_aux_0/O_TRIG] [get_bd_pins xlconcat_3/In0]
-  connect_bd_net -net tile_aux_0_O_TRIG_N [get_bd_pins tile_aux_0/O_TRIG_N] [get_bd_pins xlconcat_5/In0]
-  connect_bd_net -net tile_aux_0_O_TRIG_P [get_bd_pins tile_aux_0/O_TRIG_P] [get_bd_pins xlconcat_4/In0]
-  connect_bd_net -net tile_aux_1_O_CLK [get_bd_pins tile_aux_1/O_CLK] [get_bd_pins xlconcat_0/In1]
-  connect_bd_net -net tile_aux_1_O_CLK_N [get_bd_pins tile_aux_1/O_CLK_N] [get_bd_pins xlconcat_2/In1]
-  connect_bd_net -net tile_aux_1_O_CLK_P [get_bd_pins tile_aux_1/O_CLK_P] [get_bd_pins xlconcat_1/In1]
   connect_bd_net -net tile_aux_1_O_RESETN [get_bd_pins tile_aux_1/O_RESETN] [get_bd_pins xlconcat_6/In1]
-  connect_bd_net -net tile_aux_1_O_RESETN_N [get_bd_pins tile_aux_1/O_RESETN_N] [get_bd_pins xlconcat_8/In1]
-  connect_bd_net -net tile_aux_1_O_RESETN_P [get_bd_pins tile_aux_1/O_RESETN_P] [get_bd_pins xlconcat_7/In1]
   connect_bd_net -net tile_aux_1_O_TRIG [get_bd_pins tile_aux_1/O_TRIG] [get_bd_pins xlconcat_3/In1]
-  connect_bd_net -net tile_aux_1_O_TRIG_N [get_bd_pins tile_aux_1/O_TRIG_N] [get_bd_pins xlconcat_5/In1]
-  connect_bd_net -net tile_aux_1_O_TRIG_P [get_bd_pins tile_aux_1/O_TRIG_P] [get_bd_pins xlconcat_4/In1]
-  connect_bd_net -net tile_aux_2_O_CLK [get_bd_pins tile_aux_2/O_CLK] [get_bd_pins xlconcat_0/In2]
-  connect_bd_net -net tile_aux_2_O_CLK_N [get_bd_pins tile_aux_2/O_CLK_N] [get_bd_pins xlconcat_2/In2]
-  connect_bd_net -net tile_aux_2_O_CLK_P [get_bd_pins tile_aux_2/O_CLK_P] [get_bd_pins xlconcat_1/In2]
   connect_bd_net -net tile_aux_2_O_RESETN [get_bd_pins tile_aux_2/O_RESETN] [get_bd_pins xlconcat_6/In2]
-  connect_bd_net -net tile_aux_2_O_RESETN_N [get_bd_pins tile_aux_2/O_RESETN_N] [get_bd_pins xlconcat_8/In2]
-  connect_bd_net -net tile_aux_2_O_RESETN_P [get_bd_pins tile_aux_2/O_RESETN_P] [get_bd_pins xlconcat_7/In2]
   connect_bd_net -net tile_aux_2_O_TRIG [get_bd_pins tile_aux_2/O_TRIG] [get_bd_pins xlconcat_3/In2]
-  connect_bd_net -net tile_aux_2_O_TRIG_N [get_bd_pins tile_aux_2/O_TRIG_N] [get_bd_pins xlconcat_5/In2]
-  connect_bd_net -net tile_aux_2_O_TRIG_P [get_bd_pins tile_aux_2/O_TRIG_P] [get_bd_pins xlconcat_4/In2]
-  connect_bd_net -net tile_aux_3_O_CLK [get_bd_pins tile_aux_3/O_CLK] [get_bd_pins xlconcat_0/In3]
-  connect_bd_net -net tile_aux_3_O_CLK_N [get_bd_pins tile_aux_3/O_CLK_N] [get_bd_pins xlconcat_2/In3]
-  connect_bd_net -net tile_aux_3_O_CLK_P [get_bd_pins tile_aux_3/O_CLK_P] [get_bd_pins xlconcat_1/In3]
   connect_bd_net -net tile_aux_3_O_RESETN [get_bd_pins tile_aux_3/O_RESETN] [get_bd_pins xlconcat_6/In3]
-  connect_bd_net -net tile_aux_3_O_RESETN_N [get_bd_pins tile_aux_3/O_RESETN_N] [get_bd_pins xlconcat_8/In3]
-  connect_bd_net -net tile_aux_3_O_RESETN_P [get_bd_pins tile_aux_3/O_RESETN_P] [get_bd_pins xlconcat_7/In3]
   connect_bd_net -net tile_aux_3_O_TRIG [get_bd_pins tile_aux_3/O_TRIG] [get_bd_pins xlconcat_3/In3]
-  connect_bd_net -net tile_aux_3_O_TRIG_N [get_bd_pins tile_aux_3/O_TRIG_N] [get_bd_pins xlconcat_5/In3]
-  connect_bd_net -net tile_aux_3_O_TRIG_P [get_bd_pins tile_aux_3/O_TRIG_P] [get_bd_pins xlconcat_4/In3]
-  connect_bd_net -net tile_aux_4_O_CLK [get_bd_pins tile_aux_4/O_CLK] [get_bd_pins xlconcat_0/In4]
-  connect_bd_net -net tile_aux_4_O_CLK_N [get_bd_pins tile_aux_4/O_CLK_N] [get_bd_pins xlconcat_2/In4]
-  connect_bd_net -net tile_aux_4_O_CLK_P [get_bd_pins tile_aux_4/O_CLK_P] [get_bd_pins xlconcat_1/In4]
   connect_bd_net -net tile_aux_4_O_RESETN [get_bd_pins tile_aux_4/O_RESETN] [get_bd_pins xlconcat_6/In4]
-  connect_bd_net -net tile_aux_4_O_RESETN_N [get_bd_pins tile_aux_4/O_RESETN_N] [get_bd_pins xlconcat_8/In4]
-  connect_bd_net -net tile_aux_4_O_RESETN_P [get_bd_pins tile_aux_4/O_RESETN_P] [get_bd_pins xlconcat_7/In4]
   connect_bd_net -net tile_aux_4_O_TRIG [get_bd_pins tile_aux_4/O_TRIG] [get_bd_pins xlconcat_3/In4]
-  connect_bd_net -net tile_aux_4_O_TRIG_N [get_bd_pins tile_aux_4/O_TRIG_N] [get_bd_pins xlconcat_5/In4]
-  connect_bd_net -net tile_aux_4_O_TRIG_P [get_bd_pins tile_aux_4/O_TRIG_P] [get_bd_pins xlconcat_4/In4]
-  connect_bd_net -net tile_aux_5_O_CLK [get_bd_pins tile_aux_5/O_CLK] [get_bd_pins xlconcat_0/In5]
-  connect_bd_net -net tile_aux_5_O_CLK_N [get_bd_pins tile_aux_5/O_CLK_N] [get_bd_pins xlconcat_2/In5]
-  connect_bd_net -net tile_aux_5_O_CLK_P [get_bd_pins tile_aux_5/O_CLK_P] [get_bd_pins xlconcat_1/In5]
   connect_bd_net -net tile_aux_5_O_RESETN [get_bd_pins tile_aux_5/O_RESETN] [get_bd_pins xlconcat_6/In5]
-  connect_bd_net -net tile_aux_5_O_RESETN_N [get_bd_pins tile_aux_5/O_RESETN_N] [get_bd_pins xlconcat_8/In5]
-  connect_bd_net -net tile_aux_5_O_RESETN_P [get_bd_pins tile_aux_5/O_RESETN_P] [get_bd_pins xlconcat_7/In5]
   connect_bd_net -net tile_aux_5_O_TRIG [get_bd_pins tile_aux_5/O_TRIG] [get_bd_pins xlconcat_3/In5]
-  connect_bd_net -net tile_aux_5_O_TRIG_N [get_bd_pins tile_aux_5/O_TRIG_N] [get_bd_pins xlconcat_5/In5]
-  connect_bd_net -net tile_aux_5_O_TRIG_P [get_bd_pins tile_aux_5/O_TRIG_P] [get_bd_pins xlconcat_4/In5]
-  connect_bd_net -net tile_aux_6_O_CLK [get_bd_pins tile_aux_6/O_CLK] [get_bd_pins xlconcat_0/In6]
-  connect_bd_net -net tile_aux_6_O_CLK_N [get_bd_pins tile_aux_6/O_CLK_N] [get_bd_pins xlconcat_2/In6]
-  connect_bd_net -net tile_aux_6_O_CLK_P [get_bd_pins tile_aux_6/O_CLK_P] [get_bd_pins xlconcat_1/In6]
   connect_bd_net -net tile_aux_6_O_RESETN [get_bd_pins tile_aux_6/O_RESETN] [get_bd_pins xlconcat_6/In6]
-  connect_bd_net -net tile_aux_6_O_RESETN_N [get_bd_pins tile_aux_6/O_RESETN_N] [get_bd_pins xlconcat_8/In6]
-  connect_bd_net -net tile_aux_6_O_RESETN_P [get_bd_pins tile_aux_6/O_RESETN_P] [get_bd_pins xlconcat_7/In6]
   connect_bd_net -net tile_aux_6_O_TRIG [get_bd_pins tile_aux_6/O_TRIG] [get_bd_pins xlconcat_3/In6]
-  connect_bd_net -net tile_aux_6_O_TRIG_N [get_bd_pins tile_aux_6/O_TRIG_N] [get_bd_pins xlconcat_5/In6]
-  connect_bd_net -net tile_aux_6_O_TRIG_P [get_bd_pins tile_aux_6/O_TRIG_P] [get_bd_pins xlconcat_4/In6]
-  connect_bd_net -net tile_aux_7_O_CLK [get_bd_pins tile_aux_7/O_CLK] [get_bd_pins xlconcat_0/In7]
-  connect_bd_net -net tile_aux_7_O_CLK_N [get_bd_pins tile_aux_7/O_CLK_N] [get_bd_pins xlconcat_2/In7]
-  connect_bd_net -net tile_aux_7_O_CLK_P [get_bd_pins tile_aux_7/O_CLK_P] [get_bd_pins xlconcat_1/In7]
   connect_bd_net -net tile_aux_7_O_RESETN [get_bd_pins tile_aux_7/O_RESETN] [get_bd_pins xlconcat_6/In7]
-  connect_bd_net -net tile_aux_7_O_RESETN_N [get_bd_pins tile_aux_7/O_RESETN_N] [get_bd_pins xlconcat_8/In7]
-  connect_bd_net -net tile_aux_7_O_RESETN_P [get_bd_pins tile_aux_7/O_RESETN_P] [get_bd_pins xlconcat_7/In7]
   connect_bd_net -net tile_aux_7_O_TRIG [get_bd_pins tile_aux_7/O_TRIG] [get_bd_pins xlconcat_3/In7]
-  connect_bd_net -net tile_aux_7_O_TRIG_N [get_bd_pins tile_aux_7/O_TRIG_N] [get_bd_pins xlconcat_5/In7]
-  connect_bd_net -net tile_aux_7_O_TRIG_P [get_bd_pins tile_aux_7/O_TRIG_P] [get_bd_pins xlconcat_4/In7]
-  connect_bd_net -net xlconcat_0_dout [get_bd_pins O_CLK] [get_bd_pins xlconcat_0/dout]
-  connect_bd_net -net xlconcat_1_dout [get_bd_pins O_CLK_P] [get_bd_pins xlconcat_1/dout]
-  connect_bd_net -net xlconcat_2_dout [get_bd_pins O_CLK_N] [get_bd_pins xlconcat_2/dout]
-  connect_bd_net -net xlconcat_3_dout [get_bd_pins O_TRIG] [get_bd_pins xlconcat_3/dout]
-  connect_bd_net -net xlconcat_4_dout [get_bd_pins O_TRIG_P] [get_bd_pins xlconcat_4/dout]
-  connect_bd_net -net xlconcat_5_dout [get_bd_pins O_TRIG_N] [get_bd_pins xlconcat_5/dout]
-  connect_bd_net -net xlconcat_6_dout [get_bd_pins O_RESETN] [get_bd_pins xlconcat_6/dout]
-  connect_bd_net -net xlconcat_7_dout [get_bd_pins O_RESETN_P] [get_bd_pins xlconcat_7/dout]
-  connect_bd_net -net xlconcat_8_dout [get_bd_pins O_RESETN_N] [get_bd_pins xlconcat_8/dout]
+  connect_bd_net -net tile_aux_8_O_RESETN [get_bd_pins tile_aux_8/O_RESETN] [get_bd_pins xlconcat_6/In8]
+  connect_bd_net -net tile_aux_8_O_TRIG [get_bd_pins tile_aux_8/O_TRIG] [get_bd_pins xlconcat_3/In8]
+  connect_bd_net -net tile_aux_9_O_RESETN [get_bd_pins tile_aux_9/O_RESETN] [get_bd_pins xlconcat_6/In9]
+  connect_bd_net -net tile_aux_9_O_TRIG [get_bd_pins tile_aux_9/O_TRIG] [get_bd_pins xlconcat_3/In9]
+  connect_bd_net -net xlconcat_3_dout [get_bd_pins TRIG] [get_bd_pins xlconcat_3/dout]
+  connect_bd_net -net xlconcat_6_dout [get_bd_pins SYNC] [get_bd_pins xlconcat_6/dout]
   connect_bd_net -net xlslice_0_Dout [get_bd_pins tile_aux_0/TILE_EN] [get_bd_pins xlslice_0/Dout]
-  connect_bd_net -net xlslice_10_Dout [get_bd_pins tile_aux_2/I_TRIG] [get_bd_pins xlslice_10/Dout]
-  connect_bd_net -net xlslice_11_Dout [get_bd_pins tile_aux_3/I_TRIG] [get_bd_pins xlslice_11/Dout]
-  connect_bd_net -net xlslice_12_Dout [get_bd_pins tile_aux_4/I_TRIG] [get_bd_pins xlslice_12/Dout]
-  connect_bd_net -net xlslice_13_Dout [get_bd_pins tile_aux_5/I_TRIG] [get_bd_pins xlslice_13/Dout]
-  connect_bd_net -net xlslice_14_Dout [get_bd_pins tile_aux_6/I_TRIG] [get_bd_pins xlslice_14/Dout]
-  connect_bd_net -net xlslice_15_Dout [get_bd_pins tile_aux_7/I_TRIG] [get_bd_pins xlslice_15/Dout]
+  connect_bd_net -net xlslice_16_Dout [get_bd_pins tile_aux_8/TILE_EN] [get_bd_pins xlslice_16/Dout]
+  connect_bd_net -net xlslice_17_Dout [get_bd_pins tile_aux_9/TILE_EN] [get_bd_pins xlslice_17/Dout]
   connect_bd_net -net xlslice_1_Dout [get_bd_pins tile_aux_1/TILE_EN] [get_bd_pins xlslice_1/Dout]
   connect_bd_net -net xlslice_2_Dout [get_bd_pins tile_aux_2/TILE_EN] [get_bd_pins xlslice_2/Dout]
   connect_bd_net -net xlslice_3_Dout [get_bd_pins tile_aux_3/TILE_EN] [get_bd_pins xlslice_3/Dout]
@@ -8414,8 +8931,6 @@ proc create_hier_cell_io { parentCell nameHier } {
   connect_bd_net -net xlslice_5_Dout [get_bd_pins tile_aux_5/TILE_EN] [get_bd_pins xlslice_5/Dout]
   connect_bd_net -net xlslice_6_Dout [get_bd_pins tile_aux_6/TILE_EN] [get_bd_pins xlslice_6/Dout]
   connect_bd_net -net xlslice_7_Dout [get_bd_pins tile_aux_7/TILE_EN] [get_bd_pins xlslice_7/Dout]
-  connect_bd_net -net xlslice_8_Dout [get_bd_pins tile_aux_0/I_TRIG] [get_bd_pins xlslice_8/Dout]
-  connect_bd_net -net xlslice_9_Dout [get_bd_pins tile_aux_1/I_TRIG] [get_bd_pins xlslice_9/Dout]
 
   # Restore current instance
   current_bd_instance $oldCurInst
@@ -8805,10 +9320,12 @@ proc create_hier_cell_axi_lite_reg_space { parentCell nameHier } {
 
 
   # Create pins
+  create_bd_pin -dir O -from 9 -to 0 SYNC_EN
   create_bd_pin -dir I S_AXI_LITE_ACLK
   create_bd_pin -dir I S_AXI_LITE_ARESETN
   create_bd_pin -dir O -from 0 -to 0 analog_pwr_en
-  create_bd_pin -dir O -from 7 -to 0 tile_en
+  create_bd_pin -dir O -from 7 -to 0 legacy_tile_en
+  create_bd_pin -dir O -from 9 -to 0 tile_en
 
   # Create instance: analog_pwr_en, and set properties
   set analog_pwr_en [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 analog_pwr_en ]
@@ -8831,19 +9348,56 @@ proc create_hier_cell_axi_lite_reg_space { parentCell nameHier } {
     set_property -dict [ list \
    CONFIG.C_RW_REG0_DEFAULT {0x00000000} \
    CONFIG.C_RW_REG1_DEFAULT {0x00000000} \
+   CONFIG.C_RW_REG2_DEFAULT {0x000003FF} \
+   CONFIG.C_RW_REG3_DEFAULT {0x000003FF} \
  ] $axi_lite_reg_space_0
+
+  # Create instance: build_0, and set properties
+  set build_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 build_0 ]
+  set_property -dict [ list \
+   CONFIG.CONST_VAL {2} \
+   CONFIG.CONST_WIDTH {32} \
+ ] $build_0
+
+  # Create instance: firmware_major_0, and set properties
+  set firmware_major_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 firmware_major_0 ]
+  set_property -dict [ list \
+   CONFIG.CONST_VAL {2} \
+   CONFIG.CONST_WIDTH {32} \
+ ] $firmware_major_0
+
+  # Create instance: firmware_minor_0, and set properties
+  set firmware_minor_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 firmware_minor_0 ]
+  set_property -dict [ list \
+   CONFIG.CONST_VAL {1} \
+   CONFIG.CONST_WIDTH {32} \
+ ] $firmware_minor_0
+
+  # Create instance: legacy_tile_en, and set properties
+  set legacy_tile_en [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 legacy_tile_en ]
+  set_property -dict [ list \
+   CONFIG.DIN_FROM {7} \
+   CONFIG.DOUT_WIDTH {8} \
+ ] $legacy_tile_en
+
+  # Create instance: sync_en, and set properties
+  set sync_en [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 sync_en ]
+  set_property -dict [ list \
+   CONFIG.DIN_FROM {9} \
+   CONFIG.DOUT_WIDTH {10} \
+ ] $sync_en
 
   # Create instance: tile_en, and set properties
   set tile_en [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 tile_en ]
   set_property -dict [ list \
-   CONFIG.DIN_FROM {7} \
-   CONFIG.DOUT_WIDTH {8} \
+   CONFIG.DIN_FROM {9} \
+   CONFIG.DOUT_WIDTH {10} \
  ] $tile_en
 
   # Create instance: xlconstant_0, and set properties
   set xlconstant_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_0 ]
   set_property -dict [ list \
-   CONFIG.CONST_VAL {0} \
+   CONFIG.CONST_VAL {5} \
    CONFIG.CONST_WIDTH {32} \
  ] $xlconstant_0
 
@@ -8856,8 +9410,15 @@ proc create_hier_cell_axi_lite_reg_space { parentCell nameHier } {
   connect_bd_net -net analog_pwr_en_Dout [get_bd_pins analog_pwr_en] [get_bd_pins analog_pwr_en/Dout]
   connect_bd_net -net axi_lite_reg_space_0_RW_REG0 [get_bd_pins axi_lite_reg_space_0/RW_REG0] [get_bd_pins tile_en/Din]
   connect_bd_net -net axi_lite_reg_space_0_RW_REG1 [get_bd_pins analog_pwr_en/Din] [get_bd_pins axi_lite_reg_space_0/RW_REG1]
-  connect_bd_net -net tile_en_0_Dout [get_bd_pins tile_en] [get_bd_pins tile_en/Dout]
-  connect_bd_net -net xlconstant_0_dout [get_bd_pins axi_lite_reg_space_0/RO_REG0] [get_bd_pins axi_lite_reg_space_0/RO_REG1] [get_bd_pins axi_lite_reg_space_0/RO_REG2] [get_bd_pins axi_lite_reg_space_0/RO_REG3] [get_bd_pins xlconstant_0/dout]
+  connect_bd_net -net axi_lite_reg_space_0_RW_REG2 [get_bd_pins axi_lite_reg_space_0/RW_REG2] [get_bd_pins sync_en/Din]
+  connect_bd_net -net axi_lite_reg_space_0_RW_REG3 [get_bd_pins axi_lite_reg_space_0/RW_REG3] [get_bd_pins legacy_tile_en/Din]
+  connect_bd_net -net build_0_dout [get_bd_pins axi_lite_reg_space_0/RO_REG2] [get_bd_pins build_0/dout]
+  connect_bd_net -net firmware_major_0_dout [get_bd_pins axi_lite_reg_space_0/RO_REG0] [get_bd_pins firmware_major_0/dout]
+  connect_bd_net -net firmware_minor_0_dout [get_bd_pins axi_lite_reg_space_0/RO_REG1] [get_bd_pins firmware_minor_0/dout]
+  connect_bd_net -net legacy_tile_en_Dout [get_bd_pins legacy_tile_en] [get_bd_pins legacy_tile_en/Dout]
+  connect_bd_net -net sync_en_Dout [get_bd_pins SYNC_EN] [get_bd_pins sync_en/Dout]
+  connect_bd_net -net tile_en_Dout [get_bd_pins tile_en] [get_bd_pins tile_en/Dout]
+  connect_bd_net -net xlconstant_0_dout [get_bd_pins axi_lite_reg_space_0/RO_REG3] [get_bd_pins xlconstant_0/dout]
 
   # Restore current instance
   current_bd_instance $oldCurInst
@@ -8898,13 +9459,13 @@ proc create_hier_cell_axi_lite_reg_space { parentCell nameHier } {
   # Create ports
   set ANALOG_PWR_EN [ create_bd_port -dir O -from 0 -to 0 ANALOG_PWR_EN ]
   set CLK [ create_bd_port -dir O CLK ]
-  set HW_SYNC_TRIG [ create_bd_port -dir I HW_SYNC_TRIG ]
-  set MISO_0 [ create_bd_port -dir I -from 31 -to 0 MISO_0 ]
-  set MOSI_0 [ create_bd_port -dir O -from 31 -to 0 MOSI_0 ]
-  set SYNC [ create_bd_port -dir O -from 7 -to 0 SYNC ]
-  set TILE_EN [ create_bd_port -dir O -from 7 -to 0 TILE_EN ]
-  set TRIG [ create_bd_port -dir O -from 7 -to 0 TRIG ]
-  set TRIG1_IN [ create_bd_port -dir I TRIG1_IN ]
+  set PISO [ create_bd_port -dir I -from 31 -to 0 PISO ]
+  set POSI [ create_bd_port -dir O -from 31 -to 0 POSI ]
+  set SYNC [ create_bd_port -dir O -from 9 -to 0 SYNC ]
+  set SYNC_ISO [ create_bd_port -dir I SYNC_ISO ]
+  set TILE_EN [ create_bd_port -dir O -from 9 -to 0 TILE_EN ]
+  set TRIG [ create_bd_port -dir O -from 9 -to 0 TRIG ]
+  set TRIG_ISO [ create_bd_port -dir I TRIG_ISO ]
   set UART_RX_BUSY [ create_bd_port -dir O UART_RX_BUSY ]
   set UART_TX_BUSY [ create_bd_port -dir O UART_TX_BUSY ]
 
@@ -9708,18 +10269,20 @@ proc create_hier_cell_axi_lite_reg_space { parentCell nameHier } {
   connect_bd_intf_net -intf_net ps7_0_axi_periph_M03_AXI [get_bd_intf_pins larpix_clk/S_AXI_LITE] [get_bd_intf_pins ps7_0_axi_periph/M03_AXI]
 
   # Create port connections
-  connect_bd_net -net HW_SYNC_TRIG_1 [get_bd_ports HW_SYNC_TRIG] [get_bd_pins larpix_clk/HW_SYNC_TRIG]
+  connect_bd_net -net HW_SYNC_TRIG_1 [get_bd_ports SYNC_ISO] [get_bd_pins larpix_clk/HW_SYNC_TRIG]
   connect_bd_net -net MCLK_1 [get_bd_ports CLK] [get_bd_pins io/I_CLK] [get_bd_pins larpix_clk/MCLK] [get_bd_pins larpix_trig/MCLK] [get_bd_pins larpix_uart_array/MCLK]
-  connect_bd_net -net MISO_0_1 [get_bd_ports MISO_0] [get_bd_pins larpix_uart_array/MISO]
+  connect_bd_net -net MISO_0_1 [get_bd_ports PISO] [get_bd_pins larpix_uart_array/MISO]
   connect_bd_net -net PACMAN_TS_1 [get_bd_pins larpix_clk/TIMESTAMP] [get_bd_pins larpix_trig/TIMESTAMP] [get_bd_pins larpix_uart_array/PACMAN_TS]
-  connect_bd_net -net TRIG1_IN_1 [get_bd_ports TRIG1_IN] [get_bd_pins larpix_trig/TRIG1_IN]
+  connect_bd_net -net TILE_EN_1 [get_bd_pins axi_lite_reg_space/legacy_tile_en] [get_bd_pins larpix_uart_array/TILE_EN]
+  connect_bd_net -net TRIG1_IN_1 [get_bd_ports TRIG_ISO] [get_bd_pins larpix_trig/TRIG1_IN]
+  connect_bd_net -net axi_lite_reg_space_Dout_0 [get_bd_ports TILE_EN] [get_bd_pins axi_lite_reg_space/tile_en]
+  connect_bd_net -net axi_lite_reg_space_SYNC_EN [get_bd_pins axi_lite_reg_space/SYNC_EN] [get_bd_pins io/I_TS_EN]
   connect_bd_net -net axi_lite_reg_space_analog_pwr_en [get_bd_ports ANALOG_PWR_EN] [get_bd_pins axi_lite_reg_space/analog_pwr_en]
-  connect_bd_net -net axi_lite_reg_space_tile_en [get_bd_ports TILE_EN] [get_bd_pins axi_lite_reg_space/tile_en] [get_bd_pins io/I_TILE_EN] [get_bd_pins larpix_uart_array/TILE_EN]
-  connect_bd_net -net io_O_RESETN [get_bd_ports SYNC] [get_bd_pins io/O_RESETN]
-  connect_bd_net -net io_O_TRIG [get_bd_ports TRIG] [get_bd_pins io/O_TRIG]
+  connect_bd_net -net io_dout_0 [get_bd_ports SYNC] [get_bd_pins io/SYNC]
+  connect_bd_net -net io_dout_1 [get_bd_ports TRIG] [get_bd_pins io/TRIG]
   connect_bd_net -net larpix_clk_RST_SYNC_N [get_bd_pins io/I_RESETN] [get_bd_pins larpix_clk/RST_SYNC_N]
-  connect_bd_net -net larpix_trig_TRIG_MASKED [get_bd_pins io/I_TRIG] [get_bd_pins larpix_trig/TRIG_MASKED]
-  connect_bd_net -net larpix_uart_array_MOSI [get_bd_ports MOSI_0] [get_bd_pins larpix_uart_array/MOSI]
+  connect_bd_net -net larpix_trig_TRIG [get_bd_pins io/I_TRIG] [get_bd_pins larpix_trig/TRIG]
+  connect_bd_net -net larpix_uart_array_MOSI [get_bd_ports POSI] [get_bd_pins larpix_uart_array/MOSI]
   connect_bd_net -net larpix_uart_array_UART_RX_BUSY [get_bd_ports UART_RX_BUSY] [get_bd_pins larpix_uart_array/UART_RX_BUSY]
   connect_bd_net -net larpix_uart_array_UART_TX_BUSY1 [get_bd_ports UART_TX_BUSY] [get_bd_pins larpix_uart_array/UART_TX_BUSY]
   connect_bd_net -net processing_system7_0_FCLK_CLK0 [get_bd_pins axi_lite_reg_space/S_AXI_LITE_ACLK] [get_bd_pins data_rx/ACLK] [get_bd_pins data_tx/aclk] [get_bd_pins dma/ACLK] [get_bd_pins larpix_clk/ACLK] [get_bd_pins larpix_trig/ACLK] [get_bd_pins larpix_uart_array/ACLK] [get_bd_pins processing_system7_0/FCLK_CLK0] [get_bd_pins processing_system7_0/M_AXI_GP0_ACLK] [get_bd_pins processing_system7_0/S_AXI_HP0_ACLK] [get_bd_pins ps7_0_axi_periph/ACLK] [get_bd_pins ps7_0_axi_periph/M00_ACLK] [get_bd_pins ps7_0_axi_periph/M01_ACLK] [get_bd_pins ps7_0_axi_periph/M02_ACLK] [get_bd_pins ps7_0_axi_periph/M03_ACLK] [get_bd_pins ps7_0_axi_periph/M04_ACLK] [get_bd_pins ps7_0_axi_periph/S00_ACLK] [get_bd_pins rst_ps7_0_100M/slowest_sync_clk]
