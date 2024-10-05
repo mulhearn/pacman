@@ -67,12 +67,23 @@ int pacman_init(int verbose){
   int dh = open("/dev/mem", O_RDWR|O_SYNC);
   G_PACMAN_AXIL = (uint32_t*)mmap(NULL, PACMAN_LEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, PACMAN_ADDR);
 
-  //unsigned fwversion = G_PACMAN_AXIL[TBD>>2];
+  unsigned fwversion_maj = G_PACMAN_AXIL[0x0000>>2];
+  unsigned fwversion_min = G_PACMAN_AXIL[0x0004>>2];
+  unsigned build         = G_PACMAN_AXIL[0x0008>>2];
+  unsigned debug         = G_PACMAN_AXIL[0x000C>>2];
+
+  if ((fwversion_maj==0) && (fwversion_min==0)){
+    printf("WARNING:  Legacy firmware detected!  The firmware version cannot be verified, and will be reported as v0.0\n");
+  }
   
   if (verbose){
     printf("INFO:  Running pacman-server version %d.%d\n", PACMAN_SERVER_MAJOR_VERSION, PACMAN_SERVER_MINOR_VERSION);
-    printf("INFO:  Running pacman firmware version (LEGACY) \n");
+    printf("INFO:  Running pacman firmware version %d.%d (build: %d debug: 0x%08x)\n", fwversion_maj, fwversion_min, build, debug);
   }
+
+
+
+
   
   // I2C
   if (verbose){
@@ -84,9 +95,8 @@ int pacman_init(int verbose){
   unsigned i2cdebug = i2c_read(G_I2C_FH, 0x222);
   // I2C
   if (verbose){
-    printf("INFO:  Running I2C firmware version %d.%d (Debug Code:  0x%x)\n", i2cmajor, i2cminor, i2cdebug);
+    printf("INFO:  Running I2C sub-system firmware version %d.%d (Debug Code:  0x%x)\n", i2cmajor, i2cminor, i2cdebug);
   }
-
   
   return EXIT_SUCCESS;
 }
