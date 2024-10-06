@@ -16,6 +16,7 @@
 #include "version.hh"
 #include "addr_conf.hh"
 #include "pacman.hh"
+#include "chan_map.hh"
 #include "tx_buffer.hh"
 #include "rx_buffer.hh"
 #include "pacman_i2c.hh"
@@ -80,11 +81,6 @@ int pacman_init(int verbose){
     printf("INFO:  Running pacman-server version %d.%d\n", PACMAN_SERVER_MAJOR_VERSION, PACMAN_SERVER_MINOR_VERSION);
     printf("INFO:  Running pacman firmware version %d.%d (build: %d debug: 0x%08x)\n", fwversion_maj, fwversion_min, build, debug);
   }
-
-
-
-
-  
   // I2C
   if (verbose){
     printf("INFO:  Initializing PACMAN I2C interface.\n");
@@ -97,6 +93,10 @@ int pacman_init(int verbose){
   if (verbose){
     printf("INFO:  Running I2C sub-system firmware version %d.%d (Debug Code:  0x%x)\n", i2cmajor, i2cminor, i2cdebug);
   }
+
+
+  printf("WARNING:  This version uses channel mapping that maps 40 uarts onto 32 as follows:\n");
+  print_chan_map();
   
   return EXIT_SUCCESS;
 }
