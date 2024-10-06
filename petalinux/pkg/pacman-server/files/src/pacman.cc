@@ -26,6 +26,7 @@
 static uint32_t * G_PACMAN_AXIL = NULL;
 static uint32_t * dma  = NULL;
 static uint32_t * dma_tx = NULL;
+static uint32_t * dma_rx = NULL;
 static uint32_t * G_PACMAN_DMA_RX_BUFFER = NULL;
 static dma_desc * curr = NULL;
 static dma_desc * prev = NULL;
@@ -33,7 +34,7 @@ static dma_desc * prev = NULL;
 int G_I2C_FH = -1;
 
 //PACMAN SERVER Scratch Registers (Accessible at PACMAN_SERVER_VIRTUAL_START + (0, 1)
-uint32_t G_PACMAN_SERVER_SCRA = 0x0; 
+uint32_t G_PACMAN_SERVER_SCRA = 0x0;
 uint32_t G_PACMAN_SERVER_SCRB = 0x0;
 
 void dma_restart(uint32_t* virtual_address, dma_desc* start) {
@@ -60,7 +61,7 @@ void transmit_data(uint32_t* virtual_address, dma_desc* start, uint32_t nwords) 
 }
 
 int pacman_init(int verbose){
-  // initialize axi-lite 
+  // initialize axi-lite
   if (verbose){
     printf("INFO:  Initializing PACMAN AXI-Lite interface.\n");
   }
@@ -76,7 +77,7 @@ int pacman_init(int verbose){
   if ((fwversion_maj==0) && (fwversion_min==0)){
     printf("WARNING:  Legacy firmware detected!  The firmware version cannot be verified, and will be reported as v0.0\n");
   }
-  
+
   if (verbose){
     printf("INFO:  Running pacman-server version %d.%d\n", PACMAN_SERVER_MAJOR_VERSION, PACMAN_SERVER_MINOR_VERSION);
     printf("INFO:  Running pacman firmware version %d.%d (build: %d debug: 0x%08x)\n", fwversion_maj, fwversion_min, build, debug);
@@ -97,7 +98,7 @@ int pacman_init(int verbose){
 
   printf("WARNING:  This version uses channel mapping that maps 40 uarts onto 32 as follows:\n");
   print_chan_map();
-  
+
   return EXIT_SUCCESS;
 }
 
@@ -125,7 +126,7 @@ void print_dma_status(unsigned cr, unsigned sr){
   printf("Itr En (Error)----%d\n", ((cr&0x00004000)!=0));
   printf("Always Zero-------%d\n", ((cr&0x00008000)!=0));
   printf("IRQ Threshold-----%d\n", ((cr&0x00FF0000)>>16));
-  printf("IRQ Delay---------%d\n", ((cr&0xFF000000)>>24));  
+  printf("IRQ Delay---------%d\n", ((cr&0xFF000000)>>24));
   printf("Status Bits: \n");
   printf("Halted------------%d\n", ((sr&0x00000001)!=0));
   printf("Idle--------------%d\n", ((sr&0x00000002)!=0));
@@ -144,23 +145,22 @@ void print_dma_status(unsigned cr, unsigned sr){
   printf("Itr (Error)-------%d\n", ((sr&0x00000400)!=0));
   printf("Always Zero-------%d\n", ((sr&0x00000800)!=0));
   printf("Stat Irq Thresh---%d\n", ((cr&0x00FF0000)>>16));
-  printf("Stay Irq Delay----%d\n", ((cr&0xFF000000)>>24));  
+  printf("Stay Irq Delay----%d\n", ((cr&0xFF000000)>>24));
 }
 
 int pacman_init_tx(int verbose, int skip_reset){
   unsigned timeout, cr, sr;
-  // initialize DMA TX 
+  // initialize DMA TX
   if (verbose){
     printf("INFO:  Initializing PACMAN DMA TX interface.\n");
     printf("INFO:  Initializing DMA contol interface (AXIL).\n");
   }
 
-
   // initialize dma
   int dh = open("/dev/mem", O_RDWR|O_SYNC);
   dma = (uint32_t*)mmap(NULL, DMA_LEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_ADDR);
   dma_tx = (uint32_t*)mmap(NULL, DMA_TX_MAXLEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_TX_ADDR);
-  curr = init_circular_buffer(dma_tx, DMA_TX_ADDR, DMA_TX_MAXLEN, LARPIX_PACKET_LEN);
+  curr = init_circular_buffer(dma_tx, DMA_TX_ADDR, DMA_TX_MAXLEN, LARPIX_WIDE_LEN);
   prev = curr;
   dma_restart(dma, curr);
   uint32_t dma_status = dma_get(dma, DMA_MM2S_STAT_REG);
@@ -174,13 +174,41 @@ int pacman_init_tx(int verbose, int skip_reset){
 }
 
 int pacman_init_rx(int verbose, int skip_reset){
-  // unused in this version...
+  unsigned timeout, cr, sr;
+
+  if (verbose){
+    printf("INFO:  Running pacman-server version %d.%d\n", PACMAN_SERVER_MAJOR_VERSION, PACMAN_SERVER_MINOR_VERSION);
+  }
+
+  printf("WARNING:  This version uses channel mapping that maps 40 uarts onto 32 as follows:\n");
+  print_chan_map();
+
+  // initialize DMA TX
+  if (verbose){
+    printf("INFO:  Initializing PACMAN DMA RX interface.\n");
+    printf("INFO:  Initializing DMA contol interface (AXIL).\n");
+  }
+
+  // initialize dma
+  int dh = open("/dev/mem", O_RDWR|O_SYNC);
+  dma = (uint32_t*)mmap(NULL, DMA_LEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_ADDR);
+  dma_rx = (uint32_t*)mmap(NULL, DMA_RX_MAXLEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_RX_ADDR);
+  curr = init_circular_buffer(dma_rx, DMA_RX_ADDR, DMA_RX_MAXLEN, LARPIX_WIDE_LEN);
+  prev = curr;
+  dma_restart(dma, curr);
+  uint32_t dma_status = dma_get(dma, DMA_MM2S_STAT_REG);
+  if ( dma_status & DMA_HALTED ) {
+    printf("Error starting DMA\n");
+    return 2;
+  }
+  printf("DMA started\n");
+
   return EXIT_SUCCESS;
 }
 
 int pacman_poll_rx(){
   // unused in this version...
-  
+
   return EXIT_SUCCESS;
 }
 
@@ -202,11 +230,11 @@ int pacman_poll_tx(){
 	curr = curr->next;
       }
     }
-  } 
+  }
   // transmit
   printf("INFO: transmitting %d TX words\n", tx_words);
   transmit_data(dma, prev, tx_words);
-  prev = curr;  
+  prev = curr;
   return EXIT_SUCCESS;
 }
 
@@ -228,7 +256,7 @@ int pacman_write(uint32_t addr, uint32_t value){
 
 uint32_t pacman_read(uint32_t addr, int * status){
   if (status)
-    *status = EXIT_SUCCESS;  
+    *status = EXIT_SUCCESS;
   if (addr < PACMAN_LEN){
     return G_PACMAN_AXIL[addr>>2];
   } else {

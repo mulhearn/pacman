@@ -28,7 +28,7 @@ int pacman_poll_rx(){
   static int count=0;
   static int chan=0;
   static int tstamp=0;
-  
+
   uint32_t rx_data[4];
   rx_data[0]=0x44 + ((chan+1)<<8) + (tstamp<<16);
   rx_data[1]=0x00001000;
@@ -37,12 +37,12 @@ int pacman_poll_rx(){
 
   if (count == 0){
     rx_buffer_in(rx_data);
-    chan = (chan+1)%40;
+    //chan = (chan+1)%40;
+    chan = (chan+1)%31;
     tstamp = (tstamp+2)%0x10000;
   }
-  count = (count+1)%1000;
+  count = (count+1)%10;
 
-  usleep(2000);      
   return EXIT_SUCCESS;
 }
 
@@ -55,10 +55,10 @@ int pacman_poll_tx(){
     return EXIT_SUCCESS;
 
   printf("DEBUG:  extracted output %x\n", output[2]);
-  
+
   G_PACMAN_TXA = output[4];
   G_PACMAN_TXB = output[5];
-  
+
   return EXIT_SUCCESS;
 }
 
@@ -70,7 +70,7 @@ int pacman_write(uint32_t addr, uint32_t value){
     G_PACMAN_SCRA = value;
   else if (addr == 0x4)
     G_PACMAN_SCRB = value;
-  
+
   return EXIT_SUCCESS;
 }
 
@@ -85,7 +85,7 @@ uint32_t pacman_read(uint32_t addr, int * status){
     return G_PACMAN_TXA;
   else if (addr == 0xC)
     return G_PACMAN_TXB;
-  return 0x0;  
+  return 0x0;
 }
 
 #endif
