@@ -2,6 +2,7 @@
 
 #include "tx_buffer.hh"
 #include "rx_buffer.hh"
+#include "chan_map.hh"
 
 int test_tx_buffer(){
   int success = 1;
@@ -67,7 +68,8 @@ int test_tx_buffer(){
     for (unsigned j=0; j<TX_BUFFER_DEPTH-1; j++){
       tx_data[0] = (j<<8) + i+1;
       tx_data[1] = (j<<8) + 0x00000033;
-      success &= (tx_buffer_in(i, tx_data)==1);
+      if (chan_map_tx(i) >= 0)
+	success &= (tx_buffer_in(i, tx_data)==1);
     }
   }
   // how about this wafer thin mint?
@@ -79,6 +81,8 @@ int test_tx_buffer(){
   } else {
     printf("INFO:  ...success so far.\n");
   }
+  
+  tx_buffer_status();
 
   printf("INFO:  Draining the entire buffer and checking contents.\n");
 
@@ -90,17 +94,22 @@ int test_tx_buffer(){
     //tx_buffer_print_output(output);
     
     success &= (output[0] == 0xFFFFFFFF);
-    success &= (output[1] == 0x000000FF);
+    success &= (output[1] == 0x00000000);
+    //success &= (output[1] == 0x000000FF);    
     for (int j=0; j<TX_BUFFER_CHAN; j++){
-      success &= ((output[4+2*j+0]&0xFF) == j+1);
-      success &= ((output[4+2*j+0]>>8) == i);
-      success &= ((output[4+2*j+1]&0xFF) == 0x33);
-      success &= ((output[4+2*j+1]>>8) == i);
+      int chan = chan_map_tx(j);
+      if (chan<0)
+	continue;
+      //printf("%d %d 0x%x\n", j, chan, output[4+2*chan]);
+      success &= ((output[4+2*chan+0]&0xFF) == j+1);
+      success &= ((output[4+2*chan+0]>>8) == i);
+      success &= ((output[4+2*chan+1]&0xFF) == 0x33);
+      success &= ((output[4+2*chan+1]>>8) == i);
     }    
   }
   // check we are empty:
   success &= (tx_buffer_out(output)==0);
-
+  
   if (success==0){
     printf("ERROR:  failed draining the entire buffer and checking contents.\n");
     return 0;
@@ -201,11 +210,48 @@ int test_rx_buffer(){
   return 1;
 }
 
+int test_chan_map(){
+  int success=1;
+  uint32_t rx_data[4];
+  
+  printf("INFO:  chan_map unit test.\n");
+
+  print_chan_map();
+  
+  for (int i = 0 ; i < 8 ; i++){    
+    success &= (chan_map_tx(i)==i);
+  }
+  success &= (chan_map_tx(254)==254);
+
+  rx_data[0]=0xAAAA00AA;
+  rx_data[1]=0xBBBBBBBB;
+  rx_data[2]=0xCCCCCCCC;
+  rx_data[3]=0xDDDDDDDD;
+
+  for (int i=0; i<40; i++){
+    int nchan = chan_map_tx(i);
+    if (nchan < 0)
+      continue;
+    rx_data[0]=0xAAAA00AA + ((nchan&0xFF)<<8);
+    chan_map_rx(rx_data);
+    unsigned chan = (rx_data[0]>>8)&0xFF;
+    //printf("%d %d\n", i, chan);
+    success &= (i == chan);
+  }
+  
+  if (success==0){
+    printf("ERROR:  chan_map unit test has failed.\n");
+    return 0;
+  }
+  printf("SUMMARY:  chan_map unit test SUCCESS.\n");
+  return 1;
+}
 
 int main(){
   int success = 1;
   success &= test_tx_buffer();
-  success &= test_rx_buffer();  
+  success &= test_rx_buffer();
+  success &= test_chan_map();  
   if (success) {
     printf("SUMMARY:  *************************************************\n");
     printf("SUMMARY:  Congratulations!  All unit tests were successful.\n");

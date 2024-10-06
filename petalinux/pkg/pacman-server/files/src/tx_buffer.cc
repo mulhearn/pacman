@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "tx_buffer.hh"
+#include "chan_map.hh"
 
 uint32_t G_TX_BUFFER_DATA[TX_BUFFER_CHAN][2*TX_BUFFER_DEPTH];
 unsigned G_TX_BUFFER_HEAD[TX_BUFFER_CHAN];
@@ -53,11 +54,16 @@ unsigned tx_buffer_count(unsigned char chan){
 }
 
 unsigned tx_buffer_in(unsigned char chan, uint32_t * tx_data){
+  // apply channel mapping:
+  chan = chan_map_tx(chan);
+  if (chan < 0)
+    return 0;
+  
   // ignoring broadcast for now
   if (chan > TX_BUFFER_CHAN)
     return 0;
   unsigned head = G_TX_BUFFER_HEAD[chan];
-  
+
   if (((head+1) % TX_BUFFER_DEPTH) == G_TX_BUFFER_TAIL[chan])
     return 0;
   G_TX_BUFFER_DATA[chan][2*head+0] = tx_data[0];

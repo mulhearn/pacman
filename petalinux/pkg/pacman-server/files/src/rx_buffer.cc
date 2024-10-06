@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "rx_buffer.hh"
+#include "chan_map.hh"
 
 #define RX_BUFFER_WORDS RX_BUFFER_BYTES/4
 
@@ -56,6 +57,8 @@ unsigned rx_buffer_out(uint32_t * dst){
     return 0;
 
   unsigned tail = G_RX_BUFFER_TAIL;
+  chan_map_rx(G_RX_BUFFER_DATA[tail]);
+  
   for (int i=0; i<RX_BUFFER_WORDS; i++){
     dst[i] = G_RX_BUFFER_DATA[tail][i];
   }
