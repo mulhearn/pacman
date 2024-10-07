@@ -33,7 +33,7 @@
 #define DMA_ERR_IRQ   0x00004000
 // control bits
 #define DMA_RUN       0x00000001
-#define DMA_RST       0x00000002
+#define DMA_RST       0x00000004
 #define DMA_IOC_IRQEN 0x00001000
 #define DMA_DLY_IRQEN 0x00002000
 #define DMA_ERR_IRQEN 0x00004000
