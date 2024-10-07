@@ -196,7 +196,7 @@ int pacman_init_rx(int verbose, int skip_reset){
   printf("WARNING:  This version uses channel mapping that maps 40 uarts onto 32 as follows:\n");
   print_chan_map();
 
-  // initialize DMA TX
+  // initialize DMA RX
   if (verbose){
     printf("INFO:  Initializing PACMAN DMA RX interface.\n");
     printf("INFO:  Initializing DMA contol interface (AXIL).\n");
@@ -215,11 +215,11 @@ int pacman_init_rx(int verbose, int skip_reset){
   dma_set(dma, DMA_S2MM_TAIL_REG, buffer_end->addr);
   uint32_t dma_status = dma_get(dma, DMA_S2MM_STAT_REG);
   if ( dma_status & DMA_HALTED ) {
-    printf("Error starting DMA\n");
+    printf("ERROR:  Error starting DMA\n");
     return 2;
   }
-  printf("DMA started\n");
-  
+  printf("INFO:  DMA started succesfully.\n");
+
   return EXIT_SUCCESS;
 }
 
@@ -227,6 +227,7 @@ int pacman_poll_rx(){
   // unused in this version...
   bool err = false;
   unsigned words=0;
+  uint32_t rx_data[4];
 
   while(dma_desc_cmplt(curr_rx->desc)) {
     curr_rx = curr_rx->next;
@@ -235,14 +236,15 @@ int pacman_poll_rx(){
   }
   if (curr_rx == prev_rx){
     printf("INFO: No new data received...\n");
-    return EXIT_SUCCESS; 
+    return EXIT_SUCCESS;
   }
 
   printf("INFO: RX received new data words=%d\n", words);
-  
+
   // copy data into buffer
   for (int i=0; i<words ; i++){
-    //memcpy(word, prev_rx->word, 16);
+    memcpy(rx_data, prev_rx->word, 16);
+    rx_buffer_in(rx_data);
 
     // reset word
     if (dma_get(prev_rx->desc, DESC_STAT) & (DESC_INTERR | DESC_SLVERR | DESC_DECERR)) {
@@ -270,7 +272,7 @@ int pacman_poll_rx(){
     dma_set(dma, DMA_S2MM_TAIL_REG, (prev_rx->prev)->addr);
     return EXIT_FAILURE;
   }
-  
+
   return EXIT_SUCCESS;
 }
 
