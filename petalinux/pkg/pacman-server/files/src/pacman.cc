@@ -26,10 +26,11 @@
 static uint32_t * G_PACMAN_AXIL = NULL;
 static uint32_t * dma  = NULL;
 static uint32_t * dma_tx = NULL;
+static dma_desc * curr_tx = NULL;
+static dma_desc * prev_tx = NULL;
 static uint32_t * dma_rx = NULL;
-static uint32_t * G_PACMAN_DMA_RX_BUFFER = NULL;
-static dma_desc * curr = NULL;
-static dma_desc * prev = NULL;
+static dma_desc * curr_rx = NULL;
+static dma_desc * prev_rx = NULL;
 
 int G_I2C_FH = -1;
 
@@ -45,6 +46,18 @@ void dma_restart(uint32_t* virtual_address, dma_desc* start) {
   dma_set(virtual_address, DMA_MM2S_CTRL_REG, DMA_RUN); // run
   dma_mm2s_status(virtual_address);
 }
+
+void restart_dma(uint32_t* dma, uint32_t curr) {
+  printf("Restarting DMA...\n");
+  dma_set(dma, DMA_S2MM_CTRL_REG, DMA_RST); // reset
+  dma_set(dma, DMA_S2MM_CTRL_REG, 0); // halt
+  dma_set(dma, DMA_S2MM_CURR_REG, curr); // set curr
+  dma_set(dma, DMA_S2MM_CTRL_REG, DMA_RUN); // run
+  dma_s2mm_status(dma);
+}
+
+
+
 
 void transmit_data(uint32_t* virtual_address, dma_desc* start, uint32_t nwords) {
   if (nwords == 0) return;
@@ -160,9 +173,9 @@ int pacman_init_tx(int verbose, int skip_reset){
   int dh = open("/dev/mem", O_RDWR|O_SYNC);
   dma = (uint32_t*)mmap(NULL, DMA_LEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_ADDR);
   dma_tx = (uint32_t*)mmap(NULL, DMA_TX_MAXLEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_TX_ADDR);
-  curr = init_circular_buffer(dma_tx, DMA_TX_ADDR, DMA_TX_MAXLEN, LARPIX_WIDE_LEN);
-  prev = curr;
-  dma_restart(dma, curr);
+  curr_tx = init_circular_buffer(dma_tx, DMA_TX_ADDR, DMA_TX_MAXLEN, LARPIX_WIDE_LEN);
+  prev_tx = curr_tx;
+  dma_restart(dma, curr_tx);
   uint32_t dma_status = dma_get(dma, DMA_MM2S_STAT_REG);
   if ( dma_status & DMA_HALTED ) {
     printf("Error starting DMA\n");
@@ -193,9 +206,9 @@ int pacman_init_rx(int verbose, int skip_reset){
   int dh = open("/dev/mem", O_RDWR|O_SYNC);
   dma = (uint32_t*)mmap(NULL, DMA_LEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_ADDR);
   dma_rx = (uint32_t*)mmap(NULL, DMA_RX_MAXLEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_RX_ADDR);
-  curr = init_circular_buffer(dma_rx, DMA_RX_ADDR, DMA_RX_MAXLEN, LARPIX_WIDE_LEN);
-  prev = curr;
-  dma_restart(dma, curr);
+  curr_rx = init_circular_buffer(dma_rx, DMA_RX_ADDR, DMA_RX_MAXLEN, LARPIX_WIDE_LEN);
+  prev_rx = curr_rx;
+  dma_restart(dma, curr_rx);
   uint32_t dma_status = dma_get(dma, DMA_MM2S_STAT_REG);
   if ( dma_status & DMA_HALTED ) {
     printf("Error starting DMA\n");
@@ -208,7 +221,52 @@ int pacman_init_rx(int verbose, int skip_reset){
 
 int pacman_poll_rx(){
   // unused in this version...
+  bool err = false;
+  unsigned words=0;
 
+  while(dma_desc_cmplt(curr_rx->desc)) {
+    curr_rx = curr_rx->next;
+    words++;
+    if (curr_rx == prev_rx->prev) break; // reached end of buffer
+  }
+  if (curr_rx == prev_rx){
+    printf("INFO: No new data received...\n");
+    return EXIT_SUCCESS; 
+  }
+
+  printf("INFO: RX received new data words=%d\n", words);
+  
+  // copy data into buffer
+  for (int i=0; i<words ; i++){
+    //memcpy(word, prev_rx->word, 16);
+
+    // reset word
+    if (dma_get(prev_rx->desc, DESC_STAT) & (DESC_INTERR | DESC_SLVERR | DESC_DECERR)) {
+      printf("Descriptor error!\n");
+      err = true;
+      dma_desc_print(prev_rx->desc);
+      // reset
+      dma_set(prev_rx->desc, DESC_ADDR, prev_rx->word_addr);
+      dma_set(prev_rx->desc, DESC_NEXT, (prev_rx->next)->addr);
+      dma_desc_print(prev_rx->desc);
+    }
+    dma_set(prev_rx->desc, DESC_STAT, 0);
+
+    prev_rx = prev_rx->next;
+  }
+  // update dma
+  dma_set(dma, DMA_S2MM_TAIL_REG, (prev_rx->prev)->addr);
+
+  prev_rx = curr_rx;
+  if (err || dma_get(dma, DMA_S2MM_STAT_REG) & DMA_ERR_IRQ) {
+    // try reset if errors occurred
+    printf("An error occurred!\n");
+    dma_s2mm_status(dma);
+    restart_dma(dma, curr_rx->addr);
+    dma_set(dma, DMA_S2MM_TAIL_REG, (prev_rx->prev)->addr);
+    return EXIT_FAILURE;
+  }
+  
   return EXIT_SUCCESS;
 }
 
@@ -223,18 +281,18 @@ int pacman_poll_tx(){
       if ((output[i/32]>>(i%32))&1==1){
 	io_c = i+1;
 	tx_words++;
-	memcpy(&curr->word[WORD_TYPE_OFFSET], &tx_t, 1);
-	memcpy(&curr->word[IO_CHANNEL_OFFSET],&io_c, 1);
-	memcpy(&curr->word[LARPIX_DATA_OFFSET], (char*)&output[4+2*i], 8);
-	dma_set(curr->desc, DESC_STAT, 0);
-	curr = curr->next;
+	memcpy(&curr_tx->word[WORD_TYPE_OFFSET], &tx_t, 1);
+	memcpy(&curr_tx->word[IO_CHANNEL_OFFSET],&io_c, 1);
+	memcpy(&curr_tx->word[LARPIX_DATA_OFFSET], (char*)&output[4+2*i], 8);
+	dma_set(curr_tx->desc, DESC_STAT, 0);
+	curr_tx = curr_tx->next;
       }
     }
   }
   // transmit
   printf("INFO: transmitting %d TX words\n", tx_words);
-  transmit_data(dma, prev, tx_words);
-  prev = curr;
+  transmit_data(dma, prev_tx, tx_words);
+  prev_tx = curr_tx;
   return EXIT_SUCCESS;
 }
 
