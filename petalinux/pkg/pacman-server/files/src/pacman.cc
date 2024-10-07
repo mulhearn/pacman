@@ -206,16 +206,20 @@ int pacman_init_rx(int verbose, int skip_reset){
   int dh = open("/dev/mem", O_RDWR|O_SYNC);
   dma = (uint32_t*)mmap(NULL, DMA_LEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_ADDR);
   dma_rx = (uint32_t*)mmap(NULL, DMA_RX_MAXLEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_RX_ADDR);
-  curr_rx = init_circular_buffer(dma_rx, DMA_RX_ADDR, DMA_RX_MAXLEN, LARPIX_WIDE_LEN);
-  prev_rx = curr_rx;
-  dma_restart(dma, curr_rx);
-  uint32_t dma_status = dma_get(dma, DMA_MM2S_STAT_REG);
+  dma_desc* buffer_start = init_circular_buffer(dma_rx, DMA_RX_ADDR, DMA_RX_MAXLEN, LARPIX_WIDE_LEN);
+  dma_desc* buffer_end = buffer_start->prev;
+  uint32_t  buffer_desc_size = sizeof(*buffer_start);
+  curr_rx = buffer_start;
+  prev_rx = buffer_start;
+  restart_dma(dma, curr_rx->addr);
+  dma_set(dma, DMA_S2MM_TAIL_REG, buffer_end->addr);
+  uint32_t dma_status = dma_get(dma, DMA_S2MM_STAT_REG);
   if ( dma_status & DMA_HALTED ) {
     printf("Error starting DMA\n");
     return 2;
   }
   printf("DMA started\n");
-
+  
   return EXIT_SUCCESS;
 }
 
