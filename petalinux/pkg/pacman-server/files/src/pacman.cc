@@ -40,7 +40,7 @@ uint32_t G_PACMAN_SERVER_SCRB = 0x0;
 
 void restart_dma_tx(uint32_t* dma, dma_desc* start) {
   printf("Restarting DMA (MM2S)...\n");
-  dma_set(dma, DMA_MM2S_CTRL_REG, DMA_RST); // reset
+  //dma_set(dma, DMA_MM2S_CTRL_REG, DMA_RST); // reset
   dma_set(dma, DMA_MM2S_CTRL_REG, 0); // halt
   dma_set(dma, DMA_MM2S_CURR_REG, start->addr);
   dma_set(dma, DMA_MM2S_CTRL_REG, DMA_RUN); // run
@@ -49,7 +49,7 @@ void restart_dma_tx(uint32_t* dma, dma_desc* start) {
 
 void restart_dma_rx(uint32_t* dma, dma_desc* start) {
   printf("Restarting DMA (S2MM)...\n");
-  dma_set(dma, DMA_S2MM_CTRL_REG, DMA_RST); // reset
+  //dma_set(dma, DMA_S2MM_CTRL_REG, DMA_RST); // reset
   dma_set(dma, DMA_S2MM_CTRL_REG, 0); // halt
   dma_set(dma, DMA_S2MM_CURR_REG, start->addr); 
   dma_set(dma, DMA_S2MM_CTRL_REG, DMA_RUN); // run
