@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "chan_map.hh"
+#include "message_format.hh"
 
 #define MAX_CHAN 40
 
@@ -34,9 +35,12 @@ int chan_map_tx(int chan){
 }
 
 void chan_map_rx(uint32_t * buf){
+  if ( buf[0]&0xFF != WORD_TYPE_DATA)
+    return;
+
   unsigned chan = (buf[0]>>8)&0xFF;
   unsigned nchan = chan;
-  if (chan>8){
+  if ((chan>8) && (chan < MAX_CHAN)){
     unsigned toff = (chan-8)/3;
     unsigned uart = (chan-8)%3;
     nchan = 8 + 4*toff + uart;

@@ -38,25 +38,23 @@ int G_I2C_FH = -1;
 uint32_t G_PACMAN_SERVER_SCRA = 0x0;
 uint32_t G_PACMAN_SERVER_SCRB = 0x0;
 
-void dma_restart(uint32_t* virtual_address, dma_desc* start) {
-  printf("Restarting DMA...\n");
-  dma_set(virtual_address, DMA_MM2S_CTRL_REG, DMA_RST); // reset
-  dma_set(virtual_address, DMA_MM2S_CTRL_REG, 0); // halt
-  dma_set(virtual_address, DMA_MM2S_CURR_REG, start->addr);
-  dma_set(virtual_address, DMA_MM2S_CTRL_REG, DMA_RUN); // run
-  dma_mm2s_status(virtual_address);
+void restart_dma_tx(uint32_t* dma, dma_desc* start) {
+  printf("Restarting DMA (MM2S)...\n");
+  dma_set(dma, DMA_MM2S_CTRL_REG, DMA_RST); // reset
+  dma_set(dma, DMA_MM2S_CTRL_REG, 0); // halt
+  dma_set(dma, DMA_MM2S_CURR_REG, start->addr);
+  dma_set(dma, DMA_MM2S_CTRL_REG, DMA_RUN); // run
+  dma_mm2s_status(dma);
 }
 
-void restart_dma(uint32_t* dma, uint32_t curr) {
-  printf("Restarting DMA...\n");
+void restart_dma_rx(uint32_t* dma, dma_desc* start) {
+  printf("Restarting DMA (S2MM)...\n");
   dma_set(dma, DMA_S2MM_CTRL_REG, DMA_RST); // reset
   dma_set(dma, DMA_S2MM_CTRL_REG, 0); // halt
-  dma_set(dma, DMA_S2MM_CURR_REG, curr); // set curr
+  dma_set(dma, DMA_S2MM_CURR_REG, start->addr); 
   dma_set(dma, DMA_S2MM_CTRL_REG, DMA_RUN); // run
   dma_s2mm_status(dma);
 }
-
-
 
 
 void transmit_data(uint32_t* virtual_address, dma_desc* start, uint32_t nwords) {
@@ -175,7 +173,7 @@ int pacman_init_tx(int verbose, int skip_reset){
   dma_tx = (uint32_t*)mmap(NULL, DMA_TX_MAXLEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_TX_ADDR);
   curr_tx = init_circular_buffer(dma_tx, DMA_TX_ADDR, DMA_TX_MAXLEN, LARPIX_WIDE_LEN);
   prev_tx = curr_tx;
-  dma_restart(dma, curr_tx);
+  restart_dma_tx(dma, curr_tx);
   uint32_t dma_status = dma_get(dma, DMA_MM2S_STAT_REG);
   if ( dma_status & DMA_HALTED ) {
     printf("Error starting DMA\n");
@@ -211,7 +209,7 @@ int pacman_init_rx(int verbose, int skip_reset){
   uint32_t  buffer_desc_size = sizeof(*buffer_start);
   curr_rx = buffer_start;
   prev_rx = buffer_start;
-  restart_dma(dma, curr_rx->addr);
+  restart_dma_rx(dma, curr_rx);
   dma_set(dma, DMA_S2MM_TAIL_REG, buffer_end->addr);
   uint32_t dma_status = dma_get(dma, DMA_S2MM_STAT_REG);
   if ( dma_status & DMA_HALTED ) {
@@ -268,7 +266,7 @@ int pacman_poll_rx(){
     // try reset if errors occurred
     printf("An error occurred!\n");
     dma_s2mm_status(dma);
-    restart_dma(dma, curr_rx->addr);
+    restart_dma_rx(dma, curr_rx);
     dma_set(dma, DMA_S2MM_TAIL_REG, (prev_rx->prev)->addr);
     return EXIT_FAILURE;
   }
