@@ -232,14 +232,19 @@ int test_chan_map(){
   rx_data[3]=0xDDDDDDDD;
 
   for (int i=0; i<40; i++){
-    int nchan = chan_map_tx(i);
-    if (nchan < 0)
+    int pchan = i+1;
+    int mchan = chan_map_tx(i);
+    if (mchan < 0){
+      printf("%d (unmapped)\n", pchan);
       continue;
-    rx_data[0]=0xAAAA00AA + ((nchan&0xFF)<<8);
+    }
+    // legacy firmware starts at 1 not 0:
+    mchan = mchan+1;
+    rx_data[0]=0xAAAA00AA + ((mchan&0xFF)<<8);
     chan_map_rx(rx_data);
-    unsigned chan = (rx_data[0]>>8)&0xFF;
-    //printf("%d %d\n", i, chan);
-    success &= (i == chan);
+    unsigned uchan = (rx_data[0]>>8)&0xFF;
+    printf("%d %d %d\n", pchan, mchan, uchan);
+    success &= (pchan == uchan);
   }
 
   if (success==0){
