@@ -4,15 +4,9 @@
 //
 // pacman-server address space, at top level:
 //
-// Address less than PACMAN_SERVER_VIRTUAL_START => real hardware address (AXI-Lite Interface)
-// Else address less than PACMAN_SERVER_I2C_START => virtual address
-// Address >- PACMAN_SERVER_I2C_START => virtual I2C address
-//
-
-// Start of pacman-server virtual address space
-#define PACMAN_SERVER_VIRTUAL_START 0x00010000
-// Start of pacman-server virtual address space
-#define PACMAN_SERVER_I2C_START     0x00024000
+// All addresses less than PACMAN_AXIL_ADDR are treated as virtual addresses
+// Addresses above this are treated as hardware addresses and read/write directly.
+// 
 
 // PACMAN AXI-Lite interface HW Address:
 #define PACMAN_AXIL_ADDR 0x40000000

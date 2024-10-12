@@ -9,6 +9,7 @@
 #include "larpix.hh"
 #include "tx_buffer.hh"
 #include "pacman.hh"
+#include "pacman_vspace.hh"
 
 #define REP_SOCKET_BINDING "tcp://*:5555"
 #define ECHO_SOCKET_BINDING "tcp://*:5554"
@@ -115,7 +116,7 @@ int main(int argc, char* argv[]){
         // set pacman reg
         uint32_t* reg = get_req_word_write_reg(word);
         uint32_t* val = get_req_word_write_val(word);
-	pacman_write(*reg, *val);
+	pacman_vspace_write(*reg, *val);
 	set_rep_word_write(reply_word, reg, val);
         break;
       }
@@ -123,7 +124,7 @@ int main(int argc, char* argv[]){
       case WORD_TYPE_READ: {
         // read pacman reg
         uint32_t* reg = get_req_word_read_reg(word);	
-        uint32_t val = pacman_read(*reg);
+        uint32_t val = pacman_vspace_read(*reg);
 	set_rep_word_read(reply_word, reg, &val);	
         break;
       }

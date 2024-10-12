@@ -23,8 +23,6 @@ volatile uint32_t * G_PACMAN_DMA  = NULL;
 volatile uint32_t * G_PACMAN_DMA_TX_BUFFER = NULL;
 volatile uint32_t * G_PACMAN_DMA_RX_BUFFER = NULL;
 
-int G_I2C_FH = -1;
-
 //PACMAN SERVER Scratch Registers (Accessible at PACMAN_SERVER_VIRTUAL_START + (0, 1)
 uint32_t G_PACMAN_SERVER_SCRA = 0x0; 
 uint32_t G_PACMAN_SERVER_SCRB = 0x0;
@@ -52,10 +50,12 @@ int pacman_init(int verbose){
   if (verbose){
     printf("INFO:  Initializing PACMAN I2C interface.\n");
   }
-  G_I2C_FH = i2c_open(I2C_DEV);
-  unsigned i2cmajor = i2c_read(G_I2C_FH, 0x220);
-  unsigned i2cminor = i2c_read(G_I2C_FH, 0x221);
-  unsigned i2cdebug = i2c_read(G_I2C_FH, 0x222);
+  if (! (i2c_open(I2C_DEV)==EXIT_SUCCESS)){
+    printf("ERROR:  Could not open PACMAN I2C interface...\n");
+  }
+  unsigned i2cmajor = i2c_read(0x220);
+  unsigned i2cminor = i2c_read(0x221);
+  unsigned i2cdebug = i2c_read(0x222);
   // I2C
   if (verbose){
     printf("INFO:  Running I2C firmware version %d.%d (Debug Code:  0x%x)\n", i2cmajor, i2cminor, i2cdebug);
@@ -374,52 +374,14 @@ int pacman_poll_tx(){
 }
 
 int pacman_write(uint32_t addr, uint32_t value){
-  if (addr < PACMAN_SERVER_VIRTUAL_START){
-    printf("DEBUG:  writing HW address 0x%x\n", addr);
-    G_PACMAN_AXIL[addr>>2] = value;
-    return EXIT_SUCCESS;
-  } else if (addr >= PACMAN_SERVER_I2C_START) {
-    unsigned off = addr - PACMAN_SERVER_I2C_START;
-    printf("DEBUG:  writing I2C virtual address 0x%x\n", off);
-    i2c_write(G_I2C_FH, off, value);
-    return EXIT_SUCCESS;
-  } else {
-    // Add pacman-server virtual registers here...
-    unsigned off = addr - PACMAN_SERVER_VIRTUAL_START;
-    printf("DEBUG:  writing virtual address 0x%x\n", off);
-    if (off<=1){
-      if (off==0)
-	G_PACMAN_SERVER_SCRA = value;
-      if (off==1)
-	G_PACMAN_SERVER_SCRB = value;
-      return EXIT_SUCCESS;       	  
-    }    
-  }
-  printf("ERROR:  Invalid address 0x%x\n", addr);
-  return EXIT_FAILURE;
+  printf("DEBUG:  writing HW address 0x%x\n", addr);
+  G_PACMAN_AXIL[addr>>2] = value;
+  return EXIT_SUCCESS;
 }
 
 
 uint32_t pacman_read(uint32_t addr, int * status){
   if (status)
     *status = EXIT_SUCCESS;  
-  if (addr < PACMAN_SERVER_VIRTUAL_START){
-    return G_PACMAN_AXIL[addr>>2];
-  } else if (addr >= PACMAN_SERVER_I2C_START) {
-    unsigned off = addr - PACMAN_SERVER_I2C_START;
-    printf("DEBUG:  reading I2C virtual address 0x%x\n", off);
-    return i2c_read(G_I2C_FH, off);
-  } else {
-    // Add pacman-server virtual registers here...
-    unsigned off = addr - PACMAN_SERVER_VIRTUAL_START;
-    printf("DEBUG:  reading virtual address 0x%x\n", off);
-    if (off==0)
-      return G_PACMAN_SERVER_SCRA;
-    if (off==1)
-      return G_PACMAN_SERVER_SCRB;
-  }
-  printf("ERROR:  Invalid address 0x%x\n", addr);
-  if (status)
-    *status = EXIT_SUCCESS;
-  return 0;
+  return G_PACMAN_AXIL[addr>>2];
 }
