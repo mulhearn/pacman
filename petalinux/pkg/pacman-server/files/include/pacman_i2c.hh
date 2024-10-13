@@ -50,7 +50,7 @@
 // PACMAN-specific high-level I2C access:  initialize, read, write virtual I2C register space.
 
 // open the I2C device:
-int i2c_open(const char* dev);
+int i2c_open();
 // read the virtual register with offset vreg_offset and return its value
 uint32_t i2c_read(uint32_t vreg_offset);
 // write the value val to the virtual register with offset vreg_offset and return the associated value

@@ -43,9 +43,9 @@
 
 static int G_I2C_FH = -1;
 
-int i2c_open(const char* dev) {
+int i2c_open() {
     // open i2c device
-    G_I2C_FH = open(dev, O_RDWR);
+    G_I2C_FH = open(I2C_DEV, O_RDWR);
     if (G_I2C_FH < 0) {
         printf("**ERROR** i2c_open:  Failed to open I2C device!\n");
 	return EXIT_FAILURE;

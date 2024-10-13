@@ -9,7 +9,6 @@
 #include <unistd.h>
 
 #include "message_format.hh"
-#include "larpix.hh"
 #include "rx_buffer.hh"
 #include "pacman.hh"
 

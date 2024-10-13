@@ -50,7 +50,7 @@ int pacman_init(int verbose){
   if (verbose){
     printf("INFO:  Initializing PACMAN I2C interface.\n");
   }
-  if (! (i2c_open(I2C_DEV)==EXIT_SUCCESS)){
+  if (! (i2c_open()==EXIT_SUCCESS)){
     printf("ERROR:  Could not open PACMAN I2C interface...\n");
   }
   unsigned i2cmajor = i2c_read(0x220);

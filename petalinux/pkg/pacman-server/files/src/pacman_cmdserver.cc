@@ -6,7 +6,6 @@
 #include <zmq.h>
 
 #include "message_format.hh"
-#include "larpix.hh"
 #include "tx_buffer.hh"
 #include "pacman.hh"
 #include "pacman_vspace.hh"
