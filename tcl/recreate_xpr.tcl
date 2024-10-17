@@ -1709,7 +1709,7 @@ if { [get_files obuft_out.vhd] == "" } {
 proc cr_bd_zsys { parentCell } {
 # The design that will be created by this Tcl proc contains the following 
 # module references:
-# axi_lite_reg_space, larpix_clk_to_axi_stream, larpix_counter, larpix_mclk_sel, larpix_reset_gen, larpix_periodic_trig_gen, larpix_trig_gen, larpix_trig_to_axi_stream, axi_lite_reg_space, axi_lite_reg_space, uart_channel, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, obuft_out, uart_channel, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, obuft_out, obuft_out, obuft_out, obuft_out, obuft_out, obuft_out, uart_channel, obuft_out, obuft_out, obuft_out, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, uart_channel, uart_channel, uart_channel, uart_channel, uart_channel, uart_channel, uart_channel, uart_channel, obuft_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out
+# axi_lite_reg_space, larpix_clk_to_axi_stream, larpix_counter, larpix_mclk_sel, larpix_reset_gen, larpix_periodic_trig_gen, larpix_trig_gen, larpix_trig_to_axi_stream, axi_lite_reg_space, axi_lite_reg_space, uart_channel, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, uart_channel, obuft_out, uart_channel, obuft_out, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, obuft_out, obuft_out, obuft_out, obuft_out, obuft_out, uart_channel, obuft_out, obuft_out, obuft_out, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, obuft_out, uart_channel, uart_channel, uart_channel, uart_channel, uart_channel, uart_channel, uart_channel, uart_channel, obuft_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out, clk_ddr_out, clk_ddr_out, obuft_out, obuftds_out, obuft_out, obuftds_out, obuft_out, obuftds_out
 
 
 
@@ -1729,6 +1729,7 @@ proc cr_bd_zsys { parentCell } {
      set list_check_ips "\ 
   xilinx.com:ip:processing_system7:5.5\
   xilinx.com:ip:proc_sys_reset:5.0\
+  xilinx.com:ip:util_vector_logic:2.0\
   xilinx.com:ip:xlconstant:1.1\
   xilinx.com:ip:xlslice:1.0\
   xilinx.com:ip:axis_broadcaster:1.1\
@@ -1736,7 +1737,6 @@ proc cr_bd_zsys { parentCell } {
   xilinx.com:ip:axis_subset_converter:1.1\
   xilinx.com:ip:axi_dma:7.1\
   xilinx.com:ip:xlconcat:2.1\
-  xilinx.com:ip:util_vector_logic:2.0\
   xilinx.com:ip:util_reduced_logic:2.0\
   "
 
@@ -1791,30 +1791,9 @@ proc cr_bd_zsys { parentCell } {
   uart_channel\
   obuft_out\
   uart_channel\
-  obuft_out\
-  uart_channel\
-  obuft_out\
-  obuft_out\
-  uart_channel\
   uart_channel\
   obuft_out\
   uart_channel\
-  obuft_out\
-  uart_channel\
-  obuft_out\
-  uart_channel\
-  obuft_out\
-  uart_channel\
-  obuft_out\
-  obuft_out\
-  obuft_out\
-  obuft_out\
-  obuft_out\
-  obuft_out\
-  obuft_out\
-  uart_channel\
-  obuft_out\
-  obuft_out\
   obuft_out\
   obuft_out\
   uart_channel\
@@ -1828,6 +1807,27 @@ proc cr_bd_zsys { parentCell } {
   uart_channel\
   obuft_out\
   uart_channel\
+  obuft_out\
+  obuft_out\
+  obuft_out\
+  obuft_out\
+  obuft_out\
+  obuft_out\
+  uart_channel\
+  obuft_out\
+  obuft_out\
+  obuft_out\
+  obuft_out\
+  uart_channel\
+  obuft_out\
+  uart_channel\
+  obuft_out\
+  uart_channel\
+  obuft_out\
+  uart_channel\
+  obuft_out\
+  uart_channel\
+  obuft_out\
   uart_channel\
   uart_channel\
   uart_channel\
@@ -5042,6 +5042,20 @@ proc create_hier_cell_uart_channels { parentCell nameHier } {
    CONFIG.DIN_WIDTH {32} \
  ] $larpix_uart_channel_17_slice
 
+  # Create instance: larpix_uart_channel_2, and set properties
+  set block_name uart_channel
+  set block_cell_name larpix_uart_channel_2
+  if { [catch {set larpix_uart_channel_2 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $larpix_uart_channel_2 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+    set_property -dict [ list \
+   CONFIG.C_CHANNEL {0x02} \
+ ] $larpix_uart_channel_2
+
   # Create instance: larpix_uart_channel_18, and set properties
   set block_name uart_channel
   set block_cell_name larpix_uart_channel_18
@@ -5150,20 +5164,6 @@ proc create_hier_cell_uart_channels { parentCell nameHier } {
    CONFIG.DIN_TO {0} \
    CONFIG.DIN_WIDTH {32} \
  ] $larpix_uart_channel_1_slice
-
-  # Create instance: larpix_uart_channel_2, and set properties
-  set block_name uart_channel
-  set block_cell_name larpix_uart_channel_2
-  if { [catch {set larpix_uart_channel_2 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
-     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
-     return 1
-   } elseif { $larpix_uart_channel_2 eq "" } {
-     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
-     return 1
-   }
-    set_property -dict [ list \
-   CONFIG.C_CHANNEL {0x02} \
- ] $larpix_uart_channel_2
 
   # Create instance: larpix_uart_channel_20, and set properties
   set block_name uart_channel
@@ -5369,6 +5369,20 @@ proc create_hier_cell_uart_channels { parentCell nameHier } {
    CONFIG.DIN_TO {23} \
    CONFIG.DIN_WIDTH {32} \
  ] $larpix_uart_channel_24_slice
+
+  # Create instance: larpix_uart_channel_25, and set properties
+  set block_name uart_channel
+  set block_cell_name larpix_uart_channel_25
+  if { [catch {set larpix_uart_channel_25 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $larpix_uart_channel_25 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+    set_property -dict [ list \
+   CONFIG.C_CHANNEL {0x19} \
+ ] $larpix_uart_channel_25
 
   # Create instance: larpix_uart_channel_25_en_slice, and set properties
   set larpix_uart_channel_25_en_slice [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 larpix_uart_channel_25_en_slice ]
@@ -5872,20 +5886,6 @@ proc create_hier_cell_uart_channels { parentCell nameHier } {
     set_property -dict [ list \
    CONFIG.C_CHANNEL {0x09} \
  ] $larpix_uart_channel_9
-
-  # Create instance: larpix_uart_channel_25, and set properties
-  set block_name uart_channel
-  set block_cell_name larpix_uart_channel_25
-  if { [catch {set larpix_uart_channel_25 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
-     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
-     return 1
-   } elseif { $larpix_uart_channel_25 eq "" } {
-     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
-     return 1
-   }
-    set_property -dict [ list \
-   CONFIG.C_CHANNEL {0x19} \
- ] $larpix_uart_channel_25
 
   # Create instance: larpix_uart_channel_26, and set properties
   set block_name uart_channel
@@ -7200,6 +7200,7 @@ proc create_hier_cell_axi_lite_reg_space_2 { parentCell nameHier } {
 
 
   # Create pins
+  create_bd_pin -dir O -from 31 -to 0 RW_REG3_0
   create_bd_pin -dir I S_AXI_LITE_ACLK
   create_bd_pin -dir I S_AXI_LITE_ARESETN
   create_bd_pin -dir O -from 31 -to 0 periodic_trig_cycles
@@ -7288,6 +7289,7 @@ proc create_hier_cell_axi_lite_reg_space_2 { parentCell nameHier } {
   connect_bd_net -net axi_lite_reg_space_0_RW_REG0 [get_bd_pins axi_lite_reg_space_0/RW_REG0] [get_bd_pins periodic_trig_en/Din] [get_bd_pins trig_len/Din]
   connect_bd_net -net axi_lite_reg_space_0_RW_REG1 [get_bd_pins axi_lite_reg_space_0/RW_REG1] [get_bd_pins trig0_mask/Din] [get_bd_pins trig1_mask/Din] [get_bd_pins trig2_mask/Din] [get_bd_pins trig3_mask/Din]
   connect_bd_net -net axi_lite_reg_space_0_RW_REG2 [get_bd_pins periodic_trig_cycles] [get_bd_pins axi_lite_reg_space_0/RW_REG2]
+  connect_bd_net -net axi_lite_reg_space_0_RW_REG3 [get_bd_pins RW_REG3_0] [get_bd_pins axi_lite_reg_space_0/RW_REG3]
   connect_bd_net -net periodic_trig_en_Dout [get_bd_pins periodic_trig_en] [get_bd_pins periodic_trig_en/Dout]
   connect_bd_net -net trig0_mask_Dout [get_bd_pins trig0_mask] [get_bd_pins trig0_mask/Dout]
   connect_bd_net -net trig1_mask_Dout [get_bd_pins trig1_mask] [get_bd_pins trig1_mask/Dout]
@@ -8494,6 +8496,7 @@ proc create_hier_cell_larpix_trig { parentCell nameHier } {
   create_bd_pin -dir I ACLK
   create_bd_pin -dir I ARESETN
   create_bd_pin -dir I MCLK
+  create_bd_pin -dir O -from 31 -to 0 RX_MASK
   create_bd_pin -dir I -from 31 -to 0 TIMESTAMP
   create_bd_pin -dir O TRIG
   create_bd_pin -dir I TRIG1_IN
@@ -8563,6 +8566,7 @@ proc create_hier_cell_larpix_trig { parentCell nameHier } {
   connect_bd_net -net TRIG1_IN_1 [get_bd_pins TRIG1_IN] [get_bd_pins larpix_trig_gen_0/TRIG1_IN]
   connect_bd_net -net TRIG2_IN_1 [get_bd_pins TRIG2_IN] [get_bd_pins larpix_trig_gen_0/TRIG2_IN]
   connect_bd_net -net TRIG3_IN_1 [get_bd_pins TRIG3_IN] [get_bd_pins larpix_trig_gen_0/TRIG3_IN]
+  connect_bd_net -net axi_lite_reg_space_RW_REG3_0 [get_bd_pins RX_MASK] [get_bd_pins axi_lite_reg_space/RW_REG3_0]
   connect_bd_net -net axi_lite_reg_space_periodic_trig_cycles [get_bd_pins axi_lite_reg_space/periodic_trig_cycles] [get_bd_pins larpix_periodic_trig_0/CYCLES]
   connect_bd_net -net axi_lite_reg_space_periodic_trig_en [get_bd_pins axi_lite_reg_space/periodic_trig_en] [get_bd_pins larpix_periodic_trig_0/EN]
   connect_bd_net -net axi_lite_reg_space_trig0_mask [get_bd_pins axi_lite_reg_space/trig0_mask] [get_bd_pins larpix_trig_gen_0/TRIG0_MASK]
@@ -9369,7 +9373,7 @@ proc create_hier_cell_axi_lite_reg_space { parentCell nameHier } {
   # Create instance: firmware_minor_0, and set properties
   set firmware_minor_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 firmware_minor_0 ]
   set_property -dict [ list \
-   CONFIG.CONST_VAL {2} \
+   CONFIG.CONST_VAL {7} \
    CONFIG.CONST_WIDTH {32} \
  ] $firmware_minor_0
 
@@ -10231,6 +10235,14 @@ proc create_hier_cell_axi_lite_reg_space { parentCell nameHier } {
   # Create instance: rst_ps7_0_100M, and set properties
   set rst_ps7_0_100M [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 rst_ps7_0_100M ]
 
+  # Create instance: util_vector_logic_0, and set properties
+  set util_vector_logic_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic:2.0 util_vector_logic_0 ]
+  set_property -dict [ list \
+   CONFIG.C_OPERATION {or} \
+   CONFIG.C_SIZE {32} \
+   CONFIG.LOGO_FILE {data/sym_orgate.png} \
+ ] $util_vector_logic_0
+
   # Create instance: xlconstant_0, and set properties
   set xlconstant_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_0 ]
   set_property -dict [ list \
@@ -10271,8 +10283,8 @@ proc create_hier_cell_axi_lite_reg_space { parentCell nameHier } {
   # Create port connections
   connect_bd_net -net HW_SYNC_TRIG_1 [get_bd_ports SYNC_ISO] [get_bd_pins larpix_clk/HW_SYNC_TRIG]
   connect_bd_net -net MCLK_1 [get_bd_ports CLK] [get_bd_pins io/I_CLK] [get_bd_pins larpix_clk/MCLK] [get_bd_pins larpix_trig/MCLK] [get_bd_pins larpix_uart_array/MCLK]
-  connect_bd_net -net MISO_0_1 [get_bd_ports PISO] [get_bd_pins larpix_uart_array/MISO]
   connect_bd_net -net PACMAN_TS_1 [get_bd_pins larpix_clk/TIMESTAMP] [get_bd_pins larpix_trig/TIMESTAMP] [get_bd_pins larpix_uart_array/PACMAN_TS]
+  connect_bd_net -net PISO_1 [get_bd_ports PISO] [get_bd_pins util_vector_logic_0/Op1]
   connect_bd_net -net TILE_EN_1 [get_bd_pins axi_lite_reg_space/legacy_tile_en] [get_bd_pins larpix_uart_array/TILE_EN]
   connect_bd_net -net TRIG1_IN_1 [get_bd_ports TRIG_ISO] [get_bd_pins larpix_trig/TRIG1_IN]
   connect_bd_net -net axi_lite_reg_space_Dout_0 [get_bd_ports TILE_EN] [get_bd_pins axi_lite_reg_space/tile_en]
@@ -10281,6 +10293,7 @@ proc create_hier_cell_axi_lite_reg_space { parentCell nameHier } {
   connect_bd_net -net io_dout_0 [get_bd_ports SYNC] [get_bd_pins io/SYNC]
   connect_bd_net -net io_dout_1 [get_bd_ports TRIG] [get_bd_pins io/TRIG]
   connect_bd_net -net larpix_clk_RST_SYNC_N [get_bd_pins io/I_RESETN] [get_bd_pins larpix_clk/RST_SYNC_N]
+  connect_bd_net -net larpix_trig_RX_MASK [get_bd_pins larpix_trig/RX_MASK] [get_bd_pins util_vector_logic_0/Op2]
   connect_bd_net -net larpix_trig_TRIG [get_bd_pins io/I_TRIG] [get_bd_pins larpix_trig/TRIG]
   connect_bd_net -net larpix_uart_array_MOSI [get_bd_ports POSI] [get_bd_pins larpix_uart_array/MOSI]
   connect_bd_net -net larpix_uart_array_UART_RX_BUSY [get_bd_ports UART_RX_BUSY] [get_bd_pins larpix_uart_array/UART_RX_BUSY]
@@ -10289,6 +10302,7 @@ proc create_hier_cell_axi_lite_reg_space { parentCell nameHier } {
   connect_bd_net -net processing_system7_0_FCLK_CLK1 [get_bd_pins larpix_clk/CLK_AUX] [get_bd_pins processing_system7_0/FCLK_CLK1]
   connect_bd_net -net processing_system7_0_FCLK_RESET0_N [get_bd_pins processing_system7_0/FCLK_RESET0_N] [get_bd_pins rst_ps7_0_100M/ext_reset_in]
   connect_bd_net -net rst_ps7_0_100M_peripheral_aresetn [get_bd_pins axi_lite_reg_space/S_AXI_LITE_ARESETN] [get_bd_pins data_rx/ARESETN] [get_bd_pins data_tx/aresetn] [get_bd_pins dma/ARESETN] [get_bd_pins larpix_clk/RSTN] [get_bd_pins larpix_trig/ARESETN] [get_bd_pins larpix_uart_array/ARESETN] [get_bd_pins ps7_0_axi_periph/ARESETN] [get_bd_pins ps7_0_axi_periph/M00_ARESETN] [get_bd_pins ps7_0_axi_periph/M01_ARESETN] [get_bd_pins ps7_0_axi_periph/M02_ARESETN] [get_bd_pins ps7_0_axi_periph/M03_ARESETN] [get_bd_pins ps7_0_axi_periph/M04_ARESETN] [get_bd_pins ps7_0_axi_periph/S00_ARESETN] [get_bd_pins rst_ps7_0_100M/peripheral_aresetn]
+  connect_bd_net -net util_vector_logic_0_Res [get_bd_pins larpix_uart_array/MISO] [get_bd_pins util_vector_logic_0/Res]
   connect_bd_net -net xlconstant_0_dout [get_bd_pins larpix_clk/HW_HARD_RST_TRIG] [get_bd_pins larpix_clk/HW_STATE_RST_TRIG] [get_bd_pins larpix_trig/TRIG2_IN] [get_bd_pins larpix_trig/TRIG3_IN] [get_bd_pins xlconstant_0/dout]
 
   # Create address segments

@@ -23,7 +23,7 @@ entity larpix_uart_tx is
     MCLK : in std_logic;
     UART_TX_OUT : out std_logic;
     CLKOUT_RATIO : in std_logic_vector (7 downto 0);
-    CLKOUT_PHASE : in std_logic_vector (3 downto 0);    
+    CLKOUT_PHASE : in std_logic_vector (15 downto 0);    
     FIFO_COUNT : out std_logic_vector (C_FIFO_COUNT_WIDTH-1 downto 0);
     UART_TX_BUSY : out std_logic;
     
@@ -72,7 +72,7 @@ architecture arch_imp of larpix_uart_tx is
       CLK         : IN  STD_LOGIC;
       RST          : IN  STD_LOGIC;
       CLKOUT_RATIO : IN  STD_LOGIC_VECTOR (7 downto 0);
-      CLKOUT_PHASE : IN  STD_LOGIC_VECTOR (3 downto 0);
+      CLKOUT_PHASE : IN  STD_LOGIC_VECTOR (15 downto 0);
       MCLK         : IN STD_LOGIC;
       TX           : OUT STD_LOGIC;
       data         : IN  STD_LOGIC_VECTOR (DATA_WIDTH-1 DOWNTO 0);

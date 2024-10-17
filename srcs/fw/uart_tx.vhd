@@ -14,7 +14,7 @@ ENTITY uart_tx IS
     CLK          : IN  STD_LOGIC;
     RST          : IN  STD_LOGIC;
     CLKOUT_RATIO : IN  STD_LOGIC_VECTOR (7 downto 0);
-    CLKOUT_PHASE : IN  STD_LOGIC_VECTOR (3 downto 0);    
+    CLKOUT_PHASE : IN  STD_LOGIC_VECTOR (15 downto 0);    
     -- UART TX
     MCLK        : IN  STD_LOGIC;
     TX          : OUT STD_LOGIC;
@@ -29,7 +29,6 @@ END ENTITY uart_tx;
 
 ARCHITECTURE uart_tx_arch OF uart_tx IS
   constant BIT_LEN : integer := CLK_HZ / CLKOUT_HZ;
-  
   signal busy_out : std_logic;
   signal tx_out : std_logic;
   
@@ -38,10 +37,10 @@ ARCHITECTURE uart_tx_arch OF uart_tx IS
   signal mclk_prev : std_logic;
 
   signal phase_cnt : unsigned(3 downto 0) := (others => '0');
-  signal baud_cnt : unsigned(7 downto 0) := (others => '0');
-  signal bit_cnt : unsigned(DATA_WIDTH+2 downto 0) := (others => '0');
+  signal baud_cnt : unsigned(14 downto 0) := (others => '0');
+  signal bit_cnt : unsigned(7 downto 0) := (others => '0');
 
-  TYPE state_type IS (IDLE, WT, DELAY, SHIFT);
+  TYPE state_type IS (IDLE, WT, DELAY, SHIFT, PAUSE);
   SIGNAL state : state_type := IDLE;
 
   SIGNAL srg : STD_LOGIC_VECTOR (DATA_WIDTH+1 DOWNTO 0);
@@ -82,7 +81,7 @@ BEGIN  -- ARCHITECTURE uart_tx_arch
             busy_out <= '1';
             bit_cnt <= to_unsigned(DATA_WIDTH + 2, bit_cnt'length);
             baud_cnt <= to_unsigned(0, baud_cnt'length);
-            phase_cnt <= unsigned(CLKOUT_PHASE);
+            phase_cnt <= unsigned(CLKOUT_PHASE(3 downto 0));
           end if;
 
         when WT =>
@@ -110,7 +109,9 @@ BEGIN  -- ARCHITECTURE uart_tx_arch
             
             -- full word sent
             if (bit_cnt = 0) then
-              state <= IDLE;
+              baud_cnt <= to_unsigned(16000, baud_cnt'length);
+              bit_cnt <= unsigned(CLKOUT_PHASE(15 downto 8));
+              state <= PAUSE;
               
             -- reset baud counter, increment bit counter
             else
@@ -122,7 +123,19 @@ BEGIN  -- ARCHITECTURE uart_tx_arch
           else
             baud_cnt <= baud_cnt - 1;
           end if;
-
+        when PAUSE =>
+          busy_out <= '1';
+   --       if (bit_cnt = 0) then
+   --           state <= IDLE;
+   --       else
+            if (baud_cnt = 0) then
+   --             baud_cnt <= to_unsigned(160, baud_cnt'length);
+   --             bit_cnt <= bit_cnt - 1
+                state <= IDLE;
+            else
+                baud_cnt <= baud_cnt - 1;
+            end if; 
+    --      end if;
         when others =>
           state <= IDLE;
       end case;
