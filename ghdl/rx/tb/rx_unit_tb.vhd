@@ -41,6 +41,7 @@ architecture behaviour of rx_unit_tb is
       );
   end component;
 
+  signal timestamp : std_logic_vector(31 downto 0);
   signal count    : integer := 0;
   signal aclk     : std_logic;
   signal aresetn  : std_logic;
@@ -86,7 +87,7 @@ begin
     S_REGBUS_RB_WADDR   => waddr,
     S_REGBUS_RB_WDATA   => wdata,
     S_REGBUS_RB_WACK    => wack,
-    TIMESTAMP_I         => x"CCCCCCCC",
+    TIMESTAMP_I         => timestamp,
     FIFO_RCNT_I         => x"CCCCCCCC",
     FIFO_WCNT_I         => x"CCCCCCCC",
     DMA_ITR_I           => '1',
@@ -101,6 +102,14 @@ begin
     wait for 5 ns;
     aclk <= '0';
     wait for 5 ns;
+  end process;
+
+  timestampe_process : process
+  begin
+    timestamp <= x"00000000";
+    wait until count=1100;
+    timestamp <= x"00000ABC";
+    wait;
   end process;
 
   aresetn_process : process
@@ -118,7 +127,6 @@ begin
     uclk <= '0';
     wait for 50 ns;
   end process;
-
 
   read_process : process
   begin
@@ -178,6 +186,12 @@ begin
     raddr   <= x"402C";
     rupdate <= '1';
     wait for 10 ns;
+    raddr   <= x"7FC0";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"7FC4";
+    rupdate <= '1';
+    wait for 10 ns;
     raddr   <= x"0000";
     rupdate <= '0';
     wait for 10 ns;
@@ -197,11 +211,19 @@ begin
     wupdate <= '1';
     wait for 10 ns;
     waddr   <= x"7FA4";
-    wdata   <= x"0000000F";
+    wdata   <= x"00000003";
     wupdate <= '1';
     wait for 10 ns;
     waddr   <= x"7FA8";
     wdata   <= x"00000000";
+    wupdate <= '1';
+    wait for 10 ns;
+    waddr   <= x"7FC0";
+    wdata   <= x"00000001";
+    wupdate <= '1';
+    wait for 10 ns;
+    waddr   <= x"7FC4";
+    wdata   <= x"00000ABC";
     wupdate <= '1';
     wait for 10 ns;
     waddr   <= x"0000";

@@ -63,6 +63,10 @@ package register_map is
   -- DMA Interrupt bit (S2MM)
   constant C_ADDR_RX_DMAITR     : integer := 16#B8#;
 
+  -- Heartbeat and Sync Config registers
+  constant C_ADDR_RX_HEARTBEAT_CYCLES  : integer := 16#C0#;
+  constant C_ADDR_RX_SYNC_CYCLES       : integer := 16#C4#; 
+  
   -- Registers with SCOPE=UART_TX
   -- TODO:  needs sync with RX registers, e.g. GSTATUS.
 

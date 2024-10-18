@@ -2,14 +2,14 @@ library ieee;
 use std.textio.all;
 use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
-use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08 
+use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08
 library work;
 use work.common.all;
 
 --  Defines a testbench (without any ports)
 entity rx_registers_tb is
 end rx_registers_tb;
-     
+
 architecture behaviour of rx_registers_tb is
   component rx_registers is
     port (
@@ -20,23 +20,25 @@ architecture behaviour of rx_registers_tb is
       S_REGBUS_RB_RDATA	     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_RUPDATE    : in  std_logic;
       S_REGBUS_RB_RACK       : out std_logic;
-      
+
       S_REGBUS_RB_WUPDATE    : in  std_logic;
       S_REGBUS_RB_WADDR	     : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
       S_REGBUS_RB_WDATA	     : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_WACK       : out std_logic;
 
       LOOK_I                 : in uart_rx_data_array_t;
-      STATUS_I               : in uart_reg_array_t;    
+      STATUS_I               : in uart_reg_array_t;
       CONFIG_O               : out uart_reg_array_t;
       GFLAGS_O               : out std_logic_vector(C_RX_GFLAGS_WIDTH-1 downto 0);
+      HEARTBEAT_CYCLES_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      SYNC_CYCLES_O          : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       GSTATUS_I              : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       FIFO_RCNT_I            : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       FIFO_WCNT_I            : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       DMA_ITR_I              : in  std_logic
     );
   end component;
-  
+
   signal count    : integer := 0;
   signal aclk     : std_logic;
   signal aresetn  : std_logic;
@@ -49,7 +51,7 @@ architecture behaviour of rx_registers_tb is
   signal waddr    : std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0) := (others => '0');
   signal wupdate  : std_logic := '0';
   signal wdata    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
-  signal wack     : std_logic := '0';  
+  signal wack     : std_logic := '0';
 
   signal config   : uart_reg_array_t;
   signal gflags   : std_logic_vector(C_RX_GFLAGS_WIDTH-1 downto 0);
@@ -58,7 +60,7 @@ architecture behaviour of rx_registers_tb is
 begin
   uut0: rx_registers port map (
     ACLK           => aclk,
-    ARESETN        => aresetn,      
+    ARESETN        => aresetn,
     S_REGBUS_RB_RUPDATE => rupdate,
     S_REGBUS_RB_RADDR   => raddr,
     S_REGBUS_RB_RDATA   => rdata,
@@ -76,15 +78,15 @@ begin
     FIFO_WCNT_I => x"000B0001",
     DMA_ITR_I => '1'
   );
-  
+
   aresetn_process : process
   begin
     aresetn <= '0';
     wait for 20 ns;
-    aresetn <= '1';    
+    aresetn <= '1';
     wait;
   end process;
-  
+
   aclk_process : process
   begin
     count <= count + 1;
@@ -105,7 +107,13 @@ begin
     wait for 10 ns;
     raddr   <= x"4004";
     rupdate <= '1';
-    wait for 30 ns;
+    wait for 10 ns;
+    raddr   <= x"7FC0";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"7FC4";
+    rupdate <= '1';
+    wait for 10 ns;
     raddr   <= x"4204";
     rupdate <= '1';
     wait for 10 ns;
@@ -114,19 +122,25 @@ begin
     wait for 10 ns;
     raddr   <= x"7FA0";
     rupdate <= '1';
-    wait for 10 ns;    
+    wait for 10 ns;
     raddr   <= x"7FA4";
     rupdate <= '1';
-    wait for 10 ns;    
+    wait for 10 ns;
     raddr   <= x"7FB0";
     rupdate <= '1';
-    wait for 10 ns;    
+    wait for 10 ns;
     raddr   <= x"7FB4";
     rupdate <= '1';
-    wait for 10 ns;    
+    wait for 10 ns;
     raddr   <= x"7FB8";
     rupdate <= '1';
-    wait for 10 ns;    
+    wait for 10 ns;
+    raddr   <= x"7FC0";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"7FC4";
+    rupdate <= '1';
+    wait for 10 ns;
     raddr   <= x"4010";
     rupdate <= '1';
     wait for 10 ns;
@@ -144,25 +158,25 @@ begin
     wait for 10 ns;
     raddr   <= x"4C04";
     rupdate <= '1';
-    wait for 10 ns;    
+    wait for 10 ns;
     raddr   <= x"4C50";
     rupdate <= '1';
-    wait for 10 ns;    
+    wait for 10 ns;
     raddr   <= x"4020";
     rupdate <= '1';
-    wait for 50 ns;    
+    wait for 50 ns;
     raddr   <= x"4024";
     rupdate <= '1';
-    wait for 10 ns;    
+    wait for 10 ns;
     raddr   <= x"4028";
     rupdate <= '1';
-    wait for 10 ns;    
+    wait for 10 ns;
     raddr   <= x"402C";
     rupdate <= '1';
-    wait for 10 ns;    
+    wait for 10 ns;
     raddr   <= x"0000";
     rupdate <= '0';
-    wait for 10 ns;    
+    wait for 10 ns;
     wait;
   end process;
 
@@ -183,16 +197,24 @@ begin
     wait for 10 ns;
     waddr   <= x"4104";
     wdata   <= x"0CC01101";
-    wupdate <= '1';    
+    wupdate <= '1';
     wait for 10 ns;
     waddr   <= x"7FA4";
     wdata   <= x"0000FFFF";
     wupdate <= '1';
     wait for 10 ns;
+    waddr   <= x"7FC0";
+    wdata   <= x"00011000";
+    wupdate <= '1';
+    wait for 10 ns;
+    waddr   <= x"7FC4";
+    wdata   <= x"00000010";
+    wupdate <= '1';
+    wait for 10 ns;
     waddr   <= x"0000";
     wdata   <= x"00000000";
     wupdate <= '0';
-    wait for 100 ns;
+    wait for 120 ns;
     waddr   <= x"7FA8";
     wdata   <= x"00000000";
     wupdate <= '1';
@@ -208,10 +230,10 @@ begin
     show_output<='1';
     wait until (count=30);
     wait for 10 ns;
-    show_output<='0';    
+    show_output<='0';
     wait;
   end process;
-  
+
   output_process : process
     variable l : line;
   begin
@@ -244,6 +266,5 @@ begin
       writeline(output, l);
     end if;
   end process;
-  
+
 end behaviour;
-        
