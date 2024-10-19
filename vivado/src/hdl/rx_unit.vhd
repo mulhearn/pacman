@@ -36,12 +36,15 @@ end rx_unit;
 
 architecture behaviour of rx_unit is
   signal data    : uart_rx_data_array_t;
-  signal valid   : std_logic_vector(C_NUM_UART-1 downto 0);
-  signal ready   : std_logic_vector(C_NUM_UART-1 downto 0);
+  signal valid   : std_logic_vector(C_RX_NUM_CHAN-1 downto 0) := (others => '0');
+  signal ready   : std_logic_vector(C_RX_NUM_CHAN-1 downto 0) := (others => '0');
   signal status  : uart_reg_array_t;
   signal config  : uart_reg_array_t := (others => (others => '0'));
   signal gflags  : std_logic_vector(C_RX_GFLAGS_WIDTH-1 downto 0);
   signal gstatus : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+  signal heartbeat_cycles : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+  signal sync_cycles       : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+
   component rx_buffer is
     port (
       M_AXIS_ACLK        : in std_logic;
@@ -53,13 +56,11 @@ architecture behaviour of rx_unit is
       M_AXIS_TLAST       : out std_logic;
 
       STATUS_O           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      GCONFIG_I          : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      GFLAGS_I           : in  std_logic_vector(C_RX_GFLAGS_WIDTH-1 downto 0);
       LOOK_O             : out std_logic_vector(C_RX_DATA_WIDTH-1 downto 0);
-      
+
       DATA_I             : in  uart_rx_data_array_t;
-      VALID_I            : in  std_logic_vector(C_NUM_UART-1 downto 0);
-      READY_O            : out std_logic_vector(C_NUM_UART-1 downto 0);
+      VALID_I            : in  std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
+      READY_O            : out std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
 
       DEBUG_STATUS_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       DEBUG_DATA_O       : out std_logic_vector(C_RX_DATA_WIDTH-1 downto 0)
@@ -80,11 +81,13 @@ architecture behaviour of rx_unit is
       S_REGBUS_RB_WADDR	  : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
       S_REGBUS_RB_WDATA	  : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_WACK    : out std_logic;
-      
+
       LOOK_I              : in  uart_rx_data_array_t;
       STATUS_I            : in  uart_reg_array_t;
       CONFIG_O            : out uart_reg_array_t;
       GFLAGS_O            : out std_logic_vector(C_RX_GFLAGS_WIDTH-1 downto 0);
+      HEARTBEAT_CYCLES_O  : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      SYNC_CYCLES_O        : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       GSTATUS_I           : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       FIFO_RCNT_I         : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       FIFO_WCNT_I         : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -112,6 +115,34 @@ architecture behaviour of rx_unit is
       );
   end component;
 
+  component heartbeat is
+    port (
+      ACLK          : in  std_logic;
+      ARESETN       : in  std_logic;
+      EN_I          : in  std_logic;
+      CYCLES_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      DATA_O        : out std_logic_vector(C_RX_DATA_WIDTH-1 downto 0);
+      VALID_O       : out std_logic;
+      READY_I       : in  std_logic;
+      TIMESTAMP_I   : in  std_logic_vector(31 downto 0);
+      DEBUG_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+    );
+  end component;
+
+  component rollover is
+    port (
+      ACLK          : in  std_logic;
+      ARESETN       : in  std_logic;
+      EN_I          : in  std_logic;
+      CYCLES_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      DATA_O        : out std_logic_vector(C_RX_DATA_WIDTH-1 downto 0);
+      VALID_O       : out std_logic;
+      READY_I       : in  std_logic;
+      TIMESTAMP_I   : in  std_logic_vector(31 downto 0);
+      DEBUG_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+    );
+  end component;
+
 begin
   uut: rx_buffer port map (
     M_AXIS_ACLK     => M_AXIS_ACLK,
@@ -123,13 +154,11 @@ begin
     M_AXIS_TLAST    => M_AXIS_TLAST,
     DATA_I          => data,
     STATUS_O        => gstatus,
-    GFLAGS_I        => gflags,
-    GCONFIG_I       => (others => '0'),
     VALID_I         => valid,
     READY_O         => ready
   );
 
-  uut0: rx_registers port map (
+  reg0: rx_registers port map (
     ACLK                => M_AXIS_ACLK,
     ARESETN             => M_AXIS_ARESETN,
     S_REGBUS_RB_RUPDATE => S_REGBUS_RB_RUPDATE,
@@ -145,6 +174,8 @@ begin
     GSTATUS_I  => gstatus,
     CONFIG_O  => config,
     GFLAGS_O => gflags,
+    HEARTBEAT_CYCLES_O => heartbeat_cycles,
+    SYNC_CYCLES_O => sync_cycles,
     FIFO_RCNT_I => FIFO_RCNT_I,
     FIFO_WCNT_I => FIFO_WCNT_I,
     DMA_ITR_I   => DMA_ITR_I
@@ -169,5 +200,28 @@ begin
         TIMESTAMP_I   => TIMESTAMP_I
       );
   end generate grxchan0;
+
+  hb0: heartbeat port map (
+    ACLK          => M_AXIS_ACLK,
+    ARESETN       => M_AXIS_ARESETN,
+    EN_I          => gflags(0),
+    CYCLES_I      => heartbeat_cycles,
+    DATA_O        => data(40),
+    VALID_O       => valid(40),
+    READY_I       => ready(40),
+    TIMESTAMP_I   => TIMESTAMP_I
+  );
+
+  ro0: rollover port map (
+    ACLK          => M_AXIS_ACLK,
+    ARESETN       => M_AXIS_ARESETN,
+    EN_I          => gflags(1),
+    CYCLES_I      => sync_cycles,
+    DATA_O        => data(41),
+    VALID_O       => valid(41),
+    READY_I       => ready(41),
+    TIMESTAMP_I   => TIMESTAMP_I
+  );
+
 
 end behaviour;
