@@ -19,20 +19,45 @@ int pacman_vspace_write(uint32_t addr, uint32_t value){
     return i2c_write(off, value);
   }
 
-  unsigned enables = 0;
+  unsigned tmp = 0;
   switch(addr){
   case 0x0010:
-    enables = pacman_read(0xFF20);
-    enables &= 0xFFFF0000;
-    enables |= (value & 0x03FF);
-    return pacman_write(0xFF20, enables);
+    tmp = pacman_read(0xFF20);
+    tmp &= 0xFFFF0000;
+    tmp |= (value & 0x03FF);
+    return pacman_write(0xFF20, tmp);
   case 0x0014:
-    enables = pacman_read(0xFF20);
-    enables &= 0xFFF0FFFF;
+    tmp = pacman_read(0xFF20);
+    tmp &= 0xFFF0FFFF;
     if (value&0x1)
-      enables |= 0x00010000;
-    return pacman_write(0xFF20, enables);
+      tmp |= 0x00010000;
+    return pacman_write(0xFF20, tmp);
+  case 0x0018:
+    // ignoring... already configured correctly.
+    return EXIT_SUCCESS;
+  case 0x001C:
+    // ignoring... already configured correctly.
+    return EXIT_SUCCESS;    
+  case 0x1010:
+    // this is a request to send a sync pulse:
+    if ((value&0x4)!=0){
+      return pacman_write(0xFE24, 0x00FF03FF);
+    }    
+    return EXIT_SUCCESS;
+  case 0x1014:
+    // ignoring... already configured correctly.
+    return EXIT_SUCCESS;
+  case 0x1018:
+    // ignoring... already configured correctly.
+    return EXIT_SUCCESS;
+  case 0x101C:
+    // ignoring... already configured correctly.
+    return EXIT_SUCCESS;
+  case 0x2014:
+    // ignoring... 
+    return EXIT_SUCCESS;
   }
+
   // assume pass through if we didn't catch it earlier:
   //pacman_write(addr, value);
   //return EXIT_SUCCESS;
@@ -52,7 +77,7 @@ uint32_t pacman_vspace_read(uint32_t addr, int * status){
     return i2c_read(off);
   }
 
-  unsigned enables = 0;
+  unsigned tmp = 0;
   switch(addr){
   case 0x0000:
     return pacman_read(0xFF10, status);
@@ -63,12 +88,16 @@ uint32_t pacman_vspace_read(uint32_t addr, int * status){
   case 0x000C:
     return pacman_read(0xFF1C, status);
   case 0x0010:
-    enables = pacman_read(0xFF20, status);
-    enables &= 0x000003FF;
-    return enables;
+    tmp = pacman_read(0xFF20, status);
+    tmp &= 0x000003FF;
+    return tmp;
   case 0x0014:
-    enables = pacman_read(0xFF20);
-    return ((enables & 0x00010000) != 0);
+    tmp = pacman_read(0xFF20);
+    return ((tmp & 0x00010000) != 0);
+  case 0x1000:
+    return 0;    
+  case 0x1010:
+    return 0;
   }
 
   // assume pass through if we didn't catch it earlier:
