@@ -184,7 +184,7 @@ begin
   grxchan0: for i in 0 to C_NUM_UART-1 generate
     rxchan0: rx_chan
       generic map(
-        CHANNEL=>i
+        CHANNEL=>(i+1)
       )
       port map(
         ACLK          => M_AXIS_ACLK,
