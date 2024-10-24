@@ -45,17 +45,11 @@ scripts/create_trenz.sh
 cd trenz
 ../scripts/config.sh
 ../scripts/build.sh
+../scripts/package.sh
 cd images/linux
-
-*** Don't Forget the Following Step ***
-*** The build script does not create the BOOT.BIN file ***
-
-# create the BOOT.BIN file:
-cp ../../../src/bootgen.bif .
-bootgen -arch zynq -image bootgen.bif -w -o BOOT.BIN
 ls -alh BOOT.BIN image.ub boot.scr
+# (Don't forget to run package script to update BOOT.BIN!)
 
-#
 # put those files on partition 1 (vfat) of an SD card,
 # insert in module and boot to Linux...
 #
