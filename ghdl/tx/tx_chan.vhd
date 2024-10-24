@@ -8,9 +8,9 @@ entity tx_chan is
   port (
     ACLK          : in  std_logic;
     ARESETN       : in  std_logic;
-    UCLK_I        : in  std_logic;    
+    UCLK_I        : in  std_logic;
     CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    STATUS_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);    
+    STATUS_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     GFLAGS_I      : in  std_logic_vector(C_TX_GFLAGS_WIDTH-1 downto 0);
     DATA_I        : in  std_logic_vector(C_TX_DATA_WIDTH-1 downto 0);
     VALID_I       : in  std_logic;
@@ -27,7 +27,7 @@ architecture behavioral of tx_chan is
       CLK          : IN  STD_LOGIC;
       RST          : IN  STD_LOGIC;
       CLKOUT_RATIO : IN  STD_LOGIC_VECTOR (7 downto 0);
-      CLKOUT_PHASE : IN  STD_LOGIC_VECTOR (3 downto 0);    
+      CLKOUT_PHASE : IN  STD_LOGIC_VECTOR (3 downto 0);
       -- UART TX
       MCLK        : IN  STD_LOGIC;
       TX          : OUT STD_LOGIC;
@@ -37,13 +37,13 @@ architecture behavioral of tx_chan is
       BUSY        : OUT STD_LOGIC
     );
   end component uart_tx;
-  
+
   signal clk         : std_logic;
   signal rst         : std_logic;
 
   signal status      : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal status_z    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
-  
+
   signal valid       : std_logic;
   signal ready       : std_logic;
   signal busy        : std_logic;
@@ -51,12 +51,13 @@ architecture behavioral of tx_chan is
   signal start       : std_logic;
 
   signal tx          : std_logic;
-  
+
   -- STATES:
   signal txoff       : std_logic;  -- valid=0 into all TXs
   signal hrdy        : std_logic;  -- ready=1 from all TXs
   signal mode        : integer range 0 to 3;
-  
+  signal rested      : std_logic;
+
 begin
   uart0: uart_tx port map(
     CLK=>clk,
@@ -72,7 +73,7 @@ begin
 
   clk <= ACLK;
   rst   <= not ARESETN;
-  
+
   STATUS_O <= status_z;
   READY_O  <= ready;
   TX_O     <= tx;
@@ -81,16 +82,36 @@ begin
   hrdy     <= GFLAGS_I(1);
 
   mode <= to_integer(unsigned(CONFIG_I(13 downto 12)));
-  
+
   process(clk,rst)
+    variable delay  : integer range 0 to 16#FFFF# := 0;
+    variable rests  : integer range 0 to 16#FFFF# := 0;
   begin
     if (rst='1') then
-      valid <= '0';
-    elsif (rising_edge(clk)) then
-      if ((txoff='1') or (mode=0)) then
-        valid <= '0';
-      else
-        valid <= VALID_I;
+      delay  := 0;
+      rests  := 0;
+      rested <= '0';
+      valid  <= '0';
+    else
+      if (rising_edge(clk)) then
+        delay := to_integer(unsigned(CONFIG_I(31 downto 16)));
+        if (busy='1') then
+          rests := 0;
+        elsif (rests < delay) then
+          rests := rests + 1;
+        end if;
+
+        if (rests >= delay) then
+          rested <= '1';
+        else
+          rested <= '0';
+        end if;
+
+        if (VALID_I = '0') then
+          valid <= '0';
+        elsif (rests >= delay) then
+          valid <= VALID_I;
+        end if;
       end if;
     end if;
   end process;
@@ -116,20 +137,25 @@ begin
     end if;
   end process;
 
-  
+
+
+
+
+
   -- provide non-delayed status for convenient debugging
   DEBUG_O  <= status;
-  
+
   status(0) <= busy;
   status(1) <= VALID_I;
   status(2) <= ready;
   status(3) <= start;
   status(8) <= valid;
-  
+  status(9) <= rested;
+
   process(clk,rst)
   begin
     if (rst='1') then
-      status_z <= (others => '0');                  
+      status_z <= (others => '0');
     elsif (rising_edge(clk)) then
       status_z <= status;
     end if;
@@ -148,10 +174,9 @@ begin
     end if;
   end process;
 
-  
-    
 
-    
-  
-end;  
 
+
+
+
+end;

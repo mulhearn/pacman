@@ -12,11 +12,40 @@ git clone https://github.com/mulhearn/pacman.git
 # or, with ssh:
 git clone git@github.com:mulhearn/pacman.git
 cd pacman
-source /tools/Xilinx/Vivado/2020.2/settings64.sh
+source /tools/Xilinx/Vivado/2023.2/settings64.sh
 # create the project from tcl
 vivado -mode batch -source vivado/tcl/create.tcl
 # run systhesis, implementation, and write bit stream:
 vivado -mode batch -source vivado/tcl/runsib.tcl
+
+#building the FSBL: (You'll need this for petalinux packaging!)
+xsct apps/pacman_fsbl/install.tcl
+ls -alh products/pacman_fsbl.elf
+
+#petalinux:
+
+source /tools/Xilinx/PetaLinux/2023.2/bin/settings.sh
+cd petalinux
+./scripts/create_full.sh
+cd full
+../scripts/config.sh
+../scripts/build.sh
+../scripts/package.sh
+cd images/linux
+ls -alh BOOT.BIN image.ub boot.scr
+
+# put those files on partition 1 (vfat) of an SD card,
+# untar (as root) the rootfs.tar.gz into partion 2 (linux) of an SD card
+
+
+
+
+
+
+#
+# Other Flows (Not Checked Recently...)
+# 
+
 
 # run hello world demo:
 xsct apps/hello/install.tcl
@@ -38,21 +67,6 @@ cd flash
 source program.sh
 # switch to QSPI boot mode (boots hello world)
 
-# petalinux ramdisk (uses RAM for root fs)
-source /tools/Xilinx/PetaLinux/2022.2/bin/settings.sh
-cd petalinux
-scripts/create_trenz.sh
-cd trenz
-../scripts/config.sh
-../scripts/build.sh
-../scripts/package.sh
-cd images/linux
-ls -alh BOOT.BIN image.ub boot.scr
-# (Don't forget to run package script to update BOOT.BIN!)
-
-# put those files on partition 1 (vfat) of an SD card,
-# insert in module and boot to Linux...
-#
 
 # Read out the AXI-Lite secondary address (read only registers) via devmen:
 
