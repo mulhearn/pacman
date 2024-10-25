@@ -130,24 +130,41 @@ void toggle_enables(){
 }
 
 
+void toggle_tx_config(){
+  static int mode = 0;
+  mode = (mode + 1) % 3;
+  if (mode==0){
+    unsigned config = 0x00001602;
+    xil_printf("INFO: No Delay.  Broadcasting tx config write 0x%08x \r\n", config);
+    Xil_Out32(ADDR_AXIL_REGS+SCOPE_TX+UART_BROADCAST+C_ADDR_TX_CONFIG, config);
+  } else if (mode==1) {
+    unsigned config = 0x05281602;    
+    xil_printf("INFO: Half Speed.  Broadcasting tx config write 0x%08x \r\n", config);
+    Xil_Out32(ADDR_AXIL_REGS+SCOPE_TX+UART_BROADCAST+C_ADDR_TX_CONFIG, config);    
+  } else if (mode==2) {
+    unsigned config = 0x00001601;
+    xil_printf("INFO: Double speed.  Broadcasting tx config write 0x%08x \r\n", config);
+    Xil_Out32(ADDR_AXIL_REGS+SCOPE_TX+UART_BROADCAST+C_ADDR_TX_CONFIG, config);    
+  }
+}
 
 void toggle_rx_config(){
   static int mode = 0;
   mode = (mode + 1) % 3;
   if (mode==0){
-    unsigned config = 0x00001001;
+    unsigned config = 0x00001002;
     xil_printf("INFO: No internal loopback.  Broadcasting rx config write 0x%08x \r\n", config);
     Xil_Out32(ADDR_AXIL_REGS+SCOPE_RX+UART_BROADCAST+C_ADDR_RX_CONFIG, config);
   } else if (mode==1) {
-    unsigned config = 0x00011001;
+    unsigned config = 0x00011002;
     xil_printf("INFO: Full internal loopback.  Broadcasting rx configs write 0x%08x \r\n", config);
     Xil_Out32(ADDR_AXIL_REGS+SCOPE_RX+UART_BROADCAST+C_ADDR_RX_CONFIG, config);
   } else if (mode==2) {
     unsigned config;
-    config = 0x00011001;
+    config = 0x00011002;
     xil_printf("INFO: Tiles 2-10 use internal loopback.  Broadcasting rx configs t 0x%08x \r\n", config);
     Xil_Out32(ADDR_AXIL_REGS+SCOPE_RX+UART_BROADCAST+C_ADDR_RX_CONFIG, config);
-    config = 0x00001001;
+    config = 0x00001002;
     xil_printf("INFO: Tile 1 does not use internal loopback.  Setting Tile 1 rx config 0x%08x \r\n", config);
     Xil_Out32(ADDR_AXIL_REGS+SCOPE_RX+(0<<8)+C_ADDR_RX_CONFIG, config);
     Xil_Out32(ADDR_AXIL_REGS+SCOPE_RX+(1<<8)+C_ADDR_RX_CONFIG, config);
@@ -463,7 +480,7 @@ void benchmark_dma_loopback(){
 
   const unsigned bytes = 4;         // bytes per word (32-bit words)  
   const unsigned tx_words = 84;     // words in each packet (4 header + 2 words per 40 uarts)
-  const unsigned tx_packets = 10000; // tx_packets to write
+  const unsigned tx_packets = 1000; // tx_packets to write
   //const unsigned rx_words = 128*4;
   // no extra:
   const unsigned rx_words = 164;
@@ -548,6 +565,8 @@ void benchmark_dma_loopback(){
     unsigned tx_pstart = ipacket*tx_words+4;
     unsigned rx_a, rx_b, rx_c, rx_d, tx_c, tx_d;
 
+    //xil_printf("DEBUG:  ipacket:  %d\r\n", ipacket);
+    
     int valid = 1;
     for (int i=0; i<41; i++){
       rx_d = rx_buf[rx_pstart + 4*i+3];
@@ -566,7 +585,7 @@ void benchmark_dma_loopback(){
       if ((rx_a&0xFF) == 0x44){
 	int status = 1;
 	status &= ((rx_a&0x00FF) == 0x44);
-	status &= (((rx_a&0xFF00)>>8) == i);
+	status &= (((rx_a&0xFF00)>>8) == (i+1));
 	status &= (rx_c == tx_c);
 	status &= (rx_d == tx_d);
 	if (status==0){      
@@ -588,6 +607,7 @@ void benchmark_dma_loopback(){
 	valid=0;
       }
     }
+    //if (valid=0) break;
   }
 
   
@@ -717,11 +737,11 @@ int main(){
   
   while(1){
     xil_printf("choose an option:\r\n");
-    xil_printf("TX: (1) read tx status (2) read tx look (3) single tx (4) toggle_tx_mask \r\n");
-    xil_printf("RX: (5) read rx status (6) read rx look (7) single rx (8) toggle_rx_config \r\n");
-    xil_printf("Both: (9) zero counts (a) toggle dcache \r\n");
-    xil_printf("DMA:  (b) read DMA status (c) DMA reset (d) benchmark DMA loopback (e) benchmark DMA write \r\n");
-    xil_printf("(f) read global status (g) toggle scratch (h) toggle enables (i) test trig and sync  \r\n");
+    xil_printf("TX: (1) read tx status (2) read tx look (3) single tx (4) toggle tx mask (5) toggle tx config \r\n");
+    xil_printf("RX: (6) read rx status (7) read rx look (8) single rx (9) toggle rx config \r\n");
+    xil_printf("Both: (a) zero counts (b) toggle dcache \r\n");
+    xil_printf("DMA:  (c) read DMA status (d) DMA reset (e) benchmark DMA loopback (f) benchmark DMA write \r\n");
+    xil_printf("(g) read global status (h) toggle scratch (i) toggle enables (j) test trig and sync  \r\n");
     
     unsigned char c=inbyte();
     xil_printf("pressed:  %c\n\r", c);
@@ -739,45 +759,48 @@ int main(){
       toggle_tx_mask();
       break;            
     case '5':
+      toggle_tx_config();
+      break;            
+    case '6':
       read_rx_status();
       break;
-    case '6':
+    case '7':
       read_rx_look();
       break;
-    case '7':
+    case '8':
       single_rx();
       break;
-    case '8':
+    case '9':
       toggle_rx_config();
       break;      
-    case '9':
+    case 'a':
       zero_counts();
       break;
-    case 'a':
+    case 'b':
       toggle_dcache();
       break;
-    case 'b':
+    case 'c':
       dma_status();
       break;
-    case 'c':
+    case 'd':
       reset_dma();
       break;      
-    case 'd':
+    case 'e':
       benchmark_dma_loopback();
       break;      
-    case 'e':
+    case 'f':
       benchmark_dma_write();
       break;      
-    case 'f':
+    case 'g':
       read_global_status();
       break;      
-    case 'g':
+    case 'h':
       toggle_scratch();
       break;      
-    case 'h':
+    case 'i':
       toggle_enables();
       break;      
-    case 'i':
+    case 'j':
       check_trig_sync();
       break;      
     default:
