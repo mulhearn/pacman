@@ -9373,7 +9373,7 @@ proc create_hier_cell_axi_lite_reg_space { parentCell nameHier } {
   # Create instance: firmware_minor_0, and set properties
   set firmware_minor_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 firmware_minor_0 ]
   set_property -dict [ list \
-   CONFIG.CONST_VAL {7} \
+   CONFIG.CONST_VAL {8} \
    CONFIG.CONST_WIDTH {32} \
  ] $firmware_minor_0
 
@@ -10292,9 +10292,8 @@ proc create_hier_cell_axi_lite_reg_space { parentCell nameHier } {
   connect_bd_net -net axi_lite_reg_space_analog_pwr_en [get_bd_ports ANALOG_PWR_EN] [get_bd_pins axi_lite_reg_space/analog_pwr_en]
   connect_bd_net -net io_dout_0 [get_bd_ports SYNC] [get_bd_pins io/SYNC]
   connect_bd_net -net io_dout_1 [get_bd_ports TRIG] [get_bd_pins io/TRIG]
-  connect_bd_net -net larpix_clk_RST_SYNC_N [get_bd_pins io/I_RESETN] [get_bd_pins larpix_clk/RST_SYNC_N]
+  connect_bd_net -net larpix_clk_RST_SYNC_N [get_bd_pins io/I_RESETN] [get_bd_pins io/I_TRIG] [get_bd_pins larpix_clk/RST_SYNC_N]
   connect_bd_net -net larpix_trig_RX_MASK [get_bd_pins larpix_trig/RX_MASK] [get_bd_pins util_vector_logic_0/Op2]
-  connect_bd_net -net larpix_trig_TRIG [get_bd_pins io/I_TRIG] [get_bd_pins larpix_trig/TRIG]
   connect_bd_net -net larpix_uart_array_MOSI [get_bd_ports POSI] [get_bd_pins larpix_uart_array/MOSI]
   connect_bd_net -net larpix_uart_array_UART_RX_BUSY [get_bd_ports UART_RX_BUSY] [get_bd_pins larpix_uart_array/UART_RX_BUSY]
   connect_bd_net -net larpix_uart_array_UART_TX_BUSY1 [get_bd_ports UART_TX_BUSY] [get_bd_pins larpix_uart_array/UART_TX_BUSY]
