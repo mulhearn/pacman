@@ -9373,7 +9373,7 @@ proc create_hier_cell_axi_lite_reg_space { parentCell nameHier } {
   # Create instance: firmware_minor_0, and set properties
   set firmware_minor_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 firmware_minor_0 ]
   set_property -dict [ list \
-   CONFIG.CONST_VAL {8} \
+   CONFIG.CONST_VAL {9} \
    CONFIG.CONST_WIDTH {32} \
  ] $firmware_minor_0
 

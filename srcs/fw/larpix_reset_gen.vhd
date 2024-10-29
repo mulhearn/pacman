@@ -5,7 +5,7 @@ use ieee.numeric_std.all;
 entity larpix_reset_gen is
   generic (
     -- defined reset lengths
-    C_SYNC_RST_CYCLES : integer := 10;
+    C_SYNC_RST_CYCLES : integer := 15;
     C_STATE_RST_CYCLES : integer := 24;
     C_HARD_RST_CYCLES : integer := 256
     );
