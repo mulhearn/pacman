@@ -229,7 +229,7 @@ int pacman_poll_rx(){
     if (curr_rx == prev_rx->prev) break; // reached end of buffer
   }
   if (curr_rx == prev_rx){
-    printf("INFO: No new data received...\n");
+    //printf("INFO: No new data received...\n");
     return EXIT_SUCCESS;
   }
 
