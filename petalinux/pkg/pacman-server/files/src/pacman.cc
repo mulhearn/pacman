@@ -322,6 +322,7 @@ uint32_t pacman_read(uint32_t addr, int * status){
     return G_PACMAN_AXIL[addr>>2];
   } else if (addr >= PACMAN_EXPERT){
     unsigned off = addr - PACMAN_EXPERT;
+    printf("DEBUG:  reading expert register 0x%x\n", off);    
     if (off == 0x0)
       return 0xABCD;
     if (off == 0x4)
