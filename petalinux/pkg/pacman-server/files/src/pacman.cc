@@ -313,14 +313,14 @@ int pacman_write(uint32_t addr, uint32_t value){
   return EXIT_FAILURE;
 }
 
-#define PACMAN_EXPERT 0x60000000
+#define PACMAN_EXPERT 0x10000000
 
 uint32_t pacman_read(uint32_t addr, int * status){
   if (status)
     *status = EXIT_SUCCESS;
   if (addr < PACMAN_LEN){
     return G_PACMAN_AXIL[addr>>2];
-  } else if (addr > PACMAN_EXPERT){
+  } else if (addr >= PACMAN_EXPERT){
     unsigned off = addr - PACMAN_EXPERT;
     if (off == 0x0)
       return 0xABCD;
@@ -328,6 +328,7 @@ uint32_t pacman_read(uint32_t addr, int * status){
       return rx_buffer_lost();
     if (off == 0x8)
       return tx_buffer_lost();
+    return 0xEEEE;
   } else {
     unsigned off = addr - PACMAN_LEN;
     printf("DEBUG:  reading I2C virtual address 0x%x\n", off);
