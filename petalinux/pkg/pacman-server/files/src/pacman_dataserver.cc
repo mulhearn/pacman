@@ -48,7 +48,6 @@ int main(int argc, char* argv[]){
   // ensure that buffer is consistent with larpix:
   assert((WORD_LEN) == (RX_BUFFER_BYTES));
   assert((WORD_LEN) == (LARPIX_WIDE_LEN));
-  assert((MAX_WORDS_MSG) == (RX_BUFFER_DEPTH));
 
   printf("INFO:  Starting pacman_dataserver...\n");
   printf("INFO:  Initializing RX buffer.\n");
