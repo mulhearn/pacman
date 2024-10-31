@@ -15,13 +15,15 @@ if [ -d "$PROJ" ]; then
     echo "*** You must delete or move project directory to start the process from scratch. ***"
     # uncomment return below to require starting from scratch.
     # return 0
-    echo "WARNING   Updating an *existing* project with only our *local* changes."
-    echo "          This will not *remove* any existing new files in project directory, even if they would not be"
-    echo "          created if the process started from scratch.  If you need to remove files, you will have to delete"
-    echo "          the existing petalinux project directory and start from scratch."
+    echo "WARNING   Updating an *existing* project without starting from scratch."
 else
     echo "Creating new project directory $PROJ"
     petalinux-create -t project -n $PROJ --template zynq
+fi
+
+if [ -d "$PROJ/project-spec.prev" ]; then
+    echo "Please delete $PROJ/project-spec.prev then retry ..."
+    exit 0
 fi
 
 # Baseline is the project-spec directory provided by TRENZ for the test board design:
