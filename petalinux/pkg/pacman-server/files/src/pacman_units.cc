@@ -33,9 +33,12 @@ int test_tx_buffer(){
     tx_data[1] = 0xBBBB0000+i;
     success &= (tx_buffer_in(10, tx_data)==1);
   }
-  success &= (tx_buffer_in(10, tx_data)==0);
 
   tx_buffer_status();
+
+  success &= (tx_buffer_lost()==0);
+  success &= (tx_buffer_in(10, tx_data)==0);
+  success &= (tx_buffer_lost()==1);
 
   success &= (tx_buffer_out(output)==1);
   tx_buffer_print_output(output);
@@ -64,17 +67,19 @@ int test_tx_buffer(){
 
   printf("INFO:  Filling the entire buffer.\n");
 
+  printf("DEBUG:  lost:  %d\n", tx_buffer_lost());
   // completely fill the entire buffer:
   tx_data[0] = 0;
   tx_data[1] = 0;
   for (unsigned i=0; i<TX_BUFFER_CHAN; i++){
-    for (unsigned j=0; j<TX_BUFFER_DEPTH-1; j++){
+    for (unsigned j=0; j<(TX_BUFFER_DEPTH-1); j++){
       tx_data[0] = (j<<8) + i+1;
       tx_data[1] = (j<<8) + 0x00000033;
       if (chan_map_tx(i) >= 0)
 	success &= (tx_buffer_in(i, tx_data)==1);
     }
   }
+
   // how about this wafer thin mint?
   success &= (tx_buffer_in(20, tx_data)==0);
 
@@ -112,6 +117,8 @@ int test_tx_buffer(){
   }
   // check we are empty:
   success &= (tx_buffer_out(output)==0);
+
+  success &= (tx_buffer_lost()==2);
 
   if (success==0){
     printf("ERROR:  failed draining the entire buffer and checking contents.\n");
@@ -162,6 +169,9 @@ int test_rx_buffer(){
 
   rx_buffer_status();
 
+  // check no losses:
+  success &= (rx_buffer_lost()==0);
+
   if (success==0){
     printf("ERROR:  failed basic functionality test.\n");
     return 0;
@@ -173,12 +183,20 @@ int test_rx_buffer(){
 
   // completely fill the entire buffer:
   for (unsigned i=0; i<RX_BUFFER_DEPTH-1; i++){
-    rx_data[0] = i;
-    rx_data[1] = 2*i;
+    unsigned I = i%1024;
+    rx_data[0] = I;
+    rx_data[1] = 2*I;
     success &= (rx_buffer_in(rx_data)==1);
   }
+
+  // check no losses:
+  success &= (rx_buffer_lost()==0);
+
   // how about this wafer thin mint?
   success &= (rx_buffer_in(rx_data)==0);
+
+  // check loss detected:
+  success &= (rx_buffer_lost()==1);
 
   if (success==0){
     printf("ERROR:  filling the entire buffer failed.\n");
@@ -189,18 +207,25 @@ int test_rx_buffer(){
 
   printf("INFO:  Draining the entire buffer and checking contents\n");
 
-  // completely fill the entire buffer:
+  // drain the entire buffer:
   for (unsigned i=0; i<RX_BUFFER_DEPTH-1; i++){
+    unsigned I = i%1024;
     success &= (rx_buffer_out(rx_data)==1);
-    success &= (rx_data[0] == i);
-    success &= (rx_data[1] == 2*i);
+    success &= (rx_data[0] == I);
+    success &= (rx_data[1] == 2*I);
     //printf("DEBUG: rx_data %3d 0x%lx %lx\n", i, rx_data[1], rx_data[0]);
-    if (success==0)
+    if (success==0){
+      printf("ERROR:  draining the entire buffer.\n");
       return 0;
+    }
   }
 
   //confirm empty:
   success &= (rx_buffer_out(rx_data)==0);
+
+  // check no more loss detected:
+  success &= (rx_buffer_lost()==1);
+
 
   rx_buffer_status();
 

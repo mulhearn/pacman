@@ -34,10 +34,6 @@ static dma_desc * prev_rx = NULL;
 
 int G_I2C_FH = -1;
 
-//PACMAN SERVER Scratch Registers (Accessible at PACMAN_SERVER_VIRTUAL_START + (0, 1)
-uint32_t G_PACMAN_SERVER_SCRA = 0x0;
-uint32_t G_PACMAN_SERVER_SCRB = 0x0;
-
 void restart_dma_tx(uint32_t* dma, dma_desc* start) {
   printf("Restarting DMA (MM2S)...\n");
   //dma_set(dma, DMA_MM2S_CTRL_REG, DMA_RST); // reset
@@ -51,7 +47,7 @@ void restart_dma_rx(uint32_t* dma, dma_desc* start) {
   printf("Restarting DMA (S2MM)...\n");
   //dma_set(dma, DMA_S2MM_CTRL_REG, DMA_RST); // reset
   dma_set(dma, DMA_S2MM_CTRL_REG, 0); // halt
-  dma_set(dma, DMA_S2MM_CURR_REG, start->addr); 
+  dma_set(dma, DMA_S2MM_CURR_REG, start->addr);
   dma_set(dma, DMA_S2MM_CTRL_REG, DMA_RUN); // run
   dma_s2mm_status(dma);
 }
@@ -300,6 +296,8 @@ int pacman_poll_tx(){
   return EXIT_SUCCESS;
 }
 
+
+
 int pacman_write(uint32_t addr, uint32_t value){
   if (addr < PACMAN_LEN){
     printf("DEBUG:  writing HW address 0x%x\n", addr);
@@ -315,12 +313,21 @@ int pacman_write(uint32_t addr, uint32_t value){
   return EXIT_FAILURE;
 }
 
+#define PACMAN_EXPERT 0x60000000
 
 uint32_t pacman_read(uint32_t addr, int * status){
   if (status)
     *status = EXIT_SUCCESS;
   if (addr < PACMAN_LEN){
     return G_PACMAN_AXIL[addr>>2];
+  } else if (addr > PACMAN_EXPERT){
+    unsigned off = addr - PACMAN_EXPERT;
+    if (off == 0x0)
+      return 0xABCD;
+    if (off == 0x4)
+      return rx_buffer_lost();
+    if (off == 0x8)
+      return tx_buffer_lost();
   } else {
     unsigned off = addr - PACMAN_LEN;
     printf("DEBUG:  reading I2C virtual address 0x%x\n", off);
