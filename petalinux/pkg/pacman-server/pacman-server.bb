@@ -24,7 +24,7 @@ INITSCRIPT_PARAMS = "start 99 S ."
 S = "${WORKDIR}"
 homedir = "/home/root"
 
-#inherit update-rc.d
+inherit update-rc.d
 
 do_compile() {
 	     oe_runmake
