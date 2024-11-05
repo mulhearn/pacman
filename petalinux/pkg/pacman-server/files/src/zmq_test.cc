@@ -6,16 +6,15 @@
 #include <cassert>
 #include <sys/time.h>
 
-#define SOCKET_A_BINDING_REQ "tcp://*:5567"
+#define SOCKET_A_BINDING_PUB "tcp://*:5567"
 #define SOCKET_B_BINDING_SUB "tcp://localhost:5568"
 
 static void * ctx = NULL;
-static void * req = NULL;
+static void * pub = NULL;
 static void * sub = NULL;
 
 //#define MAX_BUFFER_SIZE 1024
-//#define MAX_BUFFER_SIZE 16384
-#define MAX_BUFFER_SIZE 16
+#define MAX_BUFFER_SIZE 16384
 uint32_t tx_buffer[MAX_BUFFER_SIZE/4];
 uint32_t rx_buffer[MAX_BUFFER_SIZE/4];
 
@@ -34,20 +33,19 @@ int main(int argc, char* argv[]){
   printf("INFO:  Creating new ZMQ context...\n");
   void* ctx = zmq_ctx_new();
 
-  printf("INFO:  Initializing REQ socket (A) ...\n");  
-  req = zmq_socket(ctx, ZMQ_REQ);
+  printf("INFO:  Initializing PUB socket (A) ...\n");  
+  pub = zmq_socket(ctx, ZMQ_PUB);
   iparam = 100;
-  zmq_setsockopt(req, ZMQ_SNDHWM, &iparam, sizeof(iparam));
+  zmq_setsockopt(pub, ZMQ_SNDHWM, &iparam, sizeof(iparam));
   iparam = 1000;
-  zmq_setsockopt(req, ZMQ_LINGER, &iparam, sizeof(iparam));
+  zmq_setsockopt(pub, ZMQ_LINGER, &iparam, sizeof(iparam));
   iparam = 1000;
-  zmq_setsockopt(req, ZMQ_SNDTIMEO, &iparam, sizeof(iparam));
-  zmq_setsockopt(req, ZMQ_RCVTIMEO, &iparam, sizeof(iparam));
-  if (zmq_bind(req, SOCKET_A_BINDING_REQ) !=0 ) {
-    printf("ERROR:  Failed to bind socket (%s)!\n", SOCKET_A_BINDING_REQ);
+  zmq_setsockopt(pub, ZMQ_SNDTIMEO, &iparam, sizeof(iparam));
+  if (zmq_bind(pub, SOCKET_A_BINDING_PUB) !=0 ) {
+    printf("ERROR:  Failed to bind socket (%s)!\n", SOCKET_A_BINDING_PUB);
     return 1;
   }
-  printf("INFO:  ZQM REQ socket (A) connected successfully...\n");
+  printf("INFO:  ZQM PUB socket (A) connected successfully...\n");
   
   printf("INFO:  Initializing SUB socket (B) ...\n");
   sub = zmq_socket(ctx, ZMQ_SUB);
@@ -85,19 +83,14 @@ int main(int argc, char* argv[]){
       //printf("DEBUG:  sending a message \n");
       rc = zmq_msg_init_data(&msg, tx_buffer, MAX_BUFFER_SIZE, 0, 0);
       assert(rc==0);
-      rc = zmq_msg_send(&msg, req, 0);
+      rc = zmq_msg_send(&msg, pub, 0);
       assert(rc!=-1);
       rc = zmq_msg_close(&msg);
       assert(rc==0);
-
-      //rc = zmq_msg_recv(&msg, req, 0);
-      //printf("DEBUG: rc:  %d\n", rc);
       //printf("DEBUG:  done sending message \n");
       tx_count = tx_count+1;
     }
 
-    return 0;
-    
     zmq_msg_init(&msg);
     rc = zmq_msg_recv(&msg, sub, 0);
     int size = zmq_msg_size(&msg);

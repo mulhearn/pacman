@@ -8,8 +8,7 @@ import sys
 import zmq
 import struct
 
-#port = "5554"
-port = "5556"
+port = "5568"
 
 context = zmq.Context()
 socket = context.socket(zmq.SUB)
@@ -23,6 +22,6 @@ while True:
     words = struct.iter_unpack("<L", msg)
     for i,word in enumerate(words):
         print(hex(word[0]), end=" ")
-        if (((i+1)%4)==0):
+        if (((i+1)%10)==0):
             print("")
     print(" count=", count)
