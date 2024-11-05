@@ -18,7 +18,7 @@ static void * sub = NULL;
 
 // BUFFER SIZE:  8 + N * 16
 //#define MAX_BUFFER_SIZE 648
-#define MAX_BUFFER_SIZE 24
+#define MAX_BUFFER_SIZE 40
 uint32_t tx_buffer[MAX_BUFFER_SIZE/4];
 uint32_t rx_buffer[MAX_BUFFER_SIZE/4];
 
@@ -82,11 +82,15 @@ int main(int argc, char* argv[]){
     int nreq = (MAX_BUFFER_SIZE-8)/16;
     printf("DEBUG: preparing a message with %d requests.\n", nreq);
     tx_buffer[0]=0x3F;
-    tx_buffer[1]=1<<16;
+    tx_buffer[1]=2<<16;
     tx_buffer[2]=0x0144;
     tx_buffer[3]=0x00;
     tx_buffer[4]=0xA;
     tx_buffer[5]=0xB;
+    tx_buffer[6]=0x0244;
+    tx_buffer[7]=0x00;
+    tx_buffer[8]=0xC;
+    tx_buffer[9]=0xD;
 
     //for (int i=0; i<nreq; i++){
     //  rx_buffer[2+4*i+0] = 0x0144;
