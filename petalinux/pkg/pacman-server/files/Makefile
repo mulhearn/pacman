@@ -2,6 +2,8 @@ APPS := pacman_cmdserver
 APPS += pacman_dataserver
 APPS += pacman_units
 APPS += pacman_menu
+APPS += zmq_test
+APPS += zmq_loopback
 
 INCLUDE_DIR := include
 SRC_DIR := src
