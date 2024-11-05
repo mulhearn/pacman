@@ -18,7 +18,8 @@ static void * sub = NULL;
 
 // BUFFER SIZE:  8 + N * 16
 //#define MAX_BUFFER_SIZE 648
-#define MAX_BUFFER_SIZE 40
+#define MAX_BUFFER_SIZE 10248
+//#define MAX_BUFFER_SIZE 20488
 uint32_t tx_buffer[MAX_BUFFER_SIZE/4];
 uint32_t rx_buffer[MAX_BUFFER_SIZE/4];
 
@@ -31,13 +32,13 @@ static void clear_msg(void*, void*) {
 int main(int argc, char* argv[]){
   struct timeval start, end;
   double elapsed_time;
-  int rc, iparam; 
+  int rc, iparam;
   printf("INFO:  Starting ZMQ loopback demo.\n");
   printf("INFO:  RAND_MAX: 0x%x\n", RAND_MAX);
   printf("INFO:  Creating new ZMQ context...\n");
   void* ctx = zmq_ctx_new();
 
-  printf("INFO:  Initializing REQ socket (A) ...\n");  
+  printf("INFO:  Initializing REQ socket (A) ...\n");
   req = zmq_socket(ctx, ZMQ_REQ);
   iparam = 100;
   zmq_setsockopt(req, ZMQ_SNDHWM, &iparam, sizeof(iparam));
@@ -51,7 +52,7 @@ int main(int argc, char* argv[]){
     return 1;
   }
   printf("INFO:  ZQM REQ socket (A) connected successfully...\n");
-  
+
   printf("INFO:  Initializing SUB socket (B) ...\n");
   sub = zmq_socket(ctx, ZMQ_SUB);
   iparam = 1000;
@@ -63,7 +64,7 @@ int main(int argc, char* argv[]){
     return 1;
   }
   printf("INFO:  ZQM SUB socket (B) connected successfully...\n");
-  
+
   int tx_count   = 0;
   int rx_count   = 0;
   int err_words  = 0;
@@ -72,33 +73,24 @@ int main(int argc, char* argv[]){
 
   //I miss the first message unless I have this not-understood pause...
   usleep(1000000);
-  
+
   printf("INFO: benchmarking %d TX/RX\n", N);
   gettimeofday(&start, NULL);
-  
-  while(rx_count < N){
+
+  while(tx_count < N){
     zmq_msg_t msg;
 
-    int nreq = (MAX_BUFFER_SIZE-8)/16;
-    printf("DEBUG: preparing a message with %d requests.\n", nreq);
+    unsigned nreq = (MAX_BUFFER_SIZE-8)/16;
+    //printf("DEBUG: preparing a message with %d requests.\n", nreq);
     tx_buffer[0]=0x3F;
-    tx_buffer[1]=2<<16;
-    tx_buffer[2]=0x0144;
-    tx_buffer[3]=0x00;
-    tx_buffer[4]=0xA;
-    tx_buffer[5]=0xB;
-    tx_buffer[6]=0x0244;
-    tx_buffer[7]=0x00;
-    tx_buffer[8]=0xC;
-    tx_buffer[9]=0xD;
+    tx_buffer[1]=((nreq)&0xFFFF)<<16;
+    for (int i=0; i<nreq; i++){
+      tx_buffer[2+4*i+0]=0x0044 + (((i%40)+1)<<8);
+      tx_buffer[2+4*i+1]=0x00;
+      tx_buffer[2+4*i+2]=rand();
+      tx_buffer[2+4*i+3]=rand();
+    }
 
-    //for (int i=0; i<nreq; i++){
-    //  rx_buffer[2+4*i+0] = 0x0144;
-    //  rx_buffer[2+4*i+1] = 0;
-    //  rx_buffer[2+4*i+2] = rand();
-    //  rx_buffer[2+4*i+3] = rand();
-    //}
-    
     if (tx_count < N){
       //printf("DEBUG:  sending a message \n");
       rc = zmq_msg_init_data(&msg, tx_buffer, MAX_BUFFER_SIZE, 0, 0);
@@ -111,7 +103,7 @@ int main(int argc, char* argv[]){
       zmq_msg_t reply;
       zmq_msg_init (&reply);
       rc = zmq_msg_recv (&reply, req, 0);
-      printf("DEBUG: rc:  %d\n", rc);
+      //printf("DEBUG: rc:  %d\n", rc);
       //printf("DEBUG:  done sending message \n");
       tx_count = tx_count+1;
     }
@@ -127,11 +119,11 @@ int main(int argc, char* argv[]){
     //if (size != MAX_BUFFER_SIZE){
     //  printf("ERROR:  unexpected size message\n");
     //  continue;
-    //}    
+    //}
     //memcpy(rx_buffer,zmq_msg_data(&msg), size);
-    printf("DEBUG:  loopback message received, size=%d\n", size);
+    printf("DEBUG:  loopback message received, rc=%d, size=%d\n", rc, size);
     zmq_msg_close(&msg);
-    
+
     //printf("DEBUG:  received message of size %d bytes \n", size);
     rx_count = rx_count+1;
 
