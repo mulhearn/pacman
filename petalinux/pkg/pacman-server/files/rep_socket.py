@@ -8,17 +8,16 @@ import sys
 import zmq
 import struct
 
-port = "5554"
-#port = "5556"
+port = "5567"
 
 context = zmq.Context()
-socket = context.socket(zmq.SUB)
-socket.connect ("tcp://127.0.0.1:%s" % port)
-socket.setsockopt(zmq.SUBSCRIBE, b'')
+socket = context.socket(zmq.REP)
+socket.connect("tcp://127.0.0.1:%s" % port)
 
 count = 0;
 while True:
     msg = socket.recv()
+    print("message received...")
     count = count + 1
     words = struct.iter_unpack("<L", msg)
     for i,word in enumerate(words):
@@ -26,3 +25,4 @@ while True:
         if (((i+1)%10)==0):
             print("")
     print(" count=", count)
+    socket.send(msg)
