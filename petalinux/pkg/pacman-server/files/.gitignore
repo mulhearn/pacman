@@ -1,4 +1,6 @@
 *~
+/zmq_loopback
+/zmq_test
 /pacman_cmdserver
 /pacman_dataserver
 /pacman_units
