@@ -3,5 +3,11 @@ pacman_cmdserver
 pacman_dataserver
 pacman_menu
 pacman_units
+pacman_counter
+pacman_push
+zmq_loopback
+zmq_test
+
+
 
 
