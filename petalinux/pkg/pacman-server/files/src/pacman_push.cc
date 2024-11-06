@@ -62,7 +62,7 @@ int main(int argc, char* argv[]){
   int tx_count   = 0;
   int err_words  = 0;
   int tot_words  = 0;
-  int N = 10;
+  int N = 10000;
 
   printf("INFO: benchmarking %d TX/RX\n", N);
 

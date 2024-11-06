@@ -6,7 +6,7 @@ SUMMARY = "Simple pacman-server application"
 SECTION = "PETALINUX/apps"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
-DEPENDS = "zeromq i2c-tools"
+DEPENDS = "zeromq python python-pyzmq i2c-tools"
 
 SRC_URI = "file://src \
            file://include \
@@ -14,13 +14,14 @@ SRC_URI = "file://src \
            file://power_up_tile.sh \
            file://report_power.sh \
            file://power_down.sh \
+           file://README.md \
            file://pacman_util.py \
            file://pump_socket.py \
            file://dump_socket.py \
            file://rep_socket.py \
 	   file://Makefile \
 		  "
-
+                  
 INITSCRIPT_NAME = "pacman_server"
 INITSCRIPT_PARAMS = "start 99 S ."
 
@@ -37,7 +38,6 @@ do_install() {
 	     install -d ${D}${bindir}
 	     install -m 0755 ${S}/pacman_cmdserver ${D}${bindir}
              install -m 0755 ${S}/pacman_dataserver ${D}${bindir}
-	     install -m 0755 ${S}/pacman_menu ${D}${bindir}
 	     install -m 0755 ${S}/pacman_units ${D}${bindir}
 	     install -m 0755 ${S}/pacman_push ${D}${bindir}
 	     install -m 0755 ${S}/pacman_counter ${D}${bindir}
@@ -45,10 +45,11 @@ do_install() {
 	     install -m 0755 ${S}/zmq_test ${D}${bindir}
 
              install -d ${D}${homedir}
+             install ${S}/README.md ${D}${homedir}
              install -m 0755 ${S}/pacman_util.py ${D}${homedir}
-	     install -m 0755 ${S}/dump_socket.py ${D}${homedir}
 	     install -m 0755 ${S}/pump_socket.py ${D}${homedir}
-	     install -m 0755 ${S}/rep_socket.py ${D}${homedir}
+	     install -m 0755 ${S}/dump_socket.py ${D}${homedir}
+	     install -m 0755 ${S}/rep_socket.py ${D}${homedir}	     
              install -m 0755 ${S}/power_up_tile.sh ${D}${homedir}
              install -m 0755 ${S}/report_power.sh ${D}${homedir}             
              install -m 0755 ${S}/power_down.sh ${D}${homedir}             
@@ -58,7 +59,7 @@ do_install() {
              install -m 0755 ${S}/pacman_server.sh ${D}${bindir}/pacman_server
 }
 
-FILES:${PN} += "${sysconfdir}/*"
-FILES:${PN} += "${homedir}/*"
+FILES_${PN} += "${sysconfdir}/*"
+FILES_${PN} += "${homedir}/*"
 
-RDEPENDS:${PN} = "python3-core python3-pyzmq"
+RDEPENDS_${PN} += "python python-pyzmq"
