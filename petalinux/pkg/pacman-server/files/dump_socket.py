@@ -8,7 +8,7 @@ import sys
 import zmq
 import struct
 
-port = "5568"
+port = "5556"
 
 context = zmq.Context()
 socket = context.socket(zmq.SUB)
