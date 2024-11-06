@@ -108,24 +108,24 @@ int main(int argc, char* argv[]){
       tx_count = tx_count+1;
     }
 
-    zmq_msg_init(&msg);
-    rc = zmq_msg_recv(&msg, sub, 0);
-    int size = zmq_msg_size(&msg);
-    if (size <= 0){
-      zmq_msg_close(&msg);
-      printf("DEBUG:  no message received \n");
-      continue;
-    }
+    //zmq_msg_init(&msg);
+    //rc = zmq_msg_recv(&msg, sub, 0);
+    //int size = zmq_msg_size(&msg);
+    //if (size <= 0){
+      //zmq_msg_close(&msg);
+      //printf("DEBUG:  no message received \n");
+      //continue;
+      //}
     //if (size != MAX_BUFFER_SIZE){
     //  printf("ERROR:  unexpected size message\n");
     //  continue;
     //}
     //memcpy(rx_buffer,zmq_msg_data(&msg), size);
-    printf("DEBUG:  loopback message received, rc=%d, size=%d\n", rc, size);
-    zmq_msg_close(&msg);
+    //printf("DEBUG:  loopback message received, rc=%d, size=%d\n", rc, size);
+    //zmq_msg_close(&msg);
 
     //printf("DEBUG:  received message of size %d bytes \n", size);
-    rx_count = rx_count+1;
+    //rx_count = rx_count+1;
 
   }
   gettimeofday(&end, NULL);
