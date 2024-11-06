@@ -5,6 +5,7 @@
 /pacman_dataserver
 /pacman_units
 /pacman_menu
-/pacman_loopback
+/pacman_counter
+/pacman_push
 /sandbox
 /obj
