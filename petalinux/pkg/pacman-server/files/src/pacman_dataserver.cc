@@ -85,7 +85,7 @@ int main(int argc, char* argv[]){
 
     if (words == 0){
       //printf("INFO: no new data received...\n");
-      usleep(10000);
+      usleep(100);
       continue;
     }
     printf("INFO: Received new data, words = %d\n", words);
@@ -93,6 +93,9 @@ int main(int argc, char* argv[]){
     if (words > MAX_WORDS_MSG)
       words = MAX_WORDS_MSG;
 
+    int timeout = 10000;
+    while( (!msg_ready) && (timeout>0) ) { timeout--; usleep(100); }
+    
     // create new message
     init_msg(msg_buffer, words, MSG_TYPE_DATA);
     zmq_msg_init_data(pub_msg, msg_buffer, get_msg_bytes(words), clear_msg, NULL);
