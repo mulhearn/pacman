@@ -21,4 +21,6 @@ void tx_buffer_print_output(uint32_t * src);
 
 unsigned tx_buffer_count(unsigned char chan);
 
+unsigned tx_buffer_lost();
+
 #endif

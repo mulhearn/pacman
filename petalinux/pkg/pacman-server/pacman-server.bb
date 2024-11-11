@@ -39,7 +39,8 @@ do_install() {
              install -m 0755 ${S}/pacman_dataserver ${D}${bindir}
 	     install -m 0755 ${S}/pacman_menu ${D}${bindir}
 	     install -m 0755 ${S}/pacman_units ${D}${bindir}
-	     install -m 0755 ${S}/pacman_loopback ${D}${bindir}
+	     install -m 0755 ${S}/pacman_push ${D}${bindir}
+	     install -m 0755 ${S}/pacman_counter ${D}${bindir}
 	     install -m 0755 ${S}/zmq_loopback ${D}${bindir}
 	     install -m 0755 ${S}/zmq_test ${D}${bindir}
 
