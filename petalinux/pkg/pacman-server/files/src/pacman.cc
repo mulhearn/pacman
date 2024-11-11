@@ -300,56 +300,55 @@ int pacman_init_rx(int verbose, int skip_reset){
 }
 
 int pacman_poll_rx(){
-  // Naive version:  request data, then wait (possibly forever) for data to arrive..
+  static int read_requested = 0;
+  static int start = 0;
   unsigned max_words = 0x0400; // enough for > 20 read cycles of all 40 uarts
   unsigned bytes = 0x4; // bytes per word
   uint32_t rx_data[4];
 
-  printf("*** Sending run*** \n");
-  G_PACMAN_DMA[(0x30)>>2] = 0x01;
+  if (! read_requested) {
+    read_requested = 1;
+    start = 1;
+    //printf("*** Sending run*** \n");
+    G_PACMAN_DMA[(0x30)>>2] = 0x01;
 
-  printf("*** Clearing RX buffer *** \n");
-  for (int i=0; i<max_words; i++)
-    G_PACMAN_DMA_RX_BUFFER[i] = 0;
+    //printf("*** Clearing RX buffer *** \n");
+    for (int i=0; i<max_words; i++)
+      G_PACMAN_DMA_RX_BUFFER[i] = 0;
 
-  printf("INFO:  DMA request to read data.\n");
-  G_PACMAN_DMA[0x0048>>2] = DMA_RX_ADDR;
-  G_PACMAN_DMA[0x0058>>2] = max_words*bytes;
-
-  printf("INFO:  Checking for IDLE.\n");
-  int start = 1;
-  while(1){
-    unsigned sr = G_PACMAN_DMA[(0x34)>>2];
-    if ((sr&0x2)!=0)
-      break;
+    //printf("INFO:  DMA request to read data.\n");
+    G_PACMAN_DMA[0x0048>>2] = DMA_RX_ADDR;
+    G_PACMAN_DMA[0x0058>>2] = max_words*bytes;
+  }
+  
+  //printf("INFO:  Checking for IDLE.\n");
+  
+  unsigned sr = G_PACMAN_DMA[(0x34)>>2];
+  if ((sr&0x2)==0){
     if (start){
-      printf("*** waiting for idle *** \n");
+      printf("DEBUG:  *** waiting for idle *** \n");
       start = 0;
     }
-    usleep(100);
+    return EXIT_SUCCESS;
   }
-
-  // TODO:  This needs a clean up to check for space in buffer, log any lost packets, etc, etc, ...
-  printf("INFO:  New Data Has Arrived!\n");
-
+  
+  read_requested = 0;  
   for (int i=0; i<max_words/4; i++){
     rx_data[3] = G_PACMAN_DMA_RX_BUFFER[4*i+3];
     rx_data[2] = G_PACMAN_DMA_RX_BUFFER[4*i+2];
     rx_data[1] = G_PACMAN_DMA_RX_BUFFER[4*i+1];
     rx_data[0] = G_PACMAN_DMA_RX_BUFFER[4*i+0];
-    printf("%d 0x%08x %08x %08x %08x\n", i, rx_data[3], rx_data[2], rx_data[1], rx_data[0]);
+    //printf("%d 0x%08x %08x %08x %08x\n", i, rx_data[3], rx_data[2], rx_data[1], rx_data[0]);
     if (rx_data[0]==0) {
       if (rx_data[2] == i) {
-	printf("Valid packet of size %d\n", i);
+	//printf("Valid packet of size %d\n", i);
       } else {
-	printf("*** Error Invalid Packet Detected ***\n");
+	printf("ERROR: *** Invalid Packet Detected ***\n");
       }
       break;
     }
-    printf("*** Filling buffer ***\n");
     rx_buffer_in(rx_data);
   }
-  usleep(1);
 
   return EXIT_SUCCESS;
 }

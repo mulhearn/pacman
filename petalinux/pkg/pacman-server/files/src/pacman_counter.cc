@@ -17,7 +17,8 @@ static void * sub = NULL;
 //#define MAX_BUFFER_SIZE 16384
 
 // BUFFER SIZE:  8 + N * 16
-#define MAX_BUFFER_SIZE 16392
+//#define MAX_BUFFER_SIZE 16392
+#define MAX_BUFFER_SIZE 128008
 uint32_t rx_buffer[MAX_BUFFER_SIZE/4];
 
 int main(int argc, char* argv[]){
