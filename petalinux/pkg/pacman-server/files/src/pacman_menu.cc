@@ -334,6 +334,11 @@ void reset_dma(){
   } else {
     printf("INFO:  DMA reset complete.  \n");
   }
+
+  printf("DEBUG:  enabling interrupts:  \n");
+  unsigned cr = G_UTIL_DMA[(0x30)>>2];
+  G_UTIL_DMA[(0x30)>>2] = (cr | 0x00001000);
+    
 }
 
 

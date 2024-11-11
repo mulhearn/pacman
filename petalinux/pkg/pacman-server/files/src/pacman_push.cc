@@ -15,8 +15,8 @@ static void * req = NULL;
 //#define MAX_BUFFER_SIZE 16384
 
 // BUFFER SIZE:  8 + N * 16
-//#define MAX_BUFFER_SIZE 648
-#define MAX_BUFFER_SIZE 1288
+#define MAX_BUFFER_SIZE 648
+//#define MAX_BUFFER_SIZE 2568
 //#define MAX_BUFFER_SIZE 10248
 //#define MAX_BUFFER_SIZE 20488
 uint32_t tx_buffer[MAX_BUFFER_SIZE/4];
@@ -31,7 +31,9 @@ int main(int argc, char* argv[]){
 
   // empirically determined:
   struct timeval delay = {1, 0};  
-  struct timeval tau   = {0, 132};
+  //struct timeval tau   = {0, 132};
+  //struct timeval tau   = {0, 264};
+  struct timeval tau   = {0, 2000};
   struct timeval cur, target, start, end;
   double elapsed_time;
   int rc, iparam;
@@ -62,7 +64,7 @@ int main(int argc, char* argv[]){
   int tx_count   = 0;
   int err_words  = 0;
   int tot_words  = 0;
-  int N = 10;
+  int N = 10000;
 
   printf("INFO: benchmarking %d TX/RX\n", N);
 

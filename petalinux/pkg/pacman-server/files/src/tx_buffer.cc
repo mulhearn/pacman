@@ -4,11 +4,14 @@
 uint32_t G_TX_BUFFER_DATA[TX_BUFFER_CHAN][2*TX_BUFFER_DEPTH];
 unsigned G_TX_BUFFER_HEAD[TX_BUFFER_CHAN];
 unsigned G_TX_BUFFER_TAIL[TX_BUFFER_CHAN];
+unsigned G_TX_LOST;
+
 
 void tx_buffer_init(int verbose){
   for (int i=0; i<TX_BUFFER_CHAN; i++){
     G_TX_BUFFER_HEAD[i] = 0;
     G_TX_BUFFER_TAIL[i] = 0;
+    G_TX_LOST = 0;
     for (int j=0; j<TX_BUFFER_DEPTH; j++){
       G_TX_BUFFER_DATA[i][2*j+0] = 0;
       G_TX_BUFFER_DATA[i][2*j+1] = 0;
@@ -29,8 +32,9 @@ void tx_buffer_status(){
     unsigned tail  = G_TX_BUFFER_TAIL[i];
     if ((count==0)&&(head==0)&&(tail==0))
       continue;
-    printf("chan %3d %d  --- %d %d\n", i, count, head, tail);
+    printf("chan  %3d %d  --- %d %d\n", i, count, head, tail);
   }
+  printf("lost:  %d\n", G_TX_LOST);
 }
 
 void tx_buffer_print_output(uint32_t * src){
@@ -49,20 +53,29 @@ unsigned tx_buffer_count(unsigned char chan){
   unsigned head = G_TX_BUFFER_HEAD[chan];
   unsigned tail = G_TX_BUFFER_TAIL[chan];
 
-  return (TX_BUFFER_DEPTH + head - tail) % TX_BUFFER_DEPTH;  
+  return (TX_BUFFER_DEPTH + head - tail) % TX_BUFFER_DEPTH;
 }
 
+unsigned tx_buffer_lost(){
+  return G_TX_LOST;
+}
+
+
 unsigned tx_buffer_in(unsigned char chan, uint32_t * tx_data){
+
   // ignoring broadcast for now
   if (chan > TX_BUFFER_CHAN)
     return 0;
   unsigned head = G_TX_BUFFER_HEAD[chan];
-  
-  if (((head+1) % TX_BUFFER_DEPTH) == G_TX_BUFFER_TAIL[chan])
+
+  if (((head+1) % TX_BUFFER_DEPTH) == G_TX_BUFFER_TAIL[chan]){
+    printf("ERROR:  LOST!!!!\n");
+    G_TX_LOST++;
     return 0;
+  }
   G_TX_BUFFER_DATA[chan][2*head+0] = tx_data[0];
   G_TX_BUFFER_DATA[chan][2*head+1] = tx_data[1];
-  G_TX_BUFFER_HEAD[chan] = (head + 1) % TX_BUFFER_DEPTH; 
+  G_TX_BUFFER_HEAD[chan] = (head + 1) % TX_BUFFER_DEPTH;
   return 1;
 }
 
@@ -75,15 +88,15 @@ unsigned tx_buffer_out(uint32_t * out){
     if (tx_buffer_count(i) > 0)
       mask[i/32] |= (one << i%32);
   }
-  //printf("DEBUG:  mask after:  %lx\n", mask);  
+  //printf("DEBUG:  mask after:  %lx\n", mask);
   if ((mask[0]==0) && (mask[1]==0))
     return 0;
-  
+
   out[0] = mask[0];
   out[1] = mask[1];
   out[2] = 0;
   out[3] = 0;
-  
+
   for (int i=0; i<TX_BUFFER_CHAN; i++){
     if ((mask[i/32]>>(i%32))&1==1) {
       unsigned tail = G_TX_BUFFER_TAIL[i];

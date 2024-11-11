@@ -17,7 +17,7 @@ static void * sub = NULL;
 //#define MAX_BUFFER_SIZE 16384
 
 // BUFFER SIZE:  8 + N * 16
-#define MAX_BUFFER_SIZE 10248
+#define MAX_BUFFER_SIZE 16392
 uint32_t rx_buffer[MAX_BUFFER_SIZE/4];
 
 int main(int argc, char* argv[]){
@@ -60,7 +60,7 @@ int main(int argc, char* argv[]){
       continue;
     }
     if (size > MAX_BUFFER_SIZE){
-      printf("ERROR:  unexpectedly large message... discarding\n");
+      printf("ERROR:  unexpectedly large message:  %d ... discarding\n", size);
       continue;
     }
     memcpy(rx_buffer,zmq_msg_data(&msg), size);
