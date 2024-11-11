@@ -12,7 +12,8 @@
 #include "rx_buffer.hh"
 #include "pacman.hh"
 
-#define MAX_MSG_LEN 65535 // words
+#define MAX_MSG_LEN  8000 // words
+#define MIN_MSG_LEN   400 // words
 #define PUB_SOCKET_BINDING "tcp://*:5556"
 
 volatile bool msg_ready = true;
@@ -65,10 +66,18 @@ int main(int argc, char* argv[]){
   printf("INFO:  Entering RX loop.\n");
   while(1) {
     pacman_poll_rx();
-    words = rx_buffer_count();    
-
-    if ((words==0) or (!msg_ready)){
-      usleep(100);
+    words = rx_buffer_count();
+    
+    unsigned timeout = 10000;
+    while((words < MIN_MSG_LEN) && (timeout > 0)){
+      timeout--;
+      pacman_poll_rx();
+      words = rx_buffer_count();
+    }
+    if (words > 0){
+      printf("DEBUG:  words: %u timeout %u\n", words, timeout);
+    }
+    if ((words==0) || (!msg_ready)){
       continue;
     }
 
@@ -101,10 +110,7 @@ int main(int argc, char* argv[]){
     last_sent_msg = std::chrono::high_resolution_clock::now().time_since_epoch();
     zmq_msg_close(pub_msg);
 
-    printf("Data messages sent: %d\n", sent_msgs);
-    //sent_msgs = 0;
-    words = 0;
-    
+    printf("INFO:  message of %u words sent.  Total sent message:  %d\n", words, sent_msgs);
   }
   return 0;
 }

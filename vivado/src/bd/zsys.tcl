@@ -616,7 +616,7 @@ proc create_root_design { parentCell } {
   # Create instance: axis_data_fifo_0, and set properties
   set axis_data_fifo_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_data_fifo:2.0 axis_data_fifo_0 ]
   set_property -dict [list \
-    CONFIG.FIFO_DEPTH {128} \
+    CONFIG.FIFO_DEPTH {256} \
     CONFIG.FIFO_MEMORY_TYPE {auto} \
     CONFIG.FIFO_MODE {1} \
     CONFIG.HAS_RD_DATA_COUNT {1} \
@@ -723,6 +723,7 @@ proc create_root_design { parentCell } {
   # Restore current instance
   current_bd_instance $oldCurInst
 
+  validate_bd_design
   save_bd_design
 }
 # End of create_root_design()
@@ -734,6 +735,4 @@ proc create_root_design { parentCell } {
 
 create_root_design ""
 
-
-common::send_gid_msg -ssname BD::TCL -id 2053 -severity "WARNING" "This Tcl script was generated from a block design that has not been validated. It is possible that design <$design_name> may result in errors during validation."
 

@@ -117,19 +117,19 @@ void toggle_rx_config(){
   static int mode = 0;
   mode = (mode + 1) % 3;
   if (mode==0){
-    unsigned config = 0x00001001;
+    unsigned config = 0x00001002;
     printf("INFO: No internal loopback.  Broadcasting rx config write 0x%08x \n", config);
     G_UTIL_AXIL[(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_CONFIG)>>2] = config;
   } else if (mode==1) {
-    unsigned config = 0x00011001;
+    unsigned config = 0x00011002;
     printf("INFO: Full internal loopback.  Broadcasting rx configs write 0x%08x \n", config);
     G_UTIL_AXIL[(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_CONFIG)>>2] = config;
   } else if (mode==2) {
     unsigned config;
-    config = 0x00011001;
+    config = 0x00011002;
     printf("INFO: Tiles 2-10 use internal loopback.  Broadcasting rx configs t 0x%08x \n", config);
     G_UTIL_AXIL[(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_CONFIG)>>2] = config;
-    config = 0x00001001;
+    config = 0x00001002;
     printf("INFO: Tile 1 does not use internal loopback.  Setting Tile 1 rx config 0x%08x \n", config);
     G_UTIL_AXIL[(SCOPE_RX+(0<<8)+C_ADDR_RX_CONFIG)>>2] = config;
     G_UTIL_AXIL[(SCOPE_RX+(1<<8)+C_ADDR_RX_CONFIG)>>2] = config;

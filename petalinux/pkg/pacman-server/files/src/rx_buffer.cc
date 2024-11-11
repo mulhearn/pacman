@@ -24,7 +24,7 @@ void rx_buffer_status(){
   unsigned head  = G_RX_BUFFER_HEAD;
   unsigned tail  = G_RX_BUFFER_TAIL;
   unsigned lost  = rx_buffer_lost();
-  printf("rx_buffer count: %d  head %d tail %d lost %d \n", count, head, lost);
+  printf("rx_buffer count: %u  head %u tail %u lost %u \n", count, head, tail, lost);
 }
 
 void rx_buffer_print_output(uint32_t * src){
