@@ -56,6 +56,7 @@ int pacman_init(int verbose){
   unsigned i2cmajor = i2c_read(0x220);
   unsigned i2cminor = i2c_read(0x221);
   unsigned i2cdebug = i2c_read(0x222);
+  
   // I2C
   if (verbose){
     printf("INFO:  Running I2C firmware version %d.%d (Debug Code:  0x%x)\n", i2cmajor, i2cminor, i2cdebug);
@@ -326,7 +327,7 @@ int pacman_poll_rx(){
   unsigned sr = G_PACMAN_DMA[(0x34)>>2];
   if ((sr&0x2)==0){
     if (start){
-      printf("DEBUG:  *** waiting for idle *** \n");
+      //printf("DEBUG:  *** waiting for idle *** \n");
       start = 0;
     }
     return EXIT_SUCCESS;
@@ -344,6 +345,7 @@ int pacman_poll_rx(){
 	//printf("Valid packet of size %d\n", i);
       } else {
 	printf("ERROR: *** Invalid Packet Detected ***\n");
+	printf("ERROR: 0x%x(%d) 0x%x %x %x %x \n", i, i, rx_data[0], rx_data[1], rx_data[2], rx_data[3]);
       }
       break;
     }

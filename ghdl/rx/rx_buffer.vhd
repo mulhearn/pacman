@@ -74,8 +74,8 @@ architecture behavioral of rx_buffer is
 
   signal turn      : integer range 0 to C_TURN_MAX-1 := 0;
 
-  type state_t is (EMPTY, IDLE, STREAM, SEND_LAST);
-  signal state : state_t := EMPTY;
+  type state_t is (IDLE, STREAM, SEND_LAST);
+  signal state : state_t := IDLE;
 
 
 begin
@@ -120,55 +120,26 @@ begin
     end if;
   end process;
 
-  -- Send ready process:
-  --
-  -- Each ready is held at zero except for one cycle immediately
-  -- following the beat on which the data was transfered into the
-  -- stream writer.
-  process(clk,rst)
-    variable turn_z : integer range 0 to C_TURN_MAX-1;
-  begin
-    if (rst='1') then
-      ready <= (others => '0');
-    elsif (rising_edge(clk)) then
-      ready <= (others => '0');
-      if ((wen='1') and (tready='1')) then
-        turn_z := (turn + C_TURN_MAX-1) mod C_TURN_MAX;
-        if (turn_z < C_RX_NUM_CHAN) then
-          ready(turn_z) <= '1';
-        end if;
-      end if;
-    end if;
-  end process;
+
 
   -- STATE MACHINE
   process(clk,rst)
-    variable last_en  : std_logic := '1';
     variable valid_seen : std_logic := '0';
-    variable beats : integer range 0 to C_COUNT_MAX := 0;
+    variable sent : integer range 0 to C_COUNT_MAX := 0;
   begin
     if (rst='1') then
-      state <= EMPTY;
+      state <= IDLE;
+      valid_seen  := '0';
+      sent        := 0;
+      ready <= (others => '0');
       data  <= (others => '0');
       wen   <= '0';
       last  <= '0';
     elsif (rising_edge(clk)) then
-      if (tvalid='1' and tready='1') then
-        beats := (beats + 1) mod C_COUNT_MAX;
-      end if;
+      ready <= (others => '0');
       data <= (others => '0');
       wen  <= '0';
       last <= '0';
-      if (state = EMPTY) then
-        valid_seen := '0';
-        beats := 0;
-        if (turn < C_RX_NUM_CHAN) then
-          if (VALID_I(turn) = '1') then
-            valid_seen := '1';
-            state <= IDLE;
-          end if;
-        end if;
-      end if;
       if (state = IDLE) then
         if (turn < C_RX_NUM_CHAN) then
           if (VALID_I(turn) = '1') then
@@ -180,37 +151,36 @@ begin
         end if;
       end if;
       if (state = STREAM) then
-        valid_seen := '1';
-        if (turn < C_RX_NUM_CHAN) then
-          data <= DATA_I(turn);
-          wen  <= VALID_I(turn);
+        if ((turn < C_RX_NUM_CHAN) and (busy = '0')) then
+          if (VALID_I(turn) = '1') then
+            data <= DATA_I(turn);
+            wen  <= '1';
+            ready(turn) <= '1';
+            sent := (sent + 1) mod C_COUNT_MAX; 
+          end if;
         end if;
         if (turn=44) then
           state <= SEND_LAST;
         end if;
       end if;
       if (state = SEND_LAST) then
-        if (turn=50) then
+        if ((turn=50) and (busy = '0')) then
           data  <= (others=>'0');
-          data(95 downto 64)  <= std_logic_vector(to_unsigned(beats, 32));
+          data(95 downto 64)  <= std_logic_vector(to_unsigned(sent, 32));
           wen   <= '1';
           last <= '1';
-          state <= EMPTY;
+          valid_seen := '0';
+          sent := 0;          
+          state <= IDLE;
         end if;
       end if;
-
-
-
     end if;
   end process;
 
+  status(1 downto 0) <= "00" when state = IDLE else
+                        "01" when state = STREAM else
+                        "10"; 
 
-
-
-  status(1 downto 0) <= "00" when state = EMPTY else
-                        "01" when state = IDLE else
-                        "10" when state = STREAM else
-                        "11";
   status(2) <= tvalid;
   status(3) <= tready;
 
@@ -218,7 +188,6 @@ begin
   status(5) <= wen;
   status(6) <= last;
   status(7) <= '1';
-
   status(13 downto 8) <= std_logic_vector(to_unsigned(turn, 6));
 
   DEBUG_DATA_O   <= data;
