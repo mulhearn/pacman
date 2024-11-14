@@ -83,6 +83,10 @@ begin
     --tready <= '0';
     --wait for 40 ns;
     tready <= '1';
+    --wait until (count=83);
+    --tready <= '0';
+    --wait for 500 ns;
+    --tready <= '1';
     wait;
   end process;
 
@@ -164,10 +168,8 @@ begin
       --write (l, String'("aclk: "));
       --write (l, aclk);
       if (status(1 downto 0) = "00") then
-        write (l, String'(" EMPT "));
-      elsif (status(1 downto 0) = "01") then
         write (l, String'(" IDLE "));
-      elsif (status(1 downto 0) = "10") then
+      elsif (status(1 downto 0) = "01") then
         write (l, String'(" STRM "));
       else
         write (l, String'(" LAST "));
@@ -183,11 +185,11 @@ begin
       write (l, status(3));
       write (l, String'(" l: "));
       write (l, tlast);
-      --write (l, String'(" b: "));
-      --write (l, status(4));
+      write (l, String'(" b: "));
+      write (l, status(4));
       --write (l, beat, left, 3);
       write (l, String'(" look: 0x"));
-      hwrite (l, look(15 downto 0));
+      hwrite (l, look(79 downto 64));
       write (l, String'(" w: "));
       write (l, status(5));
       write (l, String'(" l: "));
