@@ -18,6 +18,7 @@ entity rx_buffer is
     M_AXIS_TLAST       : out std_logic;
 
     STATUS_O           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+    CONFIG_I           : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     LOOK_O             : out std_logic_vector(C_RX_DATA_WIDTH-1 downto 0);
 
     DATA_I             : in  uart_rx_data_array_t;
@@ -125,11 +126,13 @@ begin
   -- STATE MACHINE
   process(clk,rst)
     variable valid_seen : std_logic := '0';
-    variable sent : integer range 0 to C_COUNT_MAX := 0;
+    variable cycles : integer range 0 to C_COUNT_MAX := 0;
+    variable sent   : integer range 0 to C_COUNT_MAX := 0;
   begin
     if (rst='1') then
       state <= IDLE;
       valid_seen  := '0';
+      cycles      := 0;
       sent        := 0;
       ready <= (others => '0');
       data  <= (others => '0');
@@ -156,11 +159,14 @@ begin
             data <= DATA_I(turn);
             wen  <= '1';
             ready(turn) <= '1';
-            sent := (sent + 1) mod C_COUNT_MAX; 
+            sent := (sent + 1) mod C_COUNT_MAX;
           end if;
         end if;
         if (turn=44) then
-          state <= SEND_LAST;
+          if (cycles >= to_integer(unsigned(CONFIG_I(15 downto 0)))) then
+            state <= SEND_LAST;
+          end if;
+          cycles := (cycles + 1) mod C_COUNT_MAX;
         end if;
       end if;
       if (state = SEND_LAST) then
@@ -170,7 +176,7 @@ begin
           wen   <= '1';
           last <= '1';
           valid_seen := '0';
-          sent := 0;          
+          sent := 0;
           state <= IDLE;
         end if;
       end if;
@@ -179,7 +185,7 @@ begin
 
   status(1 downto 0) <= "00" when state = IDLE else
                         "01" when state = STREAM else
-                        "10"; 
+                        "10";
 
   status(2) <= tvalid;
   status(3) <= tready;

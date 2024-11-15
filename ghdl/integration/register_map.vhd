@@ -54,7 +54,7 @@ package register_map is
 
   -- Global Status and Flags
   constant C_ADDR_RX_GSTATUS    : integer := 16#A0#;
-  constant C_ADDR_RX_GFLAGS     : integer := 16#A4#;
+  constant C_ADDR_RX_GCONFIG    : integer := 16#A4#;
   constant C_ADDR_RX_ZERO_CNTS  : integer := 16#A8#;
   
   -- FIFO counters (only via global channel 0x7F) from AXI Stream DATA FIFO

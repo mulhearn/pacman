@@ -21,6 +21,7 @@ architecture behaviour of rx_buffer_tb is
       M_AXIS_TKEEP       : out std_logic_vector(C_RX_AXIS_WIDTH/8-1 downto 0);
       M_AXIS_TLAST       : out std_logic;
       STATUS_O           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      CONFIG_I           : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       LOOK_O             : out std_logic_vector(C_RX_DATA_WIDTH-1 downto 0);
       DATA_I             : in  uart_rx_data_array_t;
       VALID_I            : in  std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
@@ -54,6 +55,7 @@ begin
     M_AXIS_TVALID   => tvalid,
     M_AXIS_TREADY   => tready,
     M_AXIS_TLAST    => tlast,
+    CONFIG_I        => x"00000000",
     DATA_I          => data,
     VALID_I         => valid,
     READY_O         => ready,
