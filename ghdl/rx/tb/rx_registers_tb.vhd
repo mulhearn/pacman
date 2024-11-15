@@ -29,7 +29,7 @@ architecture behaviour of rx_registers_tb is
       LOOK_I                 : in uart_rx_data_array_t;
       STATUS_I               : in uart_reg_array_t;
       CONFIG_O               : out uart_reg_array_t;
-      GFLAGS_O               : out std_logic_vector(C_RX_GFLAGS_WIDTH-1 downto 0);
+      GCONFIG_O              : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       HEARTBEAT_CYCLES_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       SYNC_CYCLES_O          : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       GSTATUS_I              : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -54,7 +54,7 @@ architecture behaviour of rx_registers_tb is
   signal wack     : std_logic := '0';
 
   signal config   : uart_reg_array_t;
-  signal gflags   : std_logic_vector(C_RX_GFLAGS_WIDTH-1 downto 0);
+  signal gconfig  : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
 
   signal show_output : std_logic := '0';
 begin
@@ -72,7 +72,7 @@ begin
     LOOK_I    => (others => x"DDDDDDDDCCCCCCCCBBBBBBBBAAAAAAAA"),
     STATUS_I  => (others => x"0000ABFF"),
     CONFIG_O  => config,
-    GFLAGS_O  => gflags,
+    GCONFIG_O  => gconfig,
     GSTATUS_I => x"AAAABBBB",
     FIFO_RCNT_I => x"000A0001",
     FIFO_WCNT_I => x"000B0001",

@@ -40,7 +40,7 @@ architecture behaviour of rx_unit is
   signal ready   : std_logic_vector(C_RX_NUM_CHAN-1 downto 0) := (others => '0');
   signal status  : uart_reg_array_t;
   signal config  : uart_reg_array_t := (others => (others => '0'));
-  signal gflags  : std_logic_vector(C_RX_GFLAGS_WIDTH-1 downto 0);
+  signal gconfig : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
   signal gstatus : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
   signal heartbeat_cycles : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
   signal sync_cycles       : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -56,6 +56,7 @@ architecture behaviour of rx_unit is
       M_AXIS_TLAST       : out std_logic;
 
       STATUS_O           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      CONFIG_I           : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       LOOK_O             : out std_logic_vector(C_RX_DATA_WIDTH-1 downto 0);
 
       DATA_I             : in  uart_rx_data_array_t;
@@ -85,9 +86,9 @@ architecture behaviour of rx_unit is
       LOOK_I              : in  uart_rx_data_array_t;
       STATUS_I            : in  uart_reg_array_t;
       CONFIG_O            : out uart_reg_array_t;
-      GFLAGS_O            : out std_logic_vector(C_RX_GFLAGS_WIDTH-1 downto 0);
+      GCONFIG_O           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       HEARTBEAT_CYCLES_O  : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      SYNC_CYCLES_O        : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      SYNC_CYCLES_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       GSTATUS_I           : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       FIFO_RCNT_I         : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       FIFO_WCNT_I         : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -152,6 +153,7 @@ begin
     M_AXIS_TREADY   => M_AXIS_TREADY,
     M_AXIS_TKEEP    => M_AXIS_TKEEP,
     M_AXIS_TLAST    => M_AXIS_TLAST,
+    CONFIG_I        => gconfig,
     DATA_I          => data,
     STATUS_O        => gstatus,
     VALID_I         => valid,
@@ -173,7 +175,7 @@ begin
     STATUS_I  => status,
     GSTATUS_I  => gstatus,
     CONFIG_O  => config,
-    GFLAGS_O => gflags,
+    GCONFIG_O => gconfig,
     HEARTBEAT_CYCLES_O => heartbeat_cycles,
     SYNC_CYCLES_O => sync_cycles,
     FIFO_RCNT_I => FIFO_RCNT_I,
@@ -191,7 +193,7 @@ begin
         ARESETN       => M_AXIS_ARESETN,
         CONFIG_I      => config(i),
         STATUS_O      => status(i),
-        GFLAGS_I      => gflags,
+        GFLAGS_I      => "00",
         DATA_O        => data(i),
         VALID_O       => valid(i),
         READY_I       => ready(i),
@@ -204,7 +206,7 @@ begin
   hb0: heartbeat port map (
     ACLK          => M_AXIS_ACLK,
     ARESETN       => M_AXIS_ARESETN,
-    EN_I          => gflags(0),
+    EN_I          => gconfig(16),
     CYCLES_I      => heartbeat_cycles,
     DATA_O        => data(40),
     VALID_O       => valid(40),
@@ -215,7 +217,7 @@ begin
   ro0: rollover port map (
     ACLK          => M_AXIS_ACLK,
     ARESETN       => M_AXIS_ARESETN,
-    EN_I          => gflags(1),
+    EN_I          => gconfig(17),
     CYCLES_I      => sync_cycles,
     DATA_O        => data(41),
     VALID_O       => valid(41),
