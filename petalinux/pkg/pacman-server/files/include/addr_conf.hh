@@ -18,8 +18,6 @@
 #define DMA_HIGH 0x4040FFFF
 #define DMA_LEN  0x00010000
 
-
-// TODO:  With Simple DMA these can get significantly smaller...
 #define DMA_TX_ADDR   0x30000000
 #define DMA_TX_MAXLEN 0x01000000
 

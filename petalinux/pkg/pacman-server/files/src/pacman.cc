@@ -66,7 +66,7 @@ int pacman_init(int verbose){
   if (verbose){
     printf("INFO:  Enabling Trigger, Sync, and Heartbeat words in the RX unit.\n");
   }
-  G_PACMAN_AXIL[0x7FA4>>2] = 0x7;
+  G_PACMAN_AXIL[0x7FA4>>2] = 0x70000;
 
   //if (verbose){
   //  printf("INFO:  Limiting TX bandwidth.\n");
@@ -286,9 +286,9 @@ int pacman_init_rx(int verbose, int skip_reset){
     printf("INFO:  DMA RX has entered RUN state successfully. (timeout=%d)\n", timeout);
   }
 
-  printf("INFO:  Sending initial DMA read request.\n");
-  G_PACMAN_DMA[0x0048>>2] = DMA_RX_ADDR;
-  G_PACMAN_DMA[0x0058>>2] = DMA_RX_MAXLEN;
+  //printf("INFO:  Sending initial DMA read request.\n");
+  //G_PACMAN_DMA[0x0048>>2] = DMA_RX_ADDR;
+  //G_PACMAN_DMA[0x0058>>2] = DMA_RX_MAXLEN;
 
 
   cr = G_PACMAN_DMA[REG_DMA_RX_CONTROL>>2];
@@ -303,8 +303,10 @@ int pacman_init_rx(int verbose, int skip_reset){
 int pacman_poll_rx(){
   static int read_requested = 0;
   static int start = 0;
-  unsigned max_words = 0x0400; // enough for > 20 read cycles of all 40 uarts
-  unsigned bytes = 0x4; // bytes per word
+  // Current firmware has width of buffer length register set to 14 bits, maximum values 3FFF
+  // 0xFFF * 0x4 = 0x3FFC
+  uint32_t max_words = 0xFFF; 
+  uint32_t bytes = 0x4; // bytes per word
   uint32_t rx_data[4];
 
   if (! read_requested) {
@@ -318,11 +320,9 @@ int pacman_poll_rx(){
       G_PACMAN_DMA_RX_BUFFER[i] = 0;
 
     //printf("INFO:  DMA request to read data.\n");
-    G_PACMAN_DMA[0x0048>>2] = DMA_RX_ADDR;
+    G_PACMAN_DMA[0x0048>>2] = DMA_RX_ADDR;    
     G_PACMAN_DMA[0x0058>>2] = max_words*bytes;
   }
-  
-  //printf("INFO:  Checking for IDLE.\n");
   
   unsigned sr = G_PACMAN_DMA[(0x34)>>2];
   if ((sr&0x2)==0){
@@ -331,9 +331,9 @@ int pacman_poll_rx(){
       start = 0;
     }
     return EXIT_SUCCESS;
-  }
+  }  
+  read_requested = 0;
   
-  read_requested = 0;  
   for (int i=0; i<max_words/4; i++){
     rx_data[3] = G_PACMAN_DMA_RX_BUFFER[4*i+3];
     rx_data[2] = G_PACMAN_DMA_RX_BUFFER[4*i+2];
@@ -342,7 +342,7 @@ int pacman_poll_rx(){
     //printf("%d 0x%08x %08x %08x %08x\n", i, rx_data[3], rx_data[2], rx_data[1], rx_data[0]);
     if (rx_data[0]==0) {
       if (rx_data[2] == i) {
-	//printf("Valid packet of size %d\n", i);
+	printf("DEBUG:  valid packet of size %d\n", i);
       } else {
 	printf("ERROR: *** Invalid Packet Detected ***\n");
 	printf("ERROR: 0x%x(%d) 0x%x %x %x %x \n", i, i, rx_data[0], rx_data[1], rx_data[2], rx_data[3]);
