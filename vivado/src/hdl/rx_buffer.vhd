@@ -177,6 +177,7 @@ begin
           last <= '1';
           valid_seen := '0';
           sent := 0;
+          cycles := 0;
           state <= IDLE;
         end if;
       end if;
