@@ -572,6 +572,7 @@ proc create_root_design { parentCell } {
     CONFIG.c_include_sg {0} \
     CONFIG.c_m_axis_mm2s_tdata_width {128} \
     CONFIG.c_s_axis_s2mm_tdata_width {128} \
+    CONFIG.c_sg_length_width {26} \
   ] $axi_dma_0
 
 
@@ -616,7 +617,7 @@ proc create_root_design { parentCell } {
   # Create instance: axis_data_fifo_0, and set properties
   set axis_data_fifo_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_data_fifo:2.0 axis_data_fifo_0 ]
   set_property -dict [list \
-    CONFIG.FIFO_DEPTH {8192} \
+    CONFIG.FIFO_DEPTH {32768} \
     CONFIG.FIFO_MEMORY_TYPE {auto} \
     CONFIG.FIFO_MODE {1} \
     CONFIG.HAS_RD_DATA_COUNT {1} \

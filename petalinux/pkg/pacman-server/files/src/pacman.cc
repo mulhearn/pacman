@@ -56,7 +56,7 @@ int pacman_init(int verbose){
   unsigned i2cmajor = i2c_read(0x220);
   unsigned i2cminor = i2c_read(0x221);
   unsigned i2cdebug = i2c_read(0x222);
-  
+
   // I2C
   if (verbose){
     printf("INFO:  Running I2C firmware version %d.%d (Debug Code:  0x%x)\n", i2cmajor, i2cminor, i2cdebug);
@@ -65,8 +65,9 @@ int pacman_init(int verbose){
   // DEFAULT parameters
   if (verbose){
     printf("INFO:  Enabling Trigger, Sync, and Heartbeat words in the RX unit.\n");
+    printf("INFO:  Setting number of cycles per DMA package to 0x1FFF.\n");
   }
-  G_PACMAN_AXIL[0x7FA4>>2] = 0x70000;
+  G_PACMAN_AXIL[0x7FA4>>2] = 0x71FFF;
 
   //if (verbose){
   //  printf("INFO:  Limiting TX bandwidth.\n");
@@ -305,7 +306,8 @@ int pacman_poll_rx(){
   static int start = 0;
   // Current firmware has width of buffer length register set to 14 bits, maximum values 3FFF
   // 0xFFF * 0x4 = 0x3FFC
-  uint32_t max_words = 0xFFF; 
+  // Firmware now increased to ??? bits
+  uint32_t max_words = 0xFFFF;
   uint32_t bytes = 0x4; // bytes per word
   uint32_t rx_data[4];
 
@@ -320,10 +322,10 @@ int pacman_poll_rx(){
       G_PACMAN_DMA_RX_BUFFER[i] = 0;
 
     //printf("INFO:  DMA request to read data.\n");
-    G_PACMAN_DMA[0x0048>>2] = DMA_RX_ADDR;    
+    G_PACMAN_DMA[0x0048>>2] = DMA_RX_ADDR;
     G_PACMAN_DMA[0x0058>>2] = max_words*bytes;
   }
-  
+
   unsigned sr = G_PACMAN_DMA[(0x34)>>2];
   if ((sr&0x2)==0){
     if (start){
@@ -331,9 +333,9 @@ int pacman_poll_rx(){
       start = 0;
     }
     return EXIT_SUCCESS;
-  }  
+  }
   read_requested = 0;
-  
+
   for (int i=0; i<max_words/4; i++){
     rx_data[3] = G_PACMAN_DMA_RX_BUFFER[4*i+3];
     rx_data[2] = G_PACMAN_DMA_RX_BUFFER[4*i+2];
