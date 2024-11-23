@@ -7,13 +7,14 @@
 #include <stdint.h>
 #include "version.hh"
 #include "addr_conf.hh"
+#include <sys/time.h>
 
 volatile uint32_t * G_UTIL_AXIL = NULL;
 volatile uint32_t * G_UTIL_DMA  = NULL;
 volatile uint32_t * G_UTIL_DMA_TX_BUFFER = NULL;
 volatile uint32_t * G_UTIL_DMA_RX_BUFFER = NULL;
 
-//#define ADDR_AXIL_REGS  XPAR_AXIL_TO_REGBUS_0_BASEADDR 
+//#define ADDR_AXIL_REGS  XPAR_AXIL_TO_REGBUS_0_BASEADDR
 
 #define SCOPE_GLOBAL 0xF000
 #define ROLE_GLOBAL  0x0F00
@@ -29,7 +30,7 @@ volatile uint32_t * G_UTIL_DMA_RX_BUFFER = NULL;
 #define C_ADDR_RX_LOOK_A    0x10
 #define C_ADDR_RX_LOOK_B    0x14
 #define C_ADDR_RX_LOOK_C    0x18
-#define C_ADDR_RX_LOOK_D    0x1C 
+#define C_ADDR_RX_LOOK_D    0x1C
 #define C_ADDR_RX_STARTS    0x20
 #define C_ADDR_RX_BEATS     0x24
 #define C_ADDR_RX_UPDATES   0x28
@@ -43,10 +44,10 @@ volatile uint32_t * G_UTIL_DMA_RX_BUFFER = NULL;
 #define C_ADDR_RX_DMAITR    0xB8
 
 #define C_ADDR_TX_STATUS    0x00
-#define C_ADDR_TX_CONFIG    0x04 
+#define C_ADDR_TX_CONFIG    0x04
 #define C_ADDR_TX_LOOK_C    0x18
-#define C_ADDR_TX_LOOK_D    0x1C 
-#define C_ADDR_TX_GFLAGS    0x20 
+#define C_ADDR_TX_LOOK_D    0x1C
+#define C_ADDR_TX_GFLAGS    0x20
 #define C_ADDR_TX_STARTS    0x30
 #define C_ADDR_TX_NCHAN     0x40
 
@@ -86,7 +87,7 @@ void read_global_status(){
 void toggle_scratch(){
   unsigned scra, scrb;
   static int mode = 0;
-  mode = (mode + 1) % 3;  
+  mode = (mode + 1) % 3;
   switch(mode){
     case 1:
       scra = 0xAAAAAAAA;
@@ -100,7 +101,7 @@ void toggle_scratch(){
       scra = 0x0;
       scrb = 0x0;
   }
-  printf("INFO: setting scratch a to 0x%08x and scratch b to 0x%08x \n", scra, scrb);  
+  printf("INFO: setting scratch a to 0x%08x and scratch b to 0x%08x \n", scra, scrb);
   G_UTIL_AXIL[(SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_SCRA)>>2] = scra;
   G_UTIL_AXIL[(SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_SCRB)>>2] = scrb;
 }
@@ -108,7 +109,7 @@ void toggle_scratch(){
 void toggle_enables(){
   unsigned enables[] = {0x00000000, 0x00010000, 0x00010001,  0x000103FF, 0x010103FF};
   static int mode = 0;
-  mode = (mode + 1) % 5;  
+  mode = (mode + 1) % 5;
   printf("INFO: setting enables to 0x%08x \n", enables[mode]);
   G_UTIL_AXIL[(SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_ENABLES)>>2] = enables[mode];
 }
@@ -206,16 +207,16 @@ void check_trig_sync(){
   stat   = G_UTIL_AXIL[(SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_STATUS)>>2];
   tstamp = G_UTIL_AXIL[(SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_STAMP)>>2];
   printf("timing status-------0x%x \n", stat);
-  printf("time stamp----------0x%x \n", tstamp);  
+  printf("time stamp----------0x%x \n", tstamp);
 }
 
 void toggle_tx_mask(){
   static int mode = 0;
-  mode = (mode + 1) % 3;  
+  mode = (mode + 1) % 3;
   switch(mode){
     case 1:
       tx_mask_b = 0x0;
-      tx_mask_a = 0xFFFFFFFF;      
+      tx_mask_a = 0xFFFFFFFF;
       break;
     case 2:
       tx_mask_b = 0x0;
@@ -223,7 +224,7 @@ void toggle_tx_mask(){
       break;
     default:
       tx_mask_b = 0xFF;
-      tx_mask_a = 0xFFFFFFFF;      
+      tx_mask_a = 0xFFFFFFFF;
   }
   printf("RX mask:  0x%08x %08x \n", tx_mask_b, tx_mask_a);
 }
@@ -252,7 +253,7 @@ void dma_status(){
   printf("Itr En (Error)----%d\n", ((cr&0x00004000)!=0));
   printf("Always Zero-------%d\n", ((cr&0x00008000)!=0));
   printf("IRQ Threshold-----%d\n", ((cr&0x00FF0000)>>16));
-  printf("IRQ Delay---------%d\n", ((cr&0xFF000000)>>24));  
+  printf("IRQ Delay---------%d\n", ((cr&0xFF000000)>>24));
   printf("Status Bits: \n");
   printf("Halted------------%d\n", ((sr&0x00000001)!=0));
   printf("Idle--------------%d\n", ((sr&0x00000002)!=0));
@@ -271,8 +272,8 @@ void dma_status(){
   printf("Itr (Error)-------%d\n", ((sr&0x00000400)!=0));
   printf("Always Zero-------%d\n", ((sr&0x00000800)!=0));
   printf("Stat Irq Thresh---%d\n", ((cr&0x00FF0000)>>16));
-  printf("Stay Irq Delay----%d\n", ((cr&0xFF000000)>>24));  
-  
+  printf("Stay Irq Delay----%d\n", ((cr&0xFF000000)>>24));
+
   cr = G_UTIL_DMA[(0x00)>>2];
   sr = G_UTIL_DMA[(0x04)>>2];
 
@@ -291,7 +292,7 @@ void dma_status(){
   printf("Itr En (Error)----%d\n", ((cr&0x00004000)!=0));
   printf("Always Zero-------%d\n", ((cr&0x00008000)!=0));
   printf("IRQ Threshold-----%d\n", ((cr&0x00FF0000)>>16));
-  printf("IRQ Delay---------%d\n", ((cr&0xFF000000)>>24));  
+  printf("IRQ Delay---------%d\n", ((cr&0xFF000000)>>24));
   printf("Status Bits: \n");
   printf("Halted------------%d\n", ((sr&0x00000001)!=0));
   printf("Idle--------------%d\n", ((sr&0x00000002)!=0));
@@ -310,7 +311,7 @@ void dma_status(){
   printf("Itr (Error)-------%d\n", ((sr&0x00000400)!=0));
   printf("Always Zero-------%d\n", ((sr&0x00000800)!=0));
   printf("Stat Irq Thresh---%d\n", ((cr&0x00FF0000)>>16));
-  printf("Stay Irq Delay----%d\n", ((cr&0xFF000000)>>24));  
+  printf("Stay Irq Delay----%d\n", ((cr&0xFF000000)>>24));
 }
 
 void reset_dma(){
@@ -338,7 +339,7 @@ void reset_dma(){
   printf("DEBUG:  enabling interrupts:  \n");
   unsigned cr = G_UTIL_DMA[(0x30)>>2];
   G_UTIL_DMA[(0x30)>>2] = (cr | 0x00001000);
-    
+
 }
 
 
@@ -349,7 +350,7 @@ void single_tx(){
 
   static int count = 0;
   unsigned words = 84;
-  
+
   printf("*** Sending run*** \n");
   G_UTIL_DMA[(0x00)>>2] = 0x01;
 
@@ -359,14 +360,14 @@ void single_tx(){
   G_UTIL_DMA_TX_BUFFER[1] = tx_mask_b;
   G_UTIL_DMA_TX_BUFFER[2] = 0x0;
   G_UTIL_DMA_TX_BUFFER[3] = 0x0;
-  
+
   for (int i=0; i<(words-4); i++)
     G_UTIL_DMA_TX_BUFFER[i+4] = 0xB000F000 + i + (count<<16);
-  
+
   printf("*** Sending write *** \n");
   printf(" count = %d \n", count);
   count++;
-  
+
   G_UTIL_DMA[(0x18)>>2] = DMA_TX_ADDR;
   G_UTIL_DMA[(0x28)>>2] = words*4;
 
@@ -374,7 +375,7 @@ void single_tx(){
   unsigned start = 1;
   while(timeout){
     unsigned sr = G_UTIL_DMA[(0x04)>>2];
-    if ((sr&0x2)!=0) 
+    if ((sr&0x2)!=0)
       break;
     if (start){
       printf("*** waiting for idle *** \n");
@@ -389,29 +390,79 @@ void single_tx(){
   }
 
   dma_status();
-    
+
 }
+
+
+void benchmark_tx(){
+  struct timeval start, end;
+  printf("*** Benchmarking RX *** \n");
+  unsigned words = 84;
+  int count = 0;
+
+  printf("*** Sending run*** \n");
+  G_UTIL_DMA[(0x00)>>2] = 0x01;
+
+
+  G_UTIL_DMA_TX_BUFFER[0] = tx_mask_a;
+  G_UTIL_DMA_TX_BUFFER[1] = tx_mask_b;
+  G_UTIL_DMA_TX_BUFFER[2] = 0x0;
+  G_UTIL_DMA_TX_BUFFER[3] = 0x0;
+
+  for (int i=0; i<(words-4); i++)
+    G_UTIL_DMA_TX_BUFFER[i+4] = 0xB000F000 + i + (count<<16);
+
+
+  gettimeofday(&start, NULL);
+
+  for (int i=0; i<10000; i++){
+    //printf("*** Sending write*** \n");
+    count++;
+    G_UTIL_DMA[(0x18)>>2] = DMA_TX_ADDR;
+    G_UTIL_DMA[(0x28)>>2] = words*4;
+
+    unsigned timeout = 1000000;
+    while(timeout){
+      unsigned sr = G_UTIL_DMA[(0x04)>>2];
+      if ((sr&0x2)!=0)
+	break;
+      timeout--;
+      //usleep(1);
+    }
+    if (! timeout) {
+      printf("*** ERROR:  failed to reach idle before timeout! *** \n");
+      return;
+    }
+    //printf("DEBUG:  count %d\n", count);
+  }
+  gettimeofday(&end, NULL);
+  double elapsed_time = 1000.0*(end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000.0;
+
+  printf("INFO: sent %d packets\n", count);
+  printf("INFO: elapsed time %lf ms \n", elapsed_time);
+}
+
 
 void single_rx(){
   unsigned max_words = 0x0400; // enough for > 20 read cycles of all 40 uarts
   unsigned bytes = 0x4; // bytes per word
-  
+
   printf("*** Sending run*** \n");
   G_UTIL_DMA[(0x30)>>2] = 0x01;
 
-  printf("*** Clearing RX buffer *** \n");  
+  printf("*** Clearing RX buffer *** \n");
   for (int i=0; i<max_words; i++)
     G_UTIL_DMA_RX_BUFFER[i] = 0;
-    
-  printf("*** Sending read *** \n");  
+
+  printf("*** Sending read *** \n");
   G_UTIL_DMA[(0x48)>>2] = DMA_RX_ADDR;
   G_UTIL_DMA[(0x58)>>2] = max_words*bytes;
-  
+
   unsigned timeout = 10000;
   unsigned start = 1;
   while(timeout){
     unsigned sr = G_UTIL_DMA[(0x34)>>2];
-    if ((sr&0x2)!=0) 
+    if ((sr&0x2)!=0)
       break;
     if (start){
       printf("*** waiting for idle *** \n");
@@ -425,7 +476,7 @@ void single_rx(){
     unsigned d = G_UTIL_DMA_RX_BUFFER[4*i+3];
     unsigned c = G_UTIL_DMA_RX_BUFFER[4*i+2];
     unsigned b = G_UTIL_DMA_RX_BUFFER[4*i+1];
-    unsigned a = G_UTIL_DMA_RX_BUFFER[4*i+0];    
+    unsigned a = G_UTIL_DMA_RX_BUFFER[4*i+0];
     printf("%d 0x%08x %08x %08x %08x\n", i, d, c, b, a);
     if (a==0) {
       if (c == i) {
@@ -438,10 +489,12 @@ void single_rx(){
   }
   if (! timeout) {
     printf("*** TIMEOUT ERROR *** \n");
-  }  
+  }
 }
 
-		
+
+
+
 int main(){
   printf("PACMAN command line utility driver \n");
   printf("Sanity number:  3\n");
@@ -449,11 +502,11 @@ int main(){
 
   printf("INFO:  Opening /dev/mem.\n");
   int dh = open("/dev/mem", O_RDWR|O_SYNC);
-  
+
   printf("INFO:  Initializing PACMAN AXI-Lite interface.\n");
   G_UTIL_AXIL = (uint32_t*)mmap(NULL, PACMAN_AXIL_LEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, PACMAN_AXIL_ADDR);
 
-  printf("INFO:  Initializing DMA contol interface (AXIL).\n");  
+  printf("INFO:  Initializing DMA contol interface (AXIL).\n");
   G_UTIL_DMA = (uint32_t*)mmap(NULL, DMA_LEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_ADDR);
 
   printf("INFO:  Initializing DMA TX_BUFFER.\n");
@@ -461,7 +514,7 @@ int main(){
 
   printf("INFO:  Initializing DMA RX_BUFFER.\n");
   G_UTIL_DMA_RX_BUFFER = (uint32_t*)mmap(NULL, DMA_RX_MAXLEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_RX_ADDR);
-  
+
   unsigned fwmajor = G_UTIL_AXIL[0XFF10>>2];
   unsigned fwminor = G_UTIL_AXIL[0XFF14>>2];
   unsigned fwbuild = G_UTIL_AXIL[0XFF18>>2];
@@ -470,11 +523,11 @@ int main(){
   printf("INFO:  Running pacman-server version %d.%d\n", PACMAN_SERVER_MAJOR_VERSION, PACMAN_SERVER_MINOR_VERSION);
   printf("INFO:  Running pacman firmware version %d.%d (Build: 0x%x  HW Code:  0x%x)\n", fwmajor, fwminor, fwbuild, hwcode);
 
-  
+
   while(1){
     printf("choose an option:\n");
     printf("(1) read global status (2) toggle scratch (3) toggle enables (4) test trig and sync \n");
-    printf("TX: (10) read tx status (11) read tx look (12) single tx (13) toggle_tx_mask \n");
+    printf("TX: (10) read tx status (11) read tx look (12) single tx (13) toggle_tx_mask (14) benchmark tx \n");
     printf("RX: (20) read rx status (21) read rx look (22) single rx (23) toggle_rx_config \n");
     printf("TX&RX: (30) zero counts \n");
     printf("DMA: (40) read DMA status (41) reset DMA \n");
@@ -486,16 +539,16 @@ int main(){
     switch(input){
     case 1:
       read_global_status();
-      break;      
+      break;
     case 2:
       toggle_scratch();
-      break;      
+      break;
     case 3:
       toggle_enables();
-      break;      
+      break;
     case 4:
       check_trig_sync();
-      break;      
+      break;
     case 10:
       read_tx_status();
       break;
@@ -507,7 +560,10 @@ int main(){
       break;
     case 13:
       toggle_tx_mask();
-      break;            
+      break;
+    case 14:
+      benchmark_tx();
+      break;
     case 20:
       read_rx_status();
       break;
@@ -516,10 +572,10 @@ int main(){
       break;
     case 22:
       single_rx();
-      break;            
+      break;
     case 23:
       toggle_rx_config();
-      break;      
+      break;
     case 30:
       zero_counts();
       break;
@@ -536,7 +592,3 @@ int main(){
   }
   return 0;
 }
-
-
-
-

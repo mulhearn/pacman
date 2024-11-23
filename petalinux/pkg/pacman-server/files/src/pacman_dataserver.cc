@@ -12,8 +12,8 @@
 #include "rx_buffer.hh"
 #include "pacman.hh"
 
-#define MAX_MSG_LEN  8000 // words
-#define MIN_MSG_LEN   400 // words
+#define MAX_MSG_LEN  16000 // words
+#define MIN_MSG_LEN   4000 // words
 #define PUB_SOCKET_BINDING "tcp://*:5556"
 
 volatile bool msg_ready = true;
@@ -38,7 +38,7 @@ int main(int argc, char* argv[]){
   zmq_setsockopt(pub_socket, ZMQ_SNDTIMEO, &timeo, sizeof(timeo));
   if (zmq_bind(pub_socket, PUB_SOCKET_BINDING) !=0 ) {
     printf("ERROR:  Failed to bind socket!\n");
-    printf("ERROR:  (Perhaps pacman_dataserver is already running?)\n");    
+    printf("ERROR:  (Perhaps pacman_dataserver is already running?)\n");
     return 1;
   }
   printf("INFO:  ZMQ socket created successfully.\n");
@@ -48,11 +48,11 @@ int main(int argc, char* argv[]){
     return 1;
   }
   printf("INFO:  PACMAN RX driver initialization was successful.\n");
-  
+
   auto start_time = std::chrono::high_resolution_clock::now().time_since_epoch();
   auto last_time  = start_time;
   auto now = start_time;
-  auto last_sent_msg = now;  
+  auto last_sent_msg = now;
   uint64_t total_words = 0;
   uint32_t words = 0;
   uint32_t msg_bytes;
@@ -61,13 +61,13 @@ int main(int argc, char* argv[]){
   char word_type;
   char* word;
   char msg_buffer[HEADER_LEN + MAX_MSG_LEN*WORD_LEN]; // pre-allocate message buffer
-  zmq_msg_t* pub_msg = new zmq_msg_t();  
+  zmq_msg_t* pub_msg = new zmq_msg_t();
   bool err = false;
   printf("INFO:  Entering RX loop.\n");
   while(1) {
     pacman_poll_rx();
     words = rx_buffer_count();
-    
+
     unsigned timeout = 10000;
     while((words < MIN_MSG_LEN) && (timeout > 0)){
       timeout--;
@@ -83,13 +83,13 @@ int main(int argc, char* argv[]){
 
     if (words > MAX_MSG_LEN)
       words = MAX_MSG_LEN;
-    
+
     total_words += words;
     now = std::chrono::high_resolution_clock::now().time_since_epoch();
 
     // create new message
     init_msg(msg_buffer, words, MSG_TYPE_DATA);
-    msg_bytes = get_msg_bytes(words);      
+    msg_bytes = get_msg_bytes(words);
 
     zmq_msg_init_data(pub_msg, msg_buffer, msg_bytes, clear_msg, NULL);
 
@@ -101,8 +101,8 @@ int main(int argc, char* argv[]){
 	  printf("ERROR:  There is a bug in rx_buffer, because output failed despite checking size.\n");
 	}
 	word_idx++;
-    }    
-    msg_ready = false;    
+    }
+    msg_ready = false;
     if (zmq_msg_send(pub_msg, pub_socket, 0) < 0)
         printf("Error sending message!\n");
     else
