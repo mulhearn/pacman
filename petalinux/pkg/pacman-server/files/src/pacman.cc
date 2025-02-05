@@ -306,7 +306,7 @@ int pacman_poll_rx(){
   static int start = 0;
   // Current firmware has width of buffer length register set to 14 bits, maximum values 3FFF
   // 0xFFF * 0x4 = 0x3FFC
-  // Firmware now increased to ??? bits
+  // Firmware now increased to 20 bits
   uint32_t max_words = 0xFFFF;
   uint32_t bytes = 0x4; // bytes per word
   uint32_t rx_data[4];
