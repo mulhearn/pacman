@@ -1,4 +1,4 @@
-APP := hwutil
+APP := hwutil pacman_hwcheckout
 
 INCLUDE_DIR := include
 SRC_DIR := src
@@ -9,7 +9,7 @@ OBJ := $(SRC:$(SRC_DIR)/%.cc=$(OBJ_DIR)/%.o)
 
 CPPFLAGS += -I${INCLUDE_DIR}
 
-LDLIBS += -li2c -lstdc++
+LDLIBS += -lstdc++
 
 all: build
 

@@ -24,6 +24,5 @@ do_compile() {
 do_install() {
 	     install -d ${D}${bindir}
 	     install -m 0755 ${S}/hwutil ${D}${bindir}
+	     install -m 0755 ${S}/pacman_hwcheckout ${D}${bindir}
 }
-
-
