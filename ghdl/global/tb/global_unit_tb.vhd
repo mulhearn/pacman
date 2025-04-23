@@ -7,31 +7,30 @@ library work;
 use work.common.all;
 
 --  Defines a testbench (without any ports)
-entity global_registers_tb is
-end global_registers_tb;
+entity global_unit_tb is
+end global_unit_tb;
 
-architecture behaviour of global_registers_tb is
-  component global_registers is
+architecture behaviour of global_unit_tb is
+  component global_unit is
     port (
-      ACLK	        : in std_logic;
-      ARESETN	        : in std_logic;
+      ACLK                 : in std_logic;
+      ARESETN              : in std_logic;
 
-      S_REGBUS_RB_RADDR	     : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
-      S_REGBUS_RB_RDATA	     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      S_REGBUS_RB_RUPDATE    : in  std_logic;
-      S_REGBUS_RB_RACK       : out std_logic;
+      S_REGBUS_RB_RADDR	   : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
+      S_REGBUS_RB_RDATA	   : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      S_REGBUS_RB_RUPDATE  : in  std_logic;
+      S_REGBUS_RB_RACK     : out std_logic;
 
-      S_REGBUS_RB_WUPDATE    : in  std_logic;
-      S_REGBUS_RB_WADDR	     : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
-      S_REGBUS_RB_WDATA	     : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      S_REGBUS_RB_WACK       : out std_logic;
+      S_REGBUS_RB_WUPDATE  : in  std_logic;
+      S_REGBUS_RB_WADDR	   : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
+      S_REGBUS_RB_WDATA	   : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      S_REGBUS_RB_WACK     : out std_logic;
 
-      ANALOG_PWR_EN_O        : out std_logic;
-      TILE_EN_O              : out std_logic_vector(C_NUM_TILE-1 downto 0);
-      ADC_EN_O               : out std_logic;
-      LED_CONFIG_O           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      GLOBAL_STATUS_I        : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
-    );
+      ANALOG_PWR_EN_O      : out std_logic;
+      TILE_EN_O            : out std_logic_vector(C_NUM_TILE-1 downto 0);
+      ADC_EN_O             : out std_logic;
+      LED_O                : out std_logic_vector(C_NUM_LED-1 downto 0)
+      );
   end component;
 
   signal count    : integer := 0;
@@ -48,15 +47,14 @@ architecture behaviour of global_registers_tb is
   signal wdata    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal wack     : std_logic := '0';
 
-  -- dut outputs
   signal analog_pwr_en  : std_logic;
   signal adc_en         : std_logic;
   signal tile_en        : std_logic_vector(C_NUM_TILE-1 downto 0);
-  signal led_config           : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
+  signal leds           : std_logic_vector(C_NUM_LED-1 downto 0) := (others => '0');
 
   signal show_output : std_logic := '0';
 begin
-  uut0: global_registers port map (
+  uut0: global_unit port map (
     ACLK           => aclk,
     ARESETN        => aresetn,
     S_REGBUS_RB_RUPDATE => rupdate,
@@ -70,9 +68,8 @@ begin
     ANALOG_PWR_EN_O     => analog_pwr_en,
     TILE_EN_O           => tile_en,
     ADC_EN_O            => adc_en,
-    GLOBAL_STATUS_I     => x"0000ABCD",
-    LED_CONFIG_O        => led_config
-    );
+    LED_O => leds
+  );
 
   aresetn_process : process
   begin
@@ -91,7 +88,8 @@ begin
     wait for 5 ns;
   end process;
 
-  read_process : process
+
+    read_process : process
   begin
     raddr   <= x"0000";
     rupdate <= '0';
@@ -169,7 +167,7 @@ begin
   show_output_process : process
   begin
     show_output<='1';
-    wait until (count=15);
+    wait until (count=100);
     wait for 10 ns;
     show_output<='0';
     wait;
@@ -178,7 +176,6 @@ begin
   output_process : process
     variable l : line;
   begin
-    --wait for 1 ns;
     wait for 10 ns;
     if (show_output='1') then
       write (l, String'("c: "));
@@ -207,9 +204,9 @@ begin
       hwrite (l, "00" & tile_en);
       write (l, String'(" | de: "));
       write (l, adc_en);
-      write (l, String'(" | lc: 0x"));
-      hwrite (l, led_config);
-
+      write (l, String'(" | leds: "));
+      write (l, leds(0));
+      write (l, leds(1));
       if (aresetn = '0') then
         write (l, String'(" (RESET)"));
       end if;

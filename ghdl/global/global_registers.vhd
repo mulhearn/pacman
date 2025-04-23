@@ -13,9 +13,9 @@ entity global_registers is
 
     S_REGBUS_RB_RUPDATE : in  std_logic;
     S_REGBUS_RB_RADDR	: in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
-    S_REGBUS_RB_RDATA	: out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);      
+    S_REGBUS_RB_RDATA	: out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     S_REGBUS_RB_RACK    : out std_logic;
-    
+
     S_REGBUS_RB_WUPDATE : in  std_logic;
     S_REGBUS_RB_WADDR	: in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
     S_REGBUS_RB_WDATA	: in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -23,7 +23,10 @@ entity global_registers is
 
     ANALOG_PWR_EN_O     : out std_logic;
     TILE_EN_O           : out std_logic_vector(C_NUM_TILE-1 downto 0);
-    ADC_EN_O            : out std_logic
+    ADC_EN_O            : out std_logic;
+
+    LED_CONFIG_O        : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+    GLOBAL_STATUS_I     : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
     );
 end;
 
@@ -35,7 +38,7 @@ architecture behavioral of global_registers is
   signal raddr    : std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
   signal rdata    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal rack     : std_logic := '0';
-  
+
   signal wupdate  : std_logic;
   signal waddr    : std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
   signal wdata    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -45,12 +48,13 @@ architecture behavioral of global_registers is
   signal enables   : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)   := (others => '0');
   signal scratch_a : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)   := (others => '0');
   signal scratch_b : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)   := (others => '0');
-    
+  signal led_config      : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)   := (others => '0');
+
 begin
   -- Clock and reset inputs:
   clk <= ACLK;
   rst <= not ARESETN;
-  
+
   --REGBUS read signals
   rupdate  <= S_REGBUS_RB_RUPDATE;
   raddr    <= S_REGBUS_RB_RADDR;
@@ -61,18 +65,22 @@ begin
   waddr    <= S_REGBUS_RB_WADDR;
   wdata    <= S_REGBUS_RB_WDATA;
   S_REGBUS_RB_WACK	 <= wack;
-  
+
   -- registers
   TILE_EN_O  <= enables(C_NUM_TILE-1 downto 0);
   ANALOG_PWR_EN_O <= enables(16);
   ADC_EN_O <= enables(20);
-  
+  LED_CONFIG_O  <= led_config;
+
+
+
+
   -- Handle Read Request:
   process(clk, rst)
     variable scope   : integer range 0 to 16#F#;
     variable role    : integer range 0 to 16#F#;
     variable reg     : integer range 0 to 16#FF#;
-  begin  
+  begin
     if (rst = '1') then
       rack <= '0';
       rdata <= x"00000000";
@@ -102,47 +110,56 @@ begin
             rack  <= '1';
           elsif (reg=C_ADDR_GLOBAL_HW_CODE) then
             rdata <= std_logic_vector(to_unsigned(C_HW_CODE,rdata'length));
-            rack  <= '1';            
+            rack  <= '1';
           elsif (reg=C_ADDR_GLOBAL_ENABLES) then
             rdata <= enables;
-            rack  <= '1';            
+            rack  <= '1';
+          elsif (reg=C_ADDR_GLOBAL_STATUS) then
+            rdata <= GLOBAL_STATUS_I;
+            rack  <= '1';
+          elsif (reg=C_ADDR_GLOBAL_LEDS) then
+            rdata <= led_config;
+            rack  <= '1';
           end if;
         end if;
       end if;
     end if;
   end process;
-        
+
   -- Handle Write Request:
   process(clk, rst)
     variable scope   : integer range 0 to 16#F#;
     variable role    : integer range 0 to 16#F#;
-    variable reg     : integer range 0 to 16#FF#;    
-  begin  
+    variable reg     : integer range 0 to 16#FF#;
+  begin
     if (rst = '1') then
       wack  <= '0';
       enables   <= (others => '0');
       scratch_a <= (others => '0');
       scratch_b <= (others => '0');
+      led_config      <= (others => '0');
     elsif (rising_edge(clk)) then
-      wack <= '0';      
+      wack <= '0';
       if (wupdate='1') then
         scope := to_integer(unsigned(waddr(15 downto 12)));
         role  := to_integer(unsigned(waddr(11 downto 8)));
-        reg   := to_integer(unsigned(waddr(7 downto 0)));              
+        reg   := to_integer(unsigned(waddr(7 downto 0)));
         if (scope=C_SCOPE_GLOBAL) and (role=C_ROLE_GLOBAL) then
           if (reg=C_ADDR_GLOBAL_SCRA) then
             scratch_a <= wdata;
             wack  <= '1';
           elsif (reg=C_ADDR_GLOBAL_SCRB) then
-            scratch_b <= wdata;                                             
+            scratch_b <= wdata;
             wack  <= '1';
           elsif (reg=C_ADDR_GLOBAL_ENABLES) then
             enables <= wdata;
-            wack  <= '1';            
+            wack  <= '1';
+          elsif (reg=C_ADDR_GLOBAL_LEDS) then
+            led_config <= wdata;
+            wack  <= '1';
           end if;
         end if;
       end if;
     end if;
-  end process;  
-end;  
-
+  end process;
+end;
