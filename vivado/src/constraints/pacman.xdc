@@ -128,4 +128,11 @@ set_property PACKAGE_PIN J22 [get_ports SYNC_O_0[7]]
 set_property PACKAGE_PIN J20 [get_ports SYNC_O_0[8]]
 set_property PACKAGE_PIN K21 [get_ports SYNC_O_0[9]]
 
+set_property IOSTANDARD LVCMOS33 [get_ports ADC_EN_O_0]
+set_property PACKAGE_PIN AB16 [get_ports ADC_EN_O_0]
+
+set_property IOSTANDARD LVCMOS33 [get_ports LED_O_0[0]]
+set_property IOSTANDARD LVCMOS33 [get_ports LED_O_0[1]]
+set_property PACKAGE_PIN R19 [get_ports LED_O_0[0]]
+set_property PACKAGE_PIN T19 [get_ports LED_O_0[1]]
 

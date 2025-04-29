@@ -24,7 +24,7 @@ ls -alh products/pacman_fsbl.elf
 
 #petalinux:
 
-source /tools/Xilinx/PetaLinux/2023.2/bin/settings.sh
+source /tools/Xilinx/PetaLinux/2023.2/tool/settings.sh
 cd petalinux
 ./scripts/create_full.sh
 cd full
