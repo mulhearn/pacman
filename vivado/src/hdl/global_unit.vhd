@@ -23,8 +23,12 @@ entity global_unit is
     ANALOG_PWR_EN_O      : out std_logic;
     TILE_EN_O            : out std_logic_vector(C_NUM_TILE-1 downto 0);
     ADC_EN_O             : out std_logic;
-    LED_O                : out std_logic_vector(C_NUM_LED-1 downto 0)
-  );
+    LED_O                : out std_logic_vector(C_NUM_LED-1 downto 0);
+
+    ADC_CLK_O            : out std_logic;
+    ADC_OF_I             : in std_logic;
+    ADC_D_I              : in std_logic_vector(C_NUM_ADC_BITS-1 downto 0)
+    );
 end global_unit;
 
 architecture behaviour of global_unit is
@@ -48,7 +52,8 @@ architecture behaviour of global_unit is
       ADC_EN_O               : out std_logic;
 
       LED_CONFIG_O           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      GLOBAL_STATUS_I        : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+      GLOBAL_STATUS_I        : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      ADC_LOOK_I             : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
     );
   end component;
 
@@ -64,13 +69,9 @@ architecture behaviour of global_unit is
     );
   end component;
 
-  --signal analog_pwr_en  : std_logic;
-  --signal adc_en         : std_logic;
-  --signal tile_en        : std_logic_vector(C_NUM_TILE-1 downto 0);
   signal status         : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal led_config     : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
-  --signal leds           : std_logic_vector(C_NUM_LED-1 downto 0) := (others => '0');
-
+  signal adc_look       : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
 begin
   gr0: global_registers port map (
     ACLK           => aclk,
@@ -87,7 +88,8 @@ begin
     TILE_EN_O           => TILE_EN_O,
     ADC_EN_O            => ADC_EN_O,
     GLOBAL_STATUS_I     => status,
-    LED_CONFIG_O        => led_config
+    LED_CONFIG_O        => led_config,
+    ADC_LOOK_I          => adc_look
     );
 
   gs0: global_status port map (
@@ -98,5 +100,8 @@ begin
     LED_O            => LED_O
   );
 
+  adc_look(C_NUM_ADC_BITS-1 downto 0) <= ADC_D_I;
+  adc_look(C_NUM_ADC_BITS) <= ADC_OF_I;
+  ADC_CLK_O <= not ACLK;
 
 end behaviour;

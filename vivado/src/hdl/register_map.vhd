@@ -28,6 +28,8 @@ package register_map is
   constant C_ADDR_GLOBAL_STATUS    : integer := 16#30#;
   constant C_ADDR_GLOBAL_LEDS      : integer := 16#34#;
 
+  constant C_ADDR_GLOBAL_ADC_LOOK  : integer := 16#40#;
+
   -- Registers with SCOPE=GLOBAL ROLE=TIMING
   constant C_ADDR_TIMING_STATUS    : integer := 16#00#;
   constant C_ADDR_TIMING_STAMP     : integer := 16#04#;

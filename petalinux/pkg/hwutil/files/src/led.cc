@@ -12,9 +12,11 @@
 
 void init_led(){
   int fd;
-  const char * str_a = "913";
-  const char * str_b = "918";
-  const char * str_c = "919";
+  const char * str_a = "906";
+  const char * str_b = "913";
+  const char * str_c = "918";
+  const char * str_d = "919";
+
   const char * out   = "out";
   const char * off   = "0";
 
@@ -26,8 +28,17 @@ void init_led(){
   write(fd, str_a, strlen(str_a));
   write(fd, str_b, strlen(str_b));
   write(fd, str_c, strlen(str_c));
+  write(fd, str_c, strlen(str_d));
   close(fd);
-    
+
+  fd = open("/sys/class/gpio/gpio906/direction", O_WRONLY);
+  if (fd < 0){
+    printf("ERROR:  could not export GPIO pin 913\n");
+    return;
+  }
+  write(fd, out, strlen(out));
+  close(fd);
+  
   fd = open("/sys/class/gpio/gpio913/direction", O_WRONLY);
   if (fd < 0){
     printf("ERROR:  could not export GPIO pin 913\n");
@@ -52,6 +63,14 @@ void init_led(){
   write(fd, out, strlen(out));
   close(fd);
 
+  fd = open("/sys/class/gpio/gpio906/value", O_WRONLY);
+  if (fd < 0){
+    printf("ERROR:  could not set value for GPIO pin 913\n");
+    return;
+  }
+  write(fd, off, strlen(off));
+  close(fd);
+  
   fd = open("/sys/class/gpio/gpio913/value", O_WRONLY);
   if (fd < 0){
     printf("ERROR:  could not set value for GPIO pin 913\n");

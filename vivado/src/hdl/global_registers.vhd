@@ -26,7 +26,8 @@ entity global_registers is
     ADC_EN_O            : out std_logic;
 
     LED_CONFIG_O        : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    GLOBAL_STATUS_I     : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+    GLOBAL_STATUS_I     : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+    ADC_LOOK_I          : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
     );
 end;
 
@@ -119,6 +120,9 @@ begin
             rack  <= '1';
           elsif (reg=C_ADDR_GLOBAL_LEDS) then
             rdata <= led_config;
+            rack  <= '1';
+          elsif (reg=C_ADDR_GLOBAL_ADC_LOOK) then
+            rdata <= ADC_LOOK_I;
             rack  <= '1';
           end if;
         end if;

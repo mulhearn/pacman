@@ -29,7 +29,11 @@ architecture behaviour of global_unit_tb is
       ANALOG_PWR_EN_O      : out std_logic;
       TILE_EN_O            : out std_logic_vector(C_NUM_TILE-1 downto 0);
       ADC_EN_O             : out std_logic;
-      LED_O                : out std_logic_vector(C_NUM_LED-1 downto 0)
+      LED_O                : out std_logic_vector(C_NUM_LED-1 downto 0);
+
+      ADC_CLK_O            : out std_logic;
+      ADC_OF_I             : in std_logic;
+      ADC_D_I              : in std_logic_vector(C_NUM_ADC_BITS-1 downto 0)
       );
   end component;
 
@@ -68,7 +72,9 @@ begin
     ANALOG_PWR_EN_O     => analog_pwr_en,
     TILE_EN_O           => tile_en,
     ADC_EN_O            => adc_en,
-    LED_O => leds
+    LED_O => leds,
+    ADC_OF_I            => '1',
+    ADC_D_I             => x"ADC"
   );
 
   aresetn_process : process
@@ -126,6 +132,9 @@ begin
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"FF34";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"FF40";
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"0000";

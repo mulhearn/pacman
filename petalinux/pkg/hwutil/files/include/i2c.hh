@@ -27,7 +27,8 @@ uint32_t i2c_mon_vddd(uint32_t chan);
 //uint32_t i2c_mon_idda(uint32_t lower);
 //uint32_t i2c_mon_iddd(uint32_t lower);
 //uint32_t i2c_version(uint32_t lower);
-//uint32_t i2c_set_muxa(uint32_t lower, uint32_t val);
-//uint32_t i2c_set_muxb(uint32_t lower, uint32_t val);
+
+void i2c_set_muxa(uint32_t val);
+void i2c_set_muxb(uint32_t val);
 
 #endif

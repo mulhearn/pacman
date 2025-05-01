@@ -16,19 +16,19 @@
 
 // I2C Address Space - PACMAN Rev 5
 
-//0001100   AD5677        16-chan. 16-bit DAC for VDDA setup                
-//0001101   AD5677        16-chan. 16-bit DAC for VDDD setup                
-//0010000   PAC1944       4-chan. Power Monitor VDDA+VDDD Tile1 + Tile2     
-//0010001   PAC1944       4-chan. Power Monitor VDDA+VDDD Tile3 + Tile4     
-//0010010   PAC1944       4-chan. Power Monitor VDDA+VDDD Tile5 + Tile6     
-//0010011   PAC1944       4-chan. Power Monitor VDDA+VDDD Tile7 + Tile8     
-//0010100   PAC1944       4-chan. Power Monitor VDDA+VDDD Tile9 + Tile10    
-//0010101   PAC1944       4-chan. Power Monitor T3V0 + D3V6 + D3V3          
-//1001100   MAX14661      16:2 Positive-Side MUX                            
-//1001101   MAX14661      16:2 Negative-Side MUX                            
-//1010000   SFP           SFP Module for Timing (primary addr.)             
-//1010001   SFP           SFP Module for Timing (secondary addr.)           
-//1100000   ADN2814       Clock & Data Recovery (CDR) for Timing  
+//0001100   AD5677        16-chan. 16-bit DAC for VDDA setup
+//0001101   AD5677        16-chan. 16-bit DAC for VDDD setup
+//0010000   PAC1944       4-chan. Power Monitor VDDA+VDDD Tile1 + Tile2
+//0010001   PAC1944       4-chan. Power Monitor VDDA+VDDD Tile3 + Tile4
+//0010010   PAC1944       4-chan. Power Monitor VDDA+VDDD Tile5 + Tile6
+//0010011   PAC1944       4-chan. Power Monitor VDDA+VDDD Tile7 + Tile8
+//0010100   PAC1944       4-chan. Power Monitor VDDA+VDDD Tile9 + Tile10
+//0010101   PAC1944       4-chan. Power Monitor T3V0 + D3V6 + D3V3
+//1001100   MAX14661      16:2 Positive-Side MUX
+//1001101   MAX14661      16:2 Negative-Side MUX
+//1010000   SFP           SFP Module for Timing (primary addr.)
+//1010001   SFP           SFP Module for Timing (secondary addr.)
+//1100000   ADN2814       Clock & Data Recovery (CDR) for Timing
 
 #define ADDR_BAD          0b0001110  // Non-existent address
 #define ADDR_DAC_VDDA     0b0001100  // AD5677 DAC for VDDA TILES 1-10
@@ -51,13 +51,13 @@ void init_i2c() {
 	return;
     }
     G_I2C_FH = open(I2C_DEV, O_RDWR);
-    
+
     if (G_I2C_FH < 0) {
         printf("**ERROR** i2c_open:  Failed to open I2C device!\n");
 	G_I2C_STATUS |= 2;
 	return;
     }
-    clear_i2c_status();    
+    clear_i2c_status();
 }
 
 void close_i2c() {
@@ -117,7 +117,7 @@ int i2c_set(uint8_t addr, uint8_t reg, uint32_t val, uint8_t nbytes) {
     #endif
     return write(G_I2C_FH, buf,nbytes+1);
 }
-        
+
 int i2c_rw(uint8_t addr, uint8_t reg, uint8_t* buf, uint32_t nbytes) {
     // perform read from register with repeated start
     if (i2c_addr(addr) < 0) return -1;
@@ -131,7 +131,7 @@ int i2c_rw(uint8_t addr, uint8_t reg, uint8_t* buf, uint32_t nbytes) {
     msgs[1].flags = I2C_M_RD | I2C_M_NOSTART;
     msgs[1].len = nbytes;
     msgs[1].buf = buf;
-    
+
     struct i2c_rdwr_ioctl_data data;
     data.msgs = msgs;
     data.nmsgs = 2;
@@ -158,7 +158,7 @@ int i2c_recv(uint8_t addr, uint8_t reg, uint8_t* buf, uint32_t nbytes) {
     }
     memset(buf,0,nbytes);
     if (read(G_I2C_FH, buf,nbytes) != nbytes) {
-        printf("***ERROR*** i2c_recv:  Failed to read register!\n");      
+        printf("***ERROR*** i2c_recv:  Failed to read register!\n");
         return -1;
     }
     #if VERBOSE
@@ -185,7 +185,7 @@ int i2c_recv(uint8_t addr, uint8_t* buf, uint32_t nbytes) {
     return nbytes;
 }
 
-void i2c_set_vdda(uint32_t chan, uint32_t val){  
+void i2c_set_vdda(uint32_t chan, uint32_t val){
   uint8_t reg    = 0x30 + chan;
   const uint8_t nbytes = 2;
   if (chan > 0xa)
@@ -195,7 +195,7 @@ void i2c_set_vdda(uint32_t chan, uint32_t val){
   printf("i2c_set_vdda:  reg: 0x%x\n", reg);
   #endif
   int ret = i2c_set(ADDR_DAC_VDDA, reg, val, nbytes);
-  
+
   if (ret != nbytes+1){
     printf("**ERROR** i2c_set_vdda: i2c_set returned %d when expecting %d\n", ret, nbytes+1);
     G_I2C_STATUS |= 4;
@@ -203,17 +203,17 @@ void i2c_set_vdda(uint32_t chan, uint32_t val){
   }
 }
 
-void i2c_set_vddd(uint32_t chan, uint32_t val){  
+void i2c_set_vddd(uint32_t chan, uint32_t val){
   uint8_t reg    = 0x30 + chan;
   const uint8_t nbytes = 2;
   if (chan > 0xa)
-    return; 
+    return;
   #if VERBOSE
   printf("i2c_set_vddd:  tile: %d value: 0x%x\n", chan+1, val);
   printf("i2c_set_vddd:  reg: 0x%x\n", reg);
   #endif
   int ret = i2c_set(ADDR_DAC_VDDD, reg, val, nbytes);
-  
+
   if (ret != nbytes+1){
     printf("**ERROR** i2c_set_vddd: i2c_set returned %d when expecting %d\n", ret, nbytes+1);
     G_I2C_STATUS |= 4;
@@ -227,11 +227,11 @@ uint32_t i2c_mon_vdda(uint32_t chan){
   const uint8_t addr   = 0x10+chan/2;
   const uint8_t reg    = 0x7 + 0x2*(chan%2);
 
-  if (chan > 0xb) 
+  if (chan > 0xb)
     return 0;
-  
+
   const uint8_t nbytes = 2;
-  uint8_t buf[nbytes];  
+  uint8_t buf[nbytes];
 
   int status = 0;
   // set config registers for single shot mode:
@@ -248,14 +248,14 @@ uint32_t i2c_mon_vdda(uint32_t chan){
 
   if (status){
     printf("**ERROR** i2c_mon_vdda:  I2C error.\n");
-    G_I2C_STATUS != 8;
+    G_I2C_STATUS |= 8;
     return 0;
   }
-  
+
   uint32_t val = 0;
   for (int i=0 ; i< nbytes; i++){
     val = (val<<8) | buf[i];
-  }  
+  }
   return full_scale*val/0xFFFF;
 }
 
@@ -264,11 +264,11 @@ uint32_t i2c_mon_vddd(uint32_t chan){
   const uint8_t addr   = 0x10+chan/2;
   const uint8_t reg    = 0x8 + 0x2*(chan%2);
 
-  if (chan > 0xb) 
+  if (chan > 0xb)
     return 0;
 
   const uint8_t nbytes = 2;
-  uint8_t buf[nbytes];  
+  uint8_t buf[nbytes];
 
   int status = 0;
   // set config registers for single shot mode:
@@ -285,16 +285,69 @@ uint32_t i2c_mon_vddd(uint32_t chan){
 
   if (status){
     printf("**ERROR** i2c_mon_vddd:  I2C error.\n");
-    G_I2C_STATUS != 8;
+    G_I2C_STATUS |= 8;
     return 0;
   }
-  
+
   uint32_t val = 0;
   for (int i=0 ; i< nbytes; i++){
     val = (val<<8) | buf[i];
-  }  
+  }
   return full_scale*val/0xFFFF;
 }
+
+
+uint32_t get_mux_code(uint32_t val){
+  uint32_t switch_disabled = 0x10;
+  if (val == 0)
+    return switch_disabled; // disable switch
+  if ((val >= 1) && (val <= 10))
+    return val - 1; // set to TILE val
+  if (val == 11)
+    return 0xb; // set to DAC
+  printf("get_mux_code:  unsupported value:  0x%x (%d)\n", val, val);
+  return switch_disabled;
+}
+
+void i2c_set_muxa(uint32_t val){
+  const uint8_t reg    = 0x14;
+  const uint8_t nbytes = 1;
+
+  uint32_t code = get_mux_code(val);
+
+  printf("i2c_set_muxa:  value: %d  code: %d \n", val, code);
+  int rep, status = 1;
+  rep = i2c_set(ADDR_MUX_P, reg, code, nbytes);
+  status *= (rep == nbytes+1);
+  rep = i2c_set(ADDR_MUX_N, reg, code, nbytes);
+  status *= (rep == nbytes+1);
+  if (status!=1){
+    printf("**ERROR** i2c_set_muxa:  i2c_set was not successful\n");
+    G_I2C_STATUS |= 0x10;
+  }
+}
+
+void i2c_set_muxb(uint32_t val){
+  const uint8_t reg    = 0x15;
+  const uint8_t nbytes = 1;
+
+  uint32_t code = get_mux_code(val);
+
+  printf("i2c_set_muxb:  value: %d  code: %d \n", val, code);
+  int rep, status = 1;
+  rep = i2c_set(ADDR_MUX_P, reg, code, nbytes);
+  status *= (rep == nbytes+1);
+  rep = i2c_set(ADDR_MUX_N, reg, code, nbytes);
+  status *= (rep == nbytes+1);
+  if (status!=1){
+    printf("**ERROR** i2c_set_muxb:  i2c_set was not successful\n");
+    G_I2C_STATUS |= 0x10;
+  }
+}
+
+
+
+
 
 // NOT YET UPDATED TO USE GLOBAL STATUS...
 
@@ -303,11 +356,11 @@ uint32_t i2c_mon_idda(uint32_t lower){
   const uint8_t addr   = 0x10+lower/2;
   const uint8_t reg    = 0xB + 0x2*(lower%2);
 
-  if (lower > 0xb) 
+  if (lower > 0xb)
     return 0;
-  
+
   const uint8_t nbytes = 2;
-  uint8_t buf[nbytes];  
+  uint8_t buf[nbytes];
 
   int status = 0;
   // set config registers for single shot mode:
@@ -326,14 +379,14 @@ uint32_t i2c_mon_idda(uint32_t lower){
     printf("**ERROR** i2c_mon_idda:  I2C error.\n");
     return 0;
   }
-  
+
   uint32_t val = 0;
   for (int i=0 ; i< nbytes; i++){
     val = (val<<8) | buf[i];
-  }  
+  }
   return full_scale*val/0xFFFF;
 
-  
+
 }
 
 uint32_t i2c_mon_iddd(uint32_t lower){
@@ -341,11 +394,11 @@ uint32_t i2c_mon_iddd(uint32_t lower){
   const uint8_t addr   = 0x10+lower/2;
   const uint8_t reg    = 0xC + 0x2*(lower%2);
 
-  if (lower > 0xb) 
+  if (lower > 0xb)
     return 0;
-  
+
   const uint8_t nbytes = 2;
-  uint8_t buf[nbytes];  
+  uint8_t buf[nbytes];
 
   int status = 0;
   // set config registers for single shot mode:
@@ -364,65 +417,18 @@ uint32_t i2c_mon_iddd(uint32_t lower){
     printf("**ERROR** i2c_mon_iddd:  I2C error.\n");
     return 0;
   }
-  
+
   uint32_t val = 0;
   for (int i=0 ; i< nbytes; i++){
     val = (val<<8) | buf[i];
-  }  
+  }
   return full_scale*val/0xFFFF;
-  
+
 }
 
-uint32_t i2c_version(uint32_t lower){  
+uint32_t i2c_version(uint32_t lower){
   if (lower == 0) return I2C_MAJOR_VERSION;
   if (lower == 1) return I2C_MINOR_VERSION;
   if (lower == 2) return I2C_DEBUG_TAG;
   return 0;
 }
-uint32_t get_mux_code(uint32_t val){
-  uint32_t switch_disabled = 0x10;
-  if (val == 0)
-    return switch_disabled; // disable switch
-  if ((val >= 1) && (val <= 10))
-    return val - 1; // set to TILE val
-  if (val == 11)
-    return 0xb; // set to DAC
-  printf("get_mux_code:  unsupported value:  0x%x (%d)\n", val, val);
-  return switch_disabled;
-}
-
-uint32_t i2c_set_muxa(uint32_t lower, uint32_t val){  
-  const uint8_t reg    = 0x14;
-  const uint8_t nbytes = 1;
-
-  uint32_t code = get_mux_code(val);
-
-  printf("i2c_set_muxa:  value: %d  code: %d \n", val, code);
-  int rep, status = 1;
-  rep = i2c_set(ADDR_MUX_P, reg, code, nbytes);  
-  status *= (rep == nbytes+1);
-  rep = i2c_set(ADDR_MUX_N, reg, code, nbytes);  
-  status *= (rep == nbytes+1);
-  if (status!=1)
-    printf("**ERROR** i2c_set_muxa:  i2c_set was not successful\n");
-  return status;
-}
-
-uint32_t i2c_set_muxb(uint32_t lower, uint32_t val){
-  const uint8_t reg    = 0x15;
-  const uint8_t nbytes = 1;
-  
-  uint32_t code = get_mux_code(val);
-
-  printf("i2c_set_muxb:  value: %d  code: %d \n", val, code);
-  int rep, status = 1;
-  rep = i2c_set(ADDR_MUX_P, reg, code, nbytes);  
-  status *= (rep == nbytes+1);
-  rep = i2c_set(ADDR_MUX_N, reg, code, nbytes);  
-  status *= (rep == nbytes+1);
-  if (status!=1)
-    printf("**ERROR** i2c_set_muxb:  i2c_set was not successful\n");
-  return status;
-}
-
-

@@ -30,8 +30,9 @@ architecture behaviour of global_registers_tb is
       TILE_EN_O              : out std_logic_vector(C_NUM_TILE-1 downto 0);
       ADC_EN_O               : out std_logic;
       LED_CONFIG_O           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      GLOBAL_STATUS_I        : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
-    );
+      GLOBAL_STATUS_I        : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      ADC_LOOK_I             : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+      );
   end component;
 
   signal count    : integer := 0;
@@ -71,7 +72,8 @@ begin
     TILE_EN_O           => tile_en,
     ADC_EN_O            => adc_en,
     GLOBAL_STATUS_I     => x"0000ABCD",
-    LED_CONFIG_O        => led_config
+    LED_CONFIG_O        => led_config,
+    ADC_LOOK_I          => x"00001234"
     );
 
   aresetn_process : process
@@ -128,6 +130,9 @@ begin
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"FF34";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"FF40";
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"0000";

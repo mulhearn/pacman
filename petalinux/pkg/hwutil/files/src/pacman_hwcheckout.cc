@@ -32,16 +32,17 @@ volatile uint32_t * G_UTIL_AXIL = NULL;
 #define C_ADDR_GLOBAL_FW_BUILD  0x18
 #define C_ADDR_GLOBAL_HW_CODE   0x1C
 #define C_ADDR_GLOBAL_ENABLES   0x20
+#define C_ADDR_GLOBAL_STATUS    0x30
+#define C_ADDR_GLOBAL_LEDS      0x34
+#define C_ADDR_GLOBAL_ADC_LOOK  0x40
 
-#define C_ADDR_TIMING_STATUS  0x00
-#define C_ADDR_TIMING_STAMP   0x04
-#define C_ADDR_TIMING_TRIG    0x20
-#define C_ADDR_TIMING_SYNC    0x24
-#define C_ADDR_GLOBAL_STATUS  0x30
-#define C_ADDR_GLOBAL_LEDS    0x34
+#define C_ADDR_TIMING_STATUS   0x00
+#define C_ADDR_TIMING_STAMP    0x04
+#define C_ADDR_TIMING_TRIG     0x20
+#define C_ADDR_TIMING_SYNC     0x24
 
 void toggle_enables(){
-  unsigned enables[] = {0x00000000, 0x00010000, 0x00010001,  0x000103FF, 0x010103FF};
+  unsigned enables[] = {0x00000000, 0x00010000, 0x00010001,  0x000103FF, 0x001103FF};
   static int mode = 0;
   mode = (mode + 1) % 5;
   printf("INFO: setting enables to 0x%08x \n", enables[mode]);
@@ -63,20 +64,33 @@ void hw_led_checkout(){
 
   printf("Blinking PACMAN LED, via AXIL.\n");
   for (int i=0; i<20; i++){
-    G_UTIL_AXIL[(SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_LEDS)>>2] = 0x1;  
+    G_UTIL_AXIL[(SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_LEDS)>>2] = 0x1;
     usleep(50000);
-    G_UTIL_AXIL[(SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_LEDS)>>2] = 0x0;  
+    G_UTIL_AXIL[(SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_LEDS)>>2] = 0x0;
     usleep(50000);
   }
 
   printf("Blinking PACMAN LED, via AXIL.\n");
   for (int i=0; i<20; i++){
-    G_UTIL_AXIL[(SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_LEDS)>>2] = 0x2;  
+    G_UTIL_AXIL[(SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_LEDS)>>2] = 0x2;
     usleep(50000);
-    G_UTIL_AXIL[(SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_LEDS)>>2] = 0x0;  
+    G_UTIL_AXIL[(SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_LEDS)>>2] = 0x0;
     usleep(50000);
   }
 
+}
+
+void adc_look(){
+  unsigned adc = G_UTIL_AXIL[(SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_ADC_LOOK)>>2];
+  printf("INFO: ADC LOOK: 0x%08x \n", adc);
+}
+
+
+void toggle_adc_input(){
+  i2c_set_vddd(0xa, 0x0);
+  i2c_set_vdda(0xa, 0x0);
+  i2c_set_muxa(11);
+  i2c_set_muxb(11);
 }
 
 void full_checkout(){
@@ -88,8 +102,8 @@ void main_menu(){
   while(1){
     printf("choose an option:\n");
     printf("(1) run full checkout \n");
-    printf("(2) LED (3) Toggle Enables (4) VDDA/VDDD\n");
-	
+    printf("(2) LED (3) Toggle Enables (4) VDDA/VDDD (5) Read ADC LOOK (6) Toggle ADC input\n");
+
     int input;
     scanf("%d", &input);
     printf("pressed:  %d\n", input);
@@ -108,6 +122,13 @@ void main_menu(){
     case 4:
       vdda_vddd_checkout();
       break;
+    case 5:
+      adc_look();
+      break;
+    case 6:
+      toggle_adc_input();
+      break;
+
     default:
       printf("invalid selection...\n\r");
     }
@@ -132,9 +153,9 @@ int main(){
   unsigned hwcode  = G_UTIL_AXIL[0XFF1C>>2];
 
   printf("INFO:  Running pacman firmware version %d.%d (Build: 0x%x  HW Code:  0x%x)\n", fwmajor, fwminor, fwbuild, hwcode);
-  
+
   init_led();
-  init_i2c();  
+  init_i2c();
   main_menu();
 
   //printf("INFO:  Initializing PACMAN AXI-Lite interface.\n");
