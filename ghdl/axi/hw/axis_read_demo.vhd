@@ -14,24 +14,24 @@ entity axis_read_demo is
   port (
     S_AXIS_ACLK        : in std_logic;
     S_AXIS_ARESETN     : in std_logic;
-    S_AXIS_TDATA       : in std_logic_vector(511 downto 0);      
+    S_AXIS_TDATA       : in std_logic_vector(C_TX_AXIS_WIDTH-1 downto 0);
     S_AXIS_TVALID      : in std_logic;
     S_AXIS_TREADY      : out std_logic;
-    S_AXIS_TKEEP       : in std_logic_vector(63 downto 0);      
+    S_AXIS_TKEEP       : in std_logic_vector(C_TX_AXIS_WIDTH/8-1 downto 0);
     S_AXIS_TLAST       : in std_logic;
 
     S_REGBUS_RB_RUPDATE : in  std_logic;
     S_REGBUS_RB_RADDR   : in  std_logic_vector(C_ADDR_WIDTH-1 downto 0);
-    S_REGBUS_RB_RDATA   : out std_logic_vector(C_DATA_WIDTH-1 downto 0);      
+    S_REGBUS_RB_RDATA   : out std_logic_vector(C_DATA_WIDTH-1 downto 0);
     S_REGBUS_RB_RACK    : out  std_logic;
-    
+
     S_REGBUS_RB_WUPDATE : in  std_logic;
     S_REGBUS_RB_WADDR   : in  std_logic_vector(C_ADDR_WIDTH-1 downto 0);
     S_REGBUS_RB_WDATA   : in  std_logic_vector(C_DATA_WIDTH-1 downto 0);
     S_REGBUS_RB_WACK    : out  std_logic
-  );  
+  );
 end axis_read_demo;
-     
+
 architecture behaviour of axis_read_demo is
   component axis_read is
     generic (
@@ -42,17 +42,17 @@ architecture behaviour of axis_read_demo is
       S_AXIS_ACLK        : in std_logic;
       S_AXIS_ARESETN     : in std_logic;
 
-      S_AXIS_TDATA       : in std_logic_vector(C_AXIS_WIDTH-1 downto 0);      
+      S_AXIS_TDATA       : in std_logic_vector(C_AXIS_WIDTH-1 downto 0);
       S_AXIS_TVALID      : in std_logic;
       S_AXIS_TREADY      : out std_logic;
 
-      S_AXIS_TKEEP       : in std_logic_vector(C_AXIS_WIDTH/8-1 downto 0);      
+      S_AXIS_TKEEP       : in std_logic_vector(C_AXIS_WIDTH/8-1 downto 0);
       S_AXIS_TLAST       : in std_logic;
-      
+
       DATA_O             : out std_logic_vector(C_AXIS_WIDTH*C_AXIS_BEATS-1 downto 0);
       VALID_O            : out std_logic;
       READY_I            : in std_logic
-      );  
+      );
   end component;
 
   signal clk      : std_logic;
@@ -67,10 +67,10 @@ architecture behaviour of axis_read_demo is
   signal waddr    : std_logic_vector(15 downto 0) := (others => '0');
   signal wdata    : std_logic_vector(31 downto 0) := (others => '0');
   signal wack     : std_logic;
-  
+
   signal pdata    : std_logic_vector(C_AXIS_WIDTH*C_AXIS_BEATS-1 downto 0);
   signal pvalid   : std_logic;
-  signal pready   : std_logic; 
+  signal pready   : std_logic;
 
   signal stat     : std_logic_vector(C_DATA_WIDTH-1 downto 0) := (others => '0');
 begin
@@ -86,7 +86,7 @@ begin
     VALID_O         => pvalid,
     READY_I         => pready
   );
-  
+
   clk <= S_AXIS_ACLK;
   rst <= not S_AXIS_ARESETN;
 
@@ -103,12 +103,12 @@ begin
 
   stat(0) <= pvalid;
   stat(C_DATA_WIDTH-1 downto 1) <= (others => '0');
-  
+
   -- Handle Read Request:
   process(clk)
     variable reg  : integer;
     variable word : integer;
-  begin  
+  begin
     if (rst = '1') then
       rdata <= x"00000000";
       rack <= '0';
@@ -143,16 +143,16 @@ begin
   -- Handle Write Request:
   process(clk)
   variable reg     : integer;
-  begin  
+  begin
     if (rst = '1') then
       pready <= '0';
-      wack   <= '0';          
+      wack   <= '0';
     else
       if (rising_edge(clk)) then
         pready <= '0';
-        wack   <= '0';          
+        wack   <= '0';
         if (wupdate <= '1') then
-          reg   := to_integer(unsigned(waddr(11 downto 0)));          
+          reg   := to_integer(unsigned(waddr(11 downto 0)));
           if (reg=16#204#) then
             pready <= '1';
             wack  <= '1';
@@ -161,9 +161,8 @@ begin
             wack  <= '0';
           end if;
         end if;
-      end if;   
+      end if;
     end if;
   end process;
-  
+
 end behaviour;
-        

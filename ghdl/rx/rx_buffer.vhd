@@ -18,19 +18,17 @@ entity rx_buffer is
     M_AXIS_TLAST       : out std_logic;
 
     STATUS_O           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    GCONFIG_I          : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    GFLAGS_I           : in  std_logic_vector(C_RX_GFLAGS_WIDTH-1 downto 0);
     LOOK_O             : out std_logic_vector(C_RX_DATA_WIDTH-1 downto 0);
-    
+
     DATA_I             : in  uart_rx_data_array_t;
-    VALID_I            : in  std_logic_vector(C_NUM_UART-1 downto 0);
-    READY_O            : out std_logic_vector(C_NUM_UART-1 downto 0);
+    VALID_I            : in  std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
+    READY_O            : out std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
 
     DEBUG_STATUS_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     DEBUG_DATA_O       : out std_logic_vector(C_RX_DATA_WIDTH-1 downto 0)
   );
 begin
-  assert(C_TURN_MAX >= C_NUM_UART) severity failure;
+  assert(C_TURN_MAX >= C_RX_NUM_CHAN) severity failure;
 end;
 
 
@@ -66,7 +64,7 @@ architecture behavioral of rx_buffer is
   signal tvalid    : std_logic;
   signal tready    : std_logic;
 
-  signal ready     : std_logic_vector(C_NUM_UART-1 downto 0) := (others => '0');
+  signal ready     : std_logic_vector(C_RX_NUM_CHAN-1 downto 0) := (others => '0');
   signal busy      : std_logic;
   signal wen       : std_logic := '0';
   signal last      : std_logic := '0';
@@ -108,7 +106,7 @@ begin
   rst <= not M_AXIS_ARESETN;
 
   -- Turn counter process:
-  -- 
+  --
   -- The turn counter determines which uart is eligible for data
   -- transfer to the stream writer.  Turns 0-39 are used for the
   -- UARTs.  The remaining turns are used for state transitions and sending
@@ -136,7 +134,7 @@ begin
       ready <= (others => '0');
       if ((wen='1') and (tready='1')) then
         turn_z := (turn + C_TURN_MAX-1) mod C_TURN_MAX;
-        if (turn_z < C_NUM_UART) then
+        if (turn_z < C_RX_NUM_CHAN) then
           ready(turn_z) <= '1';
         end if;
       end if;
@@ -153,18 +151,18 @@ begin
       state <= EMPTY;
       data  <= (others => '0');
       wen   <= '0';
-      last  <= '0';      
+      last  <= '0';
     elsif (rising_edge(clk)) then
       if (tvalid='1' and tready='1') then
         beats := (beats + 1) mod C_COUNT_MAX;
-      end if;      
+      end if;
       data <= (others => '0');
       wen  <= '0';
       last <= '0';
       if (state = EMPTY) then
         valid_seen := '0';
-        beats := 0; 
-        if (turn < C_NUM_UART) then
+        beats := 0;
+        if (turn < C_RX_NUM_CHAN) then
           if (VALID_I(turn) = '1') then
             valid_seen := '1';
             state <= IDLE;
@@ -172,7 +170,7 @@ begin
         end if;
       end if;
       if (state = IDLE) then
-        if (turn < C_NUM_UART) then
+        if (turn < C_RX_NUM_CHAN) then
           if (VALID_I(turn) = '1') then
             valid_seen := '1';
           end if;
@@ -181,23 +179,23 @@ begin
           state <= STREAM;
         end if;
       end if;
-      if (state = STREAM) then  
+      if (state = STREAM) then
         valid_seen := '1';
-        if (turn < 40) then
+        if (turn < C_RX_NUM_CHAN) then
           data <= DATA_I(turn);
           wen  <= VALID_I(turn);
-        end if;        
-        if (turn=40) then
-          state <= SEND_LAST;          
+        end if;
+        if (turn=44) then
+          state <= SEND_LAST;
         end if;
       end if;
-      if (state = SEND_LAST) then  
+      if (state = SEND_LAST) then
         if (turn=50) then
           data  <= (others=>'0');
           data(95 downto 64)  <= std_logic_vector(to_unsigned(beats, 32));
           wen   <= '1';
           last <= '1';
-          state <= EMPTY;          
+          state <= EMPTY;
         end if;
       end if;
 
@@ -208,21 +206,21 @@ begin
 
 
 
-  
+
   status(1 downto 0) <= "00" when state = EMPTY else
                         "01" when state = IDLE else
                         "10" when state = STREAM else
                         "11";
   status(2) <= tvalid;
   status(3) <= tready;
-  
+
   status(4) <= busy;
   status(5) <= wen;
   status(6) <= last;
   status(7) <= '1';
 
   status(13 downto 8) <= std_logic_vector(to_unsigned(turn, 6));
-  
+
   DEBUG_DATA_O   <= data;
   DEBUG_STATUS_O <= status;
 

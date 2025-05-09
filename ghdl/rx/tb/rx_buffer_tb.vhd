@@ -21,12 +21,10 @@ architecture behaviour of rx_buffer_tb is
       M_AXIS_TKEEP       : out std_logic_vector(C_RX_AXIS_WIDTH/8-1 downto 0);
       M_AXIS_TLAST       : out std_logic;
       STATUS_O           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      GFLAGS_I           : in  std_logic_vector(C_RX_GFLAGS_WIDTH-1 downto 0);
-      GCONFIG_I          : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       LOOK_O             : out std_logic_vector(C_RX_DATA_WIDTH-1 downto 0);
       DATA_I             : in  uart_rx_data_array_t;
-      VALID_I            : in  std_logic_vector(C_NUM_UART-1 downto 0);
-      READY_O            : out std_logic_vector(C_NUM_UART-1 downto 0);
+      VALID_I            : in  std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
+      READY_O            : out std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
       DEBUG_STATUS_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       DEBUG_DATA_O       : out std_logic_vector(C_RX_DATA_WIDTH-1 downto 0)
     );
@@ -42,12 +40,11 @@ architecture behaviour of rx_buffer_tb is
   signal tlast    : std_logic;
 
   signal data    : uart_rx_data_array_t;
-  signal valid   : std_logic_vector(C_NUM_UART-1 downto 0);
-  signal ready   : std_logic_vector(C_NUM_UART-1 downto 0);
+  signal valid   : std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
+  signal ready   : std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
 
   signal status  : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
   signal look      : std_logic_vector(C_RX_DATA_WIDTH-1 downto 0);
-  signal gflags  : std_logic_vector(1 downto 0);
   signal show_output : std_logic := '0';
 begin
   uut: rx_buffer port map (
@@ -61,9 +58,7 @@ begin
     VALID_I         => valid,
     READY_O         => ready,
     DEBUG_STATUS_O  => status, -- (non-delayed version for easy debugging)
-    DEBUG_DATA_O    => look,   -- (non-delayed version for easy debugging)
-    GCONFIG_I       => (others => '0'),
-    GFLAGS_I        => gflags
+    DEBUG_DATA_O    => look   -- (non-delayed version for easy debugging)
   );
 
   aresetn_process : process
@@ -83,14 +78,6 @@ begin
     wait for 5 ns;
   end process;
 
-  gflags_process : process
-  begin
-    gflags <= b"01";
-    wait until (count = 22);
-    gflags <= b"00";
-    wait;
-  end process;
-  
   tready_process : process
   begin
     --tready <= '0';
@@ -100,20 +87,20 @@ begin
   end process;
 
   valid_process : process
-    variable init : std_logic := '1';    
+    variable init : std_logic := '1';
   begin
     if (init='1') then
-      --valid <= x"000000FFFF";
-      valid <= x"FFFFFFFFFF";
+      --valid <= x"0000000FFFF";
+      valid <= x"0FFFFFFFFFF";
       init := '0';
     end if;
     wait for 10 ns;
     valid <= valid and (not ready);
-    if (valid = x"0000000000") then
+    if (valid = x"00000000000") then
       init := '1';
     end if;
   end process;
-  
+
   data_process : process
   begin
     data <= (others => (others => '0'));
@@ -162,10 +149,10 @@ begin
     variable l : line;
     variable turn : integer;
     variable beat : integer;
-    
+
   begin
     wait for 10 ns;
-        
+
     turn := to_integer(unsigned(status(13 downto 8)));
     --beat := to_integer(unsigned(status(20 downto 16)));
 
@@ -176,14 +163,14 @@ begin
       write (l, turn, left, 3);
       --write (l, String'("aclk: "));
       --write (l, aclk);
-      if (status(1 downto 0) = "00") then        
-        write (l, String'(" EMPT ")); 
-      elsif (status(1 downto 0) = "01") then        
-        write (l, String'(" IDLE ")); 
-      elsif (status(1 downto 0) = "10") then        
-        write (l, String'(" STRM ")); 
+      if (status(1 downto 0) = "00") then
+        write (l, String'(" EMPT "));
+      elsif (status(1 downto 0) = "01") then
+        write (l, String'(" IDLE "));
+      elsif (status(1 downto 0) = "10") then
+        write (l, String'(" STRM "));
       else
-        write (l, String'(" LAST ")); 
+        write (l, String'(" LAST "));
       end if;
       write (l, String'("| tdata: 0x"));
       hwrite (l, tdata(79 downto 64));
@@ -198,7 +185,7 @@ begin
       write (l, tlast);
       --write (l, String'(" b: "));
       --write (l, status(4));
-      --write (l, beat, left, 3);      
+      --write (l, beat, left, 3);
       write (l, String'(" look: 0x"));
       hwrite (l, look(15 downto 0));
       write (l, String'(" w: "));
