@@ -12,9 +12,9 @@ entity rx_registers is
 
     S_REGBUS_RB_RUPDATE : in  std_logic;
     S_REGBUS_RB_RADDR	: in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
-    S_REGBUS_RB_RDATA	: out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);      
+    S_REGBUS_RB_RDATA	: out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     S_REGBUS_RB_RACK    : out std_logic;
-    
+
     S_REGBUS_RB_WUPDATE : in  std_logic;
     S_REGBUS_RB_WADDR	: in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
     S_REGBUS_RB_WDATA	: in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -24,6 +24,8 @@ entity rx_registers is
     STATUS_I            : in  uart_reg_array_t;
     CONFIG_O            : out uart_reg_array_t := (others => (others => '0'));
     GFLAGS_O            : out std_logic_vector(C_RX_GFLAGS_WIDTH-1 downto 0) := (others => '0');
+    HEARTBEAT_CYCLES_O  : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+    SYNC_CYCLES_O        : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     GSTATUS_I           : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     FIFO_RCNT_I         : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     FIFO_WCNT_I         : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -39,15 +41,18 @@ architecture behavioral of rx_registers is
   signal raddr    : std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
   signal rdata    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal rack     : std_logic := '0';
-  
+
   signal wupdate  : std_logic;
   signal waddr    : std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
   signal wdata    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
   signal wack     : std_logic := '0';
 
   -- output registers:
-  signal config   : uart_reg_array_t := (others => std_logic_vector(to_unsigned(C_DEFAULT_CONFIG_RX, C_RB_DATA_WIDTH)));  
-  signal gflags   : std_logic_vector(C_RX_GFLAGS_WIDTH-1 downto 0);
+  signal config           : uart_reg_array_t := (others => std_logic_vector(to_unsigned(C_DEFAULT_CONFIG_RX, C_RB_DATA_WIDTH)));
+  signal gflags           : std_logic_vector(C_RX_GFLAGS_WIDTH-1 downto 0);
+  signal heartbeat_cycles : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+  signal sync_cycle       : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+
   -- input registers:
   signal look       : uart_rx_data_array_t;
   signal status     : uart_reg_array_t;
@@ -55,19 +60,19 @@ architecture behavioral of rx_registers is
   signal fifo_rcnt  : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
   signal fifo_wcnt  : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
   signal dma_itr    : std_logic;
-  
+
   signal zero_counters : std_logic := '0';
   signal istarts  : uart_counter_array_t := (others => 0);
   signal ibeats   : uart_counter_array_t := (others => 0);
   signal iupdates : uart_counter_array_t := (others => 0);
   signal ilost    : uart_counter_array_t := (others => 0);
 
-  
+
 begin
   -- Clock and reset inputs:
   clk <= ACLK;
   rst <= not ARESETN;
-  
+
   --REGBUS read signals
   rupdate  <= S_REGBUS_RB_RUPDATE;
   raddr    <= S_REGBUS_RB_RADDR;
@@ -78,19 +83,12 @@ begin
   waddr    <= S_REGBUS_RB_WADDR;
   wdata    <= S_REGBUS_RB_WDATA;
   S_REGBUS_RB_WACK	 <= wack;
-  
+
   -- registers
   CONFIG_O  <= config;
   GFLAGS_O  <= gflags;
-
-  -- These are registered at source and at output, so we might be over registering here...
-  -- Test this if resources get tight:
-  --look      <= LOOK_I;
-  --status    <= STATUS_I;
-  --gstatus   <= GSTATUS_I;
-  --fifo_rcnt <= FIFO_RCNT_I;
-  --fifo_wcnt <= FIFO_WCNT_I;      
-  --dma_itr <= DMA_ITR_I;
+  HEARTBEAT_CYCLES_O  <= heartbeat_cycles;
+  SYNC_CYCLES_O        <= sync_cycle;
 
   process(clk, rst)
   begin
@@ -110,13 +108,13 @@ begin
       dma_itr   <= DMA_ITR_I;
     end if;
   end process;
-  
+
   -- Handle Read Request:
   process(clk, rst)
     variable scope   : integer range 0 to 3;
     variable chan    : integer range 0 to 16#3F#;
     variable reg     : integer range 0 to 16#FF#;
-  begin  
+  begin
     if (rst = '1') then
       rack <= '0';
       rdata <= x"00000000";
@@ -184,9 +182,15 @@ begin
                 rdata <= (others => '0');
                 rdata(0) <= dma_itr;
                 rack  <= '1';
+              elsif (reg=C_ADDR_RX_HEARTBEAT_CYCLES) then
+                rdata <= heartbeat_cycles;
+                rack  <= '1';
+              elsif (reg=C_ADDR_RX_SYNC_CYCLES) then
+                rdata <= sync_cycle;
+                rack  <= '1';
               end if;
             end if;
-          end if;          
+          end if;
         end if;
       end if;
     end if;
@@ -197,10 +201,14 @@ begin
   variable scope   : integer range 0 to 3;
   variable chan    : integer range 0 to 16#3F#;
   variable reg     : integer range 0 to 16#FF#;
-  begin  
+  begin
     if (rst = '1') then
-      config <= (others => std_logic_vector(to_unsigned(C_DEFAULT_CONFIG_RX, C_RB_DATA_WIDTH)));
-      gflags <= (others => '0');
+      config            <= (others => std_logic_vector(to_unsigned(C_DEFAULT_CONFIG_RX, C_RB_DATA_WIDTH)));
+      gflags            <= (others => '0');
+      heartbeat_cycles  <= std_logic_vector(to_unsigned(C_DEFAULT_HEARTBEAT_CYCLES, C_RB_DATA_WIDTH));
+      sync_cycle        <= std_logic_vector(to_unsigned(C_DEFAULT_SYNC_CYCLES, C_RB_DATA_WIDTH));
+
+
       wack  <= '0';
       zero_counters <= '0';
     else
@@ -222,15 +230,21 @@ begin
               for i in 0 to C_NUM_UART-1 loop
                 config(i) <= wdata;
               end loop;
-              wack  <= '1';              
+              wack  <= '1';
             end if;
           end if;
           if ((scope=1) and (chan = 16#3F#)) then
             if (reg=C_ADDR_RX_GFLAGS) then
-              gflags <= wdata(C_RX_GFLAGS_WIDTH-1 downto 0);    
+              gflags <= wdata(C_RX_GFLAGS_WIDTH-1 downto 0);
               wack  <= '1';
             elsif (reg=C_ADDR_RX_ZERO_CNTS) then
               zero_counters <= '1';
+              wack  <= '1';
+            elsif (reg=C_ADDR_RX_HEARTBEAT_CYCLES) then
+              heartbeat_cycles <= wdata;
+              wack  <= '1';
+            elsif (reg=C_ADDR_RX_SYNC_CYCLES) then
+              sync_cycle <= wdata;
               wack  <= '1';
             end if;
           end if;
@@ -238,7 +252,7 @@ begin
       end if;
     end if;
   end process;
-  
+
   process(clk, rst)
     variable busy   : std_logic := '0';
     variable valid  : std_logic := '0';
@@ -247,7 +261,7 @@ begin
     variable update : std_logic := '0';
     variable lost   : std_logic := '0';
   begin
-    
+
     if (rst = '1') then
       istarts  <= (others => 0);
       ibeats   <= (others => 0);
@@ -262,13 +276,13 @@ begin
           ready  := status(i)(2);
           start  := status(i)(4);
           update := status(i)(5);
-          lost   := status(i)(6);          
+          lost   := status(i)(6);
           if (zero_counters = '1') then
             istarts  <= (others => 0);
             ibeats   <= (others => 0);
             iupdates <= (others => 0);
             ilost    <= (others => 0);
-            
+
           else
             if (start = '1') then
               istarts(i) <= (istarts(i) + 1) mod C_COUNT_MAX;
@@ -282,12 +296,11 @@ begin
             if (lost = '1') then
               ilost(i) <= (ilost(i) + 1) mod C_COUNT_MAX;
             end if;
-          end if;                      
+          end if;
         end loop;
       end if;
     end if;
   end process;
 
-  
-end;  
 
+end;
