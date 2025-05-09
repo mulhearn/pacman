@@ -110,7 +110,7 @@ def parse_msg(msg):
     ]
     return header, words
 
-def log_msg(msg, log):
+def log_msg(msg, log, log_data):
     if (not log):
         return
     header, words = parse_msg(msg)
@@ -121,6 +121,14 @@ def log_msg(msg, log):
                     f.write(word[0] + " " + hex(word[1]) + " " + hex(word[2])+"\n")
                 elif (word[0] == 'READ'):
                     f.write(word[0] + " " + hex(word[1]) + "\n");
+                elif ((log_data) and (word[0] == 'DATA')):
+                    f.write(word[0] + " " + hex(word[1]) + " " + hex(word[2]) + " " + hex(word[3]) + "\n");
+    if ((log_data) and header[0]=='DATA'):
+        with open(log, "a") as f:
+            for word in words:
+                if (word[0] == 'DATA'):
+                    f.write(word[0] + " " + hex(word[1]) + " " + hex(word[2]) + " " + hex(word[3]) + "\n");
+
 
 def print_msg(msg):
     header, words = parse_msg(msg)
@@ -197,7 +205,7 @@ def main(**kwargs):
                     while max_messages[0] < 0 or msg_counter < max_messages[0]:
                         msg = socket.recv()
                         print_msg(msg)
-                        log_msg(msg, log)
+                        log_msg(msg, log, kwargs['log_data'])
                         msg_counter += 1
                         print('message count {}/{}'.format(msg_counter, max_messages[0]))
                     socket.setsockopt(zmq.UNSUBSCRIBE, b'')
@@ -295,6 +303,10 @@ if __name__ == '__main__':
                         help='''
                         log read and write requests to LOGFILE
                         ''')
+    parser.add_argument('--log_data', action='store_true', help='''
+                        include TX/RX in LOGFILE
+                        ''')
+
     args = parser.parse_args()
 
     _VERBOSE = args.verbose

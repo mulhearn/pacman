@@ -2,5 +2,6 @@
 /pacman_cmdserver
 /pacman_dataserver
 /pacman_units
+/pacman_menu
 /sandbox
 /obj

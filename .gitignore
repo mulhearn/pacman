@@ -6,6 +6,7 @@ vivado*.jou
 vivado*.log
 *.aux
 *~
+/pacman_fsbl
 /fsbl
 /hello
 /demo
