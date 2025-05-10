@@ -327,6 +327,15 @@ void test_adc(){
   xil_printf("done testing ADCs  \r\n");
 }
 
+
+
+void write_bram(){
+}
+
+void read_bram(){
+}
+
+
 int main(){
   xil_printf("SANITY NUMBER:  1\r\n");
   xil_printf("Trenz Eval Board Hardware Testing (Development)\r\n");
@@ -341,11 +350,9 @@ int main(){
     xil_printf("choose an option:\r\n");
     xil_printf("(1) blink LEDS \r\n");
     xil_printf("(2) global registers \r\n");
-    xil_printf("(3) check iic \r\n");
-    xil_printf("(4) set P voltage zero \r\n");
-    xil_printf("(5) set P voltage full \r\n");
-    xil_printf("(6) set mux to DAC \r\n");
-    xil_printf("(7) test ADC  \r\n");
+    xil_printf("(3) check iic (4) set P voltage zero (5) set P voltage full \r\n");
+    xil_printf("(6) set mux to DAC (7) test ADC  \r\n");
+    xil_printf("(8) write BRAM (9) read BRAM  \r\n");
 
     unsigned char c=inbyte();
     xil_printf("pressed:  %c\n\r", c);
@@ -371,7 +378,14 @@ int main(){
     case '7':
       test_adc();
       break;
-    default:
+    case '8':
+      write_bram();
+      break;
+    case '9':
+      read_bram();
+      break;
+   
+   default:
       xil_printf("invalid selection...\n\r");
     }
   }
