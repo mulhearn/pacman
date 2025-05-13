@@ -6,37 +6,36 @@ use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08
 library work;
 use work.common.all;
 
-entity ADC_unit_tb is
-end ADC_unit_tb;
+entity adc_unit_tb is
+end adc_unit_tb;
 
-architecture behaviour of ADC_unit_tb is
-  component ADC_unit is
+architecture behaviour of adc_unit_tb is
+  component adc_unit is
     port (
-      ACLK	        : in std_logic;
-      ARESETN	        : in std_logic;
+      ACLK	          : in std_logic;
+      ARESETN	          : in std_logic;
 
       -- REGBUS Ports
       S_REGBUS_RB_RUPDATE : in  std_logic;
-      S_REGBUS_RB_RADDR	: in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
-      S_REGBUS_RB_RDATA	: out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);      
+      S_REGBUS_RB_RADDR	  : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
+      S_REGBUS_RB_RDATA	  : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);      
       S_REGBUS_RB_RACK    : out std_logic;
     
       S_REGBUS_RB_WUPDATE : in  std_logic;
-      S_REGBUS_RB_WADDR	: in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
-      S_REGBUS_RB_WDATA	: in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      S_REGBUS_RB_WADDR	  : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
+      S_REGBUS_RB_WDATA   : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_WACK    : out std_logic;
 
       -- Data Ports
-      DATA_IN             : in  std_logic_vector(ADC_DATA_WIDTH-1 downto 0);
-      DOF_IN              : in  std_logic;
-      DATA_OUT            : out std_logic_vector(ADC_DATA_WIDTH-1 downto 0);
-      DOF_OUT             : out std_logic;
-      BRAM_ADDR           : out std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
-      WEN                 : out std_logic;
+      DATA_I              : in  std_logic_vector(ADC_DATA_WIDTH-1 downto 0);
+      DOF_I               : in  std_logic;
+      DATA_O              : out std_logic_vector(BRAM_DATA_WIDTH-1 downto 0);
+      BRAM_ADDR_O         : out std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
+      WEN_O               : out std_logic;
 
       -- ADC Ports
-      ADC_EN              : out std_logic;
-      ADC_CLK             : out std_logic   
+      ADC_EN_O            : out std_logic;
+      ADC_CLK_O           : out std_logic   
     );
   end component;
   
@@ -59,8 +58,7 @@ architecture behaviour of ADC_unit_tb is
   -- daq
   signal wen       : std_logic;
   signal addr      : std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
-  signal doof      : std_logic;
-  signal do        : std_logic_vector(ADC_DATA_WIDTH-1 downto 0);
+  signal do        : std_logic_vector(BRAM_DATA_WIDTH-1 downto 0);
   signal di        : std_logic_vector(ADC_DATA_WIDTH-1 downto 0);
   signal diof      : std_logic;
 
@@ -69,9 +67,9 @@ architecture behaviour of ADC_unit_tb is
   signal adc_clk   : std_logic;
 
 begin
-  uut: ADC_unit port map (
-    ADC_EN         => adc_en,
-    ADC_CLK        => adc_clk,
+  uut: adc_unit port map (
+    ADC_EN_O       => adc_en,
+    ADC_CLK_O      => adc_clk,
     ACLK           => aclk,
     ARESETN        => aresetn,
     S_REGBUS_RB_RUPDATE => rupdate,
@@ -82,12 +80,11 @@ begin
     S_REGBUS_RB_WADDR   => waddr,
     S_REGBUS_RB_WDATA   => wdata,
     S_REGBUS_RB_WACK    => wack, 
-    DATA_IN        => di,
-    DOF_IN         => diof,
-    DATA_OUT       => do,
-    DOF_OUT        => doof,
-    BRAM_ADDR      => addr,
-    WEN            => wen
+    DATA_I              => di,
+    DOF_I               => diof,
+    DATA_O              => do,
+    BRAM_ADDR_O         => addr,
+    WEN_O               => wen
   );
 
 
@@ -123,7 +120,7 @@ begin
     diof   <= '0';
     wait for 10 ns;
     di     <= x"444";
-    diof   <= '0';
+    diof   <= '1';
     wait for 10 ns;
     di     <= x"555";
     diof   <= '0';  
@@ -135,7 +132,7 @@ begin
     diof   <= '0';   
     wait for 10 ns;
     di     <= x"888";
-    diof   <= '0';
+    diof   <= '1';
     wait for 10 ns;
     di     <= x"999";
     diof   <= '0';
@@ -147,7 +144,7 @@ begin
     diof   <= '0';
     wait for 10 ns;
     di     <= x"CCC";
-    diof   <= '0';  
+    diof   <= '1';  
     wait for 10 ns;
     di     <= x"DDD";
     diof   <= '0';
@@ -183,7 +180,7 @@ begin
     diof   <= '0';   
     wait for 10 ns;
     di     <= x"889";
-    diof   <= '0';
+    diof   <= '1';
     wait for 10 ns;
     di     <= x"99A";
     diof   <= '0';
@@ -243,6 +240,10 @@ write_process : process
     waddr   <= x"0000";
     wdata   <= x"00000000";
     wupdate <= '0';
+    wait for 10 ns;
+    waddr   <= x"D108";
+    wdata   <= x"00000001";
+    wupdate <= '1';
     wait;
   end process;
 
@@ -251,7 +252,7 @@ write_process : process
   begin
     raddr   <= x"0000";
     rupdate <= '0';
-    wait for 40 ns;
+    wait for 42 ns;
     raddr   <= x"D10C";
     rupdate <= '1';
     wait for 10 ns;

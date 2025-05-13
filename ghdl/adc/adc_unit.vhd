@@ -4,7 +4,7 @@ use ieee.numeric_std.all;
 library work;
 use work.common.all;
 
-entity ADC_unit is
+entity adc_unit is
   port (
     ACLK	        : in std_logic;
     ARESETN	        : in std_logic;
@@ -21,20 +21,20 @@ entity ADC_unit is
     S_REGBUS_RB_WACK    : out std_logic;
 
     -- Data Ports
-    DATA_IN             : in  std_logic_vector(ADC_DATA_WIDTH-1 downto 0);
-    DOF_IN              : in  std_logic;
-    DATA_OUT            : out std_logic_vector(BRAM_DATA_WIDTH-1 downto 0);
-    BRAM_ADDR           : out std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
-    WEN                 : out std_logic;
+    DATA_I              : in  std_logic_vector(ADC_DATA_WIDTH-1 downto 0);
+    DOF_I               : in  std_logic;
+    DATA_O              : out std_logic_vector(BRAM_DATA_WIDTH-1 downto 0);
+    BRAM_ADDR_O         : out std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
+    WEN_O               : out std_logic;
 
     -- ADC Ports
-    ADC_EN              : out std_logic;
-    ADC_CLK             : out std_logic   
+    ADC_EN_O            : out std_logic;
+    ADC_CLK_O           : out std_logic   
     );
-end ADC_unit;
+end adc_unit;
 
-architecture behavioral of ADC_unit is
-  component ADC_reg is
+architecture behavioral of adc_unit is
+  component adc_reg is
     port(
       ACLK	             : in std_logic;
       ARESETN	             : in std_logic;
@@ -94,7 +94,7 @@ architecture behavioral of ADC_unit is
       TRIG_MODE      => trig_mode,
       CLK_DIV        => clk_div,
       LAST_W         => last_w,
-      ADC_EN         => ADC_EN,
+      ADC_EN         => ADC_EN_O,
       ACLK           => ACLK,
       ARESETN        => ARESETN,
       S_REGBUS_RB_RUPDATE => S_REGBUS_RB_RUPDATE,
@@ -113,17 +113,17 @@ architecture behavioral of ADC_unit is
       ARESETN        => ARESETN,
       LAST_W         => last_w,
 
-      DATA_IN        => DATA_IN,
-      DOF_IN         => DOF_IN,
-      DATA_OUT       => DATA_OUT,
-      ADDR           => BRAM_ADDR,
-      WEN            => WEN
+      DATA_IN        => DATA_I,
+      DOF_IN         => DOF_I,
+      DATA_OUT       => DATA_O,
+      ADDR           => BRAM_ADDR_O,
+      WEN            => WEN_O
       );
 
   clock: ADC_CLK_DIV port map (
     ACLK => ACLK,
     ARESETN => ARESETN,
     CLK_DIV => clk_div,
-    ADC_CLK => ADC_CLK
+    ADC_CLK => ADC_CLK_O
   );
 end behavioral;

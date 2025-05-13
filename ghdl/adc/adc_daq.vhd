@@ -4,7 +4,7 @@ use ieee.numeric_std.all;
 library work;
 use work.common.all;
 
-entity ADC_DAQ is
+entity adc_daq is
   port (
     ACLK      : in std_logic;
     ARESETN   : in std_logic;
@@ -21,9 +21,9 @@ entity ADC_DAQ is
     
     LAST_W    : out std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0)
     );
-end entity ADC_DAQ;
+end entity adc_daq;
 
-architecture behavioral of ADC_DAQ is
+architecture behavioral of adc_daq is
   signal clk  : std_logic;
   signal rst  : std_logic;
   signal trig : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -39,8 +39,9 @@ begin
   trig     <= TRIG_MODE;
   WEN      <= w;
   ADDR     <= a;
-  DATA_OUT(BRAM_DATA_WIDTH-1) <= d_of;
-  DATA_OUT(BRAM_DATA_WIDTH-2 downto BRAM_DATA_WIDTH-ADC_DATA_WIDTH-1) <= data;
+  DATA_OUT(BRAM_DATA_WIDTH-1 downto ADC_DATA_WIDTH+1) <= (others => '0');
+  DATA_OUT(ADC_DATA_WIDTH) <= d_of;
+  DATA_OUT(ADC_DATA_WIDTH-1 downto 0) <= data;
 
   process(clk,rst) --gets data and Write EN
   begin

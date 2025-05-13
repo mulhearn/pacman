@@ -7,11 +7,11 @@ library work;
 use work.common.all;
 
 --  Defines a testbench (without any ports)
-entity ADC_DAQ_tb is
-end ADC_DAQ_tb;
+entity adc_daq_tb is
+end adc_daq_tb;
      
-architecture behaviour of ADC_DAQ_tb is
-  component ADC_DAQ is
+architecture behaviour of adc_daq_tb is
+  component adc_daq is
     port (
       ACLK      : in std_logic;
       ARESETN   : in std_logic;
@@ -40,7 +40,7 @@ architecture behaviour of ADC_DAQ_tb is
   signal aresetn   : std_logic;
   signal trig_mode : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
 begin
-  uut: ADC_DAQ port map (
+  uut: adc_daq port map (
       TRIG_MODE      => trig_mode,
       ACLK           => aclk,
       ARESETN        => aresetn,      

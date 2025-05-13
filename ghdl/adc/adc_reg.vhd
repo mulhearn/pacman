@@ -4,7 +4,7 @@ use ieee.numeric_std.all;
 library work;
 use work.common.all;
 
-entity ADC_reg is
+entity adc_reg is
   generic (
     C_SCOPE       : integer  := 16#D#;
     C_ROLE        : integer  := 16#1#;
@@ -34,9 +34,9 @@ entity ADC_reg is
     ADC_EN              : out std_logic;
     LAST_W              : in  std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0)
     );
-end entity ADC_reg;
+end entity adc_reg;
 
-architecture behavioral of ADC_reg is
+architecture behavioral of adc_reg is
   signal clk      : std_logic;
   signal rst      : std_logic;
 
@@ -61,13 +61,13 @@ begin
   --inputs:
   clk       <= ACLK;
   rst       <= not ARESETN;
-  lw32(C_RB_DATA_WIDTH-1 downto C_RB_DATA_WIDTH-BRAM_ADDR_WIDTH)  <= LAST_W;
-  lw32(C_RB_DATA_WIDTH-BRAM_ADDR_WIDTH-1 downto 0) <= (others => '0');
+  lw32(C_RB_DATA_WIDTH-1 downto BRAM_ADDR_WIDTH) <= (others => '0');
+  lw32(BRAM_ADDR_WIDTH-1 downto 0) <= LAST_W;
   
   --outputs:
   TRIG_MODE <= trig;
   CLK_DIV   <= divs;
-  ADC_EN    <= adce(C_RB_DATA_WIDTH-1);
+  ADC_EN    <= adce(0);
 
   --REGBUS--  
   --outputs:
