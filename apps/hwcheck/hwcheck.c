@@ -330,9 +330,15 @@ void test_adc(){
 
 
 void write_bram(){
+  for (int i=0; i<10; i++){
+    Xil_Out32(XPAR_BRAM_0_BASEADDR+4*i, i);
+  }
 }
 
 void read_bram(){
+  for (int i=0; i<10; i++){
+    xil_printf("BRAM %d -- 0x%x  \r\n", i, Xil_In32(XPAR_BRAM_0_BASEADDR+4*i));
+  }
 }
 
 
