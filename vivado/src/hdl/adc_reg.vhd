@@ -6,32 +6,35 @@ use work.common.all;
 
 entity adc_reg is
   generic (
-    C_SCOPE       : integer  := 16#D#;
-    C_REG_TRIG    : integer  := 16#100#;
-    C_REG_DIVS    : integer  := 16#104#;
-    C_REG_ADC_EN  : integer  := 16#108#;
-    C_REG_LAST_W  : integer  := 16#10C#;
-    C_REG_ROB     : integer  := 16#110#;
-    C_VAL_ROB     : unsigned(31 downto 0)  := x"22222222"
-    );      
+    C_SCOPE            : integer  := 16#D#;
+    C_REG_ADC_STATUS   : integer  := 16#100#; -- RO
+    C_REG_ADC_LOOK     : integer  := 16#104#; -- RO
+    C_REG_ADC_LAST     : integer  := 16#108#; -- RO
+    C_REG_ADC_CONFIG   : integer  := 16#110#; -- RW
+    C_REG_ADC_CLKPAR   : integer  := 16#114#; -- RW
+    C_REG_ADC_SCRATCH  : integer  := 16#200#; -- RW
+    C_REG_ADC_ROA      : integer  := 16#204#; -- RO
+    C_VAL_ADC_ROA      : integer  := 16#1234ABCD#
+    );
   port (
     ACLK	        : in std_logic;
     ARESETN	        : in std_logic;
 
     S_REGBUS_RB_RUPDATE : in  std_logic;
     S_REGBUS_RB_RADDR	: in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
-    S_REGBUS_RB_RDATA	: out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);      
+    S_REGBUS_RB_RDATA	: out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     S_REGBUS_RB_RACK    : out std_logic;
-    
+
     S_REGBUS_RB_WUPDATE : in  std_logic;
     S_REGBUS_RB_WADDR	: in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
     S_REGBUS_RB_WDATA	: in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     S_REGBUS_RB_WACK    : out std_logic;
 
-    TRIG_MODE           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    CLK_DIV             : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    ADC_EN              : out std_logic;
-    LAST_W              : in  std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0)
+    CONFIG_O            : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+    CLKPAR_O            : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+    STATUS_I            : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+    LAST_I              : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+    LOOK_I              : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
     );
 end entity adc_reg;
 
@@ -43,32 +46,25 @@ architecture behavioral of adc_reg is
   signal raddr    : std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
   signal rdata    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
   signal rack     : std_logic := '0';
-  
+
   signal wupdate  : std_logic;
   signal waddr    : std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
   signal wdata    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
   signal wack     : std_logic := '0';
 
   -- registers
-  signal trig     : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
-  signal divs     : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
-  signal adce     : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
-  signal lw32     : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
-
+  signal config   : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
+  signal clkpar   : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
+  signal scratch  : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
 
 begin
   --inputs:
   clk       <= ACLK;
   rst       <= not ARESETN;
-  lw32(C_RB_DATA_WIDTH-1 downto BRAM_ADDR_WIDTH) <= (others => '0');
-  lw32(BRAM_ADDR_WIDTH-1 downto 0) <= LAST_W;
-  
-  --outputs:
-  TRIG_MODE <= trig;
-  CLK_DIV   <= divs;
-  ADC_EN    <= adce(0);
+  CONFIG_O  <= config;
+  CLKPAR_O  <= clkpar;
 
-  --REGBUS--  
+  --REGBUS--
   --outputs:
   S_REGBUS_RB_RDATA	 <= rdata;
   S_REGBUS_RB_RACK	 <= rack;
@@ -80,12 +76,11 @@ begin
   waddr    <= S_REGBUS_RB_WADDR;
   wdata    <= S_REGBUS_RB_WDATA;
 
-  
   -- Handle Read Request:
   process(clk,rst)
   variable scope   : integer;
   variable reg     : integer;
-  begin  
+  begin
     if (rst = '1') then
       rdata <= x"00000000";
       rack <= '0';
@@ -96,22 +91,28 @@ begin
           rack <= '0';
         else
           scope := to_integer(unsigned(raddr(15 downto 12)));
-          reg   := to_integer(unsigned(raddr(11 downto 0)));          
+          reg   := to_integer(unsigned(raddr(11 downto 0)));
           if (scope=C_SCOPE) then
-            if (reg=C_REG_TRIG) then
-              rdata <= trig;
+            if (reg=C_REG_ADC_STATUS) then
+              rdata <= STATUS_I;
               rack  <= '1';
-            elsif (reg=C_REG_DIVS) then
-              rdata <= divs;
+            elsif (reg=C_REG_ADC_LOOK) then
+              rdata <= LOOK_I;
               rack  <= '1';
-            elsif (reg=C_REG_ADC_EN) then
-              rdata <= adce;
+            elsif (reg=C_REG_ADC_LAST) then
+              rdata <= LAST_I;
               rack  <= '1';
-            elsif (reg=C_REG_LAST_W) then
-              rdata <= lw32;
+            elsif (reg=C_REG_ADC_CONFIG) then
+              rdata <= config;
               rack  <= '1';
-            elsif (reg=C_REG_ROB) then
-              rdata <= std_logic_vector(C_VAL_ROB);
+            elsif (reg=C_REG_ADC_CLKPAR) then
+              rdata <= clkpar;
+              rack  <= '1';
+            elsif (reg=C_REG_ADC_SCRATCH) then
+              rdata <= scratch;
+              rack  <= '1';
+            elsif (reg=C_REG_ADC_ROA) then
+              rdata <= std_logic_vector(to_unsigned(C_VAL_ADC_ROA, rdata'length));
               rack  <= '1';
             else
               -- this is an error, invalid register
@@ -130,42 +131,40 @@ begin
 
   -- Handle Write Request:
   process(clk,rst)
-  variable scope   : integer;
-  variable reg     : integer;
-  begin  
+    variable scope   : integer;
+    variable reg     : integer;
+  begin
     if (rst = '1') then
-      trig <= x"00000000";
-      divs <= x"00000000";
-      adce <= x"00000000";
+      config <= x"00000000";
+      clkpar <= x"00000000";
+      scratch <= x"00000000";
     else
       if (rising_edge(clk)) then
         if (wupdate='0') then
-            wack  <= '0';          
+          wack  <= '0';
         else
           scope := to_integer(unsigned(waddr(15 downto 12)));
-          reg   := to_integer(unsigned(waddr(11 downto 0)));          
+          reg   := to_integer(unsigned(waddr(11 downto 0)));
           if (scope=C_SCOPE) then
-            if (reg=C_REG_TRIG) then
-              trig   <= wdata;
-              wack   <= '1';
-            elsif (reg=C_REG_DIVS) then
-              divs  <= wdata;
+            if (reg=C_REG_ADC_CONFIG) then
+              config <= wdata;
               wack  <= '1';
-            elsif (reg=C_REG_ADC_EN) then
-              adce  <= wdata;
-              wack  <= '1'; 
+            elsif (reg=C_REG_ADC_CLKPAR) then
+              clkpar <= wdata;
+              wack  <= '1';
+            elsif (reg=C_REG_ADC_SCRATCH) then
+              scratch <= wdata;
+              wack  <= '1';
             else
-                -- this is an error, invalid register
-                wack  <= '0';
+              -- this is an error, invalid register
+              wack  <= '0';
             end if;
           else
             -- this is not an error, just a request outside our scope/role
             wack  <= '0';
           end if;
         end if;
-      end if;   
+      end if;
     end if;
   end process;
 end;
-
-
