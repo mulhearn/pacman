@@ -6,6 +6,7 @@ package register_map is
 
   -- Top Level SCOPE (4 - bits)
   constant C_SCOPE_GLOBAL  : integer := 2#1111#;
+  constant C_SCOPE_TIMING  : integer := 2#1110#; -- E
   constant C_SCOPE_UART_TX : integer := 2#00#;   -- UART_TX = 00XX
   constant C_SCOPE_UART_RX : integer := 2#01#;   -- UART_RX = 01XX
 
@@ -27,14 +28,38 @@ package register_map is
 
   constant C_ADDR_GLOBAL_STATUS    : integer := 16#30#;
   constant C_ADDR_GLOBAL_LEDS      : integer := 16#34#;
-
   constant C_ADDR_GLOBAL_ADC_LOOK  : integer := 16#40#;
 
-  -- Registers with SCOPE=GLOBAL ROLE=TIMING
-  constant C_ADDR_TIMING_STATUS    : integer := 16#00#;
-  constant C_ADDR_TIMING_STAMP     : integer := 16#04#;
-  constant C_ADDR_TIMING_TRIG      : integer := 16#20#;
-  constant C_ADDR_TIMING_SYNC      : integer := 16#24#;
+  -- Registers with SCOPE=TIMING ROLE(2 bits)=CFG, COUNTER, REGULAR
+  constant C_TIMING_REGULAR               : integer := 16#0#;
+  constant C_TIMING_COUNTER               : integer := 16#2#;
+  constant C_TIMING_CFG                   : integer := 16#4#;
+
+  constant C_ADDR_TIMING_STATUS            : integer := 16#00#;
+  constant C_ADDR_TIMING_STAMP             : integer := 16#04#;
+  constant C_ADDR_ATC_POKE_C               : integer := 16#10#;
+  constant C_ADDR_ATC_POKE_D               : integer := 16#14#;
+  CONSTANT C_ADDR_COUNT_START              : integer := 16#B0#;
+  CONSTANT C_ADDR_COUNT_STOP               : integer := 16#B4#;
+  CONSTANT C_ADDR_COUNT_RESET              : integer := 16#B8#;
+ 
+  --F(fast clock domain)
+  constant C_ADDR_LEMO_A_F                 : integer := 16#20#;
+  constant C_ADDR_LEMO_B_F                 : integer := 16#24#;
+  --S(slow)
+  constant C_ADDR_LEMO_A_S                 : integer := 16#30#;
+  constant C_ADDR_LEMO_B_S                 : integer := 16#34#;
+  constant C_ADDR_POKE_C_S                 : integer := 16#38#;
+  constant C_ADDR_POKE_D_S                 : integer := 16#3C#;
+  
+  
+  constant C_ADDR_ATC_POLARITY             : integer := 16#40#;
+  constant C_ADDR_ATC_TS                   : integer := 16#44#;
+  constant C_ADDR_ATC_G_START              : integer := 16#50#;
+  constant C_ADDR_ATC_G_END                : integer := 16#74#;
+  
+  constant C_ADDR_ATC_H_START              : integer := 16#80#;
+  constant C_ADDR_ATC_H_END                : integer := 16#A4#;
 
   -- Registers with SCOPE=UART_RX
 

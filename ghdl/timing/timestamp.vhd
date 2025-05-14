@@ -2,6 +2,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+--transfer counter_b to fast domain
+--counter_b is the counter of rising_edge in domain B
+
 entity timestamp is
   generic (
     constant C_TIMESTAMP_WIDTH     : integer := 32
@@ -9,8 +12,8 @@ entity timestamp is
 
   port (
     -- Clock Domain A: (Fast Clock)
-    CLK_A_I	        : in  std_logic;
-    RSTN_A_I	        : in  std_logic;
+    CLK_A_I	            : in  std_logic;
+    RSTN_A_I	          : in  std_logic;
     TIMESTAMP_A_O       : out std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
     
     -- Clock Domain B: (Slow Clock)
