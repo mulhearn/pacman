@@ -60,6 +60,33 @@ architecture behavioral of adc_unit is
       );
   end component;
 
+  component adc_daq is
+    port(
+      ACLK           : in  std_logic;
+      ARESETN        : in  std_logic;
+
+      -- ADC
+      ADC_DATA_I     : in  std_logic_vector(ADC_DATA_WIDTH-1 downto 0);
+      ADC_DOF_I      : in  std_logic;
+      ADC_EN_O       : out std_logic;
+
+      -- REGISTER
+      CONFIG_I       : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      STATUS_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      LAST_O         : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+
+      -- BRAM
+      BRAM_EN_O      : out std_logic; 
+      BRAM_DATA_O    : out std_logic_vector(BRAM_DATA_WIDTH-1 downto 0);
+      BRAM_WEN_O     : out std_logic_vector(3 downto 0);
+      BRAM_ADDR_O    : out std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
+      BRAM_CLK_O     : out std_logic;
+      BRAM_RST_O     : out std_logic
+      );
+  end component;
+
+  
+
   signal config    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal clkpar    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');  
   signal status    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
@@ -68,19 +95,13 @@ architecture behavioral of adc_unit is
 
 begin
   ADC_CLK_O <= ACLK;
-  ADC_EN_O  <= '1';
   
-  BRAM_EN_O   <= '0';
-  BRAM_DATA_O <= x"ABCD1234";
-  BRAM_WEN_O  <= (others => '1');
-  BRAM_ADDR_O <= (others => '0');
-  BRAM_CLK_O  <= ACLK;
-  BRAM_RST_O  <= '0';
+
 
   look(ADC_DATA_WIDTH-1 downto 0) <= ADC_DATA_I;
   look(ADC_DATA_WIDTH) <= ADC_DOF_I;
   
-  registers: ADC_reg port map (
+  registers: adc_reg port map (
       ACLK           => ACLK,
       ARESETN        => ARESETN,
       S_REGBUS_RB_RUPDATE => S_REGBUS_RB_RUPDATE,
@@ -99,5 +120,27 @@ begin
       LOOK_I   => look
       );
 
+  daq: adc_daq port map (
+      ACLK           => ACLK,
+      ARESETN        => ARESETN,
+
+      -- ADC
+      ADC_DATA_I     => ADC_DATA_I,
+      ADC_DOF_I      => ADC_DOF_I,
+      ADC_EN_O       => ADC_EN_O,
+
+      -- REGISTER
+      CONFIG_I       => config,
+      STATUS_O       => status,
+      LAST_O         => last,
+
+      -- BRAM
+      BRAM_EN_O      => BRAM_EN_O,
+      BRAM_DATA_O    => BRAM_DATA_O,
+      BRAM_WEN_O     => BRAM_WEN_O,
+      BRAM_ADDR_O    => BRAM_ADDR_O,
+      BRAM_CLK_O     => BRAM_CLK_O,
+      BRAM_RST_O     => BRAM_RST_O
+      );
 
 end behavioral;

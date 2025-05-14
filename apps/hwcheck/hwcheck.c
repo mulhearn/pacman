@@ -7,6 +7,9 @@
 #include "sleep.h"
 #include "xiicps.h"
 
+#include "xtime_l.h"
+#include "xaxidma.h"
+
 // MIO pinout:
 #define ADC_SLEEP 0
 #define LEDA 7
@@ -292,60 +295,100 @@ void set_mux_dac(){
   iic_byte(ADDR_MUX_N, 0x15, 11);
 }
 
+
+void toggle_dac(){
+  static int mode = 0;
+  mode = (mode + 1) % 3; 
+  if (mode == 0) {
+    xil_printf("setting DAC to +0 -0\r\n");
+    set_voltages(0x00, 0x00, 0x00, 0x00);
+  } else if (mode == 1) {
+    xil_printf("setting DAC to +0x4000,-0x0000,0\r\n");
+    set_voltages(0x40, 0x00, 0x00, 0x00);
+  }  else if (mode == 2) {
+    xil_printf("setting DAC to +0x0000,-0x4000\r\n");
+    set_voltages(0x00, 0x00, 0x40, 0x00);
+  }
+}
+
 // these are the addresses for the interfaces as read off from the address editor of the block diagram in vivado
 #define ADDR_AXIL_REGS  0x40000000
 
-void global_registers(){
-  Xil_Out32(ADDR_AXIL_REGS+0xFF20, 0x001103FF);
-  Xil_Out32(ADDR_AXIL_REGS+0xD100, 0x000000FF);
+
+void read_global_registers(){
+  //Xil_Out32(ADDR_AXIL_REGS+0xFF20, 0x001103FF);
+  //Xil_Out32(ADDR_AXIL_REGS+0xD100, 0x000000FF);
   xil_printf("Enables  -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xFF20));
-  xil_printf("ADC Look -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xFF40));
-  xil_printf("Last Address -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xD10C));
+  xil_printf("Global Look  -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xFF40));
+  xil_printf("ADC status   -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xD100));
+  xil_printf("ADC look     -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xD104));
+  xil_printf("ADC last     -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xD108));
+  xil_printf("ADC config   -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xD110));
+  xil_printf("ADC clkpar   -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xD114));
+  xil_printf("ADC scratch  -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xD200));
+  xil_printf("ADC roa      -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xD204));      
+}
+
+void toggle_enables(){
+  static int mode = 0;
+  mode = (mode + 1) % 2;  
+
+  if (mode == 1) {
+    xil_printf("enable all\r\n");
+    Xil_Out32(ADDR_AXIL_REGS+0xFF20, 0x001103FF);
+   } else {
+    xil_printf("disable all\r\n");
+    Xil_Out32(ADDR_AXIL_REGS+0xFF20, 0x00000000);
+  }
 }
 
 
-void test_adc_look(){
+void toggle_adc_sleep(){
+  static int mode = 0;
+  mode = (mode + 1) % 2;  
 
-  xil_printf("test ADCs  \r\n");
-  set_mux_dac();
-  XGpioPs_WritePin(&gpiops, ADC_SLEEP, 0x0);
-
-  xil_printf("Set Voltage Near (Postive) Half Scale  \r\n");
-  set_voltages(0x40, 0x40, 0x0, 0x0);
-  usleep(1000);
-
-  xil_printf("ADC REGISTER -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xFF40));
-  xil_printf("ADC REGISTER -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xFF40));
-  xil_printf("ADC REGISTER -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xFF40));
-
-  xil_printf("Set Voltage Near Negative Half Scale  \r\n");
-  set_voltages(0x00, 0x00, 0x40, 0x40);
-  usleep(1000);
-  xil_printf("ADC REGISTER -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xFF40));
-  xil_printf("ADC REGISTER -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xFF40));
-  xil_printf("ADC REGISTER -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xFF40));
-
-  XGpioPs_WritePin(&gpiops, ADC_SLEEP, 0x1);
-  xil_printf("done testing ADCs  \r\n");
+  if (mode == 0) {
+    xil_printf("set ADC to sleep  \r\n");
+    XGpioPs_WritePin(&gpiops, ADC_SLEEP, 0x1);
+  } else {
+    xil_printf("set ADC to awake \r\n");
+    XGpioPs_WritePin(&gpiops, ADC_SLEEP, 0x0);
+  }
 }
 
-void test_adc(){
-
-  xil_printf("test ADCs  \r\n");
-  set_mux_dac();
-  XGpioPs_WritePin(&gpiops, ADC_SLEEP, 0x0);
-
-  xil_printf("Set Voltage Near (Postive) Half Scale  \r\n");
-  set_voltages(0x40, 0x40, 0x0, 0x0);
-  usleep(1000);
-
-  xil_printf("ADC REGISTER -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xFF40));
-  xil_printf("ADC REGISTER -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xFF40));
-  xil_printf("ADC REGISTER -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xFF40));
-
+void toggle_adc_config(){
+  static int mode = 0;
+  mode = (mode + 1) % 5;
+  unsigned config = 0;
+  if (mode == 0) {
+    config = 0x00000000;
+  } else if (mode == 1) {
+    config = 0x000000A3;
+  }  else if (mode == 2) {
+    config = 0x000403B3;
+  } else if (mode == 3) {
+    config = 0x00080FB3;
+  } else if (mode == 4) {
+    config = 0x000CABC3;
+  } else {
+    return;
+  }
+  xil_printf("setting ADC config to %x \r\n", config);
+  Xil_Out32(ADDR_AXIL_REGS+0xD110, config);
 }
 
+void toggle_dcache(){
+  static int mode = 0;
+  mode = (mode + 1) % 2;  
 
+  if (mode == 0) {
+    xil_printf("enabling dcache\r\n");
+    Xil_DCacheEnable();
+  } else {
+    xil_printf("disabling dcache\r\n");
+    Xil_DCacheDisable();
+  }
+}
 
 void write_bram(){
   for (int i=0; i<10; i++){
@@ -359,7 +402,6 @@ void read_bram(){
   }
 }
 
-
 int main(){
   xil_printf("SANITY NUMBER:  1\r\n");
   xil_printf("Trenz Eval Board Hardware Testing (Development)\r\n");
@@ -372,11 +414,10 @@ int main(){
   }
   while(1){
     xil_printf("choose an option:\r\n");
-    xil_printf("(1) blink LEDS \r\n");
-    xil_printf("(2) global registers \r\n");
-    xil_printf("(3) check iic (4) set P voltage zero (5) set P voltage full \r\n");
-    xil_printf("(6) set mux to DAC (7) test ADC   \r\n");
-    xil_printf("(8) write BRAM (9) read BRAM  \r\n");
+    xil_printf("(1) blink LEDS (2) read global registers (3) toggle enables\r\n");
+    xil_printf("(4) check iic (5) set MUX to DAC (6) toggle DAC \r\n");
+    xil_printf("(7) enable ADC (8) toggle ADC config \r\n");
+    xil_printf("(9) read BRAM  (a) write BRAM \r\n");
 
     unsigned char c=inbyte();
     xil_printf("pressed:  %c\n\r", c);
@@ -385,30 +426,32 @@ int main(){
       blink();
       break;
     case '2':
-      global_registers();
+      read_global_registers();
       break;
     case '3':
-      check_iic();
+      toggle_enables();
       break;
     case '4':
-      set_voltages_zero();
+      check_iic();
       break;
     case '5':
-      set_voltages_full();
-      break;
-    case '6':
       set_mux_dac();
       break;
+    case '6':
+      toggle_dac();
+      break;
     case '7':
-      test_adc();
-      break;
+      toggle_adc_sleep();
+      break;      
     case '8':
-      write_bram();
-      break;
+      toggle_adc_config();
+      break;      
     case '9':
       read_bram();
       break;
-   
+    case 'a':
+      write_bram();
+      break;   
    default:
       xil_printf("invalid selection...\n\r");
     }

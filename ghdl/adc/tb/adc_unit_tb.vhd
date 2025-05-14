@@ -108,123 +108,21 @@ begin
     wait for 5 ns;
   end process;
 
-  data_in : process
-  begin
-    di     <= x"000";
-    diof   <= '0';
-    wait for 8 ns;
-    di     <= x"111";
-    diof   <= '0';
-    wait for 10 ns;
-    di     <= x"222";
-    diof   <= '0';
-    wait for 10 ns;
-    di     <= x"333";
-    diof   <= '0';
-    wait for 10 ns;
-    di     <= x"444";
-    diof   <= '1';
-    wait for 10 ns;
-    di     <= x"555";
-    diof   <= '0';  
-    wait for 10 ns;
-    di     <= x"666";
-    diof   <= '0';
-    wait for 10 ns;
-    di     <= x"777";
-    diof   <= '0';   
-    wait for 10 ns;
-    di     <= x"888";
-    diof   <= '1';
-    wait for 10 ns;
-    di     <= x"999";
-    diof   <= '0';
-    wait for 10 ns;
-    di     <= x"AAA";
-    diof   <= '0';
-    wait for 10 ns;
-    di     <= x"BBB";
-    diof   <= '0';
-    wait for 10 ns;
-    di     <= x"CCC";
-    diof   <= '1';  
-    wait for 10 ns;
-    di     <= x"DDD";
-    diof   <= '0';
-    wait for 10 ns;
-    di     <= x"EEE";
-    diof   <= '0';  
-    wait for 10 ns;
-    di     <= x"FFF";
-    diof   <= '0';
-    wait for 10 ns;
-    di     <= x"001";
-    diof   <= '0';
-    wait for 10 ns;
-    di     <= x"112";
-    diof   <= '0';
-    wait for 10 ns;
-    di     <= x"223";
-    diof   <= '0';
-    wait for 10 ns;
-    di     <= x"334";
-    diof   <= '0';
-    wait for 10 ns;
-    di     <= x"445";
-    diof   <= '0';
-    wait for 10 ns;
-    di     <= x"556";
-    diof   <= '0';  
-    wait for 10 ns;
-    di     <= x"667";
-    diof   <= '0';
-    wait for 10 ns;
-    di     <= x"778";
-    diof   <= '0';   
-    wait for 10 ns;
-    di     <= x"889";
-    diof   <= '1';
-    wait for 10 ns;
-    di     <= x"99A";
-    diof   <= '0';
-    wait for 10 ns;
-    di     <= x"AAB";
-    diof   <= '0';
-    wait for 10 ns;
-    di     <= x"BBC";
-    diof   <= '0';
-    wait for 10 ns;
-    di     <= x"CCD";
-    diof   <= '0';  
-    wait for 10 ns;
-    di     <= x"DDE";
-    diof   <= '0';
-    wait for 10 ns;
-    di     <= x"EEF";
-    diof   <= '0';  
-    wait for 10 ns;
-    di     <= x"FF0";
-    diof   <= '0';
-    wait for 10 ns;
-    di     <= x"ACE";
-    diof   <= '0';
-    wait;
-  end process;
 
 write_process : process
   begin
     wait for 1 ns;
     wait for 20 ns;
     waddr   <= x"D110";
-    wdata   <= x"00000001";
+    wdata   <= x"000000A1";
     wupdate <= '1';
-    wait for 10 ns;
-    waddr   <= x"D114";
-    wdata   <= x"00000004";
+    wait for 50 ns;
+    waddr   <= x"D110";
+    wdata   <= x"0ACE0FB0";
     wupdate <= '1';
-    wait for 100 ns;
+    wait for 50 ns;
     waddr   <= x"D110"; 
-    wdata   <= x"00000000";
+    wdata   <= x"0DEAD1C1";
     wupdate <= '1';
     wait;
   end process;
@@ -261,37 +159,6 @@ write_process : process
     raddr   <= x"0000";
     rupdate <= '0';
     wait;
-  end process;
-
-  output_process : process
-    variable l : line;
-  begin
-    --wait for 1 ns;
-    if (count < 15) then
-      wait for 10 ns;
-    else
-      wait;
-    end if;
-    write (l, String'("c: "));
-    write (l, count, left, 4);
-    write (l, String'("aclk: "));
-    write (l, aclk);
-    write (l, String'(" | wa: 0x"));
-    hwrite (l, waddr);
-    write (l, String'(" wd: 0x"));
-    hwrite (l, wdata);
-    write (l, String'(" | w: 0x"));
-    hwrite (l, wen);
-    write (l, String'(" di: 0x"));
-    hwrite (l, di);
-    write (l, String'(" a: 0x"));
-    hwrite (l, addr);
-    write (l, String'(" do: 0x"));
-    hwrite (l, do);
-    if (aresetn = '0') then
-      write (l, String'(" (RESET)"));
-    end if;
-    writeline(output, l);
   end process;
 
 
