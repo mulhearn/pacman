@@ -99,5 +99,34 @@ begin
     wait for 10 ns;  
     wait;
   end process;
-end behaviour;
         
+  output_process : process
+    variable l : line;
+  begin
+    --wait for 1 ns;
+    if (count < 15) then
+      wait for 10 ns;
+    else
+      wait;
+    end if;
+    write (l, String'("c: "));
+    write (l, count, left, 4);
+    write (l, String'("aclk: "));
+    write (l, aclk);
+    write (l, String'(" || t: 0x"));
+    hwrite (l, trig_mode);
+    write (l, String'("  w: 0x"));
+    hwrite (l, wen);
+    write (l, String'(" | di: 0x"));
+    hwrite (l, di);
+    write (l, String'("  a: 0x"));
+    hwrite (l, addr);
+    write (l, String'("  do: 0x"));
+    hwrite (l, do);
+    if (aresetn = '0') then
+      write (l, String'(" (RESET)"));
+    end if;
+    writeline(output, l);
+  end process;
+
+end behaviour;

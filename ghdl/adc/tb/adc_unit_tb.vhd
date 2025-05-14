@@ -215,41 +215,19 @@ write_process : process
   begin
     wait for 1 ns;
     wait for 20 ns;
-    waddr   <= x"D100";
+    waddr   <= x"D110";
     wdata   <= x"00000001";
     wupdate <= '1';
     wait for 10 ns;
-    waddr   <= x"D104";
+    waddr   <= x"D114";
     wdata   <= x"00000004";
     wupdate <= '1';
-    wait for 10 ns;
-    --expert write:
-    waddr   <= x"D1E0";
-    wdata   <= x"FFFFFFFF";
-    wupdate <= '1';
-    wait for 10 ns;
-    waddr   <= x"D108";
-    wdata   <= x"A0000000";
-    wupdate <= '1';
     wait for 100 ns;
-    waddr   <= x"D100"; 
-    wdata   <= x"000000FF";
-    wupdate <= '1';
-    wait for 50 ns;
-    waddr   <= x"D100";
-    wdata   <= x"EEEEEEEE";
-    wupdate <= '1';
-    wait for 50 ns;
-    waddr   <= x"0000";
+    waddr   <= x"D110"; 
     wdata   <= x"00000000";
-    wupdate <= '0';
-    wait for 10 ns;
-    waddr   <= x"D108";
-    wdata   <= x"00000001";
     wupdate <= '1';
     wait;
   end process;
-
   
   rapid_read_process : process
   begin
@@ -284,4 +262,38 @@ write_process : process
     rupdate <= '0';
     wait;
   end process;
+
+  output_process : process
+    variable l : line;
+  begin
+    --wait for 1 ns;
+    if (count < 15) then
+      wait for 10 ns;
+    else
+      wait;
+    end if;
+    write (l, String'("c: "));
+    write (l, count, left, 4);
+    write (l, String'("aclk: "));
+    write (l, aclk);
+    write (l, String'(" | wa: 0x"));
+    hwrite (l, waddr);
+    write (l, String'(" wd: 0x"));
+    hwrite (l, wdata);
+    write (l, String'(" | w: 0x"));
+    hwrite (l, wen);
+    write (l, String'(" di: 0x"));
+    hwrite (l, di);
+    write (l, String'(" a: 0x"));
+    hwrite (l, addr);
+    write (l, String'(" do: 0x"));
+    hwrite (l, do);
+    if (aresetn = '0') then
+      write (l, String'(" (RESET)"));
+    end if;
+    writeline(output, l);
+  end process;
+
+
+
 end behaviour;

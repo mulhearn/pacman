@@ -27,11 +27,11 @@ architecture behavioral of adc_daq is
   signal clk  : std_logic;
   signal rst  : std_logic;
   signal trig : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-  signal cnt  : unsigned(BRAM_ADDR_WIDTH-1 downto 0);
+  signal cnt  : unsigned(BRAM_ADDR_WIDTH-3 downto 0);
   signal data : std_logic_vector(ADC_DATA_WIDTH-1 downto 0);
   signal d_of : std_logic;
   signal w    : std_logic;
-  signal a    : std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
+  signal a    : std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0) := (others => '0');
 
 begin
   clk      <= ACLK;
@@ -42,7 +42,7 @@ begin
   WEN(2)      <= w;
   WEN(3)      <= w;
   ADDR     <= a;
-  DATA_OUT(BRAM_DATA_WIDTH-1 downto ADC_DATA_WIDTH+1) <= (others => '0');
+  DATA_OUT(BRAM_DATA_WIDTH-1 downto ADC_DATA_WIDTH+1) <= (others => '1');
   DATA_OUT(ADC_DATA_WIDTH) <= d_of;
   DATA_OUT(ADC_DATA_WIDTH-1 downto 0) <= data;
 
@@ -85,8 +85,7 @@ begin
       if (rising_edge(clk)) then
         if (w = '1') then
           LAST_W <= a;
-          cnt <= cnt + 1;
-          a <= std_logic_vector(cnt + 1);
+          a <= (others => '0');
         end if;
       end if;
     end if;

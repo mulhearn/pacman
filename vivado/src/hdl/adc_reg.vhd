@@ -7,12 +7,11 @@ use work.common.all;
 entity adc_reg is
   generic (
     C_SCOPE       : integer  := 16#D#;
-    C_ROLE        : integer  := 16#1#;
-    C_REG_TRIG    : integer  := 16#0#;
-    C_REG_DIVS    : integer  := 16#4#;
-    C_REG_ADC_EN  : integer  := 16#8#;
-    C_REG_LAST_W  : integer  := 16#C#;
-    C_REG_ROB     : integer  := 16#10#;
+    C_REG_TRIG    : integer  := 16#100#;
+    C_REG_DIVS    : integer  := 16#104#;
+    C_REG_ADC_EN  : integer  := 16#108#;
+    C_REG_LAST_W  : integer  := 16#10C#;
+    C_REG_ROB     : integer  := 16#110#;
     C_VAL_ROB     : unsigned(31 downto 0)  := x"22222222"
     );      
   port (
@@ -85,7 +84,6 @@ begin
   -- Handle Read Request:
   process(clk,rst)
   variable scope   : integer;
-  variable role    : integer;
   variable reg     : integer;
   begin  
     if (rst = '1') then
@@ -98,9 +96,8 @@ begin
           rack <= '0';
         else
           scope := to_integer(unsigned(raddr(15 downto 12)));
-          role  := to_integer(unsigned(raddr(11 downto 8)));
-          reg   := to_integer(unsigned(raddr(7 downto 0)));          
-          if ((scope=C_SCOPE) and (role=C_ROLE)) then
+          reg   := to_integer(unsigned(raddr(11 downto 0)));          
+          if (scope=C_SCOPE) then
             if (reg=C_REG_TRIG) then
               rdata <= trig;
               rack  <= '1';
@@ -117,9 +114,9 @@ begin
               rdata <= std_logic_vector(C_VAL_ROB);
               rack  <= '1';
             else
-                -- this is an error, invalid register
-                rdata <= x"EEEEEEEE";
-                rack  <= '0';
+              -- this is an error, invalid register
+              rdata <= x"EEEEEEEE";
+              rack  <= '0';
             end if;
           else
             -- this is not an error, just a request outside our scope/role
@@ -131,11 +128,9 @@ begin
     end if;
   end process;
 
-
-    -- Handle Write Request:
+  -- Handle Write Request:
   process(clk,rst)
   variable scope   : integer;
-  variable role    : integer;
   variable reg     : integer;
   begin  
     if (rst = '1') then
@@ -148,9 +143,8 @@ begin
             wack  <= '0';          
         else
           scope := to_integer(unsigned(waddr(15 downto 12)));
-          role  := to_integer(unsigned(waddr(11 downto 8)));
-          reg   := to_integer(unsigned(waddr(7 downto 0)));          
-          if ((scope=C_SCOPE) and (role=C_ROLE)) then
+          reg   := to_integer(unsigned(waddr(11 downto 0)));          
+          if (scope=C_SCOPE) then
             if (reg=C_REG_TRIG) then
               trig   <= wdata;
               wack   <= '1';
