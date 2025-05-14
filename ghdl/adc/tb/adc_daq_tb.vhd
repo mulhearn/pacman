@@ -24,14 +24,14 @@ architecture behaviour of adc_daq_tb is
       DATA_OUT  : out std_logic_vector(BRAM_DATA_WIDTH-1 downto 0);
 
       ADDR      : out std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
-      WEN       : out std_logic;
+      WEN       : out std_logic_vector(3 downto 0);
     
       LAST_W    : out std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0)
       );
   end component;
   signal count     : integer := 0;
   signal last_w    : std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
-  signal wen       : std_logic;
+  signal wen       : std_logic_vector(3 downto 0);
   signal addr      : std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
   signal do        : std_logic_vector(BRAM_DATA_WIDTH-1 downto 0);
   signal di        : std_logic_vector(ADC_DATA_WIDTH-1 downto 0);

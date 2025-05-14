@@ -9,8 +9,14 @@ package common is
 
   constant C_NUM_LED           : integer  := 2;
 
+  -- soon to be obsolete:
   constant C_NUM_ADC_BITS      : integer  := 12;
 
+  constant BRAM_ADDR_WIDTH       : integer  := 32;
+  constant ADC_DATA_WIDTH        : integer  := 12;
+  constant BRAM_DATA_WIDTH       : integer  := 32;
+
+  
   constant C_TIMESTAMP_WIDTH   : integer  := 32;
 
   -- register bus data is 32 bits, address 16 bits.

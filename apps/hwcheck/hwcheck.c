@@ -297,12 +297,23 @@ void set_mux_dac(){
 
 void global_registers(){
   Xil_Out32(ADDR_AXIL_REGS+0xFF20, 0x001103FF);
+  Xil_Out32(ADDR_AXIL_REGS+0xD100, 0x000000FF);
+  usleep(10000);  
+  Xil_Out32(ADDR_AXIL_REGS+0xD100, 0x00000000);
   xil_printf("Enables  -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xFF20));
   xil_printf("ADC Look -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xFF40));
+  xil_printf("Last Address -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xD10C));
+
+  unsigned addr = Xil_In32(ADDR_AXIL_REGS+0xD10C);
+  addr = addr&0x1FFC;
+  xil_printf("Last Address (byte aligned) -- 0x%x  \r\n", addr);
+  for (int i=-20; i<20; i++){
+    xil_printf("BRAM %d -- 0x%x  \r\n", i, Xil_In32(XPAR_BRAM_0_BASEADDR+addr+4*i));
+  }
 }
 
 
-void test_adc(){
+void test_adc_look(){
 
   xil_printf("test ADCs  \r\n");
   set_mux_dac();
@@ -325,6 +336,22 @@ void test_adc(){
 
   XGpioPs_WritePin(&gpiops, ADC_SLEEP, 0x1);
   xil_printf("done testing ADCs  \r\n");
+}
+
+void test_adc(){
+
+  xil_printf("test ADCs  \r\n");
+  set_mux_dac();
+  XGpioPs_WritePin(&gpiops, ADC_SLEEP, 0x0);
+
+  xil_printf("Set Voltage Near (Postive) Half Scale  \r\n");
+  set_voltages(0x40, 0x40, 0x0, 0x0);
+  usleep(1000);
+
+  xil_printf("ADC REGISTER -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xFF40));
+  xil_printf("ADC REGISTER -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xFF40));
+  xil_printf("ADC REGISTER -- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0xFF40));
+
 }
 
 
@@ -357,7 +384,7 @@ int main(){
     xil_printf("(1) blink LEDS \r\n");
     xil_printf("(2) global registers \r\n");
     xil_printf("(3) check iic (4) set P voltage zero (5) set P voltage full \r\n");
-    xil_printf("(6) set mux to DAC (7) test ADC  \r\n");
+    xil_printf("(6) set mux to DAC (7) test ADC   \r\n");
     xil_printf("(8) write BRAM (9) read BRAM  \r\n");
 
     unsigned char c=inbyte();

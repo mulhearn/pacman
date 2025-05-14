@@ -12,7 +12,7 @@ package common is
   -- soon to be obsolete:
   constant C_NUM_ADC_BITS      : integer  := 12;
 
-  constant BRAM_ADDR_WIDTH       : integer  := 8;
+  constant BRAM_ADDR_WIDTH       : integer  := 32;
   constant ADC_DATA_WIDTH        : integer  := 12;
   constant BRAM_DATA_WIDTH       : integer  := 32;
 

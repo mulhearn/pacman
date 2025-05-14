@@ -90,7 +90,7 @@ begin
     raddr   <= x"0000";
     rupdate <= '0';
     wait for 8 ns;
-    last_w <= x"AD";
+    last_w <= x"000000AD";
     wait for 40 ns;
     raddr   <= x"D10C";
     rupdate <= '1';
@@ -100,7 +100,7 @@ begin
     wait for 10 ns;
     raddr   <= x"D104";
     rupdate <= '1';
-    last_w  <= x"BC";
+    last_w  <= x"000000BC";
     wait for 10 ns;
     raddr   <= x"D110";
     rupdate <= '1';

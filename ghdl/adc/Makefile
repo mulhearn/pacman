@@ -2,17 +2,19 @@ all: modules-a modules-e testbenches run-units
 
 modules-a:
 	echo "*** modules analysis ***"
-	ghdl -a common.vhd
+	ghdl -a ../integration/common.vhd
 	ghdl -a adc_daq.vhd
 	ghdl -a adc_reg.vhd
 	ghdl -a ADC_CLK_DIV.vhd
 	ghdl -a adc_unit.vhd
+	ghdl -a const_bram.vhd
 modules-e:
 	echo "*** module elaboration ***"
 	ghdl -e adc_daq
 	ghdl -e adc_reg
 	ghdl -e ADC_CLK_DIV
 	ghdl -e adc_unit
+	ghdl -e const_bram
 testbenches:
 	echo "*** testbench analysis and elaboration ***"
 	ghdl -a -fsynopsys tb/ADC_CLK_DIV_tb.vhd

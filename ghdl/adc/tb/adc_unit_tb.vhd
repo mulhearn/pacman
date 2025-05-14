@@ -26,16 +26,19 @@ architecture behaviour of adc_unit_tb is
       S_REGBUS_RB_WDATA   : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_WACK    : out std_logic;
 
-      -- Data Ports
-      DATA_I              : in  std_logic_vector(ADC_DATA_WIDTH-1 downto 0);
-      DOF_I               : in  std_logic;
-      DATA_O              : out std_logic_vector(BRAM_DATA_WIDTH-1 downto 0);
+      -- BRAM
+      BRAM_EN_O           : out std_logic; 
+      BRAM_DATA_O         : out std_logic_vector(BRAM_DATA_WIDTH-1 downto 0);
+      BRAM_WEN_O          : out std_logic_vector(3 downto 0);
       BRAM_ADDR_O         : out std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
-      WEN_O               : out std_logic;
-
-      -- ADC Ports
+      BRAM_CLK_O          : out std_logic;
+      BRAM_RST_O          : out std_logic;
+    
+      -- ADC
       ADC_EN_O            : out std_logic;
-      ADC_CLK_O           : out std_logic   
+      ADC_CLK_O           : out std_logic;
+      ADC_DATA_I          : in  std_logic_vector(ADC_DATA_WIDTH-1 downto 0);
+      ADC_DOF_I           : in  std_logic
     );
   end component;
   
@@ -56,7 +59,7 @@ architecture behaviour of adc_unit_tb is
   signal wack    : std_logic := '0';
 
   -- daq
-  signal wen       : std_logic;
+  signal wen       : std_logic_vector(3 downto 0);
   signal addr      : std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
   signal do        : std_logic_vector(BRAM_DATA_WIDTH-1 downto 0);
   signal di        : std_logic_vector(ADC_DATA_WIDTH-1 downto 0);
@@ -80,11 +83,11 @@ begin
     S_REGBUS_RB_WADDR   => waddr,
     S_REGBUS_RB_WDATA   => wdata,
     S_REGBUS_RB_WACK    => wack, 
-    DATA_I              => di,
-    DOF_I               => diof,
-    DATA_O              => do,
+    ADC_DATA_I          => di,
+    ADC_DOF_I           => diof,
+    BRAM_DATA_O         => do,
     BRAM_ADDR_O         => addr,
-    WEN_O               => wen
+    BRAM_WEN_O          => wen
   );
 
 
