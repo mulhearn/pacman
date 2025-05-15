@@ -266,6 +266,8 @@ proc create_root_design { parentCell } {
   set ADC_CLK_O_0 [ create_bd_port -dir O ADC_CLK_O_0 ]
   set ADC_D_I_0 [ create_bd_port -dir I -from 11 -to 0 ADC_D_I_0 ]
   set ADC_OF_I_0 [ create_bd_port -dir I ADC_OF_I_0 ]
+  set LEMO_A_0 [ create_bd_port -dir I LEMO_A_0 ]
+  set LEMO_B_0 [ create_bd_port -dir I LEMO_B_0 ]
 
   # Create instance: SC0720_0, and set properties
   set SC0720_0 [ create_bd_cell -type ip -vlnv trenz.biz:user:SC0720:1.0 SC0720_0 ]
@@ -720,6 +722,8 @@ proc create_root_design { parentCell } {
   # Create port connections
   connect_bd_net -net ADC_D_I_0_1 [get_bd_ports ADC_D_I_0] [get_bd_pins global_unit_0/ADC_D_I] [get_bd_pins adc_unit_0/ADC_DATA_I]
   connect_bd_net -net ADC_OF_I_0_1 [get_bd_ports ADC_OF_I_0] [get_bd_pins global_unit_0/ADC_OF_I] [get_bd_pins adc_unit_0/ADC_DOF_I]
+  connect_bd_net -net LEMO_A_I_0_1 [get_bd_ports LEMO_A_0] [get_bd_pins timing_unit_0/LEMO_A_I]
+  connect_bd_net -net LEMO_B_I_0_1 [get_bd_ports LEMO_B_0] [get_bd_pins timing_unit_0/LEMO_B_I]
   connect_bd_net -net PHY_LEDs [get_bd_pins xlconcat_0/dout] [get_bd_pins vio_0/probe_in0]
   connect_bd_net -net PISO_I_0_1 [get_bd_ports PISO_I_0] [get_bd_pins rx_unit_0/PISO_I]
   connect_bd_net -net PL_pin_K16_1 [get_bd_ports PL_pin_K16] [get_bd_pins SC0720_0/PL_pin_K16]
@@ -753,9 +757,9 @@ proc create_root_design { parentCell } {
   connect_bd_net -net processing_system7_0_FCLK_RESET0_N [get_bd_pins processing_system7_0/FCLK_RESET0_N] [get_bd_pins rst_ps7_0_100M/ext_reset_in]
   connect_bd_net -net rst_ps7_0_100M_peripheral_aresetn [get_bd_pins rst_ps7_0_100M/peripheral_aresetn] [get_bd_pins ps7_0_axi_periph/S00_ARESETN] [get_bd_pins axi_dma_0/axi_resetn] [get_bd_pins ps7_0_axi_periph/M00_ARESETN] [get_bd_pins ps7_0_axi_periph/ARESETN] [get_bd_pins axil_to_regbus_0/S_AXI_ARESETN] [get_bd_pins ps7_0_axi_periph/M01_ARESETN] [get_bd_pins axi_mem_intercon/S00_ARESETN] [get_bd_pins axi_mem_intercon/M00_ARESETN] [get_bd_pins axi_mem_intercon/ARESETN] [get_bd_pins rx_unit_0/M_AXIS_ARESETN] [get_bd_pins tx_unit_0/S_AXIS_ARESETN] [get_bd_pins axi_mem_intercon/S01_ARESETN] [get_bd_pins axis_data_fifo_0/s_axis_aresetn] [get_bd_pins regbus_mux_0/ARESETN] [get_bd_pins timing_unit_0/ARESETN] [get_bd_pins global_unit_0/ARESETN] [get_bd_pins axi_bram_ctrl_0/s_axi_aresetn] [get_bd_pins ps7_0_axi_periph/M02_ARESETN] [get_bd_pins adc_unit_0/ARESETN]
   connect_bd_net -net timing_unit_0_GLB_CLK_O [get_bd_pins timing_unit_0/GLB_CLK_O] [get_bd_ports GLB_CLK_O_0]
-  connect_bd_net -net timing_unit_0_SYNC_O [get_bd_pins timing_unit_0/SYNC_O] [get_bd_ports SYNC_O_0]
+  connect_bd_net -net timing_unit_0_G_O [get_bd_pins timing_unit_0/G_O] [get_bd_ports SYNC_O_0]
   connect_bd_net -net timing_unit_0_TIMESTAMP_O [get_bd_pins timing_unit_0/TIMESTAMP_O] [get_bd_pins rx_unit_0/TIMESTAMP_I]
-  connect_bd_net -net timing_unit_0_TRIG_O [get_bd_pins timing_unit_0/TRIG_O] [get_bd_ports TRIG_O_0]
+  connect_bd_net -net timing_unit_0_TRIG_O [get_bd_pins timing_unit_0/H_O] [get_bd_ports TRIG_O_0]
   connect_bd_net -net tx_unit_0_POSI_O [get_bd_pins tx_unit_0/POSI_O] [get_bd_ports POSI_O_0] [get_bd_pins rx_unit_0/LOOPBACK_I]
 
   # Create address segments
