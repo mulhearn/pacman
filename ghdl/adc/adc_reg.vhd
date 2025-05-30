@@ -10,8 +10,10 @@ entity adc_reg is
     C_REG_ADC_STATUS   : integer  := 16#100#; -- RO
     C_REG_ADC_LOOK     : integer  := 16#104#; -- RO
     C_REG_ADC_LAST     : integer  := 16#108#; -- RO
+    C_REG_ADC_STATE    : integer  := 16#10C#; -- RO
     C_REG_ADC_CONFIG   : integer  := 16#110#; -- RW
     C_REG_ADC_CLKPAR   : integer  := 16#114#; -- RW
+    C_REG_ADC_COMMAND  : integer  := 16#118#; -- RW
     C_REG_ADC_SCRATCH  : integer  := 16#200#; -- RW
     C_REG_ADC_ROA      : integer  := 16#204#; -- RO
     C_VAL_ADC_ROA      : integer  := 16#1234ABCD#
@@ -32,9 +34,11 @@ entity adc_reg is
 
     CONFIG_O            : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     CLKPAR_O            : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    STATUS_I            : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    LAST_I              : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    LOOK_I              : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+    COMMAND_O           : out std_logic_vector(7 downto 0);
+    STATUS_I            : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+    STATE_I             : in  std_logic_vector(3 downto 0);
+    LAST_I              : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+    LOOK_I              : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
     );
 end entity adc_reg;
 
@@ -56,13 +60,20 @@ architecture behavioral of adc_reg is
   signal config   : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal clkpar   : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal scratch  : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
+  signal command  : std_logic_vector(7 downto 0) := (others => '0');
+  signal state    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
 
 begin
   --inputs:
   clk       <= ACLK;
   rst       <= not ARESETN;
+
+  --output registers
   CONFIG_O  <= config;
   CLKPAR_O  <= clkpar;
+  COMMAND_O <= command;
+
+  state(3 downto 0 ) <= STATE_I;
 
   --REGBUS--
   --outputs:
@@ -108,6 +119,9 @@ begin
             elsif (reg=C_REG_ADC_CLKPAR) then
               rdata <= clkpar;
               rack  <= '1';
+            elsif (reg=C_REG_ADC_STATE) then
+              rdata <= state;
+              rack  <= '1';
             elsif (reg=C_REG_ADC_SCRATCH) then
               rdata <= scratch;
               rack  <= '1';
@@ -138,8 +152,10 @@ begin
       config <= x"00000000";
       clkpar <= x"00000000";
       scratch <= x"00000000";
+      command <= x"00";
     else
       if (rising_edge(clk)) then
+        command <= x"00";
         if (wupdate='0') then
           wack  <= '0';
         else
@@ -147,14 +163,17 @@ begin
           reg   := to_integer(unsigned(waddr(11 downto 0)));
           if (scope=C_SCOPE) then
             if (reg=C_REG_ADC_CONFIG) then
-              config <= wdata;
-              wack  <= '1';
+              config  <= wdata;
+              wack    <= '1';
             elsif (reg=C_REG_ADC_CLKPAR) then
-              clkpar <= wdata;
-              wack  <= '1';
+              clkpar  <= wdata;
+              wack    <= '1';
+            elsif (reg=C_REG_ADC_COMMAND) then
+              command <= wdata(7 downto 0);
+              wack    <= '1';
             elsif (reg=C_REG_ADC_SCRATCH) then
               scratch <= wdata;
-              wack  <= '1';
+              wack    <= '1';
             else
               -- this is an error, invalid register
               wack  <= '0';

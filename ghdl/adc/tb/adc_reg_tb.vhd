@@ -28,17 +28,20 @@ architecture behaviour of adc_reg_tb is
 
       CONFIG_O             : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       CLKPAR_O             : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      STATUS_I             : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      LAST_I               : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      LOOK_I               : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+      COMMAND_O            : out std_logic_vector(7 downto 0);
+      STATE_I              : in  std_logic_vector(3 downto 0);
+      STATUS_I             : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      LAST_I               : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      LOOK_I               : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
       );
   end component;
   signal count     : integer := 0;
   signal aclk      : std_logic;
   signal aresetn   : std_logic;
   -- registers
-  signal config : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
-  signal clkpar : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
+  signal config  : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
+  signal clkpar  : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
+  signal command : std_logic_vector(7 downto 0);
 
   -- read signals:
   signal raddr   : std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0) := (others => '0');
@@ -65,7 +68,9 @@ begin
 
       CONFIG_O            => config,
       CLKPAR_O            => clkpar,
+      COMMAND_O           => command,
       STATUS_I            => x"11112222",
+      STATE_I             => x"4",
       LAST_I              => x"00000AAA",
       LOOK_I              => x"11111BBB"      
       );
@@ -121,13 +126,17 @@ begin
 
   write_process : process
   begin
-    wait for 20 ns;
+    wait for 18 ns;
     waddr   <= x"D110";
     wdata   <= x"FEEDDADA";
     wupdate <= '1';
     wait for 10 ns;
     waddr   <= x"D114";
     wdata   <= x"DEADBEEF";
+    wupdate <= '1';
+    wait for 10 ns;
+    waddr   <= x"D118";
+    wdata   <= x"000000EF";
     wupdate <= '1';
     wait for 10 ns;
     waddr   <= x"D200";

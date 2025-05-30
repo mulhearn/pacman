@@ -4,6 +4,7 @@ modules-a:
 	echo "*** modules analysis ***"
 	ghdl -a ../integration/common.vhd
 	ghdl -a const_bram.vhd
+	ghdl -a adc_clk_div.vhd
 	ghdl -a adc_reg.vhd
 	ghdl -a adc_daq.vhd
 	ghdl -a adc_unit.vhd
@@ -11,9 +12,11 @@ modules-a:
 modules-e:
 	echo "*** module elaboration ***"
 	ghdl -e const_bram
+	ghdl -e adc_clk_div
 	ghdl -e adc_reg
 	ghdl -e adc_daq
 	ghdl -e adc_unit
+
 
 testbenches:
 	echo "*** testbench analysis and elaboration ***"

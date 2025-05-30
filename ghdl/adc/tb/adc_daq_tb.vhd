@@ -23,8 +23,10 @@ architecture behaviour of adc_daq_tb is
 
       -- REGISTER
       CONFIG_I       : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      COMMAND_I      : in  std_logic_vector(7 downto 0);
       STATUS_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       LAST_O         : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      STATE_O        : out std_logic_vector(3 downto 0);
 
       -- BRAM
       BRAM_EN_O      : out std_logic; 
@@ -47,6 +49,17 @@ architecture behaviour of adc_daq_tb is
   signal di        : std_logic_vector(ADC_DATA_WIDTH-1 downto 0) := (others => '0');
   signal diof      : std_logic := '0';
   signal adc_e     : std_logic := '0';
+  signal command   : std_logic_vector(7 downto 0) := (others => '0');
+  signal state     : std_logic_vector(3 downto 0) := (others => '0');
+
+  signal clock     : std_logic;
+  signal reset     : std_logic;
+  signal adc_data  : std_logic_vector(11 downto 0);
+  signal adc_of    : std_logic;
+  signal data_o    : std_logic_vector(BRAM_DATA_WIDTH-1 downto 0);
+  signal address   : std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
+  signal trigger   : std_logic := '0';
+  signal old_state : std_logic_vector(3 downto 0) := (others => '0');
 begin
   uut: adc_daq port map (
       ACLK         => aclk,
@@ -55,12 +68,22 @@ begin
       ADC_DOF_I    => diof,
       ADC_EN_O     => adc_e,
       CONFIG_I     => config,
+      COMMAND_I    => command,
       STATUS_O     => stat,
       LAST_O       => last,
+      STATE_O      => state,
       BRAM_DATA_O  => do,
       BRAM_WEN_O   => wen,
-      BRAM_ADDR_O  => addr       
+      BRAM_ADDR_O  => addr
       );
+
+  clock <= aclk;
+  reset <= aresetn;
+  adc_data <= di;
+  adc_of   <= diof;
+  data_o   <= do;
+  address  <= addr;
+  trigger  <= state(1) and not old_state(1);
   
   aresetn_process : process
   begin
@@ -77,24 +100,161 @@ begin
     wait for 5 ns;
     aclk <= '0';
     wait for 5 ns;
+    old_state <= state;
   end process;
+
+  config_in : process
+  begin
+    wait for 18 ns;
+    config <= x"00300033";
+    --wait for 20 ns;
+    --config <= x"000F0013";
+    --wait for 70 ns;
+    --config <= x"00400033";
+    wait for 70 ns;
+    wait;
+  end process;
+
+  --command_in : process
+  --begin
+  --  wait for 28 ns;
+  --  command <= x"02";
+  --  wait for 10 ns;
+  --  command <= x"00";
+  --  wait for 10 ns;
+  --  command <= x"04";
+  --  wait for 10 ns;
+  --  command <= x"00";
+  --  wait for 10 ns;
+  --  command <= x"02";
+  --  wait for 10 ns;
+  --  command <= x"00";
+  --  wait for 200 ns;
+  --  command <= x"01";
+  --  wait for 10 ns;
+  --  command <= x"00";
+  --  wait for 20 ns;
+  --  command <= x"02";
+  --  wait for 10 ns;
+  --  command <= x"00";
+  --  wait;
+  --end process;
 
   data_in : process
   begin
-    --di     <= x"ACE";
-    --diof   <= '0';
-    wait for 8 ns;
-    config <= x"000000A0";
-    wait for 20 ns;
-    config <= x"000000A1";
-    wait for 20 ns;
-    config <= x"00000FB1";
-    wait for 20 ns;
-    config <= x"0ACE0AB0";
-    wait for 20 ns;
-    config <= x"0DEAAAC1";
-    wait for 20 ns;
-    config <= x"00000000";
+    di     <= x"000";
+    diof   <= '0';
+    wait for 18 ns;
+    di     <= x"111";
+    diof   <= '0';
+    wait for 10 ns;
+    di     <= x"222";
+    diof   <= '0';
+    wait for 10 ns;
+    di     <= x"333";
+    diof   <= '0';
+    wait for 10 ns;
+    di     <= x"444";
+    diof   <= '0';
+    wait for 10 ns;
+    di     <= x"555";
+    diof   <= '0';  
+    wait for 10 ns;
+    di     <= x"666";
+    diof   <= '0';
+    wait for 10 ns;
+    di     <= x"777";
+    diof   <= '0';   
+    wait for 10 ns;
+    di     <= x"888";
+    diof   <= '0';
+    wait for 10 ns;
+    di     <= x"999";
+    diof   <= '0';
+    wait for 10 ns;
+    di     <= x"AAA";
+    diof   <= '0';
+    wait for 10 ns;
+    di     <= x"BBB";
+    diof   <= '0';
+    wait for 10 ns;
+    di     <= x"CCC";
+    diof   <= '1';  
+    wait for 10 ns;
+    di     <= x"DDD";
+    diof   <= '0';
+    wait for 10 ns;
+    di     <= x"EEE";
+    diof   <= '0';  
+    wait for 10 ns;
+    di     <= x"FFF";
+    diof   <= '0';
+    wait for 10 ns;
+    di     <= x"001";
+    diof   <= '0';
+    wait for 10 ns;
+    di     <= x"112";
+    diof   <= '0';
+    wait for 10 ns;
+    di     <= x"223";
+    diof   <= '0';
+    wait for 10 ns;
+    di     <= x"334";
+    diof   <= '0';
+    wait for 10 ns;
+    di     <= x"445";
+    diof   <= '0';
+    wait for 10 ns;
+    di     <= x"556";
+    diof   <= '0';  
+    wait for 10 ns;
+    di     <= x"667";
+    diof   <= '0';
+    wait for 10 ns;
+    di     <= x"778";
+    diof   <= '0';   
+    wait for 10 ns;
+    di     <= x"889";
+    diof   <= '1';
+    wait for 10 ns;
+    di     <= x"99A";
+    diof   <= '0';
+    wait for 10 ns;
+    di     <= x"AAB";
+    diof   <= '0';
+    wait for 10 ns;
+    di     <= x"BBC";
+    diof   <= '0';
+    wait for 10 ns;
+    di     <= x"CCD";
+    diof   <= '0';  
+    wait for 10 ns;
+    di     <= x"DDE";
+    diof   <= '0';
+    wait for 10 ns;
+    di     <= x"EEF";
+    diof   <= '0';  
+    wait for 10 ns;
+    di     <= x"FF0";
+    diof   <= '0';
+    wait for 10 ns;
+    di     <= x"ACE";
+    diof   <= '0';
+    wait for 10 ns;
+    di     <= x"222";
+    diof   <= '0';
+    wait for 10 ns;
+    di     <= x"333";
+    diof   <= '0';
+    wait for 10 ns;
+    di     <= x"444";
+    diof   <= '1';
+    wait for 10 ns;
+    di     <= x"555";
+    diof   <= '0';  
+    wait for 10 ns;
+    di     <= x"666";
+    diof   <= '0';
     wait;
   end process;
 

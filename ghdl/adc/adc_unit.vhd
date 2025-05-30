@@ -54,8 +54,10 @@ architecture behavioral of adc_unit is
 
       CONFIG_O            : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       CLKPAR_O            : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      COMMAND_O           : out std_logic_vector(7 downto 0);
       STATUS_I            : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       LAST_I              : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      STATE_I             : in std_logic_vector(3 downto 0);
       LOOK_I              : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
       );
   end component;
@@ -72,6 +74,8 @@ architecture behavioral of adc_unit is
 
       -- REGISTER
       CONFIG_I       : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      COMMAND_I      : in  std_logic_vector(7 downto 0);
+      STATE_O        : out std_logic_vector(3 downto 0);
       STATUS_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       LAST_O         : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
@@ -84,19 +88,27 @@ architecture behavioral of adc_unit is
       BRAM_RST_O     : out std_logic
       );
   end component;
+  component adc_clk_div is
+    port (
+      ACLK           : in  std_logic;
+      ARESETN        : in  std_logic;
+      CLKPAR_I       : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      
+      ADC_CLK_O      : out std_logic
+      );
+  end component;
 
   
 
   signal config    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
+  signal command   : std_logic_vector(7 downto 0);
+  signal state     : std_logic_vector(3 downto 0);
   signal clkpar    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');  
   signal status    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal last      : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal look      : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
 
 begin
-  ADC_CLK_O <= ACLK;
-  
-
 
   look(ADC_DATA_WIDTH-1 downto 0) <= ADC_DATA_I;
   look(ADC_DATA_WIDTH) <= ADC_DOF_I;
@@ -113,11 +125,13 @@ begin
       S_REGBUS_RB_WDATA   => S_REGBUS_RB_WDATA,
       S_REGBUS_RB_WACK    => S_REGBUS_RB_WACK,
 
-      CONFIG_O => config,
-      CLKPAR_O => clkpar,
-      STATUS_I => status,
-      LAST_I   => last,
-      LOOK_I   => look
+      CONFIG_O  => config,
+      CLKPAR_O  => clkpar,
+      COMMAND_O => command,
+      STATE_I   => state,
+      STATUS_I  => status,
+      LAST_I    => last,
+      LOOK_I    => look
       );
 
   daq: adc_daq port map (
@@ -131,6 +145,8 @@ begin
 
       -- REGISTER
       CONFIG_I       => config,
+      COMMAND_I      => command,
+      STATE_O        => state,
       STATUS_O       => status,
       LAST_O         => last,
 
@@ -141,6 +157,14 @@ begin
       BRAM_ADDR_O    => BRAM_ADDR_O,
       BRAM_CLK_O     => BRAM_CLK_O,
       BRAM_RST_O     => BRAM_RST_O
+      );
+
+  clock_out: adc_clk_div port map (
+      ACLK       => ACLK,
+      ARESETN    => ARESETN,
+      CLKPAR_I   => clkpar,
+      
+      ADC_CLK_O  => ADC_CLK_O   
       );
 
 end behavioral;
