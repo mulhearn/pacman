@@ -52,7 +52,13 @@ architecture behavioral of adc_daq is
   signal t_rst : std_logic;
   signal run   : std_logic;
   signal halt  : std_logic;
- 
+
+  -- switch negative-edge inputs to positive-edge registers
+  signal adc_data_ne : std_logic_vector(ADC_DATA_WIDTH-1 downto 0) := (others => '0');
+  signal adc_dof_ne   : std_logic := '0';
+  signal adc_data    : std_logic_vector(ADC_DATA_WIDTH-1 downto 0) := (others => '0');
+  signal adc_dof      : std_logic := '0';
+  
 begin
   clk         <= ACLK;
   rst         <= not ARESETN;
@@ -78,7 +84,28 @@ begin
 
   trig        <= x"600";
   step        <= x"000";
-  
+
+  process(clk,rst)
+  begin
+    if (rst = '1') then
+      adc_data_ne <= (others => '0');
+      adc_dof_ne   <= '0';
+    elsif (falling_edge(clk)) then
+      adc_data_ne <= ADC_DATA_I;
+      adc_dof_ne  <= ADC_DOF_I;
+    end if;
+  end process;
+
+  process(clk,rst)
+  begin
+    if (rst = '1') then
+      adc_data <= (others => '0');
+      adc_dof  <= '0';
+    elsif (rising_edge(clk)) then
+      adc_data <= adc_data_ne;
+      adc_dof  <= adc_dof_ne;
+    end if;
+  end process;
 
   process(clk,rst)
     variable limit : integer := 2;
@@ -100,8 +127,8 @@ begin
         data     <= (others => '0');
         addr     <= (others => '0');
       elsif (mode = x"1") then
-        data(11 downto 0)  <= ADC_DATA_I;
-        data(12)           <= ADC_DOF_I;
+        data(11 downto 0)  <= adc_data;
+        data(12)           <= adc_dof;
         data(31 downto 13) <= (others => '0');
         wen                <= (others => '1');
         if (upper = x"0") then
@@ -112,11 +139,11 @@ begin
           addr <= std_logic_vector(unsigned(addr) + 4);
         end if;
       elsif (mode = x"2") then -- bit packing
-        data(11 downto 0)  <= ADC_DATA_I;
-        data(12)           <= ADC_DOF_I;
+        data(11 downto 0)  <= adc_data;
+        data(12)           <= adc_dof;
         data(15 downto 13) <= (others => '0');
-        data(27 downto 16) <= ADC_DATA_I;
-        data(28)           <= ADC_DOF_I;
+        data(27 downto 16) <= adc_data;
+        data(28)           <= adc_dof;
         data(31 downto 29)  <= (others => '0');
         if (wen = x"3") then
           wen <= x"C";
@@ -158,8 +185,8 @@ begin
         end if;
       elsif (mode = x"3") then
         -- get output data
-        data(11 downto 0)  <= ADC_DATA_I;
-        data(12)           <= ADC_DOF_I;
+        data(11 downto 0)  <= adc_data;
+        data(12)           <= adc_dof;
         data(31 downto 13) <= (others => '0');
         -- get address
         if (wen /= x"0") then
@@ -178,13 +205,13 @@ begin
           wen   <= (others => '0');
           data  <= (others => '0');
         elsif (state = x"1") then
-          if (unsigned(ADC_DATA_I) > high) then
+          if (unsigned(adc_data) > high) then
             state <= x"3";
-          elsif (unsigned(ADC_DATA_I) > low) then
+          elsif (unsigned(adc_data) > low) then
             state <= x"2";
           end if;
         elsif (state = x"2") then
-          if (unsigned(ADC_DATA_I) < low) then
+          if (unsigned(adc_data) < low) then
             state <= x"1";
           end if;
         elsif (state = x"3") then
@@ -197,7 +224,7 @@ begin
             count := count + 1;
           end if;
         else
-          if (unsigned(ADC_DATA_I) < low) then
+          if (unsigned(adc_data) < low) then
             state <= x"1";
           else 
             state <= x"2";

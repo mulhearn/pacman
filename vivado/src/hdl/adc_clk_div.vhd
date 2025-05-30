@@ -23,7 +23,7 @@ architecture behavioral of adc_clk_div is
   signal clk_d  : std_logic := '0';
   
 begin
-  clk_i       <= (not ACLK);
+  clk_i       <= ACLK;
   rst         <= not ARESETN;
   ADC_CLK_O   <= clk_i when (pass = '1') else
                  clk_d;
