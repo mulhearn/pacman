@@ -102,6 +102,6 @@ begin
 
   adc_look(C_NUM_ADC_BITS-1 downto 0) <= ADC_D_I;
   adc_look(C_NUM_ADC_BITS) <= ADC_OF_I;
-  ADC_CLK_O <= not ACLK;
+  ADC_CLK_O <= ACLK;
 
 end behaviour;

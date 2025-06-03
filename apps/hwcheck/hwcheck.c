@@ -267,33 +267,76 @@ void check_iic(){
 
 // VDDA DAC is used for postive  end of differential test DAC output
 // VDDD DAC is used for negative end of differntial test DAC output
-
-void set_voltages(unsigned vdda_up, unsigned vdda_dn,
+void set_voltages(unsigned chan, unsigned vdda_up, unsigned vdda_dn,
 		  unsigned vddd_up, unsigned vddd_dn){
-  // Test inputs... setting to VDDA/VDDD for now:
+  unsigned reg = 0x30 + chan;
+  if (chan > 0xa)
+    return;  
+  iic_set(ADDR_DAC_VDDA, reg, vdda_up, vdda_dn);
+  iic_set(ADDR_DAC_VDDD, reg, vddd_up, vddd_dn);
+}
+
+// VDDA DAC is used for postive  end of differential test DAC output
+// VDDD DAC is used for negative end of differntial test DAC output
+void set_dac_voltages(unsigned vdda_up, unsigned vdda_dn,
+		      unsigned vddd_up, unsigned vddd_dn){
   iic_set(ADDR_DAC_VDDA, 0b00111010, vdda_up, vdda_dn);
-  //iic_set(ADDR_DAC_VDDD, 0b00111010, vddd_up, vddd_dn);
   iic_set(ADDR_DAC_VDDD, 0b00111010, vddd_up, vddd_dn);
 }
 
-void set_voltages_zero(){
-  set_voltages(0x00, 0x00, 0x00, 0x00);
-}
 
-void set_voltages_full(){
-  set_voltages(0xFF, 0xFF, 0xFF, 0xFF);
-}
+void toggle_mux(){
+  static int mode = 0;
+  mode = (mode + 1) % 3;
 
-
-void set_mux_dac(){
   //  two muxes, one for positive one for negative of differential signal
-  //  register 0x14 is CMDA switch, 11 is for DAC input
-  //  register 0x15 is CMDA switch, 11 is for DAC input
-  iic_byte(ADDR_MUX_P, 0x14, 11);
-  iic_byte(ADDR_MUX_P, 0x15, 11);
-  iic_byte(ADDR_MUX_N, 0x14, 11);
-  iic_byte(ADDR_MUX_N, 0x15, 11);
+  //  register 0x14 is CMDA switch, 
+  //  register 0x15 is CMDB switch,
+  if (mode == 0) {
+    xil_printf("setting MUX to no connection \r\n");
+    // Setting switch to 0 is no connection.
+    iic_byte(ADDR_MUX_P, 0x14, 0x10);
+    iic_byte(ADDR_MUX_P, 0x15, 0x10);
+    iic_byte(ADDR_MUX_N, 0x14, 0x10);
+    iic_byte(ADDR_MUX_N, 0x15, 0x10);    
+  } else if (mode == 1) {
+    xil_printf("setting MUX to DAC input \r\n");    
+    // Input channel 11 is DAC input
+    iic_byte(ADDR_MUX_P, 0x14, 11);
+    iic_byte(ADDR_MUX_P, 0x15, 11);
+    iic_byte(ADDR_MUX_N, 0x14, 11);
+    iic_byte(ADDR_MUX_N, 0x15, 11);
+  } else if (mode == 2) {
+    xil_printf("setting MUX to TILE 1 analog monitor input \r\n");    
+    // Input channel 1 is Tile 1
+    iic_byte(ADDR_MUX_P, 0x14, 0);
+    iic_byte(ADDR_MUX_P, 0x15, 0);
+    iic_byte(ADDR_MUX_N, 0x14, 0);
+    iic_byte(ADDR_MUX_N, 0x15, 0);
+  } else if (mode == 3) {
+    xil_printf("setting MUX to TILE 1 analog monitor input w/ 100 ohm termination\r\n");    
+    // SHDA registers: 0x10,0x11
+    // SHDB registers: 0x12,0x13
+    iic_byte(ADDR_MUX_P, 0x10, 0x00);
+    iic_byte(ADDR_MUX_P, 0x11, 0x04);
+    iic_byte(ADDR_MUX_P, 0x12, 0x01);
+    iic_byte(ADDR_MUX_P, 0x13, 0x04);    
+    iic_byte(ADDR_MUX_N, 0x10, 0x00);
+    iic_byte(ADDR_MUX_N, 0x11, 0x04);
+    iic_byte(ADDR_MUX_N, 0x12, 0x01);
+    iic_byte(ADDR_MUX_N, 0x13, 0x04);    
+    
+    // Copy SHDA/SHDB to switches:
+    iic_byte(ADDR_MUX_P, 0x14, 0x11);
+    iic_byte(ADDR_MUX_P, 0x15, 0x11);
+    iic_byte(ADDR_MUX_N, 0x14, 0x11);
+    iic_byte(ADDR_MUX_N, 0x15, 0x11);    
+  }
 }
+
+
+
+
 
 
 void toggle_dac(){
@@ -301,25 +344,23 @@ void toggle_dac(){
   mode = (mode + 1) % 3; 
   if (mode == 0) {
     xil_printf("setting DAC to +0 -0\r\n");
-    set_voltages(0x00, 0x00, 0x00, 0x00);
+    set_dac_voltages(0x00, 0x00, 0x00, 0x00);
   } else if (mode == 1) {
     xil_printf("setting DAC to +0x4000,-0x0000,0\r\n");
-    set_voltages(0x40, 0x00, 0x00, 0x00);
+    set_dac_voltages(0x40, 0x00, 0x00, 0x00);
   }  else if (mode == 2) {
     xil_printf("setting DAC to +0x0000,-0x4000\r\n");
-    set_voltages(0x00, 0x00, 0x40, 0x00);
+    set_dac_voltages(0x00, 0x00, 0x40, 0x00);
   }
 }
 
-
 void pulse_dac(){
-  set_voltages(0x00, 0x00, 0x40, 0x00);
+  set_dac_voltages(0x00, 0x00, 0x40, 0x00);
   usleep(1);
-  set_voltages(0x40, 0x00, 0x00, 0x00);
+  set_dac_voltages(0x40, 0x00, 0x00, 0x00);
   usleep(1);
-  set_voltages(0x00, 0x00, 0x40, 0x00);
+  set_dac_voltages(0x00, 0x00, 0x40, 0x00);
 }
-
 
 // these are the addresses for the interfaces as read off from the address editor of the block diagram in vivado
 #define ADDR_AXIL_REGS  0x40000000
@@ -371,9 +412,44 @@ void toggle_adc_sleep(){
   }
 }
 
-void toggle_adc_config(){
-  static int mode = 6;
-  mode = (mode + 1) % 10;
+void toggle_adc_circular_buffer(){
+  static int mode = 0;
+  mode = (mode + 1) % 2;
+  unsigned config = 0;
+  if (mode == 0) {
+    config = 0x00000000;
+  } else {
+    config = 0x04000013;
+  }
+  xil_printf("setting ADC config to %x \r\n", config);
+  Xil_Out32(ADDR_AXIL_REGS+0xD110, config);
+}
+
+
+void toggle_adc_trigger(){
+  static int mode = 0;
+  mode = (mode + 1) % 2;
+  unsigned config = 0;
+  if (mode == 0) {
+    config = 0x00000000;
+  } else {
+    config = 0x04000013;
+  }  
+  xil_printf("setting ADC config to %x \r\n", config);
+  Xil_Out32(ADDR_AXIL_REGS+0xD110, config);    
+
+  if (mode == 1){
+    usleep(100000);
+    config = 0x04000033;
+  }
+  xil_printf("setting ADC config to %x \r\n", config);
+  Xil_Out32(ADDR_AXIL_REGS+0xD110, config);    
+
+}
+
+void toggle_adc_patterns(){
+  static int mode = 0;
+  mode = (mode + 1) % 6;
   unsigned config = 0;
   if (mode == 0) {
     config = 0x00000000;
@@ -387,14 +463,6 @@ void toggle_adc_config(){
     config = 0x000CABC3;
   } else if (mode == 5) {
     config = 0x000C12C3;
-  } else if (mode == 6) {
-    config = 0x001000D3;
-  } else if (mode == 7) {
-    config = 0x00200013;
-  } else if (mode == 8) {
-    config = 0x00100023;
-  } else if (mode == 9) {
-    config = 0x00200033;
   } else {
     return;
   }
@@ -416,20 +484,49 @@ void toggle_dcache(){
 }
 
 void write_bram(){
-  for (int i=0; i<10; i++){
+  for (int i=0; i<30; i++){
     Xil_Out32(XPAR_BRAM_0_BASEADDR+4*i, i);
   }
 }
 
 void read_bram(){
-  for (int i=0; i<10; i++){
-    xil_printf("BRAM %d -- 0x%x  \r\n", i, Xil_In32(XPAR_BRAM_0_BASEADDR+4*i));
+  for (int i=0; i<=256; i++){    
+    xil_printf("0x%x, ", Xil_In32(XPAR_BRAM_0_BASEADDR+4*i));
+    if ((i+1)%10==0)
+      xil_printf("\r\n");
+  }
+  xil_printf("\r\n");
+}
+
+
+void toggle_voltages(){
+  static int mode = 0;
+  mode = (mode + 1) % 4;
+  
+  if (mode == 0) {
+    xil_printf("setting VDDD and VDDA to zero \r\n");
+    set_voltages(0, 0x00, 0x00, 0x00, 0x00);
+  } else if (mode == 1) {
+    xil_printf("setting VDDD and VDDA to full scale \r\n");
+    set_voltages(0, 0xFF, 0xFF, 0xFF, 0xFF);
+  } else if (mode == 2) {
+    xil_printf("setting VDDD and VDDA to half scale\r\n");
+    set_voltages(0, 0x80, 0x00, 0x80, 0x00);
+  } else if (mode == 3) {
+    xil_printf("setting VDDD and VDDA to quarter scale\r\n");
+    set_voltages(0, 0x40, 0x00, 0x40, 0x00);
   }
 }
 
+
+void send_atc_signals(){
+  
+}
+
+
 int main(){
   xil_printf("SANITY NUMBER:  1\r\n");
-  xil_printf("Trenz Eval Board Hardware Testing (Development)\r\n");
+  xil_printf("PACMAN HW check\r\n");
   int status = 0;
   status |= init_gpiops();
   status |= init_iic();
@@ -440,9 +537,10 @@ int main(){
   while(1){
     xil_printf("choose an option:\r\n");
     xil_printf("(1) blink LEDS (2) read global registers (3) toggle enables\r\n");
-    xil_printf("(4) check iic (5) set MUX to DAC (6) toggle DAC (7) pulse DAC\r\n");
-    xil_printf("(8) enable ADC (9) toggle ADC config (a) set ADC mode to RUN \r\n");
-    xil_printf("(b) read BRAM  (c) write BRAM \r\n");
+    xil_printf("(4) check iic (5) toggle MUX (6) toggle DAC (7) pulse DAC\r\n");
+    xil_printf("(8) enable ADC (9) toggle ADC circular buffer (a) toggle ADC trigger mode (b) toggle ADC patterns \r\n");
+    xil_printf("(c) read BRAM  (d) write BRAM (e) toggle VDDD/VDDA voltages \r\n");
+    xil_printf("(f) send ATC signals \r\n");
 
     unsigned char c=inbyte();
     xil_printf("pressed:  %c\n\r", c);
@@ -460,7 +558,7 @@ int main(){
       check_iic();
       break;
     case '5':
-      set_mux_dac();
+      toggle_mux();
       break;
     case '6':
       toggle_dac();
@@ -472,18 +570,24 @@ int main(){
       toggle_adc_sleep();
       break;      
     case '9':
-      toggle_adc_config();
+      toggle_adc_circular_buffer();
       break;
     case 'a':
-      set_adc_mode_to_run();
+      toggle_adc_trigger();
       break;      
     case 'b':
+      toggle_adc_patterns();
+      break;      
+    case 'c':
       read_bram();
       break;
-    case 'c':
+    case 'd':
       write_bram();
       break;   
-   default:
+    case 'e':
+      toggle_voltages();
+      break;   
+    default:
       xil_printf("invalid selection...\n\r");
     }
   }
