@@ -82,7 +82,7 @@ begin
   LAST_O      <= last;
   STATE_O     <= state;
 
-  trig        <= x"600";
+  trig        <= x"800";
   step        <= x"000";
 
   process(clk,rst)
@@ -108,7 +108,7 @@ begin
   end process;
 
   process(clk,rst)
-    variable limit : integer := 2;
+    variable limit : integer := 128;
     variable count : integer;
     variable low   : unsigned(ADC_DATA_WIDTH-1 downto 0);
     variable high  : unsigned(ADC_DATA_WIDTH-1 downto 0);
