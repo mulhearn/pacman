@@ -38,7 +38,7 @@
 #define ADDR_MUX_P        0b1001100  // MAX14661 for TILES 1-10
 #define ADDR_MUX_N        0b1001101  // MAX14661 for TILES 1-10
 
-#define VERBOSE true
+#define VERBOSE false
 
 static int G_I2C_FH = -1;
 static uint32_t G_I2C_STATUS = 0;
@@ -296,6 +296,81 @@ uint32_t i2c_mon_vddd(uint32_t chan){
   return full_scale*val/0xFFFF;
 }
 
+uint32_t i2c_mon_idda(uint32_t chan){
+  const int full_scale = 20000; // 20 A = 20000 mA full scale
+  const uint8_t addr   = 0x10+chan/2;
+  const uint8_t reg    = 0xB + 0x2*(chan%2);
+
+  if (chan > 0xb)
+    return 0;
+
+  const uint8_t nbytes = 2;
+  uint8_t buf[nbytes];
+
+  int status = 0;
+  // set config registers for single shot mode:
+  status |= (i2c_set(addr, 1, 0x8500, nbytes) != (nbytes+1));
+  // send refresh to start conversions:
+  status |= (i2c_set(addr, 0) != 1);
+  usleep(5000);
+  // send second refresh to move most recent conversions into output registers:
+  status |= (i2c_set(addr, 0) != 1);
+  usleep(5000);
+  // read requested value:
+  status |= (i2c_set(addr, reg) != 1);
+  status |= (i2c_recv(addr, reg, buf, nbytes)!=nbytes);
+
+  if (status){
+    printf("**ERROR** i2c_mon_idda:  I2C error.\n");
+    G_I2C_STATUS |= 4;
+    return 0;
+  }
+
+  uint32_t val = 0;
+  for (int i=0 ; i< nbytes; i++){
+    val = (val<<8) | buf[i];
+  }
+  return full_scale*val/0xFFFF;
+
+}
+
+uint32_t i2c_mon_iddd(uint32_t chan){
+  const int full_scale = 20000; // 20 A = 20000 mA full scale
+  const uint8_t addr   = 0x10+chan/2;
+  const uint8_t reg    = 0xC + 0x2*(chan%2);
+
+  if (chan > 0xb)
+    return 0;
+
+  const uint8_t nbytes = 2;
+  uint8_t buf[nbytes];
+
+  int status = 0;
+  // set config registers for single shot mode:
+  status |= (i2c_set(addr, 1, 0x8500, nbytes) != (nbytes+1));
+  // send refresh to start conversions:
+  status |= (i2c_set(addr, 0) != 1);
+  usleep(5000);
+  // send second refresh to move most recent conversions into output registers:
+  status |= (i2c_set(addr, 0) != 1);
+  usleep(5000);
+  // read requested value:
+  status |= (i2c_set(addr, reg) != 1);
+  status |= (i2c_recv(addr, reg, buf, nbytes)!=nbytes);
+
+  if (status){
+    printf("**ERROR** i2c_mon_iddd:  I2C error.\n");
+    G_I2C_STATUS |= 4;
+    return 0;
+  }
+
+  uint32_t val = 0;
+  for (int i=0 ; i< nbytes; i++){
+    val = (val<<8) | buf[i];
+  }
+  return full_scale*val/0xFFFF;
+
+}
 
 uint32_t get_mux_code(uint32_t val){
   uint32_t switch_disabled = 0x10;
@@ -343,92 +418,4 @@ void i2c_set_muxb(uint32_t val){
     printf("**ERROR** i2c_set_muxb:  i2c_set was not successful\n");
     G_I2C_STATUS |= 0x10;
   }
-}
-
-
-
-
-
-// NOT YET UPDATED TO USE GLOBAL STATUS...
-
-uint32_t i2c_mon_idda(uint32_t lower){
-  const int full_scale = 20000; // 20 A = 20000 mA full scale
-  const uint8_t addr   = 0x10+lower/2;
-  const uint8_t reg    = 0xB + 0x2*(lower%2);
-
-  if (lower > 0xb)
-    return 0;
-
-  const uint8_t nbytes = 2;
-  uint8_t buf[nbytes];
-
-  int status = 0;
-  // set config registers for single shot mode:
-  status |= (i2c_set(addr, 1, 0x8500, nbytes) != (nbytes+1));
-  // send refresh to start conversions:
-  status |= (i2c_set(addr, 0) != 1);
-  usleep(5000);
-  // send second refresh to move most recent conversions into output registers:
-  status |= (i2c_set(addr, 0) != 1);
-  usleep(5000);
-  // read requested value:
-  status |= (i2c_set(addr, reg) != 1);
-  status |= (i2c_recv(addr, reg, buf, nbytes)!=nbytes);
-
-  if (status){
-    printf("**ERROR** i2c_mon_idda:  I2C error.\n");
-    return 0;
-  }
-
-  uint32_t val = 0;
-  for (int i=0 ; i< nbytes; i++){
-    val = (val<<8) | buf[i];
-  }
-  return full_scale*val/0xFFFF;
-
-
-}
-
-uint32_t i2c_mon_iddd(uint32_t lower){
-  const int full_scale = 20000; // 20 A = 20000 mA full scale
-  const uint8_t addr   = 0x10+lower/2;
-  const uint8_t reg    = 0xC + 0x2*(lower%2);
-
-  if (lower > 0xb)
-    return 0;
-
-  const uint8_t nbytes = 2;
-  uint8_t buf[nbytes];
-
-  int status = 0;
-  // set config registers for single shot mode:
-  status |= (i2c_set(addr, 1, 0x8500, nbytes) != (nbytes+1));
-  // send refresh to start conversions:
-  status |= (i2c_set(addr, 0) != 1);
-  usleep(5000);
-  // send second refresh to move most recent conversions into output registers:
-  status |= (i2c_set(addr, 0) != 1);
-  usleep(5000);
-  // read requested value:
-  status |= (i2c_set(addr, reg) != 1);
-  status |= (i2c_recv(addr, reg, buf, nbytes)!=nbytes);
-
-  if (status){
-    printf("**ERROR** i2c_mon_iddd:  I2C error.\n");
-    return 0;
-  }
-
-  uint32_t val = 0;
-  for (int i=0 ; i< nbytes; i++){
-    val = (val<<8) | buf[i];
-  }
-  return full_scale*val/0xFFFF;
-
-}
-
-uint32_t i2c_version(uint32_t lower){
-  if (lower == 0) return I2C_MAJOR_VERSION;
-  if (lower == 1) return I2C_MINOR_VERSION;
-  if (lower == 2) return I2C_DEBUG_TAG;
-  return 0;
 }
