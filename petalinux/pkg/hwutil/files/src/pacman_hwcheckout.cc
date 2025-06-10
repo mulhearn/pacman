@@ -16,13 +16,13 @@
 #include "i2c.hh"
 #include "rxtx.hh"
 
-// *** LED *** 
+// *** LED ***
 
 void blink_leds(){
   blink_red_led();
 }
 
-// *** GLOBAL UNIT *** 
+// *** GLOBAL UNIT ***
 
 void read_global_registers(){
   printf("fw major----------- %d   \n", read_axil(C_SCOPE_GLOBAL+C_ADDR_GLOBAL_FW_MAJOR));
@@ -68,7 +68,7 @@ void toggle_global_scratch(){
   write_axil(C_SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRB, scrb);
 }
 
-// *** POWER UNIT *** 
+// *** POWER UNIT ***
 
 void toggle_power(){
   unsigned vddd[] = {0x00, 0xFFFF, 0,8000, 0x4000};
@@ -86,20 +86,20 @@ void toggle_power(){
     i2c_set_vdda(i, vdda[mode]);
   }
 }
-  
+
 void monitor_power(){
   for (int i=0; i<10; i++){
-    printf("TILE %2d POWER SUMMARY:\n", i+1);    
+    printf("TILE %2d POWER SUMMARY:\n", i+1);
     unsigned vdda = i2c_mon_vdda(i);
     unsigned vddd = i2c_mon_vddd(i);
     unsigned idda = i2c_mon_idda(i);
     unsigned iddd = i2c_mon_iddd(i);
 
-    printf("VDDA:  voltage:  %5d mV current: %5d mA\n", vdda, idda);    
+    printf("VDDA:  voltage:  %5d mV current: %5d mA\n", vdda, idda);
     printf("VDDD:  voltage:  %5d mV current: %5d mV\n", vddd, iddd);
   }
 
-  printf("BOARD POWER SUMMARY:\n");    
+  printf("BOARD POWER SUMMARY:\n");
 
   unsigned vxa = i2c_mon_vdda(0xa);
   unsigned vya = i2c_mon_vddd(0xa);
@@ -112,7 +112,7 @@ void monitor_power(){
   unsigned iyb = i2c_mon_iddd(0xb);
 
   float cyb = 4.5*iyb/20000.;
-  
+
   printf("Board 3V6:  voltage:  %5d mV  current:  %5d mA\n",  vxa, ixa);
   printf("Board 3V3:  voltage:  %5d mV  current:  %5d mA\n",  vya, iya);
   printf("Board 3V0:  voltage:  %5d mV  current:  %5d mA\n",  vxb, ixb);
@@ -120,7 +120,7 @@ void monitor_power(){
 
 }
 
-// *** RX and TX UNITs *** 
+// *** RX and TX UNITs ***
 
 void read_tx_registers(){
   for (int i=0; i<40; i++){
@@ -166,7 +166,7 @@ void toggle_rx_config(){
     write_axil(SCOPE_RX+(0<<8)+C_ADDR_RX_CONFIG, config);
     write_axil(SCOPE_RX+(1<<8)+C_ADDR_RX_CONFIG, config);
     write_axil(SCOPE_RX+(2<<8)+C_ADDR_RX_CONFIG, config);
-    write_axil(SCOPE_RX+(3<<8)+C_ADDR_RX_CONFIG, config);    
+    write_axil(SCOPE_RX+(3<<8)+C_ADDR_RX_CONFIG, config);
   }
 
   printf("INFO: Disabling Trigger, Sync, and Heartbeat words in the RX unit... \n");
@@ -210,7 +210,7 @@ void rxtx_reset_counts(){
   write_axil(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_ZERO_CNTS, 0);
 }
 
-// *** TIMING UNIT *** 
+// *** TIMING UNIT ***
 
 void read_timing_registers(){
   printf("TIMING REGISTERS:\n");
@@ -232,12 +232,12 @@ void read_timing_counts(){
   printf("count LEMO B (slow) ------0x%x \n", read_axil(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_LEMO_B_S));
   printf("count POKE C (slow) ------0x%x \n", read_axil(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_POKE_C_S));
   printf("count POKE D (slow) ------0x%x \n", read_axil(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_POKE_D_S));
-  
+
   printf("count timestamp sync-----0x%x \n", read_axil(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_TS));
   for (int i=0; i<10; i++)
     printf("count tile %2d ATC G---0x%x \n", i+1, read_axil(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_G_FIRST+4*i));
   for (int i=0; i<10; i++)
-    printf("count tile %2d ATC H---0x%x \n", i+1, read_axil(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_H_FIRST+4*i));  
+    printf("count tile %2d ATC H---0x%x \n", i+1, read_axil(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_H_FIRST+4*i));
 }
 
 void toggle_timing_input_polarity(){
@@ -245,7 +245,7 @@ void toggle_timing_input_polarity(){
   static int mode = 0;
   mode = (mode + 1) % 2;
   printf("INFO: setting input polarity to 0x%x \n", polarity[mode]);
-  write_axil(C_SCOPE_TIMING + C_ADDR_TIMING_CONFIG_POLARITY, polarity[mode]);  
+  write_axil(C_SCOPE_TIMING + C_ADDR_TIMING_CONFIG_POLARITY, polarity[mode]);
 }
 
 void toggle_timing_ts_sync_config(){
@@ -253,11 +253,11 @@ void toggle_timing_ts_sync_config(){
   static int mode = 0;
   mode = (mode + 1) % 2;
   printf("INFO: setting timestamp sync config to 0x%x \n", config[mode]);
-  write_axil(C_SCOPE_TIMING + C_ADDR_TIMING_CONFIG_TS, config[mode]);  
+  write_axil(C_SCOPE_TIMING + C_ADDR_TIMING_CONFIG_TS, config[mode]);
 }
 
 void toggle_timing_g_config(){
-  unsigned config[] = {0x00, 0x0F14};
+  unsigned config[] = {0x0000, 0x00F14, 0x0F04};
   static int mode = 0;
   mode = (mode + 1) % 3;
 
@@ -266,8 +266,8 @@ void toggle_timing_g_config(){
     write_axil(C_SCOPE_TIMING+C_ADDR_TIMING_CONFIG_G_FIRST+4*i, config[mode]);
 }
 
-void toggle_timing_h_config(){  
-  unsigned config[] = {0x00, 0x1F18};
+void toggle_timing_h_config(){
+  unsigned config[] = {0x0000, 0x1F18, 0x1F08};
   static int mode = 0;
   mode = (mode + 1) % 3;
 
@@ -287,7 +287,7 @@ void toggle_timing_counts(){
     write_axil(C_SCOPE_TIMING+C_ADDR_TIMING_STOP_COUNTS, 0x0);
     write_axil(C_SCOPE_TIMING+C_ADDR_TIMING_RESET_COUNTS, 0x0);
     write_axil(C_SCOPE_TIMING+C_ADDR_TIMING_START_COUNTS, 0x0);
-  }  
+  }
 }
 
 void poke_timing_input_c(){
@@ -299,7 +299,10 @@ void poke_timing_input_d(){
 }
 
 
-// *** ADC UNIT *** 
+// *** ADC UNIT ***
+
+static unsigned G_ADC_BUFFER_SIZE = 20;
+static unsigned G_ADC_INPUT = 0;
 
 void read_adc_registers(){
   printf("ADC REGISTERS: \n");
@@ -328,8 +331,121 @@ void toggle_adc_on_off(){
   }
 }
 
-void set_adc_mode_to_run(){
-  write_axil(C_SCOPE_ADC+C_ADDR_ADC_COMMAND, 0x2);
+void toggle_adc_daq_test_patterns(){
+  G_ADC_BUFFER_SIZE = 20;
+  unsigned config[] = {0x00000000, 0x000000A3, 0x000403B3, 0x00080FB3, 0x000CABC3, 0x001012C3, 0x004000D3};
+  static int mode = 0;
+  mode = (mode + 1) % 7;
+
+  printf("INFO:  setting ADC config to %x \r\n", config[mode]);
+  write_axil(C_SCOPE_ADC+C_ADDR_ADC_CONFIG, config[mode]);
+
+  if (mode==0){
+    for (unsigned i=0; i<G_ADC_BUFFER_SIZE; i++){
+      unsigned addr = 4*i;
+      write_bram(addr, 0);
+    }
+  }
+}
+
+void set_adc_daq_off(){
+  unsigned config = 0x0;
+  printf("INFO:  setting ADC config to %x \r\n", config);
+  write_axil(C_SCOPE_ADC+C_ADDR_ADC_CONFIG, config);
+}
+
+void clear_bram(){
+  G_ADC_BUFFER_SIZE = 20;
+
+  for (unsigned i=0; i<G_ADC_BUFFER_SIZE; i++){
+    unsigned addr = 4*i;
+    write_bram(addr,0);
+  }
+}
+
+void toggle_bram_test_patterns(){
+  G_ADC_BUFFER_SIZE = 20;
+
+  static int mode = 0;
+  mode = (mode + 1) % 3;
+  if (mode==0){
+    for (unsigned i=0; i<G_ADC_BUFFER_SIZE; i++){
+      unsigned addr = 4*i;
+      write_bram(addr,0);
+    }
+  } else if (mode==1){
+    for (unsigned i=0; i<G_ADC_BUFFER_SIZE; i++){
+      unsigned addr = 4*i;
+      write_bram(addr,0x0ADC0000 + i);
+    }
+  } else {
+    for (unsigned i=0; i<G_ADC_BUFFER_SIZE; i++){
+      unsigned addr = 4*i;
+      write_bram(addr,0x12340000 + 2*i);
+    }
+  }
+}
+
+void read_bram_by_address(){
+  for (unsigned i=0; i<G_ADC_BUFFER_SIZE; i++){
+    unsigned addr = 4*i;
+    printf("%2d 0x%03x: 0x%08x\n", i, addr, read_bram(addr));
+  }
+}
+
+void read_bram_time_ordered(){
+  unsigned last_adr = 0x1FFF & read_axil(C_SCOPE_ADC+C_ADDR_ADC_STATUS);
+  unsigned last_val = read_axil(C_SCOPE_ADC+C_ADDR_ADC_LAST);
+
+  printf("LAST ADDRESS:  0x%x\n", last_adr);
+  printf("LAST VALUE:    0x%x\n", last_val);
+  printf("ADC INPUT:     0x%x\n", G_ADC_INPUT);
+  printf("BUFFER SIZE:   %d\n", G_ADC_BUFFER_SIZE);
+
+  if (G_ADC_BUFFER_SIZE == 0)
+    return;
+
+  for (int i=1; i<G_ADC_BUFFER_SIZE; i++){
+    unsigned addr = (last_adr + 4*i)%(4*G_ADC_BUFFER_SIZE);
+    printf("0x%x, ", read_bram(addr));
+    if (i%10 == 0)
+      printf("\n");
+  }
+  printf("0x%x\n", read_bram(last_adr%(4*G_ADC_BUFFER_SIZE)));
+}
+
+
+
+
+void copy_adc_buffer_to_file(){
+  FILE *file;
+  unsigned config   = read_axil(C_SCOPE_ADC+C_ADDR_ADC_CONFIG);
+  unsigned last_adr = 0x1FFF & read_axil(C_SCOPE_ADC+C_ADDR_ADC_STATUS);
+  unsigned last_val = read_axil(C_SCOPE_ADC+C_ADDR_ADC_LAST);
+
+  file = fopen("adc.txt", "a");
+  if (file == NULL) {
+    printf("ERROR: could not open file ");
+    return;
+  }
+
+  fprintf(file, "CONFIG:        0x%x\n", config);
+  fprintf(file, "LAST ADDRESS:  0x%x\n", last_adr);
+  fprintf(file, "LAST VALUE:    0x%x\n", last_val);
+  fprintf(file, "ADC INPUT:     0x%x\n", G_ADC_INPUT);
+  fprintf(file, "BUFFER SIZE:   %d\n", G_ADC_BUFFER_SIZE);
+
+  if (G_ADC_BUFFER_SIZE == 0)
+    return;
+
+  for (int i=1; i<G_ADC_BUFFER_SIZE; i++){
+    unsigned addr = (last_adr + 4*i)%(4*G_ADC_BUFFER_SIZE);
+    fprintf(file, "0x%x, ", read_bram(addr));
+    if (i%10 == 0)
+    fprintf(file, "\n");
+  }
+  fprintf(file, "0x%x\n", read_bram(last_adr%(4*G_ADC_BUFFER_SIZE)));
+  fclose(file);
 }
 
 void set_adc_input_to_dac(){
@@ -338,9 +454,10 @@ void set_adc_input_to_dac(){
   i2c_set_vdda(0xa, 0x0);
   i2c_set_muxa(11);
   i2c_set_muxb(11);
+  G_ADC_INPUT = 11;
 }
 
-void toggle_adc_daq_input(){
+void toggle_adc_dac_constant_value(){
   unsigned vp[] = {0x00, 0x4000, 0x2000, 0x0000, 0x0000};
   unsigned vn[] = {0x00, 0x0000, 0x0000, 0x4000, 0x2000};
   static int mode = 0;
@@ -351,52 +468,38 @@ void toggle_adc_daq_input(){
   i2c_set_vddd(0xa, vn[mode]);
 }
 
+void toggle_adc_input_tile(){
+  static int tile = 9;
+  tile = (tile + 1) % 10;
 
-void write_bram(){
-  unsigned size=20;
-  for (unsigned i=0; i<size; i++){
-    unsigned addr = 4*i;
-    write_bram(addr,i);
-  }
-}
-
-void read_bram_by_address(){
-  unsigned size=20;
-  for (unsigned i=0; i<size; i++){
-    unsigned addr = 4*i;
-    printf("%2d 0x%03x: 0x%08x\n", i, addr, read_bram(addr));
-  }
-}
-
-void toggle_adc_test_patterns(){
-  unsigned config[] = {0x00000000, 0x000000A3, 0x000403B3, 0x00080FB3, 0x000CABC3, 0x001012C3, 0x001000D3};  
-  static int mode = 0;
-  mode = (mode + 1) % 7;
-
-  printf("INFO:  setting ADC config to %x \r\n", config[mode]);
-  write_axil(C_SCOPE_ADC+C_ADDR_ADC_CONFIG, config[mode]);
+  printf("INFO: setting ADC input to TILE %d monitoring\n", tile+1);
+  i2c_set_muxa(tile);
+  i2c_set_muxb(tile);
+  G_ADC_INPUT = tile;
 }
 
 void set_adc_circular_buffer(){
-  unsigned config = 0x00100013;  
+  G_ADC_BUFFER_SIZE = 1024;
+  unsigned config = 0x10000013;
   printf("INFO:  setting ADC config to %x \r\n", config);
   write_axil(C_SCOPE_ADC+C_ADDR_ADC_CONFIG, config);
 }
 
 void set_adc_trigger(){
-  unsigned config = 0x00100033;  
+  G_ADC_BUFFER_SIZE = 1024;
+  unsigned config = 0x10000033;
   printf("INFO:  setting ADC config to %x \r\n", config);
   write_axil(C_SCOPE_ADC+C_ADDR_ADC_CONFIG, config);
 }
 
-//void toggle_adc_input_tile(){
-//  static int tile = 9;
-//  tile = (tile + 1) % 10;
-//  
-//  printf("INFO: setting ADC input to TILE %2d monitoring signal\n", tile+1);  
-//  i2c_set_muxa(tile);
-//  i2c_set_muxb(tile);
-//}
+void set_adc_mode_to_run(){
+  write_axil(C_SCOPE_ADC+C_ADDR_ADC_COMMAND, 0x2);
+}
+
+void poke_timing(){
+  poke_timing_input_c();
+  poke_timing_input_d();
+}
 
 // *** MENUS ***
 
@@ -445,13 +548,13 @@ void rxtx_menu(){
     switch(input){
     case 0:
       return;
-      break;      
+      break;
     case 1:
       rxtx_reset_counts();
-      break;      
+      break;
     case 2:
       toggle_rx_config();
-      break;      
+      break;
     case 3:
       read_tx_registers();
       break;
@@ -472,10 +575,10 @@ void rxtx_menu(){
       break;
     case 9:
       benchmark_tx();
-      break;      
+      break;
     case 10:
       benchmark_rxtx_loopback();
-      break;      
+      break;
     case 11:
       dma_status();
       break;
@@ -511,25 +614,25 @@ void timing_menu(){
       break;
     case 3:
       toggle_timing_input_polarity();
-      break;      
-    case 4:      
+      break;
+    case 4:
       toggle_timing_ts_sync_config();
       break;
-    case 5:      
+    case 5:
       toggle_timing_g_config();
       break;
-    case 6:      
+    case 6:
       toggle_timing_h_config();
       break;
     case 7:
       toggle_timing_counts();
-      break;      
+      break;
     case 8:
       poke_timing_input_c();
       break;
     case 9:
       poke_timing_input_d();
-      break;      
+      break;
     default:
       printf("invalid selection...\n\r");
     }
@@ -540,10 +643,12 @@ void timing_menu(){
 void adc_menu(){
   while(1){
     printf("ADC MENU:  choose an option:\n");
-    printf("(0) main menu (1) read adc registers (2) toggle ADC on/off (3) run \n");
-    printf("(4) use DAC input (5) toggle DAC input \n");
-    printf("(6) write BRAM (7) read BRAM by address\n");
-    printf("(8) toggle test patterns (9) circular buffer (10) trigger\n");
+    printf("(0) main menu (1) read ADC registers (2) toggle ADC on/off (3) toggle ADC DAQ test patterns (4) turn ADC DAQ off\n");
+    printf("(5) clear BRAM (6) toggle BRAM test patterns (7) read BRAM by address (8) read BRAM time ordered (9) copy ADC buffer to file\n");
+    printf("(10) set ADC input to DAC (11) toggle DAC constant value (12) toggle TILE input\n");
+    printf("(13) set ADC DAQ to circular buffer (14) set ADC DAQ to trigger (15) set trigger mode to RUN\n");
+    printf("(16) poke timing\n");
+
     int input;
     scanf("%d", &input);
     printf("pressed:  %d\n", input);
@@ -558,30 +663,47 @@ void adc_menu(){
       toggle_adc_on_off();
       break;
     case 3:
-      set_adc_mode_to_run();
+      toggle_adc_daq_test_patterns();
       break;
     case 4:
-      set_adc_input_to_dac();
+      set_adc_daq_off();
       break;
     case 5:
-      toggle_adc_daq_input();
+      clear_bram();
       break;
     case 6:
-      write_bram();
+      toggle_bram_test_patterns();
       break;
     case 7:
       read_bram_by_address();
       break;
     case 8:
-      toggle_adc_test_patterns();
+      read_bram_time_ordered();
       break;
     case 9:
-      set_adc_circular_buffer();
+      copy_adc_buffer_to_file();
       break;
     case 10:
+      set_adc_input_to_dac();
+      break;
+    case 11:
+      toggle_adc_dac_constant_value();
+      break;
+    case 12:
+      toggle_adc_input_tile();
+      break;
+    case 13:
+      set_adc_circular_buffer();
+      break;
+    case 14:
       set_adc_trigger();
       break;
-
+    case 15:
+      set_adc_mode_to_run();
+      break;
+    case 16:
+      poke_timing();
+      break;
     default:
       printf("invalid selection...\n\r");
     }

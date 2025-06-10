@@ -26,7 +26,7 @@ void      clear_mio_status(){
 
 void      init_mio(){
   clear_mio_status();
-  write_mio(0, 1);
+  //write_mio(0, 1);
 }
 
 void      close_mio(){
@@ -51,4 +51,3 @@ void      write_mio(int pin, uint32_t value){
 uint32_t  read_mio(int pin){
   return 0;
 }
-
