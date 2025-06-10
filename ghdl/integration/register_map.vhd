@@ -42,7 +42,7 @@ package register_map is
   CONSTANT C_ADDR_COUNT_START              : integer := 16#B0#;
   CONSTANT C_ADDR_COUNT_STOP               : integer := 16#B4#;
   CONSTANT C_ADDR_COUNT_RESET              : integer := 16#B8#;
- 
+
   --F(fast clock domain)
   constant C_ADDR_LEMO_A_F                 : integer := 16#20#;
   constant C_ADDR_LEMO_B_F                 : integer := 16#24#;
@@ -51,13 +51,13 @@ package register_map is
   constant C_ADDR_LEMO_B_S                 : integer := 16#34#;
   constant C_ADDR_POKE_C_S                 : integer := 16#38#;
   constant C_ADDR_POKE_D_S                 : integer := 16#3C#;
-  
-  
+
+
   constant C_ADDR_ATC_POLARITY             : integer := 16#40#;
   constant C_ADDR_ATC_TS                   : integer := 16#44#;
   constant C_ADDR_ATC_G_START              : integer := 16#50#;
   constant C_ADDR_ATC_G_END                : integer := 16#74#;
-  
+
   constant C_ADDR_ATC_H_START              : integer := 16#80#;
   constant C_ADDR_ATC_H_END                : integer := 16#A4#;
 

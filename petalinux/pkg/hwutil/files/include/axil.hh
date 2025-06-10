@@ -91,5 +91,5 @@ void      close_axil();
 
 void      write_axil(uint32_t addr, uint32_t value);
 uint32_t  read_axil(uint32_t addr);
-  
+
 #endif

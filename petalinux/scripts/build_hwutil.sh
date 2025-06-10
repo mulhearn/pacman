@@ -1,4 +1,4 @@
-#  
+#
 #  build_hwutil.sh
 #
 # Cross-compile only the pacman-server application and grab the produced rpm.
@@ -9,5 +9,5 @@
 #
 
 petalinux-build -c hwutil -x build
-ls -alh build/tmp/deploy/rpm/cortexa*_neon/hwutil-1.0-r*.cortexa*_neon.rpm 
+ls -alh build/tmp/deploy/rpm/cortexa*_neon/hwutil-1.0-r*.cortexa*_neon.rpm
 cp -v build/tmp/deploy/rpm/cortexa*_neon/hwutil-1.0-r*.cortexa*_neon.rpm hwutil-latest.rpm

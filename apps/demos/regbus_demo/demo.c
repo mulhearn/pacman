@@ -20,7 +20,7 @@ void check_read_reg(){
 
 void check_write_reg(){
   static unsigned count=0;
-  
+
   xil_printf("Count is 0x%x  \r\n", count);
 
   Xil_Out32(ADDR_AXIL_REGS+0x0000, 0xAAAA0000 + count);
@@ -29,14 +29,14 @@ void check_write_reg(){
   count = (count + 1)&0xFFFF;
 }
 
-		
+
 int main(){
   xil_printf("SANITY NUMBER:  1\r\n");
   xil_printf("Pac-Man Card Low-Level Hardware Testing (Development)\r\n");
   while(1){
     xil_printf("choose an option:\r\n");
     xil_printf("(1) test read registers (2) test write register \r\n");
-      
+
     unsigned char c=inbyte();
     xil_printf("pressed:  %c\n\r", c);
     switch(c){

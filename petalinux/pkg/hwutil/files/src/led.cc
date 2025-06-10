@@ -13,7 +13,7 @@
 #include "mio.hh"
 #include "led.hh"
 
-void init_led(){  
+void init_led(){
 }
 
 void blink_red_led(){

@@ -2,14 +2,14 @@ library ieee;
 use std.textio.all;
 use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
-use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08 
+use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08
 library work;
 use work.common.all;
 
 --  Defines a testbench (without any ports)
 entity adc_reg_tb is
 end adc_reg_tb;
-     
+
 architecture behaviour of adc_reg_tb is
   component adc_reg is
     port (
@@ -20,7 +20,7 @@ architecture behaviour of adc_reg_tb is
       S_REGBUS_RB_RDATA	   : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_RUPDATE  : in  std_logic;
       S_REGBUS_RB_RACK     : out std_logic;
-      
+
       S_REGBUS_RB_WUPDATE  : in  std_logic;
       S_REGBUS_RB_WADDR	   : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
       S_REGBUS_RB_WDATA	   : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -72,20 +72,20 @@ begin
       STATUS_I            => x"11112222",
       STATE_I             => x"4",
       LAST_I              => x"00000AAA",
-      LOOK_I              => x"11111BBB"      
+      LOOK_I              => x"11111BBB"
       );
-  
+
   aresetn_process : process
   begin
     aresetn <= '0';
     wait for 12 ns;
-    aresetn <= '1';    
+    aresetn <= '1';
     wait;
   end process;
-  
+
   aclk_process : process
   begin
-    count <= count + 1;    
+    count <= count + 1;
     aclk <= '1';
     wait for 5 ns;
     aclk <= '0';
@@ -143,7 +143,7 @@ begin
     wdata   <= x"AAAAAAAA";
     wupdate <= '1';
     wait for 10 ns;
-    waddr   <= x"0000"; 
+    waddr   <= x"0000";
     wdata   <= x"00000000";
     wupdate <= '0';
     wait;
@@ -182,6 +182,6 @@ output_process : process
     end if;
     writeline(output, l);
   end process;
-  
+
 end behaviour;
-        
+

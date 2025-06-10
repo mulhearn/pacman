@@ -26,7 +26,7 @@ architecture behaviour of timing_unit_tb is
     S_REGBUS_RB_RDATA	    : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     S_REGBUS_RB_RUPDATE   : in  std_logic;
     S_REGBUS_RB_RACK      : out std_logic;
-    
+
     S_REGBUS_RB_WUPDATE   : in  std_logic;
     S_REGBUS_RB_WADDR	    : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
     S_REGBUS_RB_WDATA	    : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -60,8 +60,8 @@ architecture behaviour of timing_unit_tb is
   signal lemo_b   :  std_logic := '0';
   -- dut outputs
   signal glb_clk    : std_logic;
-  signal atc_h      :  std_logic_vector(9 downto 0) := (others => '0'); 
-  signal atc_g      :  std_logic_vector(9 downto 0) := (others => '0'); 
+  signal atc_h      :  std_logic_vector(9 downto 0) := (others => '0');
+  signal atc_g      :  std_logic_vector(9 downto 0) := (others => '0');
   signal ts_sy      :  std_logic;
   signal timestamp  : std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
   signal  debug           :  std_logic_vector(7 downto 0);
@@ -76,17 +76,17 @@ begin
     S_REGBUS_RB_RDATA   => rdata,
     S_REGBUS_RB_RACK    => rack,
     S_REGBUS_RB_WUPDATE => wupdate,
-    S_REGBUS_RB_WADDR   => waddr,   
-    S_REGBUS_RB_WDATA   => wdata,   
+    S_REGBUS_RB_WADDR   => waddr,
+    S_REGBUS_RB_WDATA   => wdata,
     S_REGBUS_RB_WACK    => wack,
     TIMESTAMP_O         => timestamp,
     GLB_CLK_O           => glb_clk,
     G_O                 => atc_g ,
     H_O                 => atc_h,
-    TS_SYNC             => ts_sy, 
+    TS_SYNC             => ts_sy,
     LEMO_A              => lemo_a,
     LEMO_B              => lemo_b,
-    DEBUG               => debug                        
+    DEBUG               => debug
   );
 
   aresetn_process : process
@@ -115,24 +115,24 @@ begin
   end process;
 
   lemo_a_process : process
-  begin   
+  begin
     lemo_a   <= '0';
     wait for 10 ns;
     lemo_a   <= '1';
     wait for 10 ns;
     lemo_a   <= '0';
     wait;
-  end process;  
-  
+  end process;
+
   lemo_b_process : process
-  begin   
+  begin
     lemo_b   <= '1';
     wait for 100 ns;
     lemo_b  <= '0';
     wait for 10 ns;
     lemo_b   <= '1';
     wait;
-  end process; 
+  end process;
   read_process : process
   begin
     raddr   <= x"0000";

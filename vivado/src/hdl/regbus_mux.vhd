@@ -7,7 +7,7 @@ entity regbus_mux is
     C_DATA_WIDTH  : integer  := 32;
     C_ADDR_WIDTH  : integer  := 16;
     N_PRIMARY     : integer  := 5
-  );      
+  );
   port (
     ACLK	        : in std_logic;
     ARESETN	        : in std_logic;
@@ -15,9 +15,9 @@ entity regbus_mux is
     -- Secondary REGBUS:
     S_REGBUS_RB_RUPDATE  : in   std_logic;
     S_REGBUS_RB_RADDR	 : in   std_logic_vector(C_ADDR_WIDTH-1 downto 0);
-    S_REGBUS_RB_RDATA	 : out  std_logic_vector(C_DATA_WIDTH-1 downto 0);      
+    S_REGBUS_RB_RDATA	 : out  std_logic_vector(C_DATA_WIDTH-1 downto 0);
     S_REGBUS_RB_RACK     : out  std_logic;
-    
+
     S_REGBUS_RB_WUPDATE  : in   std_logic;
     S_REGBUS_RB_WADDR	 : in   std_logic_vector(C_ADDR_WIDTH-1 downto 0);
     S_REGBUS_RB_WDATA	 : in   std_logic_vector(C_DATA_WIDTH-1 downto 0);
@@ -26,9 +26,9 @@ entity regbus_mux is
     -- Primary A REGBUS
     PA_REGBUS_RB_RUPDATE : out  std_logic;
     PA_REGBUS_RB_RADDR	 : out  std_logic_vector(C_ADDR_WIDTH-1 downto 0);
-    PA_REGBUS_RB_RDATA	 : in   std_logic_vector(C_DATA_WIDTH-1 downto 0);      
+    PA_REGBUS_RB_RDATA	 : in   std_logic_vector(C_DATA_WIDTH-1 downto 0);
     PA_REGBUS_RB_RACK    : in   std_logic;
-    
+
     PA_REGBUS_RB_WUPDATE : out  std_logic;
     PA_REGBUS_RB_WADDR	 : out  std_logic_vector(C_ADDR_WIDTH-1 downto 0);
     PA_REGBUS_RB_WDATA	 : out  std_logic_vector(C_DATA_WIDTH-1 downto 0);
@@ -37,9 +37,9 @@ entity regbus_mux is
     -- Primary B REGBUS
     PB_REGBUS_RB_RUPDATE : out  std_logic;
     PB_REGBUS_RB_RADDR	 : out  std_logic_vector(C_ADDR_WIDTH-1 downto 0);
-    PB_REGBUS_RB_RDATA	 : in   std_logic_vector(C_DATA_WIDTH-1 downto 0);      
+    PB_REGBUS_RB_RDATA	 : in   std_logic_vector(C_DATA_WIDTH-1 downto 0);
     PB_REGBUS_RB_RACK    : in   std_logic;
-    
+
     PB_REGBUS_RB_WUPDATE : out  std_logic;
     PB_REGBUS_RB_WADDR	 : out  std_logic_vector(C_ADDR_WIDTH-1 downto 0);
     PB_REGBUS_RB_WDATA	 : out  std_logic_vector(C_DATA_WIDTH-1 downto 0);
@@ -48,9 +48,9 @@ entity regbus_mux is
     -- Primary C REGBUS
     PC_REGBUS_RB_RUPDATE : out  std_logic;
     PC_REGBUS_RB_RADDR	 : out  std_logic_vector(C_ADDR_WIDTH-1 downto 0);
-    PC_REGBUS_RB_RDATA	 : in   std_logic_vector(C_DATA_WIDTH-1 downto 0);      
+    PC_REGBUS_RB_RDATA	 : in   std_logic_vector(C_DATA_WIDTH-1 downto 0);
     PC_REGBUS_RB_RACK    : in   std_logic;
-    
+
     PC_REGBUS_RB_WUPDATE : out  std_logic;
     PC_REGBUS_RB_WADDR	 : out  std_logic_vector(C_ADDR_WIDTH-1 downto 0);
     PC_REGBUS_RB_WDATA	 : out  std_logic_vector(C_DATA_WIDTH-1 downto 0);
@@ -59,9 +59,9 @@ entity regbus_mux is
     -- Primary D REGBUS
     PD_REGBUS_RB_RUPDATE : out  std_logic;
     PD_REGBUS_RB_RADDR	 : out  std_logic_vector(C_ADDR_WIDTH-1 downto 0);
-    PD_REGBUS_RB_RDATA	 : in   std_logic_vector(C_DATA_WIDTH-1 downto 0);      
+    PD_REGBUS_RB_RDATA	 : in   std_logic_vector(C_DATA_WIDTH-1 downto 0);
     PD_REGBUS_RB_RACK    : in   std_logic;
-    
+
     PD_REGBUS_RB_WUPDATE : out  std_logic;
     PD_REGBUS_RB_WADDR	 : out  std_logic_vector(C_ADDR_WIDTH-1 downto 0);
     PD_REGBUS_RB_WDATA	 : out  std_logic_vector(C_DATA_WIDTH-1 downto 0);
@@ -70,9 +70,9 @@ entity regbus_mux is
     -- Primary E REGBUS
     PE_REGBUS_RB_RUPDATE : out  std_logic;
     PE_REGBUS_RB_RADDR	 : out  std_logic_vector(C_ADDR_WIDTH-1 downto 0);
-    PE_REGBUS_RB_RDATA	 : in   std_logic_vector(C_DATA_WIDTH-1 downto 0);      
+    PE_REGBUS_RB_RDATA	 : in   std_logic_vector(C_DATA_WIDTH-1 downto 0);
     PE_REGBUS_RB_RACK    : in   std_logic;
-    
+
     PE_REGBUS_RB_WUPDATE : out  std_logic;
     PE_REGBUS_RB_WADDR	 : out  std_logic_vector(C_ADDR_WIDTH-1 downto 0);
     PE_REGBUS_RB_WDATA	 : out  std_logic_vector(C_DATA_WIDTH-1 downto 0);
@@ -81,9 +81,9 @@ entity regbus_mux is
     -- Primary F REGBUS
     --PF_REGBUS_RB_RUPDATE : out  std_logic;
     --PF_REGBUS_RB_RADDR	 : out  std_logic_vector(C_ADDR_WIDTH-1 downto 0);
-    --PF_REGBUS_RB_RDATA	 : in   std_logic_vector(C_DATA_WIDTH-1 downto 0);      
+    --PF_REGBUS_RB_RDATA	 : in   std_logic_vector(C_DATA_WIDTH-1 downto 0);
     --PF_REGBUS_RB_RACK    : in   std_logic;
-    
+
     --PF_REGBUS_RB_WUPDATE : out  std_logic;
     --PF_REGBUS_RB_WADDR	 : out  std_logic_vector(C_ADDR_WIDTH-1 downto 0);
     --PF_REGBUS_RB_WDATA	 : out  std_logic_vector(C_DATA_WIDTH-1 downto 0);
@@ -103,7 +103,7 @@ architecture behavioral of regbus_mux is
   signal raddr    : std_logic_vector(C_ADDR_WIDTH-1 downto 0);
   signal rdata    : std_logic_vector(C_DATA_WIDTH-1 downto 0);
   signal rack     : std_logic := '0';
-  
+
   signal wupdate  : std_logic;
   signal waddr    : std_logic_vector(C_ADDR_WIDTH-1 downto 0);
   signal wdata    : std_logic_vector(C_DATA_WIDTH-1 downto 0);
@@ -114,7 +114,7 @@ architecture behavioral of regbus_mux is
 
   type t_data_array is array (0 to N_PRIMARY-1) of std_logic_vector(C_DATA_WIDTH-1 downto 0);
   signal rdata_array : t_data_array;
-  
+
   function reductive_or (a_vector : std_logic_vector) return std_logic is
     variable r : std_logic := '0';
   begin
@@ -130,11 +130,11 @@ architecture behavioral of regbus_mux is
     for i in update'range loop
       if (update(i) = '1') then
         data := data or data_array(i);
-      end if;    
+      end if;
     end loop;
     return data;
   end function;
-    
+
 begin
   -- fan out inputs from secondary to the primaries:
   rupdate <= S_REGBUS_RB_RUPDATE;
@@ -142,7 +142,7 @@ begin
   wupdate <= S_REGBUS_RB_WUPDATE;
   waddr   <= S_REGBUS_RB_WADDR;
   wdata   <= S_REGBUS_RB_WDATA;
-  
+
   PA_REGBUS_RB_RUPDATE   <= rupdate;
   PA_REGBUS_RB_RADDR	 <= raddr;
   PA_REGBUS_RB_WUPDATE   <= wupdate;
@@ -183,7 +183,7 @@ begin
   S_REGBUS_RB_RDATA <= rdata;
   S_REGBUS_RB_RACK  <= rack;
   S_REGBUS_RB_WACK  <= wack;
-  
+
   racks(0) <= PA_REGBUS_RB_RACK;
   racks(1) <= PB_REGBUS_RB_RACK;
   racks(2) <= PC_REGBUS_RB_RACK;
@@ -212,5 +212,5 @@ begin
   clk <= ACLK;
   rst <= not ARESETN;
 
-end;  
+end;
 

@@ -151,7 +151,7 @@ below).  Note that changes to source files are version controlled like
 ordinary source files.
 
 -----------------------------------------------------------------------
-6) Update the TCL project file after making changes to the Xilinx project 
+6) Update the TCL project file after making changes to the Xilinx project
 -----------------------------------------------------------------------
 
 If you make changes to the Xilinx projects (not just the referenced

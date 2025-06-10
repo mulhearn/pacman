@@ -1,5 +1,5 @@
 
-Schematics for the TE0720-03-1CFA: 
+Schematics for the TE0720-03-1CFA:
 https://www.trenz-electronic.de/fileadmin/docs/Trenz_Electronic/Modules_and_Module_Carriers/4x5/TE0720/REV03/Documents/SCH-TE0720-03-1CFA.PDF
 
 From which we see that it contains a XC7Z020-1CLG484C with pinout from:

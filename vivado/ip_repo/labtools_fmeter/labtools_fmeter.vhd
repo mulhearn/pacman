@@ -1,21 +1,21 @@
 ----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
--- 
+-- Company:
+-- Engineer:
+--
 -- Create Date: 19.09.2014 18:06:10
--- Design Name: 
+-- Design Name:
 -- Module Name: top - Behavioral
--- Project Name: 
--- Target Devices: 
--- Tool Versions: 
--- Description: 
--- 
--- Dependencies: 
--- 
+-- Project Name:
+-- Target Devices:
+-- Tool Versions:
+-- Description:
+--
+-- Dependencies:
+--
 -- Revision:
 -- Revision 0.01 - File Created
 -- Additional Comments:
--- 
+--
 ----------------------------------------------------------------------------------
 
 
@@ -41,12 +41,12 @@ entity labtools_fmeter is
             C_CHANNELS : integer range 1 to 32 := 4;
             C_MODE : integer range 0 to 1 := 0;
             C_NUM_BITS : integer range 16 to 32 := 32
-        );  
-        port ( 
+        );
+        port (
             refclk    : in STD_LOGIC;
-            
+
             fin      : in STD_LOGIC_VECTOR(C_CHANNELS-1 downto 0);
-            
+
             F0       : out STD_LOGIC_VECTOR(C_NUM_BITS-1 downto 0);
             F1       : out STD_LOGIC_VECTOR(C_NUM_BITS-1 downto 0);
             F2       : out STD_LOGIC_VECTOR(C_NUM_BITS-1 downto 0);
@@ -56,7 +56,7 @@ entity labtools_fmeter is
             F5       : out STD_LOGIC_VECTOR(C_NUM_BITS-1 downto 0);
             F6       : out STD_LOGIC_VECTOR(C_NUM_BITS-1 downto 0);
             F7       : out STD_LOGIC_VECTOR(C_NUM_BITS-1 downto 0);
-            
+
             F8       : out STD_LOGIC_VECTOR(C_NUM_BITS-1 downto 0);
             F9       : out STD_LOGIC_VECTOR(C_NUM_BITS-1 downto 0);
             F10       : out STD_LOGIC_VECTOR(C_NUM_BITS-1 downto 0);
@@ -66,17 +66,17 @@ entity labtools_fmeter is
             F13       : out STD_LOGIC_VECTOR(C_NUM_BITS-1 downto 0);
             F14       : out STD_LOGIC_VECTOR(C_NUM_BITS-1 downto 0);
             F15       : out STD_LOGIC_VECTOR(C_NUM_BITS-1 downto 0);
-            
+
             F16       : out STD_LOGIC_VECTOR(C_NUM_BITS-1 downto 0);
             F17       : out STD_LOGIC_VECTOR(C_NUM_BITS-1 downto 0);
             F18       : out STD_LOGIC_VECTOR(C_NUM_BITS-1 downto 0);
             F19       : out STD_LOGIC_VECTOR(C_NUM_BITS-1 downto 0);
-            
+
             F20       : out STD_LOGIC_VECTOR(C_NUM_BITS-1 downto 0);
             F21       : out STD_LOGIC_VECTOR(C_NUM_BITS-1 downto 0);
             F22       : out STD_LOGIC_VECTOR(C_NUM_BITS-1 downto 0);
             F23       : out STD_LOGIC_VECTOR(C_NUM_BITS-1 downto 0);
-            
+
             F24       : out STD_LOGIC_VECTOR(C_NUM_BITS-1 downto 0);
             F25       : out STD_LOGIC_VECTOR(C_NUM_BITS-1 downto 0);
             F26       : out STD_LOGIC_VECTOR(C_NUM_BITS-1 downto 0);
@@ -86,7 +86,7 @@ entity labtools_fmeter is
             F29       : out STD_LOGIC_VECTOR(C_NUM_BITS-1 downto 0);
             F30       : out STD_LOGIC_VECTOR(C_NUM_BITS-1 downto 0);
             F31       : out STD_LOGIC_VECTOR(C_NUM_BITS-1 downto 0);
-            
+
             update    : out STD_LOGIC
         );
 end labtools_fmeter;
@@ -178,16 +178,16 @@ CH31_gen: if C_CHANNELS > 31 generate begin F31 <= F(C_NUM_BITS*32-1 downto C_NU
 COUNTER_REFCLK_inst: COUNTER_TC_MACRO
    generic map (
       COUNT_BY => X"000000000001", -- Count by value
-      DEVICE => "7SERIES",         -- Target Device: "VIRTEX5", "7SERIES" 
-      DIRECTION => "UP",            -- Counter direction "UP" or "DOWN" 
+      DEVICE => "7SERIES",         -- Target Device: "VIRTEX5", "7SERIES"
+      DIRECTION => "UP",            -- Counter direction "UP" or "DOWN"
       RESET_UPON_TC => "TRUE",      -- Reset counter upon terminal count, TRUE or FALSE
       --TC_VALUE   => X"000005F5E0FF", -- Terminal count value 100M
-      
+
       TC_VALUE   => std_logic_vector(TO_UNSIGNED(C_REFCLK_HZ-1, 32)), -- Terminal count value 100M
       --TC_VALUE => X"000000000100", -- Terminal count value
       WIDTH_DATA => C_NUM_BITS)            -- Counter output bus width, 1-48
    port map (
-      Q     => refcnt,          -- Counter ouput, width determined by WIDTH_DATA generic 
+      Q     => refcnt,          -- Counter ouput, width determined by WIDTH_DATA generic
       TC    => tc,            --TC,      -- 1-bit terminal count output, high = terminal count is reached
       CLK   => refclk,          --CLK,    -- 1-bit clock input
       CE    => High,             --CE,      -- 1-bit clock enable input
@@ -204,11 +204,11 @@ Mode_0_Gen: if C_MODE=0 generate
 end generate;
 
 Mode_1_Gen: if C_MODE=1 generate
-    
+
 
 FDCE_inst: FDCE
    generic map (
-      INIT => '0') -- Initial value of register ('0' or '1')  
+      INIT => '0') -- Initial value of register ('0' or '1')
    port map (
       Q => fin_i(i),      -- Data output
       C => refclk,      -- Clock input
@@ -221,17 +221,17 @@ FDCE_inst: FDCE
     clk_i(i) <= refclk;
 end generate;
 
- 
+
 COUNTER_F_inst: COUNTER_TC_MACRO
    generic map (
       COUNT_BY => X"000000000001", -- Count by value
-      DEVICE => "7SERIES",         -- Target Device: "VIRTEX5", "7SERIES" 
-      DIRECTION => "UP",            -- Counter direction "UP" or "DOWN" 
+      DEVICE => "7SERIES",         -- Target Device: "VIRTEX5", "7SERIES"
+      DIRECTION => "UP",            -- Counter direction "UP" or "DOWN"
       RESET_UPON_TC => "FALSE",      -- Reset counter upon terminal count, TRUE or FALSE
       TC_VALUE => X"000000000000", -- Terminal count value
       WIDTH_DATA => C_NUM_BITS)            -- Counter output bus width, 1-48
    port map (
-      Q     => F_i(C_NUM_BITS*(i+1)-1 downto C_NUM_BITS*i),              -- Counter ouput, width determined by WIDTH_DATA generic 
+      Q     => F_i(C_NUM_BITS*(i+1)-1 downto C_NUM_BITS*i),              -- Counter ouput, width determined by WIDTH_DATA generic
       TC    => open,            --TC,      -- 1-bit terminal count output, high = terminal count is reached
       CLK   => clk_i(i),          --CLK,    -- 1-bit clock input
       CE    => enable_i(i),    --CE,      -- 1-bit clock enable input

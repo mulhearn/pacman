@@ -89,7 +89,7 @@ begin
   update_lemo_a <= UPDATE_LEMO_A_I;
   update_lemo_b <= UPDATE_LEMO_B_I;
   update_poke_c <= UPDATE_POKE_C_I;
-  update_poke_d <= UPDATE_POKE_D_I;  
+  update_poke_d <= UPDATE_POKE_D_I;
   --BUSY_F_O <= busy_f;
   config_g    <= ATC_CONFIG_G;
   config_h    <= ATC_CONFIG_H;
@@ -97,13 +97,13 @@ begin
   ATC_G_COUNT  <=counter_g;
   ATC_H_COUNT  <=counter_h;
   ATC_TS_COUNT <=counter_ts;
-  
+
   DEBUG_O(0) <= update_ts;
   DEBUG_O(1) <= config_ts(4);
   --DEBUG_O(2) <= ;
-  DEBUG_O(7 downto 2) <= (others => '0');  
+  DEBUG_O(7 downto 2) <= (others => '0');
   -- Output signal for G
-  -- (A&a) or (B&b) or (C&c) or (D&d) 
+  -- (A&a) or (B&b) or (C&c) or (D&d)
   -- A come from config and a is the input signal
   gen_g:for i in 0 to 9 generate
     update_g(i) <= (config_g(i)(0) and update_lemo_a) or (config_g(i)(1) and update_lemo_b) or (config_g(i)(2) and update_poke_c) or (config_g(i)(3) and update_poke_d);
@@ -142,9 +142,9 @@ begin
         COUNT_RESET     => COUNT_RESET
       );
   end generate;
-  
+
   -- Output signal for TS
-  update_ts <= (config_ts(0) and update_lemo_a) or (config_ts(1) and update_lemo_b) or (config_ts(2) and update_poke_c) or (config_ts(3) and update_poke_d); 
+  update_ts <= (config_ts(0) and update_lemo_a) or (config_ts(1) and update_lemo_b) or (config_ts(2) and update_poke_c) or (config_ts(3) and update_poke_d);
   mux_ts:atc_mux_single
     port map (
       UCLK            => UCLK,
@@ -160,7 +160,7 @@ begin
       COUNT_RESET     => COUNT_RESET
       );
 
- 
+
 
 
 

@@ -1,6 +1,6 @@
 # Set SDK workspace
 setws .
 
-# Build 
+# Build
 app build pacman_fsbl
 

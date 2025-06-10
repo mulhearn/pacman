@@ -8,5 +8,5 @@ void      close_bram();
 
 void      write_bram(uint32_t addr, uint32_t value);
 uint32_t  read_bram(uint32_t addr);
-  
+
 #endif

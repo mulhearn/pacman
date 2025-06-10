@@ -33,13 +33,13 @@ ARCHITECTURE uart_rx_arch OF uart_rx IS
   SIGNAL cnt_bit_length : INTEGER RANGE -1 TO CLK_LENGTH * 255;
   SIGNAL cnt_bits       : INTEGER RANGE 0 TO DATA_WIDTH+2;
   SIGNAL delay_cnt      : INTEGER RANGE 0 TO 255;
-  
+
   TYPE state_type IS (IDLE, DELAY, WT, SHIFT, UPDATE);
   SIGNAL state : state_type := IDLE;
-  
+
   SIGNAL RXfiltered  : STD_LOGIC;
   SIGNAL RXfilterSRG : STD_LOGIC_VECTOR (2 DOWNTO 0);
-  
+
   SIGNAL srg : STD_LOGIC_VECTOR (DATA_WIDTH+1 DOWNTO 0);
 
 BEGIN  -- ARCHITECTURE uart_rx_arch
@@ -62,11 +62,11 @@ BEGIN  -- ARCHITECTURE uart_rx_arch
         state <= IDLE;
         busy <= '0';
         data_update <= '0';
-        
+
       ELSIF CLK'EVENT AND CLK = '1' THEN  -- rising clock edge
          data_update <= '0';
          bit_length  <= CLK_LENGTH * to_integer(unsigned(CLKIN_RATIO));
-         
+
          CASE state IS
             WHEN IDLE =>
                busy <= '0';
@@ -88,7 +88,7 @@ BEGIN  -- ARCHITECTURE uart_rx_arch
               else
                 delay_cnt <= delay_cnt - 1;
               end if;
-               
+
             WHEN WT =>
                busy <= '1';
                cnt_bit_length <= cnt_bit_length - 1;
@@ -97,7 +97,7 @@ BEGIN  -- ARCHITECTURE uart_rx_arch
                ELSE
                   state <= WT;
                END IF;
-               
+
             WHEN SHIFT =>
                cnt_bits       <= cnt_bits + 1;
                srg            <= RXfiltered & srg (DATA_WIDTH+1 DOWNTO 1);
@@ -107,7 +107,7 @@ BEGIN  -- ARCHITECTURE uart_rx_arch
                ELSE
                   state <= WT;
                END IF;
-               
+
             WHEN UPDATE =>
                -- check stop bit
                IF srg(DATA_WIDTH+1) = '1' THEN
@@ -115,7 +115,7 @@ BEGIN  -- ARCHITECTURE uart_rx_arch
                   data        <= srg(DATA_WIDTH DOWNTO 1);
                END IF;
                state <= IDLE;
-               
+
             WHEN OTHERS =>
                state <= IDLE;
          END CASE;

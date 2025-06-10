@@ -14,7 +14,7 @@ ENTITY uart_tx IS
     CLK          : IN  STD_LOGIC;
     RST          : IN  STD_LOGIC;
     CLKOUT_RATIO : IN  STD_LOGIC_VECTOR (7 downto 0);
-    CLKOUT_PHASE : IN  STD_LOGIC_VECTOR (3 downto 0);    
+    CLKOUT_PHASE : IN  STD_LOGIC_VECTOR (3 downto 0);
     -- UART TX
     MCLK        : IN  STD_LOGIC;
     TX          : OUT STD_LOGIC;
@@ -29,10 +29,10 @@ END ENTITY uart_tx;
 
 ARCHITECTURE uart_tx_arch OF uart_tx IS
   constant BIT_LEN : integer := CLK_HZ / CLKOUT_HZ;
-  
+
   signal busy_out : std_logic;
   signal tx_out : std_logic;
-  
+
   signal mclk_meta : std_logic;
   signal mclk_sync : std_logic;
   signal mclk_prev : std_logic;
@@ -45,7 +45,7 @@ ARCHITECTURE uart_tx_arch OF uart_tx IS
   SIGNAL state : state_type := IDLE;
 
   SIGNAL srg : STD_LOGIC_VECTOR (DATA_WIDTH+1 DOWNTO 0);
-  
+
   attribute ASYNC_REG : string;
   attribute ASYNC_REG of mclk_meta: signal is "TRUE";
   attribute ASYNC_REG of mclk_sync: signal is "TRUE";
@@ -64,14 +64,14 @@ BEGIN  -- ARCHITECTURE uart_tx_arch
       mclk_prev <= mclk_sync;
     end if;
   end process;
-  
+
   uart_tx_fsm : process (CLK, RST) is
   begin
     if (RST = '1') then -- asynchronous reset (active high)
       state <= IDLE;
       tx_out <= '1';
       busy_out <= '0'; -- mm change
-      
+
     elsif (rising_edge(CLK)) then
       case state is
         when IDLE =>
@@ -95,28 +95,28 @@ BEGIN  -- ARCHITECTURE uart_tx_arch
         when DELAY =>
           -- delay relative to mclk rising edge
           busy_out <= '1';
-          if (phase_cnt > 0) then 
+          if (phase_cnt > 0) then
             phase_cnt <= phase_cnt - 1;
           else
             state <= SHIFT;
           end if;
-          
+
         when SHIFT =>
           -- shift bits
           busy_out <= '1';
           if (baud_cnt = 0) then
             tx_out <= srg(0);
             srg <= '1' & srg(DATA_WIDTH+1 DOWNTO 1);
-            
+
             -- full word sent
             if (bit_cnt = 0) then
-              state <= IDLE;              
+              state <= IDLE;
             -- reset baud counter, increment bit counter
             else
               baud_cnt <= to_unsigned(to_integer(unsigned(CLKOUT_RATIO)) * BIT_LEN, baud_cnt'length) - 1;
               bit_cnt <= bit_cnt - 1;
             end if;
-            
+
           -- increment baud counter
           else
             baud_cnt <= baud_cnt - 1;

@@ -63,7 +63,7 @@
 *                       Fix for CR#732865 - Backward compatibility for ps7_init
 *                       					function
 * 7.00a kc  10/18/13    Integrated SD/MMC driver
-* 8.00a kc  02/20/14	Fix for CR#775631 - FSBL: FsblGetGlobalTimer() 
+* 8.00a kc  02/20/14	Fix for CR#775631 - FSBL: FsblGetGlobalTimer()
 *											is not proper
 * 9.00a kc  04/16/14	Fix for CR#724166 - SetPpk() will fail on secure
 *		 									fallback unless FSBL* and FSBL
@@ -251,7 +251,7 @@ int main(void)
 	 */
 	SlcrUnlock();
 
-	/* If Performance measurement is required 
+	/* If Performance measurement is required
 	 * then read the Global Timer value , Please note that the
 	 * time taken for mio, clock and ddr initialisation
 	 * done in the ps7_init function is not accounted in the FSBL
@@ -276,7 +276,7 @@ int main(void)
 	 * Register the Exception handlers
 	 */
 	RegisterHandlers();
-	
+
 	/*
 	 * Print the FSBL Banner
 	 */
@@ -288,7 +288,7 @@ int main(void)
 #if defined(XPAR_PS7_DDR_0_S_AXI_BASEADDR) || defined(XPAR_PS7_DDR_0_BASEADDRESS)
 
     /*
-     * DDR Read/write test 
+     * DDR Read/write test
      */
 	Status = DDRInitCheck();
 	if (Status == XST_FAILURE) {
@@ -847,7 +847,7 @@ void OutputStatus(u32 State)
 * @note		This function does not return, the PS block is reset
 *
 ****************************************************************************/
-void ErrorLockdown(u32 State) 
+void ErrorLockdown(u32 State)
 {
 	/*
 	 * Store the error status
@@ -937,7 +937,7 @@ void MarkFSBLIn(void)
 * @note		None.
 *
 ****************************************************************************/
-void ClearFSBLIn(void) 
+void ClearFSBLIn(void)
 {
 	Xil_Out32(REBOOT_STATUS_REG,
 		(Xil_In32(REBOOT_STATUS_REG)) &	~(FSBL_FAIL_MASK));
@@ -955,7 +955,7 @@ void ClearFSBLIn(void)
 * @note		None.
 *
 ****************************************************************************/
-static void RegisterHandlers(void) 
+static void RegisterHandlers(void)
 {
 	Xil_ExceptionInit();
 
@@ -1241,7 +1241,7 @@ void CheckWDTReset(void)
 			if (Silicon_Version == SILICON_VERSION_1) {
 				/*
 				 * for 1.0 Silicon we need to write
-				 * 1 to the RESET REASON Clear register 
+				 * 1 to the RESET REASON Clear register
 				 */
 				Xil_Out32(RESET_REASON_CLR, 1);
 			} else {
@@ -1422,7 +1422,7 @@ u32 NextValidImageCheck(void)
 	u32 BootDevMaxSize=0;
 
 	fsbl_printf(DEBUG_GENERAL, "Searching For Next Valid Image");
-	
+
 	/*
 	 * Setting variable with maximum flash size based on boot mode
 	 */
@@ -1451,7 +1451,7 @@ u32 NextValidImageCheck(void)
 	 */
 	ImageBaseAddr = (MultiBootReg & PCAP_MBOOT_REG_REBOOT_OFFSET_MASK)
 								* GOLDEN_IMAGE_OFFSET;
-	
+
 	/*
 	 * Valid image search continue till end of the flash
 	 * With increment 32KB in each iteration

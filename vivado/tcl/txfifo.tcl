@@ -33,7 +33,7 @@ if { $bCheckIPsPassed != 1 } {
 
 set txfifo [create_ip -name fifo_generator -vendor xilinx.com -library ip -module_name txfifo]
 
-set_property -dict { 
+set_property -dict {
   CONFIG.Input_Data_Width {32}
   CONFIG.Input_Depth {64}
   CONFIG.Output_Data_Width {64}
@@ -47,7 +47,7 @@ set_property -dict {
   CONFIG.Full_Threshold_Negate_Value {60}
 } [get_ips txfifo]
 
-set_property -dict { 
+set_property -dict {
   GENERATE_SYNTH_CHECKPOINT {1}
 } $txfifo
 

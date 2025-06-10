@@ -8,5 +8,5 @@ void      close_mio();
 
 void      write_mio(int pin, uint32_t value);
 uint32_t  read_mio(int pin);
-  
+
 #endif

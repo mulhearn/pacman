@@ -50,9 +50,9 @@ do_install() {
 	     install -m 0755 ${S}/pump_socket.py ${D}${homedir}
 	     install -m 0755 ${S}/rep_socket.py ${D}${homedir}
              install -m 0755 ${S}/power_up_tile.sh ${D}${homedir}
-             install -m 0755 ${S}/report_power.sh ${D}${homedir}             
-             install -m 0755 ${S}/power_down.sh ${D}${homedir}             
-             
+             install -m 0755 ${S}/report_power.sh ${D}${homedir}
+             install -m 0755 ${S}/power_down.sh ${D}${homedir}
+
              install -d ${D}${sysconfdir}/init.d
 	     install -m 0755 ${S}/pacman_server.sh ${D}${sysconfdir}/init.d/pacman_server
              install -m 0755 ${S}/pacman_server.sh ${D}${bindir}/pacman_server

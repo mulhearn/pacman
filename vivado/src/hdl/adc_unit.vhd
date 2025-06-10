@@ -12,22 +12,22 @@ entity adc_unit is
     -- REGBUS Ports
     S_REGBUS_RB_RUPDATE : in  std_logic;
     S_REGBUS_RB_RADDR	: in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
-    S_REGBUS_RB_RDATA	: out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);      
+    S_REGBUS_RB_RDATA	: out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     S_REGBUS_RB_RACK    : out std_logic;
-    
+
     S_REGBUS_RB_WUPDATE : in  std_logic;
     S_REGBUS_RB_WADDR	: in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
     S_REGBUS_RB_WDATA	: in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     S_REGBUS_RB_WACK    : out std_logic;
 
     -- BRAM
-    BRAM_EN_O           : out std_logic; 
+    BRAM_EN_O           : out std_logic;
     BRAM_DATA_O         : out std_logic_vector(BRAM_DATA_WIDTH-1 downto 0);
     BRAM_WEN_O          : out std_logic_vector(3 downto 0);
     BRAM_ADDR_O         : out std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
     BRAM_CLK_O          : out std_logic;
     BRAM_RST_O          : out std_logic;
-    
+
     -- ADC
     ADC_EN_O            : out std_logic;
     ADC_CLK_O           : out std_logic;
@@ -46,7 +46,7 @@ architecture behavioral of adc_unit is
       S_REGBUS_RB_RDATA	     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_RUPDATE    : in  std_logic;
       S_REGBUS_RB_RACK       : out std_logic;
-      
+
       S_REGBUS_RB_WUPDATE    : in  std_logic;
       S_REGBUS_RB_WADDR	     : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
       S_REGBUS_RB_WDATA	     : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -80,7 +80,7 @@ architecture behavioral of adc_unit is
       LAST_O         : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
       -- BRAM
-      BRAM_EN_O      : out std_logic; 
+      BRAM_EN_O      : out std_logic;
       BRAM_DATA_O    : out std_logic_vector(BRAM_DATA_WIDTH-1 downto 0);
       BRAM_WEN_O     : out std_logic_vector(3 downto 0);
       BRAM_ADDR_O    : out std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
@@ -93,17 +93,17 @@ architecture behavioral of adc_unit is
       ACLK           : in  std_logic;
       ARESETN        : in  std_logic;
       CLKPAR_I       : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      
+
       ADC_CLK_O      : out std_logic
       );
   end component;
 
-  
+
 
   signal config    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal command   : std_logic_vector(7 downto 0);
   signal state     : std_logic_vector(3 downto 0);
-  signal clkpar    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');  
+  signal clkpar    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal status    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal last      : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal look      : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
@@ -112,7 +112,7 @@ begin
 
   look(ADC_DATA_WIDTH-1 downto 0) <= ADC_DATA_I;
   look(ADC_DATA_WIDTH) <= ADC_DOF_I;
-  
+
   registers: adc_reg port map (
       ACLK           => ACLK,
       ARESETN        => ARESETN,
@@ -163,8 +163,8 @@ begin
       ACLK       => ACLK,
       ARESETN    => ARESETN,
       CLKPAR_I   => clkpar,
-      
-      ADC_CLK_O  => ADC_CLK_O   
+
+      ADC_CLK_O  => ADC_CLK_O
       );
 
 end behavioral;

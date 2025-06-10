@@ -44,7 +44,7 @@ architecture behaviour of atc_mux_tb is
     ATC_TS_COUNT            :  out  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     COUNT_START             : in std_logic := '0';
     COUNT_RESET             : in std_logic := '0';
-   
+
     DEBUG_O                 : out std_logic_vector(7 downto 0)
 
 
@@ -66,8 +66,8 @@ architecture behaviour of atc_mux_tb is
   signal update_ts       : std_logic;
   signal count_s    :std_logic;
   signal count_r    : std_logic;
-  signal   atc_h         :  std_logic_vector(9 downto 0) := (others => '0'); 
-  signal   atc_g         :  std_logic_vector(9 downto 0) := (others => '0'); 
+  signal   atc_h         :  std_logic_vector(9 downto 0) := (others => '0');
+  signal   atc_g         :  std_logic_vector(9 downto 0) := (others => '0');
   signal   ts_sy         :  std_logic;
   signal  config_g        :  ATC_array;
   signal  cfg_g_in        :  ATC_array;
@@ -87,16 +87,16 @@ begin
     UPDATE_POKE_D_I => update_poke_d,
 
 
-    ATC_CONFIG_G    => cfg_g_in,      
-    ATC_CONFIG_H    => cfg_h_in,      
-    ATC_CONFIG_TS   => x"00000A12",      
-    
-    ATC_G_O      => atc_g,        
-    ATC_H_O      => atc_h,       
+    ATC_CONFIG_G    => cfg_g_in,
+    ATC_CONFIG_H    => cfg_h_in,
+    ATC_CONFIG_TS   => x"00000A12",
+
+    ATC_G_O      => atc_g,
+    ATC_H_O      => atc_h,
     TS_SYNC      => ts_sy,
-    ATC_G_COUNT  => counter_g,          
-    ATC_H_COUNT  => counter_h,          
-    ATC_TS_COUNT => counter_ts,           
+    ATC_G_COUNT  => counter_g,
+    ATC_H_COUNT  => counter_h,
+    ATC_TS_COUNT => counter_ts,
     COUNT_START => count_s,
     COUNT_RESET => count_r,
     DEBUG_O    => debug
@@ -160,7 +160,7 @@ begin
     --wait for 20 ns;
     update_lemo_a <= '0';
     wait;
-   
+
   end process;
 
 

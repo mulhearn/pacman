@@ -14,13 +14,13 @@ entity slow_pulse is
     CLK_F_I	                : in  std_logic;
     RSTN_F_I	              : in  std_logic;
     UPDATE_I	              : in  std_logic;
-   
+
     BUSY_F_O	              : out std_logic;
 
     CONFIG_POL              : in  std_logic :='0';
 
 
-    -- Slow Clock Domain : 
+    -- Slow Clock Domain :
     CLK_S_I                 : in  std_logic;
     PULSE_O                 : out std_logic;
     DEBUG_O                 : out std_logic_vector(7 downto 0);
@@ -37,7 +37,7 @@ architecture behavioral of slow_pulse is
   signal clk_f           : std_logic;
   signal rst_f           : std_logic;
   signal update_in       : std_logic;
- 
+
   signal busy_f          : std_logic;
 
   signal clk_s           : std_logic;
@@ -63,18 +63,18 @@ begin
   clk_f    <= CLK_F_I;
   rst_f    <= not RSTN_F_I;
   update_in <= UPDATE_I;
- 
+
 
 
   BUSY_F_O <= busy_f;
   clk_s    <= CLK_S_I;
-  
-  
+
+
   DEBUG_O(0) <= request;
   DEBUG_O(1) <= request_sync;
   DEBUG_O(2) <= ack;
   DEBUG_O(3) <= ack_sync;
-  
+
   -- double flop synchronization of ack signal (s to f)
   process(clk_f, rst_f)
   begin
@@ -98,7 +98,7 @@ begin
       request_sync <= request_meta; --likely stable
     end if;
   end process;
-  
+
 
   -- fast clock domain  process
   process(clk_f, rst_f)
@@ -112,7 +112,7 @@ begin
         if ( update_in = '1') then
           request <= '1';
           busy_f <= '1';
-        end if; 
+        end if;
       else
         if ((request='1') and (ack_sync='1')) then
           request <= '0';
@@ -135,7 +135,7 @@ begin
   begin
     if (rst_f = '1') then
       PULSE_O <= CONFIG_POL;
-      ack <= '0'; 
+      ack <= '0';
       counter <=0;
     elsif (rising_edge(clk_s)) then
       if ((ack='0') and (request_sync='1')) then
@@ -144,10 +144,10 @@ begin
       end if;
       if(request_sync = '0') then
         ack <= '0';
-      end if; 
+      end if;
       if (ack = '1' and counter = 1) then
-        PULSE_O <= not CONFIG_POL; 
-        counter <= counter - 1;             
+        PULSE_O <= not CONFIG_POL;
+        counter <= counter - 1;
       else
         PULSE_O <= CONFIG_POL;
       end if;
@@ -158,21 +158,21 @@ begin
 process(clk_s, rst_f)
   begin
     if (rst_f = '1') then
-      count_out <= 0 ; 
+      count_out <= 0 ;
     elsif (rising_edge(clk_s)) then
       if COUNT_RESET = '1' then
         count_out <= 0;
       else
         if (COUNT_START = '1') then
-          if (ack = '1' and counter = 1 ) then  
+          if (ack = '1' and counter = 1 ) then
 	    if (count_out = 10000000 -1 ) then
               count_out <=0;
             else
               count_out <= count_out + 1;
             end if;
-          end if; 
-        end if;  
-      end if; 
+          end if;
+        end if;
+      end if;
     end if;
   end process;
   COUNT_O <= std_logic_vector(to_signed(count_out , 32));

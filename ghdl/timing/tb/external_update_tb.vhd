@@ -10,7 +10,7 @@ end external_update_tb;
 architecture behaviour of external_update_tb is
   component external_update is
     port (
-     
+
       UPDATE_E_I	        : in  std_logic;
       CLK_F_I             : in  std_logic;
       RSTN                : in  std_logic;
@@ -19,13 +19,13 @@ architecture behaviour of external_update_tb is
       DEBUG               : out std_logic_vector(7 downto 0)
     );
   end component;
-  
+
   signal update_e    : std_logic; -- input signal
 
   signal clk_b         : std_logic; -- clk of board frequency
   signal rst           : std_logic;
   signal aresetn       :std_logic;
-  signal pulse         : std_logic; 
+  signal pulse         : std_logic;
   signal pulse_count       : std_logic_vector(31 downto 0);
   signal debug       : std_logic_vector(7 downto 0);
   signal show_output   : std_logic := '0';
@@ -37,7 +37,7 @@ architecture behaviour of external_update_tb is
     RSTN     => aresetn,
     UPDATE_E_I => update_e,
     --CONFIG_A_I => x"0008007A",
-  
+
     PULSE_OUT => pulse,
     COUNT_P => pulse_count,
     DEBUG =>debug
@@ -65,7 +65,7 @@ architecture behaviour of external_update_tb is
     aresetn <= '0';
     wait for 10 ns;
     aresetn <= '1';
-    
+
     wait;
   end process;
 
@@ -88,10 +88,10 @@ architecture behaviour of external_update_tb is
     wait for 10 ns;
     show_output <= '0';
     wait;
-  end process; 
+  end process;
 
 
-  
+
   output_process : process
     variable l : line;
   begin
@@ -104,7 +104,7 @@ architecture behaviour of external_update_tb is
       write  (l, clk_b);
       write  (l, String'("| update_e: "));
       write  (l, update_e);
- 
+
 
       write  (l, String'(" pulse: "));
       write  (l, pulse);
@@ -116,12 +116,12 @@ architecture behaviour of external_update_tb is
       write  (l, pulse_count);
 
 
-      
+
       if (aresetn = '0') then
         write (l, String'(" (RESET)"));
       end if;
       writeline(output, l);
     end if;
   end process;
- 
-end behaviour;  
+
+end behaviour;

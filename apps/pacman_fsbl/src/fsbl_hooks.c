@@ -109,7 +109,7 @@ u32 FsblHookBeforeHandoff(void)
 	Status = XST_SUCCESS;
 
 	Status |= TE_FsblHookBeforeHandoff_Custom();
-	
+
 	return (Status);
 }
 

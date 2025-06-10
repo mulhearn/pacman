@@ -270,8 +270,8 @@ void benchmark_tx(){
 
   unsigned m = 40.0*10000/66;
   unsigned p = 40.0*10000/67;
-  printf("maximum tx rate:      %d tx payloads (64-bit+2 @ 10 MHz) per ms\n", m);  
-  printf("practical max:        %d tx payloads (64-bit+3 @ 10 MHz) per ms\n", p);  
+  printf("maximum tx rate:      %d tx payloads (64-bit+2 @ 10 MHz) per ms\n", m);
+  printf("practical max:        %d tx payloads (64-bit+3 @ 10 MHz) per ms\n", p);
 }
 
 void benchmark_rxtx_loopback(){
@@ -283,7 +283,7 @@ void benchmark_rxtx_loopback(){
   printf("*** Sending run to TX and RX *** \n");
   G_UTIL_DMA[(0x00)>>2] = 0x01; // TX
   G_UTIL_DMA[(0x30)>>2] = 0x01; // RX
-  
+
   G_UTIL_DMA_TX_BUFFER[0] = tx_mask_a;
   G_UTIL_DMA_TX_BUFFER[1] = tx_mask_b;
   G_UTIL_DMA_TX_BUFFER[2] = 0x0;
@@ -304,11 +304,11 @@ void benchmark_rxtx_loopback(){
     unsigned fifocnt = read_axil(SCOPE_RX+0x3F00+C_ADDR_RX_FRCNT);
     unsigned gstatus = read_axil(SCOPE_TX+0x3F00+C_ADDR_TX_STATUS);
     unsigned sr = G_UTIL_DMA[(0x04)>>2];
-    
+
     if ( (packets_sent < tx_packets) && (fifocnt<100) && (gstatus == 0x1) && (((sr&0x2)!=0) || (packets_sent==0)) ) {
       G_UTIL_DMA[(0x18)>>2] = DMA_TX_ADDR;
       G_UTIL_DMA[(0x28)>>2] = tx_words*4;
-      packets_sent++;      
+      packets_sent++;
     }
 
     if (fifocnt>=24) {
@@ -327,7 +327,7 @@ void benchmark_rxtx_loopback(){
   timeout = 1000;
   while(timeout){
     unsigned sr = G_UTIL_DMA[(0x34)>>2];
-    if ((sr&0x2)!=0) 
+    if ((sr&0x2)!=0)
       break;
     usleep(1);
     timeout--;
@@ -342,8 +342,8 @@ void benchmark_rxtx_loopback(){
 
   unsigned m = 40.0*10000/66;
   unsigned p = 40.0*10000/67;
-  printf("maximum tx rate:      %d tx payloads (64-bit+2 @ 10 MHz) per ms\n", m);  
-  printf("practical max:        %d tx payloads (64-bit+3 @ 10 MHz) per ms\n", p);  
+  printf("maximum tx rate:      %d tx payloads (64-bit+2 @ 10 MHz) per ms\n", m);
+  printf("practical max:        %d tx payloads (64-bit+3 @ 10 MHz) per ms\n", p);
 
   if (!timeout){
     printf("*** ERROR:  failed to complete packet loopack before timeout *** \r\n");

@@ -9,7 +9,7 @@ entity adc_clk_div is
     ACLK           : in  std_logic;
     ARESETN        : in  std_logic;
     CLKPAR_I       : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    
+
     ADC_CLK_O      : out std_logic
     );
 end entity adc_clk_div;
@@ -18,16 +18,16 @@ architecture behavioral of adc_clk_div is
   signal clk_i  : std_logic;
   signal rst    : std_logic;
   signal pass   : std_logic := '1';
-  
+
   --signal clk_o  : std_logic := '0';
   signal clk_d  : std_logic := '0';
-  
+
 begin
   clk_i       <= ACLK;
   rst         <= not ARESETN;
   ADC_CLK_O   <= clk_i when (pass = '1') else
                  clk_d;
-  
+
   process(clk_i,rst)
     variable div : integer := 0;
     variable cnt : integer := 0;
@@ -60,6 +60,6 @@ begin
     end if;
   end process;
 end behavioral;
-  
 
-  
+
+

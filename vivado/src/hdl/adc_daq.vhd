@@ -22,7 +22,7 @@ entity adc_daq is
     STATE_O        : out std_logic_vector(3 downto 0);
 
     -- BRAM
-    BRAM_EN_O      : out std_logic; 
+    BRAM_EN_O      : out std_logic;
     BRAM_DATA_O    : out std_logic_vector(BRAM_DATA_WIDTH-1 downto 0);
     BRAM_WEN_O     : out std_logic_vector(3 downto 0);
     BRAM_ADDR_O    : out std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
@@ -37,7 +37,7 @@ architecture behavioral of adc_daq is
   signal upper : std_logic_vector(15 downto 0);
   signal mid   : std_logic_vector(7 downto 0);
   signal mode  : std_logic_vector(3 downto 0);
-  
+
   signal wen   : std_logic_vector(3 downto 0) := (others => '0');
   signal addr  : std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0) := (others => '0');
   signal data  : std_logic_vector(BRAM_DATA_WIDTH-1 downto 0) := (others => '0');
@@ -58,7 +58,7 @@ architecture behavioral of adc_daq is
   signal adc_dof_ne   : std_logic := '0';
   signal adc_data    : std_logic_vector(ADC_DATA_WIDTH-1 downto 0) := (others => '0');
   signal adc_dof      : std_logic := '0';
-  
+
 begin
   clk         <= ACLK;
   rst         <= not ARESETN;
@@ -170,7 +170,7 @@ begin
         data(7 downto 0)   <= mid;
         data(15 downto 8)  <= mid;
         data(23 downto 16) <= mid;
-        data(31 downto 24) <= mid;          
+        data(31 downto 24) <= mid;
         addr               <= upper(BRAM_ADDR_WIDTH-1 downto 0);
       elsif (mode = x"D") then
         wen      <= (others => '1');
@@ -226,11 +226,11 @@ begin
         else
           if (unsigned(adc_data) < low) then
             state <= x"1";
-          else 
+          else
             state <= x"2";
-          end if;   
+          end if;
         end if;
-        -- handles command 
+        -- handles command
         if (t_rst = '1') then
           state    <= x"0";
           addr     <= (others => '0');
@@ -267,6 +267,6 @@ begin
   end process;
 
 end behavioral;
-  
 
-  
+
+

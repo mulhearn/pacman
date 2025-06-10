@@ -22,13 +22,13 @@ architecture behaviour of slow_pulse_tb is
     CLK_F_I	                : in  std_logic;
     RSTN_F_I	              : in  std_logic;
     UPDATE_I	              : in  std_logic;
-   
+
     BUSY_F_O	              : out std_logic;
 
     CONFIG_POL              : in  std_logic :='0';
 
 
-    -- Slow Clock Domain : 
+    -- Slow Clock Domain :
     CLK_S_I                 : in  std_logic;
     PULSE_O                 : out std_logic;
     DEBUG_O                 : out std_logic_vector(7 downto 0);
@@ -149,9 +149,9 @@ begin
       write  (l, uclk);
       write  (l, String'("| update_in: "));
       write  (l, update_in);
-      
-    
-     
+
+
+
 
       write  (l, String'(" pulse: "));
       write  (l, sig_out);
@@ -167,7 +167,7 @@ begin
       write  (l, debug(3));
       write  (l, String'(" count_out: "));
       write  (l, cout);
-      
+
       if (aresetn = '0') then
         write (l, String'(" (RESET)"));
       end if;
@@ -190,9 +190,9 @@ begin
       write  (l, uclk);
       write  (l, String'("| update_in: "));
       write  (l, update_in);
-      
-    
-     
+
+
+
 
       write  (l, String'(" pulse: "));
       write  (l, sig_out);
@@ -210,14 +210,14 @@ begin
       write  (l, cout);
       write  (l, String'(" count_reset: "));
       write  (l, count_r);
-      
+
       if (aresetn = '0') then
         write (l, String'(" (RESET)"));
       end if;
       writeline(output, l);
     end if;
-  end process;  
-  
+  end process;
+
 
 
 

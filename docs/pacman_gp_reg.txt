@@ -76,7 +76,7 @@ The non-UART Roles are:
 GLOBAL:     0b1111 (0xF)
 TIMING:     0b1101 (0xD)
 ADC:        0b1011 (0xB)
-RESERVED:   0b1001 (0x9) 
+RESERVED:   0b1001 (0x9)
 RESERVED:   0b0111 (0x7)
 RESERVED:   0b0101 (0x5)
 RESERVED:   0b0011 (0x3)
@@ -93,7 +93,7 @@ Count:             0x08 (R) <-- Clears on Read
 Max Buffer Usage:  0x0A (R) <-- Clears on Read
 
 Global SCOPE and ROLE registers:
-Status           0x00 (R)   <-- Any transient errors clear on read 
+Status           0x00 (R)   <-- Any transient errors clear on read
 Firmware Major   0x04 (R)
 Firmware Minor   0x08 (R)
 Build Timestamp  0x0C (R)
@@ -103,12 +103,12 @@ Error Code:      0xF0 (R)  <-- Error Code from most recent error
 Debug:           0xFF (R)  <-- Debugging output
 
 Clock Registers:
-Status           0x00 (R)  
+Status           0x00 (R)
 Select           0x04
 ...
 Start Count       0xE0 (CMD) <-- start a counter on each clock
 Stop  Count       0xE4 (CMD) <-- stop a counter on each clock
-Fast  Count       0xE8 (R)   <-- 100 MHz counter     
+Fast  Count       0xE8 (R)   <-- 100 MHz counter
 Slow  Count       0xEC (R)   <-- 10 MHz counter
 Debug:            0xFF (R)   <-- Debugging output
 

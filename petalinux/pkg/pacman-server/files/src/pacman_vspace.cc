@@ -14,7 +14,7 @@ int pacman_vspace_write(uint32_t addr, uint32_t value){
     unsigned off = addr - PACMAN_AXIL_ADDR;
     return pacman_write(off, value);
   }
-  if (addr >= PACMAN_SERVER_I2C_START) {  
+  if (addr >= PACMAN_SERVER_I2C_START) {
     unsigned off = addr - PACMAN_AXIL_ADDR;
     return i2c_write(off, value);
   }
@@ -37,12 +37,12 @@ int pacman_vspace_write(uint32_t addr, uint32_t value){
     return EXIT_SUCCESS;
   case 0x001C:
     // ignoring... already configured correctly.
-    return EXIT_SUCCESS;    
+    return EXIT_SUCCESS;
   case 0x1010:
     // this is a request to send a sync pulse:
     if ((value&0x4)!=0){
       return pacman_write(0xFE24, 0x00FF03FF);
-    }    
+    }
     return EXIT_SUCCESS;
   case 0x1014:
     // ignoring... already configured correctly.
@@ -54,7 +54,7 @@ int pacman_vspace_write(uint32_t addr, uint32_t value){
     // ignoring... already configured correctly.
     return EXIT_SUCCESS;
   case 0x2014:
-    // ignoring... 
+    // ignoring...
     return EXIT_SUCCESS;
   }
 
@@ -62,7 +62,7 @@ int pacman_vspace_write(uint32_t addr, uint32_t value){
   //pacman_write(addr, value);
   //return EXIT_SUCCESS;
 
-  return EXIT_FAILURE; 
+  return EXIT_FAILURE;
 }
 
 uint32_t pacman_vspace_read(uint32_t addr, int * status){
@@ -72,7 +72,7 @@ uint32_t pacman_vspace_read(uint32_t addr, int * status){
     unsigned off = addr - PACMAN_AXIL_ADDR;
     return pacman_read(off, status);
   }
-  if (addr >= PACMAN_SERVER_I2C_START) {  
+  if (addr >= PACMAN_SERVER_I2C_START) {
     unsigned off = addr - PACMAN_AXIL_ADDR;
     return i2c_read(off);
   }
@@ -95,7 +95,7 @@ uint32_t pacman_vspace_read(uint32_t addr, int * status){
     tmp = pacman_read(0xFF20);
     return ((tmp & 0x00010000) != 0);
   case 0x1000:
-    return 0;    
+    return 0;
   case 0x1010:
     return 0;
   }

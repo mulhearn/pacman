@@ -75,15 +75,15 @@ int main(int argc, char* argv[]){
     }
     if (size != (npkts*16+8)){
       printf("ERROR:  message size (%d) does not match packets in header (%d)\n", size, npkts);
-      continue;      
+      continue;
     }
     //printf("DEBUG:  received valid message\n");
     for (int i=0; i<npkts; i++){
       uint32_t wtype =  rx_buffer[2+4*i]&0xFF;
-      uint32_t chan  = (rx_buffer[2+4*i]>>8)&0xFF;      
+      uint32_t chan  = (rx_buffer[2+4*i]>>8)&0xFF;
       //printf("DEBUG:  packet %d wtype:  0x%x  chan:  %d \n", i, wtype, chan);
 
-      if (wtype == 0x44){      
+      if (wtype == 0x44){
 	if ((chan == 0) || (chan > 40)){
 	  printf("ERROR:  invalid channel detected:  %d\n", chan);
 	  continue;
@@ -109,7 +109,7 @@ int main(int argc, char* argv[]){
   //printf("INFO: total words: %d  errors: %d\n", tot_words, err_words);
   //uint64_t data = rx_count * MAX_BUFFER_SIZE;
   //double mbts = data*1000/(elapsed_time*1024*1024);
-  //printf("INFO: bytes:     %lu\n", data);  
+  //printf("INFO: bytes:     %lu\n", data);
   //printf("INFO: mbts:      %lf\n", mbts);
   return 0;
 }

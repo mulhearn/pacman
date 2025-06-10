@@ -2,14 +2,14 @@ library ieee;
 use std.textio.all;
 use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
-use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08 
+use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08
 library work;
 use work.common.all;
 
 --  Defines a testbench (without any ports)
 entity adc_daq_tb is
 end adc_daq_tb;
-     
+
 architecture behaviour of adc_daq_tb is
   component adc_daq is
     port (
@@ -29,7 +29,7 @@ architecture behaviour of adc_daq_tb is
       STATE_O        : out std_logic_vector(3 downto 0);
 
       -- BRAM
-      BRAM_EN_O      : out std_logic; 
+      BRAM_EN_O      : out std_logic;
       BRAM_DATA_O    : out std_logic_vector(BRAM_DATA_WIDTH-1 downto 0);
       BRAM_WEN_O     : out std_logic_vector(3 downto 0);
       BRAM_ADDR_O    : out std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
@@ -63,7 +63,7 @@ architecture behaviour of adc_daq_tb is
 begin
   uut: adc_daq port map (
       ACLK         => aclk,
-      ARESETN      => aresetn,      
+      ARESETN      => aresetn,
       ADC_DATA_I   => di,
       ADC_DOF_I    => diof,
       ADC_EN_O     => adc_e,
@@ -84,18 +84,18 @@ begin
   data_o   <= do;
   address  <= addr;
   trigger  <= state(1) and not old_state(1);
-  
+
   aresetn_process : process
   begin
     aresetn <= '0';
     wait for 12 ns;
-    aresetn <= '1';    
+    aresetn <= '1';
     wait;
   end process;
-  
+
   aclk_process : process
   begin
-    count <= count + 1;    
+    count <= count + 1;
     aclk <= '1';
     wait for 5 ns;
     aclk <= '0';
@@ -158,13 +158,13 @@ begin
     diof   <= '0';
     wait for 10 ns;
     di     <= x"555";
-    diof   <= '0';  
+    diof   <= '0';
     wait for 10 ns;
     di     <= x"666";
     diof   <= '0';
     wait for 10 ns;
     di     <= x"777";
-    diof   <= '0';   
+    diof   <= '0';
     wait for 10 ns;
     di     <= x"888";
     diof   <= '0';
@@ -179,13 +179,13 @@ begin
     diof   <= '0';
     wait for 10 ns;
     di     <= x"CCC";
-    diof   <= '1';  
+    diof   <= '1';
     wait for 10 ns;
     di     <= x"DDD";
     diof   <= '0';
     wait for 10 ns;
     di     <= x"EEE";
-    diof   <= '0';  
+    diof   <= '0';
     wait for 10 ns;
     di     <= x"FFF";
     diof   <= '0';
@@ -206,13 +206,13 @@ begin
     diof   <= '0';
     wait for 10 ns;
     di     <= x"556";
-    diof   <= '0';  
+    diof   <= '0';
     wait for 10 ns;
     di     <= x"667";
     diof   <= '0';
     wait for 10 ns;
     di     <= x"778";
-    diof   <= '0';   
+    diof   <= '0';
     wait for 10 ns;
     di     <= x"889";
     diof   <= '1';
@@ -227,13 +227,13 @@ begin
     diof   <= '0';
     wait for 10 ns;
     di     <= x"CCD";
-    diof   <= '0';  
+    diof   <= '0';
     wait for 10 ns;
     di     <= x"DDE";
     diof   <= '0';
     wait for 10 ns;
     di     <= x"EEF";
-    diof   <= '0';  
+    diof   <= '0';
     wait for 10 ns;
     di     <= x"FF0";
     diof   <= '0';
@@ -251,12 +251,12 @@ begin
     diof   <= '1';
     wait for 10 ns;
     di     <= x"555";
-    diof   <= '0';  
+    diof   <= '0';
     wait for 10 ns;
     di     <= x"666";
     diof   <= '0';
     wait;
   end process;
 
-  
+
 end behaviour;

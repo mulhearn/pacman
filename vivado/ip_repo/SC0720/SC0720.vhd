@@ -1,21 +1,21 @@
 ----------------------------------------------------------------------------------
 -- Company: Trenz Electronic GmbH
--- Engineer: Antti Lukats 
--- 
+-- Engineer: Antti Lukats
+--
 -- Create Date: 13.11.2013 09:58:03
--- Design Name: 
+-- Design Name:
 -- Module Name: SC0720 - Behavioral
--- Project Name: 
+-- Project Name:
 -- Target Devices: TE0720 SoM
 -- Tool Versions: 2014.4
--- Description: 
--- 
--- Dependencies: 
--- 
+-- Description:
+--
+-- Dependencies:
+--
 -- Revision:
--- Revision 0.4  
+-- Revision 0.4
 -- Additional Comments:
--- 
+--
 ----------------------------------------------------------------------------------
 
 library IEEE;
@@ -30,7 +30,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 --library UNISIM;
 --use UNISIM.VComponents.all;
 
-entity SC0720 is Port ( 
+entity SC0720 is Port (
     --
     -- External I2C
     --
@@ -49,9 +49,9 @@ entity SC0720 is Port (
     PHY_LED2: out std_logic;
 	--
 	-- Connect to same name PL pin
-	--	
+	--
 	PL_pin_K16 :  in std_logic; -- PUDC
-	PL_pin_K19 :  in std_logic; -- XCLK 
+	PL_pin_K19 :  in std_logic; -- XCLK
 	PL_pin_L16 : out std_logic; -- X1 SCL out
 	PL_pin_M15 :  in std_logic; -- X2
 	PL_pin_N15 :  in std_logic; -- X3
@@ -70,8 +70,8 @@ entity SC0720 is Port (
 	scl_t      : in std_logic
 	);
 
-	
-	
+
+
 end SC0720;
 
 architecture Behavioral of SC0720 is
@@ -81,16 +81,16 @@ signal scl: std_logic;
 
 begin
 	PL_pin_K20 <= '0'; -- TE0720-00 compat!
-	
+
 	-- I2C bus merger
 	ext_sda_o <= sda_o;
 	ext_sda_t <= sda_t;
-	ext_scl_t <= scl_t;	
-	
-	
+	ext_scl_t <= scl_t;
+
+
 	-- SDA readback from SC to I2C core
 	sda_i 	<= PL_pin_P22 and ext_sda_i;
-	-- SDA/SCL pass through to SC	
+	-- SDA/SCL pass through to SC
 	PL_pin_N22 <= sda;
 	PL_pin_L16 <= scl;
 	-- internal signals
@@ -105,5 +105,5 @@ begin
     PHY_LED1 <= PL_pin_N15;
     PHY_LED2 <= PL_pin_P16;
 
-	
+
 end Behavioral;

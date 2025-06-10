@@ -27,7 +27,7 @@ entity atc_mux_single is
     --output
     ATC_OUT                : out std_logic;
     ATC_COUNT              : out std_logic_vector(C_CONFIG_WIDTH-1 downto 0);
-    
+
     COUNT_START           : in std_logic := '0';
     COUNT_RESET            : in std_logic := '0'
   );
@@ -52,43 +52,43 @@ begin
   update_lemo_a <= UPDATE_LEMO_A_I;
   update_lemo_b <= UPDATE_LEMO_B_I;
   update_poke_c <= UPDATE_POKE_C_I;
-  update_poke_d <= UPDATE_POKE_D_I;  
+  update_poke_d <= UPDATE_POKE_D_I;
   config        <= CONFIG_ATC;
 
 
-  
-  
-  update <= (config(0) and update_lemo_a) or (config(1) and update_lemo_b) or (config(2) and update_poke_c) or (config(3) and update_poke_d); 
-  process(clk, rst)    
+
+
+  update <= (config(0) and update_lemo_a) or (config(1) and update_lemo_b) or (config(2) and update_poke_c) or (config(3) and update_poke_d);
+  process(clk, rst)
   begin
     if (rst = '1') then
       ATC_OUT<= config(4);
       counter <= 0;
     elsif (rising_edge(clk)) then
       if (update = '1') then
-        counter <= to_integer(unsigned(config(31 downto 8)));  
-      end if;  
+        counter <= to_integer(unsigned(config(31 downto 8)));
+      end if;
       if (counter > 0) then
-        ATC_OUT <= not config(4); 
+        ATC_OUT <= not config(4);
         counter <= counter -1 ;
       else
         ATC_OUT <= config(4);
       end if;
     end if;
   end process;
-  
-  
-  
-  
+
+
+
+
  --process of counter
    process(clk, rst)
-    variable act_count     : std_logic := '0'; 
+    variable act_count     : std_logic := '0';
   begin
     if (rst = '1') then
       act_count := '0';
       event_counter <= 0 ;
     elsif (rising_edge(clk)) then
- 
+
       if COUNT_RESET = '1' then
         event_counter <= 0;
       else
@@ -101,13 +101,13 @@ begin
                 event_counter  <= event_counter  + 1;
                 act_count := '1';  -- Prevent further counts this activation
               end if;
-            end if;  
+            end if;
           else
-      	    act_count := '0'; 
-          end if;     
+      	    act_count := '0';
+          end if;
         end if;
       end if;
-    end if;   
+    end if;
   end process;
 
   ATC_COUNT <= std_logic_vector(to_signed(event_counter , 32));

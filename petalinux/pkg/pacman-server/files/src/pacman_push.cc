@@ -30,7 +30,7 @@ static void clear_msg(void*, void*) {
 int main(int argc, char* argv[]){
 
   // empirically determined:
-  struct timeval delay = {1, 0};  
+  struct timeval delay = {1, 0};
   //struct timeval tau   = {0, 132};
   struct timeval tau   = {0, 264};
   //struct timeval tau   = {0, 2000};
@@ -79,7 +79,7 @@ int main(int argc, char* argv[]){
     }
     cur = target;
     timeradd(&cur, &tau, &target);
-    
+
     //printf("DEBUG: preparing a message with %d requests.\n", nreq);
     tx_buffer[0]=0x3F;
     tx_buffer[1]=((nreq)&0xFFFF)<<16;
@@ -89,7 +89,7 @@ int main(int argc, char* argv[]){
       tx_buffer[2+4*i+2]=rand();
       tx_buffer[2+4*i+3]=rand();
     }
-    
+
     //printf("DEBUG:  sending a message \n");
     rc = zmq_msg_init_data(&msg, tx_buffer, MAX_BUFFER_SIZE, 0, 0);
     assert(rc==0);
@@ -111,7 +111,7 @@ int main(int argc, char* argv[]){
   uint64_t data    = tx_count * (MAX_BUFFER_SIZE-8);
   uint64_t packets = data / 16;
   double mbps = data*1000/(elapsed_time*1024*1024);
-  double ppms = packets/elapsed_time;  
+  double ppms = packets/elapsed_time;
   printf("INFO: total bytes:        %lu\n", data);
   printf("INFO: total packets:      %lu\n", packets);
   printf("INFO: elapsed time (ms):  %lf\n", elapsed_time);

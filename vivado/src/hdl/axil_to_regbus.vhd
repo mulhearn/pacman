@@ -11,30 +11,30 @@ entity axil_to_regbus is
     S_AXI_ACLK           : in  std_logic;
     S_AXI_ARESETN        : in  std_logic;
     S_AXI_ARADDR         : in  std_logic_vector(C_ADDR_WIDTH-1 downto 0);
-    S_AXI_ARPROT         : in  std_logic_vector(2 downto 0) := (others => '0');                 
+    S_AXI_ARPROT         : in  std_logic_vector(2 downto 0) := (others => '0');
     S_AXI_ARVALID        : in  std_logic;
-    S_AXI_ARREADY        : out std_logic;    
+    S_AXI_ARREADY        : out std_logic;
     S_AXI_RDATA          : out std_logic_vector(C_DATA_WIDTH-1 downto 0);
     S_AXI_RRESP          : out std_logic_vector(1 downto 0);
     S_AXI_RVALID         : out std_logic;
     S_AXI_RREADY         : in  std_logic;
-    S_AXI_AWADDR         : in  std_logic_vector(C_ADDR_WIDTH-1 downto 0);      
-    S_AXI_AWPROT         : in  std_logic_vector(2 downto 0) := (others => '0');                 
-    S_AXI_AWVALID        : in  std_logic;                                    
+    S_AXI_AWADDR         : in  std_logic_vector(C_ADDR_WIDTH-1 downto 0);
+    S_AXI_AWPROT         : in  std_logic_vector(2 downto 0) := (others => '0');
+    S_AXI_AWVALID        : in  std_logic;
     S_AXI_AWREADY        : out std_logic;
-    S_AXI_WDATA          : in  std_logic_vector(C_DATA_WIDTH-1 downto 0);      
-    S_AXI_WSTRB          : in  std_logic_vector(C_DATA_WIDTH/8-1 downto 0) := (others => '0');                 
-    S_AXI_WVALID         : in  std_logic;                                    
-    S_AXI_WREADY         : out std_logic;                                           
+    S_AXI_WDATA          : in  std_logic_vector(C_DATA_WIDTH-1 downto 0);
+    S_AXI_WSTRB          : in  std_logic_vector(C_DATA_WIDTH/8-1 downto 0) := (others => '0');
+    S_AXI_WVALID         : in  std_logic;
+    S_AXI_WREADY         : out std_logic;
     S_AXI_BRESP          : out std_logic_vector(1 downto 0);
     S_AXI_BVALID         : out std_logic;
     S_AXI_BREADY         : in  std_logic;
-    
+
     P_REGBUS_RB_RUPDATE  : out std_logic;
     P_REGBUS_RB_RADDR    : out std_logic_vector(C_ADDR_WIDTH-1 downto 0);
-    P_REGBUS_RB_RDATA    : in  std_logic_vector(C_DATA_WIDTH-1 downto 0);      
+    P_REGBUS_RB_RDATA    : in  std_logic_vector(C_DATA_WIDTH-1 downto 0);
     P_REGBUS_RB_RACK     : in  std_logic;
-    
+
     P_REGBUS_RB_WUPDATE  : out std_logic;
     P_REGBUS_RB_WADDR    : out std_logic_vector(C_ADDR_WIDTH-1 downto 0);
     P_REGBUS_RB_WDATA    : out std_logic_vector(C_DATA_WIDTH-1 downto 0);
@@ -61,7 +61,7 @@ architecture behavioral of axil_to_regbus is
   signal wdata     : std_logic_vector(C_DATA_WIDTH-1 downto 0);
   signal wready    : std_logic := '0';
   signal wvalid    : std_logic;
-  
+
   signal bvalid    : std_logic := '0';
   signal bready    : std_logic;
 
@@ -70,7 +70,7 @@ architecture behavioral of axil_to_regbus is
 
   signal rupdate_z : std_logic := '0';
 
-  
+
 begin
   -- read signals:
   S_AXI_ARREADY  <= arready;
@@ -83,13 +83,13 @@ begin
   S_AXI_WREADY   <= wready;
   S_AXI_BVALID   <= bvalid;
 -- Fixed response:
-  S_AXI_BRESP <= (others => '0');  
+  S_AXI_BRESP <= (others => '0');
 
   clk <= S_AXI_ACLK;
   rst <= not S_AXI_ARESETN;
-  
+
   P_REGBUS_RB_RUPDATE <= rupdate;
-  P_REGBUS_RB_WUPDATE <= wupdate;  
+  P_REGBUS_RB_WUPDATE <= wupdate;
   P_REGBUS_RB_RADDR   <= araddr;
   P_REGBUS_RB_WADDR   <= awaddr;
   P_REGBUS_RB_WDATA   <= wdata;
@@ -103,17 +103,17 @@ begin
       rdata <= (others => '0');
     end if;
   end process;
-    
+
   process(clk)
-  begin  
+  begin
     if (rising_edge(clk)) then
       rupdate_z <= rupdate;
-    end if;   
+    end if;
   end process;
-  
+
   -- register our (not-ignored) inputs:
   process(clk)
-  begin  
+  begin
     if (rising_edge(clk)) then
       araddr  <= S_AXI_ARADDR;
       arvalid <= S_AXI_ARVALID;
@@ -130,17 +130,17 @@ begin
   -- has completed.  This simplification limits throughput to 50% of
   -- maximum (two clock cycles per read), but it doesn't require any
   -- buffering.
-  arready <= not rvalid;  
+  arready <= not rvalid;
   rupdate <= arready and arvalid;
   -- Determine rvalid:
   process(clk)
-  begin  
+  begin
     if (rst = '1') then
       rvalid  <= '0';
     else
       if (rising_edge(clk)) then
         -- rvalid goes high for (arready and arvalid) and then stays high until rready:
-        rvalid  <= rupdate or (rvalid and not rready) ;        
+        rvalid  <= rupdate or (rvalid and not rready) ;
       end if;
     end if;
   end process;
@@ -165,8 +165,8 @@ begin
   -- wupdate <= awvalid and wvalid and (not wready) and ((not bvalid)
   -- or (bvalid and bready));
   process(clk)
-  variable lowaddr : std_logic_vector(7 downto 0);    
-  begin  
+  variable lowaddr : std_logic_vector(7 downto 0);
+  begin
     if (rst = '1') then
       wready  <= '0';
       bvalid  <= '0';
@@ -177,5 +177,5 @@ begin
       end if;
     end if;
   end process;
-end;  
+end;
 

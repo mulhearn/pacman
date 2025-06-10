@@ -19,9 +19,9 @@ architecture behaviour of timing_registers_tb is
 
     S_REGBUS_RB_RUPDATE    : in  std_logic;
     S_REGBUS_RB_RADDR	     : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
-    S_REGBUS_RB_RDATA	     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);      
+    S_REGBUS_RB_RDATA	     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     S_REGBUS_RB_RACK       : out std_logic;
-    
+
     S_REGBUS_RB_WUPDATE    : in  std_logic;
     S_REGBUS_RB_WADDR	     : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
     S_REGBUS_RB_WDATA	     : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -36,7 +36,7 @@ architecture behaviour of timing_registers_tb is
     ATC_POLARITY           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
     STATUS_I               : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    TIMESTAMP_I            : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);   
+    TIMESTAMP_I            : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     --count of input in fast domain
     LEMO_A_COUNT           : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     LEMO_B_COUNT           : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -51,7 +51,7 @@ architecture behaviour of timing_registers_tb is
     ATC_G_COUNT           :  in  ATC_array;
     ATC_H_COUNT           :  in  ATC_array;
     ATC_TS_COUNT          :  in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
- 
+
     );
   end component;
 
@@ -109,18 +109,18 @@ begin
     LEMO_A_COUNT        => lemo_a_c,
     LEMO_B_COUNT        => lemo_b_c,
     LEMO_A_COUNT_S      =>  x"0000B435",
-    LEMO_B_COUNT_S       => x"0000A335",  
-    POKE_C_COUNT_S        => x"0000A235", 
-    POKE_D_COUNT_S       => x"0000A135",  
+    LEMO_B_COUNT_S       => x"0000A335",
+    POKE_C_COUNT_S        => x"0000A235",
+    POKE_D_COUNT_S       => x"0000A135",
 
     --count of output
-    ATC_G_COUNT          => atc_g_c,  
-    ATC_H_COUNT          => atc_h_c, 
-    ATC_TS_COUNT         => atc_ts_c  
+    ATC_G_COUNT          => atc_g_c,
+    ATC_H_COUNT          => atc_h_c,
+    ATC_TS_COUNT         => atc_ts_c
   );
 
 
-  
+
   aresetn_process : process
   begin
     aresetn <= '0';
@@ -143,7 +143,7 @@ begin
     raddr   <= x"0000";
     rupdate <= '0';
     wait for 1 ns;
-    wait for 80 ns;   
+    wait for 80 ns;
     raddr   <= x"FE20";
     rupdate <= '1';
     wait for 10 ns;
@@ -188,7 +188,7 @@ begin
     wait for 10 ns;
     waddr   <= x"FEA4";
     wdata   <= x"00000111";
-    wupdate <= '1';    
+    wupdate <= '1';
     wait for 10 ns;
     waddr   <= x"FE20";
     wdata   <= x"000103FF";

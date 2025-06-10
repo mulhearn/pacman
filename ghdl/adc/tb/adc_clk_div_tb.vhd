@@ -2,14 +2,14 @@ library ieee;
 use std.textio.all;
 use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
-use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08 
+use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08
 library work;
 use work.common.all;
 
 --  Defines a testbench (without any ports)
 entity adc_clk_div_tb is
 end adc_clk_div_tb;
-     
+
 architecture behaviour of adc_clk_div_tb is
   component adc_clk_div is
     port (
@@ -25,7 +25,7 @@ architecture behaviour of adc_clk_div_tb is
   signal aresetn   : std_logic;
   signal clkpar    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal clk_o     : std_logic;
-  
+
 begin
   uut: adc_clk_div port map (
       ACLK         => aclk,
@@ -33,18 +33,18 @@ begin
       CLKPAR_I     => clkpar,
       ADC_CLK_O    => clk_o
       );
-  
+
   aresetn_process : process
   begin
     aresetn <= '0';
     wait for 12 ns;
-    aresetn <= '1';    
+    aresetn <= '1';
     wait;
   end process;
-  
+
   aclk_process : process
   begin
-    count <= count + 1;    
+    count <= count + 1;
     aclk <= '1';
     wait for 5 ns;
     aclk <= '0';
@@ -64,5 +64,5 @@ begin
     clkpar <= x"00000000";
     wait;
   end process;
-  
+
 end behaviour;

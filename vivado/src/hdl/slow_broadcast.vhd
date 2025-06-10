@@ -67,7 +67,7 @@ begin
   DEBUG_O(0) <= update;
   DEBUG_O(1) <= ack;
   DEBUG_O(7 downto 2) <= (others => '0');
-  
+
   -- double flop synchronization of ack signal (B to A)
   process(clk_a, rst_a)
   begin

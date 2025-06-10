@@ -24,7 +24,7 @@ architecture behaviour of timestamp_tb is
       TIMESTAMP_A_O       : out std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
       -- Clock Domain B: (Slow Clock)
       CLK_B_I             : in  std_logic;
-      RSTN_B_I            : in  std_logic;    
+      RSTN_B_I            : in  std_logic;
       TIMESTAMP_B_O       : out std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0)
     );
   end component;
@@ -32,13 +32,13 @@ architecture behaviour of timestamp_tb is
   signal count       : integer := 0;
   signal aclk        : std_logic;
   signal aresetn     : std_logic;
-  signal uclk        : std_logic;  
+  signal uclk        : std_logic;
   signal uresetn     : std_logic;
   signal show_output : std_logic := '0';
   signal timestamp_a : std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
 
-  signal sync_a      : std_logic;  
-  
+  signal sync_a      : std_logic;
+
 begin
   uut: timestamp port map (
     CLK_A_I        => aclk,
@@ -83,7 +83,7 @@ begin
     wait;
   end process;
 
-  
+
     show_process : process
   begin
     show_output <= '1';
@@ -107,7 +107,7 @@ begin
       write  (l, uclk);
       write  (l, String'(" ts_a: "));
       hwrite  (l, timestamp_a);
-      
+
       if (aresetn = '0') then
         write (l, String'(" (RST A)"));
       end if;

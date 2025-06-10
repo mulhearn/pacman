@@ -29,10 +29,10 @@
 // for example SET_VDDA register for tile 3 is located at I2C_BASE_ADDR + 0x010 + (3-1).
 #define I2C_VREG_OFFSET_SET_VDDA   0x010  // set VDDA level (one register per tile + test(0xA) )
 #define I2C_VREG_OFFSET_SET_VDDD   0x020  // set VDDD level (one register per tile + test(0xA) )
-#define I2C_VREG_OFFSET_MON_VDDA   0x030  // ADC for VDDA voltage (one register per tile, plus two board-level) 
-#define I2C_VREG_OFFSET_MON_VDDD   0x040  // ADC for VDDD voltage (one register per tile, plus two board-level) 
-#define I2C_VREG_OFFSET_MON_IDDA   0x050  // ADC for VDDA current (one register per tile, plus two board-level) 
-#define I2C_VREG_OFFSET_MON_IDDD   0x060  // ADC for VDDA current (one register per tile, plus two board-level) 
+#define I2C_VREG_OFFSET_MON_VDDA   0x030  // ADC for VDDA voltage (one register per tile, plus two board-level)
+#define I2C_VREG_OFFSET_MON_VDDD   0x040  // ADC for VDDD voltage (one register per tile, plus two board-level)
+#define I2C_VREG_OFFSET_MON_IDDA   0x050  // ADC for VDDA current (one register per tile, plus two board-level)
+#define I2C_VREG_OFFSET_MON_IDDD   0x060  // ADC for VDDA current (one register per tile, plus two board-level)
 #define I2C_VREG_OFFSET_SET_MUXA   0x070  // MUX setting Contact A (Front Panel)  (0=off, 1-10=TILE, 11=DAC)
 #define I2C_VREG_OFFSET_SET_MUXB   0x080  // MUX setting Contact B (ADC)          (0=off, 1-10=TILE, 11=DAC)
 #define I2C_VREG_OFFSET_MUX_EXPERT 0x090  // MUX expert settings  // NOT IMPLEMENTED

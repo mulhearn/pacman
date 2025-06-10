@@ -1,5 +1,5 @@
-Device/Package xc7z020clg484 9/18/2012 10:07:35                                                                                              
-                                                                                                    
+Device/Package xc7z020clg484 9/18/2012 10:07:35
+
 Pin   Pin Name                 Memory Byte Group  Bank  VCCAUX Group  Super Logic Region  I/O Type  No-Connect
 T12   DONE_0                   NA                 0     NA            NA                  CONFIG    NA
 N11   DXP_0                    NA                 0     NA            NA                  CONFIG    NA
@@ -485,5 +485,5 @@ D9    VCCO_MIO1_501            NA                 501   NA            NA        
 E12   VCCO_MIO1_501            NA                 501   NA            NA                  NA        NA
 H7    PS_DDR_VREF0_502         NA                 502   NA            NA                  DDR       NA
 P7    PS_DDR_VREF1_502         NA                 502   NA            NA                  DDR       NA
-                                                                                                    
-Total Number of Pins, 484                                                                                              
+
+Total Number of Pins, 484

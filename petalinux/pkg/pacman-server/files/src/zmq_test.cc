@@ -27,13 +27,13 @@ static void clear_msg(void*, void*) {
 int main(int argc, char* argv[]){
   struct timeval start, end;
   double elapsed_time;
-  int rc, iparam; 
+  int rc, iparam;
   printf("INFO:  Starting ZMQ loopback demo.\n");
   printf("INFO:  RAND_MAX: 0x%x\n", RAND_MAX);
   printf("INFO:  Creating new ZMQ context...\n");
   void* ctx = zmq_ctx_new();
 
-  printf("INFO:  Initializing PUB socket (A) ...\n");  
+  printf("INFO:  Initializing PUB socket (A) ...\n");
   pub = zmq_socket(ctx, ZMQ_PUB);
   iparam = 100;
   zmq_setsockopt(pub, ZMQ_SNDHWM, &iparam, sizeof(iparam));
@@ -46,7 +46,7 @@ int main(int argc, char* argv[]){
     return 1;
   }
   printf("INFO:  ZQM PUB socket (A) connected successfully...\n");
-  
+
   printf("INFO:  Initializing SUB socket (B) ...\n");
   sub = zmq_socket(ctx, ZMQ_SUB);
   iparam = 1000;
@@ -58,7 +58,7 @@ int main(int argc, char* argv[]){
     return 1;
   }
   printf("INFO:  ZQM SUB socket (B) connected successfully...\n");
-  
+
   int tx_count   = 0;
   int rx_count   = 0;
   int err_words  = 0;
@@ -67,7 +67,7 @@ int main(int argc, char* argv[]){
 
   //I miss the first message unless I have this not-understood pause...
   usleep(1000000);
-  
+
   printf("INFO: benchmarking %d TX/RX\n", N);
   gettimeofday(&start, NULL);
 
@@ -78,7 +78,7 @@ int main(int argc, char* argv[]){
       tx_buffer[i] = rand();
       rx_buffer[i] = 0;
     }
-    
+
     if (tx_count < N){
       //printf("DEBUG:  sending a message \n");
       rc = zmq_msg_init_data(&msg, tx_buffer, MAX_BUFFER_SIZE, 0, 0);
@@ -102,7 +102,7 @@ int main(int argc, char* argv[]){
     if (size != MAX_BUFFER_SIZE){
       printf("ERROR:  unexpected size message\n");
       continue;
-    }    
+    }
     memcpy(rx_buffer,zmq_msg_data(&msg), size);
     zmq_msg_close(&msg);
 
@@ -112,7 +112,7 @@ int main(int argc, char* argv[]){
 	err_words++;
       }
     }
-    
+
     //printf("DEBUG:  received message of size %d bytes \n", size);
     rx_count = rx_count+1;
   }

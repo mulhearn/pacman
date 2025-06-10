@@ -12,9 +12,9 @@ entity tx_registers is
 
     S_REGBUS_RB_RUPDATE : in  std_logic;
     S_REGBUS_RB_RADDR	: in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
-    S_REGBUS_RB_RDATA	: out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);      
+    S_REGBUS_RB_RDATA	: out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     S_REGBUS_RB_RACK    : out std_logic;
-    
+
     S_REGBUS_RB_WUPDATE : in  std_logic;
     S_REGBUS_RB_WADDR	: in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
     S_REGBUS_RB_WDATA	: in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -36,24 +36,24 @@ architecture behavioral of tx_registers is
   signal raddr    : std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
   signal rdata    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal rack     : std_logic := '0';
-  
+
   signal wupdate  : std_logic;
   signal waddr    : std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
   signal wdata    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
   signal wack     : std_logic := '0';
 
   -- registers
-  signal config   : uart_reg_array_t := (others => std_logic_vector(to_unsigned(C_DEFAULT_CONFIG_TX, C_RB_DATA_WIDTH)));  
+  signal config   : uart_reg_array_t := (others => std_logic_vector(to_unsigned(C_DEFAULT_CONFIG_TX, C_RB_DATA_WIDTH)));
   signal gflags     : std_logic_vector(C_TX_GFLAGS_WIDTH-1 downto 0);
 
   signal zero_counters : std_logic := '0';
-  signal starts   : uart_reg_array_t := (others => (others => '0'));  
-  
+  signal starts   : uart_reg_array_t := (others => (others => '0'));
+
 begin
   -- Clock and reset inputs:
   clk <= ACLK;
   rst <= not ARESETN;
-  
+
   --REGBUS read signals
   rupdate  <= S_REGBUS_RB_RUPDATE;
   raddr    <= S_REGBUS_RB_RADDR;
@@ -64,7 +64,7 @@ begin
   waddr    <= S_REGBUS_RB_WADDR;
   wdata    <= S_REGBUS_RB_WDATA;
   S_REGBUS_RB_WACK	 <= wack;
-  
+
   -- registers
   CONFIG_O  <= config;
   GFLAGS_O  <= gflags;
@@ -74,7 +74,7 @@ begin
     variable scope   : integer range 0 to 3;
     variable chan    : integer range 0 to 16#3F#;
     variable reg     : integer range 0 to 16#FF#;
-  begin  
+  begin
     if (rst = '1') then
       rack <= '0';
       rdata <= x"00000000";
@@ -119,7 +119,7 @@ begin
                 rack  <= '1';
               end if;
             end if;
-          end if;          
+          end if;
         end if;
       end if;
     end if;
@@ -130,7 +130,7 @@ begin
   variable scope   : integer range 0 to 3;
   variable chan    : integer range 0 to 16#3F#;
   variable reg     : integer range 0 to 16#FF#;
-  begin  
+  begin
     if (rst = '1') then
       wack  <= '0';
       zero_counters <= '0';
@@ -153,12 +153,12 @@ begin
               for i in 0 to C_NUM_UART-1 loop
                 config(i) <= wdata;
               end loop;
-              wack  <= '1';              
+              wack  <= '1';
             end if;
           end if;
           if ((scope=0) and (chan = 16#3F#)) then
             if (reg=C_ADDR_TX_GFLAGS) then
-              gflags <= wdata(C_TX_GFLAGS_WIDTH-1 downto 0);    
+              gflags <= wdata(C_TX_GFLAGS_WIDTH-1 downto 0);
               wack  <= '1';
             elsif (reg=C_ADDR_TX_STARTS) then
               zero_counters <= '1';
@@ -170,7 +170,7 @@ begin
     end if;
   end process;
 
-  process(clk, rst)    
+  process(clk, rst)
     type uart_int_array_t is array (0 to C_NUM_UART-1) of integer range 0 to 16#FFFFFF#;
     variable istarts : uart_int_array_t := (others => 0);
   begin
@@ -183,13 +183,13 @@ begin
             istarts(i) := 0;
           elsif (STATUS_I(i)(3) = '1') then
             istarts(i) := (istarts(i) + 1) mod 16#FFFFFF#;
-          end if;          
-          starts(i) <= std_logic_vector(to_unsigned(istarts(i),starts(i)'length));          
+          end if;
+          starts(i) <= std_logic_vector(to_unsigned(istarts(i),starts(i)'length));
         end loop;
       end if;
     end if;
   end process;
 
-  
-end;  
+
+end;
 

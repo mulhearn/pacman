@@ -9,10 +9,10 @@ entity tx_buffer is
     S_AXIS_ACLK        : in std_logic;
     S_AXIS_ARESETN     : in std_logic;
 
-    S_AXIS_TDATA       : in std_logic_vector(C_TX_AXIS_WIDTH-1 downto 0);      
+    S_AXIS_TDATA       : in std_logic_vector(C_TX_AXIS_WIDTH-1 downto 0);
     S_AXIS_TVALID      : in std_logic;
     S_AXIS_TREADY      : out std_logic;
-    S_AXIS_TKEEP       : in std_logic_vector(C_TX_AXIS_WIDTH/8-1 downto 0);      
+    S_AXIS_TKEEP       : in std_logic_vector(C_TX_AXIS_WIDTH/8-1 downto 0);
     S_AXIS_TLAST       : in std_logic;
 
     STATUS_O           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -32,12 +32,12 @@ architecture behavioral of tx_buffer is
     port (
       S_AXIS_ACLK        : in std_logic;
       S_AXIS_ARESETN     : in std_logic;
-      S_AXIS_TDATA       : in std_logic_vector(C_AXIS_WIDTH-1 downto 0);      
+      S_AXIS_TDATA       : in std_logic_vector(C_AXIS_WIDTH-1 downto 0);
       S_AXIS_TVALID      : in std_logic;
       S_AXIS_TREADY      : out std_logic;
-      S_AXIS_TKEEP       : in std_logic_vector(C_AXIS_WIDTH/8-1 downto 0);      
+      S_AXIS_TKEEP       : in std_logic_vector(C_AXIS_WIDTH/8-1 downto 0);
       S_AXIS_TLAST       : in std_logic;
-      DATA_O             : out std_logic_vector(C_AXIS_WIDTH*C_AXIS_BEATS-1 downto 0);      
+      DATA_O             : out std_logic_vector(C_AXIS_WIDTH*C_AXIS_BEATS-1 downto 0);
       VALID_O            : out std_logic;
       READY_I            : in std_logic
     );
@@ -48,34 +48,34 @@ architecture behavioral of tx_buffer is
 
   signal tvalid    : std_logic;
   signal tready    : std_logic;
-  
+
   signal pdata     : std_logic_vector(C_TX_AXIS_WIDTH*C_TX_AXIS_BEATS-1 downto 0);
   signal pvalid    : std_logic;
   signal pready    : std_logic;
 
   signal status    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-  
+
   signal mask      : std_logic_vector(C_NUM_UART-1 downto 0);
   signal ovalid    : std_logic_vector(C_NUM_UART-1 downto 0);
-  
+
   type state_type is (WAIT_STREAM, WAIT_TX);
   signal state : state_type := WAIT_STREAM;
 
 
 begin
   ar0: axis_read port map (
-    S_AXIS_ACLK     => S_AXIS_ACLK,    
-    S_AXIS_ARESETN  => S_AXIS_ARESETN, 
-    S_AXIS_TDATA    => S_AXIS_TDATA,   
+    S_AXIS_ACLK     => S_AXIS_ACLK,
+    S_AXIS_ARESETN  => S_AXIS_ARESETN,
+    S_AXIS_TDATA    => S_AXIS_TDATA,
     S_AXIS_TVALID   => tvalid,
     S_AXIS_TREADY   => tready,
-    S_AXIS_TKEEP    => S_AXIS_TKEEP,   
-    S_AXIS_TLAST    => S_AXIS_TLAST,   
+    S_AXIS_TKEEP    => S_AXIS_TKEEP,
+    S_AXIS_TLAST    => S_AXIS_TLAST,
     DATA_O          => pdata,
     VALID_O         => pvalid,
     READY_I         => pready
   );
-  
+
   tvalid <= S_AXIS_TVALID;
   S_AXIS_TREADY <= tready;
 
@@ -90,7 +90,7 @@ begin
       for i in 0 to C_NUM_UART-1 loop
         DATA_O(i) <= pdata(C_TX_DATA_WIDTH*(i+3)-1 downto C_TX_DATA_WIDTH*(i+2));
       end loop;
-    end if;    
+    end if;
   end process;
 
   VALID_O <= ovalid;
@@ -102,7 +102,7 @@ begin
         r := r or a_vector(i);
       end loop;
       return r;
-    end function;    
+    end function;
   begin
     if (rst='1') then
       state  <= WAIT_STREAM;
@@ -126,11 +126,11 @@ begin
         if (reductive_or(ovalid)='0') then
           pready <= '1';
           state <= WAIT_STREAM;
-        end if;        
+        end if;
       end if;
     end if;
   end process;
-  
+
   clk <= S_AXIS_ACLK;
   rst <= not S_AXIS_ARESETN;
 
@@ -147,5 +147,5 @@ begin
       STATUS_O <= status;
     end if;
   end process;
-end;  
+end;
 

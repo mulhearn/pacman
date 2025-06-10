@@ -55,11 +55,11 @@ mv pacman-old junk
 
 
 Now is a good time to clean up the recreate tcl to do a few things:
- - assuming you've added the TE board files to Xilinx, you can now get rid of the board_repo line, since you won't be keeping it local 
+ - assuming you've added the TE board files to Xilinx, you can now get rid of the board_repo line, since you won't be keeping it local
 set_property -name "board_part_repo_paths" -value "/space/home/benchtop/projects/sandbox/pacman/board_files" -objects $obj
  - remove the orig_proj_dir, since it won't exist
- 
- 
+
+
 
 # now test you have everything:
 tar -czf pacman.tgz pacman

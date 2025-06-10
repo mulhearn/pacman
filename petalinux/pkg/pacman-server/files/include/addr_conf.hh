@@ -6,7 +6,7 @@
 //
 // All addresses less than PACMAN_AXIL_ADDR are treated as virtual addresses
 // Addresses above this are treated as hardware addresses and read/write directly.
-// 
+//
 
 // PACMAN AXI-Lite interface HW Address:
 #define PACMAN_AXIL_ADDR 0x40000000

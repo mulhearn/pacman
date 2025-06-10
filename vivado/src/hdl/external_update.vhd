@@ -6,10 +6,10 @@ use ieee.numeric_std.all;
 entity external_update is
 
   port (
-    -- External Source: 
+    -- External Source:
 
     UPDATE_E_I	        : in  std_logic;
-    
+
     -- Clock Domain Board: (Fast Clock)
     CLK_F_I               : in  std_logic;
     RSTN                  : in  std_logic;
@@ -26,32 +26,32 @@ architecture behavioral of external_update is
   signal update_e   : std_logic; -- input signal
 
   signal clk_f      : std_logic; -- clk of board frequency
-  signal rst        : std_logic; 
+  signal rst        : std_logic;
   signal count      : integer :=0; -- count of pulse
 
 
   -- double flopping at clock domain crossing:
   signal update_meta : std_logic; -- metastable
   signal update_sync : std_logic; -- likely stable
- 
+
   attribute ASYNC_REG : string;
   attribute ASYNC_REG of update_meta: signal is "TRUE";
   attribute ASYNC_REG of update_sync: signal is "TRUE";
-  
+
   signal update_z : std_logic ;
-  signal pulse      : std_logic :='0'; 
-  
+  signal pulse      : std_logic :='0';
+
 begin
 
   update_e <= UPDATE_E_I;
-  
+
   clk_f <= CLK_F_I;
   rst    <= not RSTN;
 
-  
-  
 
-  -- double flop synchronization of update signal 
+
+
+  -- double flop synchronization of update signal
   -- synchronize request into board domain
   update_process : process(clk_f, rst)
   begin
@@ -65,7 +65,7 @@ begin
       update_z  <= update_sync; -- old signal
     end if;
 
-  
+
   end process;
 
 
@@ -81,10 +81,10 @@ begin
       else
         pulse <= '0';
       end if;
-         
+
     end if;
 
-  
+
   end process;
 
 
@@ -94,7 +94,7 @@ begin
   begin
     if (rst = '1') then
       count <= 0;
-    elsif (rising_edge(clk_f)) then 
+    elsif (rising_edge(clk_f)) then
       if COUNT_RESET = '1' then
         count <= 0;
       elsif pulse = '1' and COUNT_START = '1' then
@@ -111,7 +111,7 @@ begin
 
 
 
- 
+
 
   --outputs
   PULSE_OUT <= pulse;

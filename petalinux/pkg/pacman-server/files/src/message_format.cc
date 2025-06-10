@@ -47,7 +47,7 @@ char* get_msg_type(char* msg) {
 
 uint16_t* get_msg_words(char* msg) {
   // Returns ptr to msg words
-  return (uint16_t*)(msg+6); 
+  return (uint16_t*)(msg+6);
 }
 
 uint32_t get_msg_bytes(char* msg) {

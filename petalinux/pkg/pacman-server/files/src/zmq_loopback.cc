@@ -22,7 +22,7 @@ static void clear_msg(void*, void*) {
 
 int main(int argc, char* argv[]){
   uint32_t buffer[MAX_BUFFER_SIZE];
-  int rc, iparam; 
+  int rc, iparam;
   printf("INFO:  Starting ZMQ loopback demo.\n");
   printf("INFO:  Creating new ZMQ context...\n");
   void* ctx = zmq_ctx_new();
@@ -37,8 +37,8 @@ int main(int argc, char* argv[]){
     return 1;
   }
   printf("INFO:  ZQM SUB socket (A) connected successfully...\n");
-  
-  printf("INFO:  Initializing PUB socket (B) ...\n");  
+
+  printf("INFO:  Initializing PUB socket (B) ...\n");
   pub = zmq_socket(ctx, ZMQ_PUB);
   iparam = 100;
   zmq_setsockopt(pub, ZMQ_SNDHWM, &iparam, sizeof(iparam));
@@ -67,7 +67,7 @@ int main(int argc, char* argv[]){
       printf("ERROR:  message too large... truncating.\n");
       size = MAX_BUFFER_SIZE;
     }
-    
+
     printf("DEBUG:  received message of size %d bytes \n", size);
     memcpy(buffer,zmq_msg_data(&msg), size);
     zmq_msg_close(&msg);
