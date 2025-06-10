@@ -75,6 +75,13 @@ int pacman_init(int verbose){
   //G_PACMAN_AXIL[0x3B04>>2] = 0x05281602;
   G_PACMAN_AXIL[0x3B04>>2] = 0x00001602;
 
+  if (verbose){
+    printf("INFO:  Setting TS polarity to active low (will become default soon)\n");
+  }
+  G_PACMAN_AXIL[0xE444>>2] = 0x10;
+
+
+
   return EXIT_SUCCESS;
 }
 
