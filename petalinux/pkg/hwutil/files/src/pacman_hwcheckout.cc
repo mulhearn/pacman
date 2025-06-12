@@ -20,6 +20,7 @@
 
 void blink_leds(){
   blink_red_led();
+  blink_pacman_leds();
 }
 
 // *** GLOBAL UNIT ***
@@ -120,7 +121,60 @@ void monitor_power(){
 
 }
 
+void record_iv_curves(){
+  FILE *file;
+  file = fopen("iv.txt", "w");
+  if (file == NULL) {
+    printf("ERROR: could not open file ");
+    return;
+  }
+
+  printf("INFO: first setting all voltages to zero.\n");
+  for (int i=0; i<10; i++){
+    i2c_set_vdda(i, 0);
+    i2c_set_vddd(i, 0);
+  }
+  
+  for (int i=0; i<10; i++){
+    fprintf(file, "TILE:   %d\n", i+1);
+    printf("INFO:  VDDD/VDDA IV curves for Tile %d\n", i+1);
+    for (unsigned vset = 0x0000; vset<=0xFFFF; vset+=0x1000){
+      i2c_set_vdda(i, vset);
+      i2c_set_vddd(i, vset);
+      usleep(10);      
+      unsigned vdda = i2c_mon_vdda(i);
+      unsigned vddd = i2c_mon_vddd(i);
+      unsigned idda = i2c_mon_idda(i);
+      unsigned iddd = i2c_mon_iddd(i);
+      printf("INFO:  vset: 0x%04x vdda: %7d idda: %7d vddd: %7d iddd: %7d\n", vset, vdda, idda, vddd, iddd);
+      fprintf(file, "vset: 0x%04x vdda: %7d idda: %7d vddd: %7d iddd: %7d\n", vset, vdda, idda, vddd, iddd);
+    }
+    i2c_set_vdda(i, 0);
+    i2c_set_vddd(i, 0);
+  }
+  fclose(file);  
+}
+
 // *** RX and TX UNITs ***
+
+void toggle_tx_config(){
+  static int mode = 0;
+  mode = (mode + 1) % 3;
+  if (mode==0){
+    unsigned config = 0x1602;
+    printf("INFO: Default TX config.  Broadcasting tx config write 0x%08x \n", config);
+    write_axil(SCOPE_TX+UART_BROADCAST+C_ADDR_TX_CONFIG, config);
+  } else if (mode==1) {
+    unsigned config = 0x1601;
+    printf("INFO: Full-speed TX.  Broadcasting tx config write 0x%08x \n", config);
+    write_axil(SCOPE_TX+UART_BROADCAST+C_ADDR_TX_CONFIG, config);
+  } else if (mode==2) {
+    unsigned config = 0x053c1602;
+    printf("INFO: Default TX config plus delay.  Broadcasting tx config write 0x%08x \n", config);
+    write_axil(SCOPE_TX+UART_BROADCAST+C_ADDR_TX_CONFIG, config);
+  }
+
+}
 
 void read_tx_registers(){
   for (int i=0; i<40; i++){
@@ -144,10 +198,9 @@ void read_tx_look(){
   }
 }
 
-
 void toggle_rx_config(){
   static int mode = 0;
-  mode = (mode + 1) % 3;
+  mode = (mode + 1) % 5;
   if (mode==0){
     unsigned config = 0x00001002;
     printf("INFO: No internal loopback.  Broadcasting rx config write 0x%08x \n", config);
@@ -167,13 +220,24 @@ void toggle_rx_config(){
     write_axil(SCOPE_RX+(1<<8)+C_ADDR_RX_CONFIG, config);
     write_axil(SCOPE_RX+(2<<8)+C_ADDR_RX_CONFIG, config);
     write_axil(SCOPE_RX+(3<<8)+C_ADDR_RX_CONFIG, config);
+  } else if (mode==3) {
+    unsigned config = 0x00010002;
+    printf("INFO: Disabling rx.  Broadcasting rx configs write 0x%08x \n", config);
+    write_axil(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_CONFIG, config);
+  } else if (mode==4) {
+    unsigned config = 0x00011001;
+    printf("INFO: Full internal loopback at full speed.  Broadcasting rx configs write 0x%08x \n", config);
+    write_axil(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_CONFIG, config);    
   }
-
-  printf("INFO: Disabling Trigger, Sync, and Heartbeat words in the RX unit... \n");
-  printf("INFO: And setting cycles to 1... \n");
-  write_axil(0x7FA4, 0x00000001);
 }
 
+void toggle_rx_global_config(){
+  unsigned config[] = {0x00071FFF, 0x00000001, 0x00000100, 0x00000800, 0x00001000, 0x00001FFF};
+  static int mode = 0;
+  mode = (mode + 1) % 6;
+  printf("INFO: setting rx global config to 0x%08x \n", config[mode]);
+  write_axil(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_GFLAGS, config[mode]);
+}
 
 void read_rx_registers(){
   for (int i=0; i<40; i++){
@@ -506,13 +570,16 @@ void poke_timing(){
 void power_menu(){
   while(1){
     printf("POWER MENU:  choose an option:\n");
-    printf("(1) toggle enables (2) toggle power (3) monitor power (4) main menu \n");
+    printf("(0) main menu (1) toggle enables (2) toggle power (3) monitor power\n");
+    printf("(4) write IV curves to file\n");
 
     int input;
     scanf("%d", &input);
     printf("pressed:  %d\n", input);
 
     switch(input){
+    case 0:
+      return;
     case 1:
       toggle_global_enables();
       break;
@@ -523,7 +590,7 @@ void power_menu(){
       monitor_power();
       break;
     case 4:
-      return;
+      record_iv_curves();
       break;
     default:
       printf("invalid selection...\n\r");
@@ -535,11 +602,13 @@ void power_menu(){
 void rxtx_menu(){
   while(1){
     printf("RX/TX MENU:  choose an option:\n");
-    printf("(0) main menu (1) zero counts (2) toggle RX config\n");
-    printf("(3) TX status  (4) TX look   (5) single TX  \n");
-    printf("(6) RX status  (7) RX look   (8) single RX  \n");
-    printf("(9) benchmark TX  (10) benchmark RX/TX loopback \n");
-    printf("(11) DMA status (12) reset DMA \n");
+    printf("(0) main menu (1) zero counts (2) toggle TX config (3) toggle RX config (4) toggle RX global config\n");
+    printf("(5) TX status  (6) TX look   (7) single TX  \n");
+    printf("(8) RX status  (9) RX look   (10) single RX  \n");
+    printf("(11) benchmark TX  (12) benchmark RX/TX loopback \n");
+    printf("(13) DMA status (14) reset DMA \n");
+    printf("(15) set DMA TX to RUN \n");
+    printf("(16) set DMA RX to RUN (17) clear DMA RX (18) start DMA RX (19) resume RX\n");
 
     int input;
     scanf("%d", &input);
@@ -553,41 +622,61 @@ void rxtx_menu(){
       rxtx_reset_counts();
       break;
     case 2:
+      toggle_tx_config();
+      break;      
+    case 3:
       toggle_rx_config();
       break;
-    case 3:
-      read_tx_registers();
-      break;
     case 4:
-      read_tx_look();
+      toggle_rx_global_config();
       break;
     case 5:
-      single_tx();
+      read_tx_registers();
       break;
     case 6:
-      read_rx_registers();
+      read_tx_look();
       break;
     case 7:
-      read_rx_look();
+      single_tx();
       break;
     case 8:
-      single_rx();
+      read_rx_registers();
       break;
     case 9:
-      benchmark_tx();
+      read_rx_look();
       break;
     case 10:
-      benchmark_rxtx_loopback();
+      single_rx();
       break;
     case 11:
-      dma_status();
+      benchmark_tx();
       break;
     case 12:
+      benchmark_rxtx_loopback();
+      break;
+    case 13:
+      dma_status();
+      break;
+    case 14:
       reset_dma();
+      break;
+    case 15:
+      set_dma_tx_to_run();
+      break;
+    case 16:
+      set_dma_rx_to_run();
+      break;
+    case 17:      
+      clear_dma_rx_buffer();
+      break;
+    case 18:
+      start_dma_rx();
+      break;
+    case 19:
+      resume_rx();
       break;
     default:
       printf("invalid selection...\n\r");
-      return;
     }
   }
   return;
