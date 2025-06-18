@@ -37,7 +37,6 @@ do_install() {
 	     install -d ${D}${bindir}
 	     install -m 0755 ${S}/pacman_cmdserver ${D}${bindir}
              install -m 0755 ${S}/pacman_dataserver ${D}${bindir}
-	     install -m 0755 ${S}/pacman_menu ${D}${bindir}
 	     install -m 0755 ${S}/pacman_units ${D}${bindir}
 	     install -m 0755 ${S}/pacman_push ${D}${bindir}
 	     install -m 0755 ${S}/pacman_counter ${D}${bindir}

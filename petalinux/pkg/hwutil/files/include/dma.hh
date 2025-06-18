@@ -15,6 +15,8 @@
 // Use 32-bit word addressing:
 #define DMA_BYTES_PER_WORD 4
 
+#define DMA_TX_WORDS 84
+
 // TODO: confirm this is the limit:
 #define DMA_RX_MAX_WORDS 0xFFFF
 
@@ -38,9 +40,15 @@ void dma_status();
 void set_dma_tx_to_run();
 void set_dma_rx_to_run();
 
+void set_dma_tx_mask(unsigned mask_a=0xFFFFFFFF, unsigned mask_b=0xFF);
 void clear_dma_rx_buffer(unsigned max_words = DMA_RX_MAX_WORDS);
+
+void start_dma_tx();
 void start_dma_rx(unsigned max_words = DMA_RX_MAX_WORDS);
-int  wait_dma_rx_idle(unsigned timeout = 10000);
+
+int  wait_dma_tx_idle(unsigned timeout = 10000, int verbose=0);
+int  wait_dma_rx_idle(unsigned timeout = 10000, int verbose=0);
+
 int  count_dma_rx_buffer(unsigned max_words = DMA_RX_MAX_WORDS, int verbose=0);
 
 #endif

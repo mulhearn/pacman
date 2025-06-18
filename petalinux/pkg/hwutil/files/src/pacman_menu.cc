@@ -19,8 +19,10 @@
 // *** LED ***
 
 void blink_leds(){
+  printf("INFO: starting LED blink test...\n");
   blink_red_led();
   blink_pacman_leds();
+  printf("INFO: done with LED blink test.\n");
 }
 
 // *** GLOBAL UNIT ***
@@ -134,14 +136,14 @@ void record_iv_curves(){
     i2c_set_vdda(i, 0);
     i2c_set_vddd(i, 0);
   }
-  
+
   for (int i=0; i<10; i++){
     fprintf(file, "TILE:   %d\n", i+1);
     printf("INFO:  VDDD/VDDA IV curves for Tile %d\n", i+1);
     for (unsigned vset = 0x0000; vset<=0xFFFF; vset+=0x1000){
       i2c_set_vdda(i, vset);
       i2c_set_vddd(i, vset);
-      usleep(10);      
+      usleep(10);
       unsigned vdda = i2c_mon_vdda(i);
       unsigned vddd = i2c_mon_vddd(i);
       unsigned idda = i2c_mon_idda(i);
@@ -152,7 +154,7 @@ void record_iv_curves(){
     i2c_set_vdda(i, 0);
     i2c_set_vddd(i, 0);
   }
-  fclose(file);  
+  fclose(file);
 }
 
 // *** RX and TX UNITs ***
@@ -200,16 +202,20 @@ void read_tx_look(){
 
 void toggle_rx_config(){
   static int mode = 0;
-  mode = (mode + 1) % 5;
+  mode = (mode + 1) % 6;
   if (mode==0){
     unsigned config = 0x00001002;
     printf("INFO: No internal loopback.  Broadcasting rx config write 0x%08x \n", config);
     write_axil(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_CONFIG, config);
   } else if (mode==1) {
+    unsigned config = 0x00001001;
+    printf("INFO: No internal loopback at full speed..  Broadcasting rx config write 0x%08x \n", config);
+    write_axil(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_CONFIG, config);
+  } else if (mode==2) {
     unsigned config = 0x00011002;
     printf("INFO: Full internal loopback.  Broadcasting rx configs write 0x%08x \n", config);
     write_axil(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_CONFIG, config);
-  } else if (mode==2) {
+  } else if (mode==3) {
     unsigned config;
     config = 0x00011002;
     printf("INFO: Tiles 2-10 use internal loopback.  Broadcasting rx configs t 0x%08x \n", config);
@@ -220,14 +226,14 @@ void toggle_rx_config(){
     write_axil(SCOPE_RX+(1<<8)+C_ADDR_RX_CONFIG, config);
     write_axil(SCOPE_RX+(2<<8)+C_ADDR_RX_CONFIG, config);
     write_axil(SCOPE_RX+(3<<8)+C_ADDR_RX_CONFIG, config);
-  } else if (mode==3) {
+  } else if (mode==4) {
     unsigned config = 0x00010002;
     printf("INFO: Disabling rx.  Broadcasting rx configs write 0x%08x \n", config);
     write_axil(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_CONFIG, config);
-  } else if (mode==4) {
+  } else if (mode==5) {
     unsigned config = 0x00011001;
     printf("INFO: Full internal loopback at full speed.  Broadcasting rx configs write 0x%08x \n", config);
-    write_axil(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_CONFIG, config);    
+    write_axil(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_CONFIG, config);
   }
 }
 
@@ -575,7 +581,7 @@ void power_menu(){
 
     int input;
     scanf("%d", &input);
-    printf("pressed:  %d\n", input);
+    printf("INFO: selected %d\n", input);
 
     switch(input){
     case 0:
@@ -605,14 +611,15 @@ void rxtx_menu(){
     printf("(0) main menu (1) zero counts (2) toggle TX config (3) toggle RX config (4) toggle RX global config\n");
     printf("(5) TX status  (6) TX look   (7) single TX  \n");
     printf("(8) RX status  (9) RX look   (10) single RX  \n");
-    printf("(11) benchmark TX  (12) benchmark RX/TX loopback \n");
-    printf("(13) DMA status (14) reset DMA \n");
-    printf("(15) set DMA TX to RUN \n");
-    printf("(16) set DMA RX to RUN (17) clear DMA RX (18) start DMA RX (19) resume RX\n");
+    printf("(11) benchmark TX  (12) benchmark RX/TX loopback (13) random RX/TX loopback\n");
+    printf("(14) DMA status (15) reset DMA \n");
+    printf("(16) set DMA TX to RUN \n");
+    printf("(17) set DMA RX to RUN (18) clear DMA RX (19) start DMA RX (20) resume RX\n");
+
 
     int input;
     scanf("%d", &input);
-    printf("pressed:  %d\n", input);
+    printf("INFO: selected %d\n", input);
 
     switch(input){
     case 0:
@@ -623,7 +630,7 @@ void rxtx_menu(){
       break;
     case 2:
       toggle_tx_config();
-      break;      
+      break;
     case 3:
       toggle_rx_config();
       break;
@@ -655,24 +662,27 @@ void rxtx_menu(){
       benchmark_rxtx_loopback();
       break;
     case 13:
-      dma_status();
+      random_rxtx_loopback();
       break;
     case 14:
-      reset_dma();
+      dma_status();
       break;
     case 15:
-      set_dma_tx_to_run();
+      reset_dma();
       break;
     case 16:
+      set_dma_tx_to_run();
+      break;
+    case 17:
       set_dma_rx_to_run();
       break;
-    case 17:      
+    case 18:
       clear_dma_rx_buffer();
       break;
-    case 18:
+    case 19:
       start_dma_rx();
       break;
-    case 19:
+    case 20:
       resume_rx();
       break;
     default:
@@ -690,7 +700,7 @@ void timing_menu(){
     printf("(7) toggle counts (8) poke C (9) poke D\n");
     int input;
     scanf("%d", &input);
-    printf("pressed:  %d\n", input);
+    printf("INFO: selected %d\n", input);
 
     switch(input){
     case 0:
@@ -740,7 +750,7 @@ void adc_menu(){
 
     int input;
     scanf("%d", &input);
-    printf("pressed:  %d\n", input);
+    printf("INFO: selected %d\n", input);
 
     switch(input){
     case 0:
@@ -807,7 +817,7 @@ void main_menu(){
     printf("(4) power menu (5) RX/TX menu (6) timing menu (7) ADC menu \n");
     int input;
     scanf("%d", &input);
-    printf("pressed:  %d\n", input);
+    printf("INFO: selected %d\n", input);
 
     switch(input){
     case 1:
@@ -839,8 +849,8 @@ void main_menu(){
 }
 
 int main(){
-  printf("PACMAN Linux-Based Hardware Checkout \n");
-  printf("Random Max:  0x%x Random Number:  0x%x \n", RAND_MAX, rand());
+  printf("pacman_menu:  PACMAN Linux driver access via menu, for diagnostics and hardware checkout.\n");
+  //printf("Random Max:  0x%x Random Number:  0x%x \n", RAND_MAX, rand());
 
   init_mio();
   init_axil();

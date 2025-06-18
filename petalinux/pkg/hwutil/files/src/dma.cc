@@ -61,7 +61,7 @@ void reset_dma(){
 
 void dma_status(){
   unsigned cr, sr;
-  printf("INFO: Control and status registers for DMA TX \n");  
+  printf("INFO: Control and status registers for DMA TX \n");
 
   cr = G_UTIL_DMA[C_ADDR_DMA_TX_CONTROL>>2];
   sr = G_UTIL_DMA[C_ADDR_DMA_TX_STATUS>>2];
@@ -102,7 +102,7 @@ void dma_status(){
   printf("Stay Irq Delay----%d\n", ((cr&0xFF000000)>>24));
 
   printf("INFO: Control and status registers for DMA RX \n");
-  
+
   cr = G_UTIL_DMA[C_ADDR_DMA_RX_CONTROL>>2];
   sr = G_UTIL_DMA[C_ADDR_DMA_RX_STATUS>>2];
   printf("DMA control register (S2MM) - 0x%x \n", cr);
@@ -140,12 +140,6 @@ void dma_status(){
   printf("Always Zero-------%d\n", ((sr&0x00000800)!=0));
   printf("Stat Irq Thresh---%d\n", ((cr&0x00FF0000)>>16));
   printf("Stay Irq Delay----%d\n", ((cr&0xFF000000)>>24));
-
-
-
-
-
-
 }
 
 void set_dma_tx_to_run(){
@@ -167,8 +161,9 @@ void set_dma_tx_to_run(){
   }
 }
 
+
 void set_dma_rx_to_run(){
-  
+
   printf("INFO:  Setting DMA RX To RUN.\n");
   G_UTIL_DMA[(C_ADDR_DMA_RX_CONTROL)>>2] = MASK_DMA_CR_RUN;
 
@@ -185,52 +180,18 @@ void set_dma_rx_to_run(){
   } else {
     printf("INFO:  DMA RX has left the HALTED state successfully. (timeout=%d)\n", timeout);
   }
-  
 }
 
-void single_tx(){
-  // TX buffer is a 128 bit header plus 40 uarts allocated 64 bits each.
-  // This is a total of 84 32-bit words (4 header words, 80 uart words)
-  // The resulting AXI stream is 128 bits times 21 beats.
-
-  static int count = 0;
-  unsigned tx_words = 84;
-
-  set_dma_tx_to_run();
-  //dma_status();
-
+void set_dma_tx_mask(unsigned mask_a, unsigned mask_b){
   G_UTIL_DMA_TX_BUFFER[0] = tx_mask_a;
   G_UTIL_DMA_TX_BUFFER[1] = tx_mask_b;
   G_UTIL_DMA_TX_BUFFER[2] = 0x0;
   G_UTIL_DMA_TX_BUFFER[3] = 0x0;
+}
 
-  for (int i=0; i<(tx_words-4); i++)
-    G_UTIL_DMA_TX_BUFFER[i+4] = 0xB000F000 + i + (count<<16);
-
-  printf("INFO:  Sending write, count = % d \n", count);
-  count++;
-
-  G_UTIL_DMA[(0x18)>>2] = DMA_TX_ADDR;
-  G_UTIL_DMA[(0x28)>>2] = tx_words*DMA_BYTES_PER_WORD;
-
-  unsigned timeout = 10000;
-  unsigned start = 1;
-  while(timeout){
-    unsigned sr = G_UTIL_DMA[(0x04)>>2];
-    if ((sr&0x2)!=0)
-      break;
-    if (start){
-      printf("INFO: waiting for idle ... \n");
-      start = 0;
-    }
-    usleep(10);
-    timeout--;
-  }
-  if (! timeout) {
-    printf("ERROR:  *** Failed to reach idle before timeout! *** \n");
-    return;
-  }
-  printf("INFO:  Single DMA TX was successfull.\n");
+void set_dma_tx_data(unsigned chan, unsigned data_a, unsigned data_b){
+  G_UTIL_DMA_TX_BUFFER[4+2*chan+0] = data_a;
+  G_UTIL_DMA_TX_BUFFER[4+2*chan+1] = data_b;
 }
 
 void clear_dma_rx_buffer(unsigned max_words){
@@ -239,19 +200,42 @@ void clear_dma_rx_buffer(unsigned max_words){
     G_UTIL_DMA_RX_BUFFER[i] = 0;
 }
 
+void start_dma_tx(){
+  //printf("INFO: starting DMA TX cycle \n");
+  G_UTIL_DMA[(0x18)>>2] = DMA_TX_ADDR;
+  G_UTIL_DMA[(0x28)>>2] = DMA_TX_WORDS*DMA_BYTES_PER_WORD;
+}
+
 void start_dma_rx(unsigned max_words){
   //printf("INFO: starting DMA RX cycle \n");
   G_UTIL_DMA[(0x48)>>2] = DMA_RX_ADDR;
   G_UTIL_DMA[(0x58)>>2] = max_words*DMA_BYTES_PER_WORD;
 }
 
-int  wait_dma_rx_idle(unsigned timeout){
+int  wait_dma_tx_idle(unsigned timeout, int verbose){
   unsigned start = 1;
   while(timeout){
-    unsigned sr = G_UTIL_DMA[(0x34)>>2];
+
+    unsigned sr = G_UTIL_DMA[C_ADDR_DMA_TX_STATUS>>2];
     if ((sr&0x2)!=0)
       break;
-    if (start){
+    if (start && verbose){
+      printf("INFO: waiting for idle... \n");
+      start = 0;
+    }
+    usleep(1);
+    timeout--;
+  }
+  return timeout;
+}
+
+int  wait_dma_rx_idle(unsigned timeout, int verbose){
+  unsigned start = 1;
+  while(timeout){
+    unsigned sr = G_UTIL_DMA[C_ADDR_DMA_RX_STATUS>>2];
+    if ((sr&0x2)!=0)
+      break;
+    if (start && verbose){
       printf("INFO: waiting for idle... \n");
       start = 0;
     }
@@ -290,16 +274,45 @@ int  count_dma_rx_buffer(unsigned max_words, int verbose){
   return 0;
 }
 
+
+void single_tx(){
+  // TX buffer is a 128 bit header plus 40 uarts allocated 64 bits each.
+  // This is a total of 84 32-bit words (4 header words, 80 uart words)
+  // The resulting AXI stream is 128 bits times 21 beats.
+
+  static int count = 0;
+
+  set_dma_tx_to_run();
+  set_dma_tx_mask(tx_mask_a, tx_mask_b);
+
+  for (int chan=0; chan<40; chan++)
+    set_dma_tx_data(chan, 0xB000F000 + (2*chan) + (count<<16),  0xB000F000 + (2*chan+1) + (count<<16));
+
+  printf("INFO:  Starting DMA TX cycle, count = % d \n", count);
+  count++;
+
+  start_dma_tx();
+
+  unsigned timeout = wait_dma_tx_idle();
+
+  if (! timeout) {
+    printf("ERROR:  *** Failed to reach idle before timeout! *** \n");
+    return;
+  }
+  printf("INFO:  Single DMA TX was successfull.\n");
+}
+
 void single_rx(){
-  unsigned max_words = 0x0400; 
+  unsigned max_words = 0x0400;
   set_dma_rx_to_run();
   clear_dma_rx_buffer(max_words);
+  printf("INFO:  Starting DMA RX cycle\n");
   start_dma_rx(max_words);
   resume_rx();
 }
 
 void resume_rx(){
-  unsigned max_words = 0x0400; 
+  unsigned max_words = 0x0400;
   unsigned timeout = wait_dma_rx_idle(10000);
   if (timeout > 0){
     printf("INFO: RX IDLE reached with timeout %d\n", timeout);
@@ -309,10 +322,7 @@ void resume_rx(){
   }
 
   int count = count_dma_rx_buffer(max_words,2);
-  if(count > 0){
-    printf("INFO: count %d\n", count);
-  }
-  
+
   if (! timeout) {
     printf("*** TIMEOUT ERROR *** \n");
   }
@@ -325,7 +335,7 @@ void benchmark_tx(){
   int count = 0;
 
   int tx_packets=10000;
-  
+
   printf("*** Sending run*** \n");
   G_UTIL_DMA[(0x00)>>2] = 0x01;
 
@@ -370,7 +380,7 @@ void benchmark_tx(){
   unsigned m = 40.0*10000/66;
   unsigned p = 40.0*10000/67;
   unsigned a = 40*tx_packets/elapsed_time;
-  
+
   printf("maximum tx rate:      %d tx payloads (64-bit+2 @ 10 MHz) per ms\n", m);
   printf("practical max:        %d tx payloads (64-bit+3 @ 10 MHz) per ms\n", p);
   printf("achieved:             %d tx payloads (64-bit+3 @ 10 MHz) per ms\n", a);
@@ -378,7 +388,7 @@ void benchmark_tx(){
 
 void benchmark_rxtx_loopback(){
   int verbose = 0;
-  
+
   struct timeval start, end;
   printf("INFO: benchmarking RX/TX loopback\n");
   unsigned tx_words  = 84;
@@ -413,19 +423,19 @@ void benchmark_rxtx_loopback(){
       G_UTIL_DMA[(0x28)>>2] = tx_words*4;
       uarts_sent += 40; // TODO:  use tx mask to determine number of words instead.
       if (verbose)
-	printf("DMA TX started, total uart packets sent: %d \n", uarts_sent); 
+	printf("DMA TX started, total uart packets sent: %d \n", uarts_sent);
     }
 
     if (dma_requested==1){
       unsigned rxsr    = G_UTIL_DMA[(0x34)>>2];
-      unsigned fifocnt = read_axil(SCOPE_RX+0x3F00+C_ADDR_RX_FRCNT);      
+      unsigned fifocnt = read_axil(SCOPE_RX+0x3F00+C_ADDR_RX_FRCNT);
       if ((rxsr&0x2)!=0) {
 	if (verbose)
-	  printf("DMA state is IDLE, checking buffer.  FIFO count is %d\n", fifocnt); 
+	  printf("DMA state is IDLE, checking buffer.  FIFO count is %d\n", fifocnt);
 	dma_requested=0;
 	unsigned count = count_dma_rx_buffer();
 	if (verbose)
-	  printf("INFO: received %d uart packets from single DMA RX\n", count);	
+	  printf("INFO: received %d uart packets from single DMA RX\n", count);
 	uarts_rcvd += count;
 	dma_reads += 1;
       }
@@ -437,7 +447,7 @@ void benchmark_rxtx_loopback(){
       clear_dma_rx_buffer(4);
 
       if (verbose){
-	unsigned fifocnt = read_axil(SCOPE_RX+0x3F00+C_ADDR_RX_FRCNT);	
+	unsigned fifocnt = read_axil(SCOPE_RX+0x3F00+C_ADDR_RX_FRCNT);
 	printf("DMA RX started, total uart packets received: %d fifo count: %d \n", uarts_rcvd, fifocnt);
       }
       start_dma_rx();
@@ -446,10 +456,10 @@ void benchmark_rxtx_loopback(){
 
     usleep(1);
     timeout--;
-  }  
+  }
   //printf("INFO: outside loop, DMA requested = %d\n", dma_requested);
   //dma_status();
-  
+
   gettimeofday(&end, NULL);
   double elapsed_time = 1000.0*(end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000.0;
 
@@ -458,22 +468,74 @@ void benchmark_rxtx_loopback(){
   printf("INFO: elapsed time %lf ms \n", elapsed_time);
   printf("INFO: DMA read cycles %d \n", dma_reads);
   if (dma_reads > 0)
-    printf("INFO: uart packets per DMA read cycle %d \n", uarts_rcvd/dma_reads);
+    printf("SUMMARY: uart packets per DMA read cycle %d \n", uarts_rcvd/dma_reads);
   unsigned m = 40.0*10000/66;
   unsigned p = 40.0*10000/67;
   unsigned a = uarts_rcvd/elapsed_time;
-  
-  printf("maximum tx rate:      %d tx payloads (64-bit+2 @ 10 MHz) per ms\n", m);
-  printf("practical max:        %d tx payloads (64-bit+3 @ 10 MHz) per ms\n", p);
-  printf("achieved:             %d tx payloads (64-bit+3 @ 10 MHz) per ms\n", a);
-  
+
+  printf("SUMMARY: maximum tx rate:      %d tx payloads (64-bit+2 @ 10 MHz) per ms\n", m);
+  printf("SUMMARY: practical max:        %d tx payloads (64-bit+3 @ 10 MHz) per ms\n", p);
+  printf("SUMMARY: achieved:             %d tx payloads (64-bit+3 @ 10 MHz) per ms\n", a);
+
   if (!timeout){
     printf("ERROR:  *** failed to complete RX/TX loopack before timeout *** \r\n");
     return;
   }
-
 }
 
+void random_rxtx_loopback(){
+  unsigned timeout;
+  unsigned data_a[40];
+  unsigned data_b[40];
+  unsigned count = 0;
+  unsigned fails = 0;
 
+  set_dma_tx_to_run();
+  set_dma_rx_to_run();
 
+  for (int i=0; i<1000; i++){
+    count++;
+    for (int chan=0; chan<40; chan++){
+      data_a[chan] = random();
+      data_b[chan] = random();
+    }
+    set_dma_tx_mask(tx_mask_a, tx_mask_b);
+    for (int chan=0; chan<40; chan++)
+      set_dma_tx_data(chan, data_a[chan], data_b[chan]);
 
+    //printf("INFO:  Starting DMA TX cycle \n");
+    start_dma_tx();
+
+    timeout = wait_dma_tx_idle();
+    if (! timeout) {
+      printf("ERROR:  *** Failed to reach TX IDLE before timeout! *** \n");
+      return;
+    }
+
+    clear_dma_rx_buffer();
+    start_dma_rx();
+
+    timeout = wait_dma_rx_idle(10000);
+    if (! timeout) {
+      printf("ERROR: *** Failed to reach RX IDLE before timeout. *** \n");
+      return;
+    }
+
+    unsigned disc = 0x0;
+    for (unsigned chan=0; chan<40; chan++){
+      unsigned b = G_UTIL_DMA_RX_BUFFER[4*chan+3];
+      unsigned a = G_UTIL_DMA_RX_BUFFER[4*chan+2];
+      unsigned xor_a = a ^ data_a[chan];
+      unsigned xor_b = b ^ data_b[chan];
+      disc |= xor_a;
+      disc |= xor_b;
+      if ((xor_b != 0) || (xor_b != 0)){
+	fails++;
+      }
+    }
+    if (disc != 0x0) {
+      printf("ERROR: discrepancy found.\n");
+    }
+  }
+  printf("SUMMARY: Found %d discrepancies in %d uart packets\n", fails, count*40);
+}

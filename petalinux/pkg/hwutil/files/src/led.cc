@@ -27,7 +27,6 @@ void blink_red_led(){
     write_mio(7, 0);
     usleep(50000);
   }
-  printf("Done.\n");
 }
 
 void blink_pacman_leds(){
@@ -59,5 +58,4 @@ void blink_pacman_leds(){
     write_axil(C_SCOPE_GLOBAL + C_ADDR_GLOBAL_LEDS, 0x0);
     usleep(50000);
   }
-  printf("Done.\n");
 }

@@ -1,4 +1,4 @@
-APP := hwutil pacman_hwcheckout
+APP := hwutil pacman_menu
 
 INCLUDE_DIR := include
 SRC_DIR := src
