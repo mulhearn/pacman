@@ -20,8 +20,6 @@
 #define UART_GLOBAL    0x3F00
 #define UART_BROADCAST 0x3B00
 
-
-
 #define C_ADDR_RX_STATUS    0x00
 #define C_ADDR_RX_CONFIG    0x04
 #define C_ADDR_RX_LOOK_A    0x10
@@ -122,7 +120,7 @@ void toggle_scratch(){
 }
 
 void toggle_enables(){
-  unsigned enables[] = {0x00000000, 0x00010000, 0x00010001,  0x000103FF, 0x010103FF};
+  unsigned enables[] = {0x00000000, 0x00010000, 0x00010001,  0x000103FF, 0x001103FF};
   static int mode = 0;
   mode = (mode + 1) % 5;
   xil_printf("INFO: setting enables to 0x%08x \r\n", enables[mode]);
@@ -150,7 +148,7 @@ void toggle_tx_config(){
 
 void toggle_rx_config(){
   static int mode = 0;
-  mode = (mode + 1) % 3;
+  mode = (mode + 1) % 4;
   if (mode==0){
     unsigned config = 0x00001002;
     xil_printf("INFO: No internal loopback.  Broadcasting rx config write 0x%08x \r\n", config);
@@ -160,6 +158,10 @@ void toggle_rx_config(){
     xil_printf("INFO: Full internal loopback.  Broadcasting rx configs write 0x%08x \r\n", config);
     Xil_Out32(ADDR_AXIL_REGS+SCOPE_RX+UART_BROADCAST+C_ADDR_RX_CONFIG, config);
   } else if (mode==2) {
+    unsigned config = 0x00011001;
+    xil_printf("INFO: Full internal loopback at full speed.  Broadcasting rx configs write 0x%08x \r\n", config);
+    Xil_Out32(ADDR_AXIL_REGS+SCOPE_RX+UART_BROADCAST+C_ADDR_RX_CONFIG, config);
+  } else if (mode==3) {
     unsigned config;
     config = 0x00011002;
     xil_printf("INFO: Tiles 2-10 use internal loopback.  Broadcasting rx configs t 0x%08x \r\n", config);
@@ -172,9 +174,6 @@ void toggle_rx_config(){
     Xil_Out32(ADDR_AXIL_REGS+SCOPE_RX+(3<<8)+C_ADDR_RX_CONFIG, config);
   }
 }
-
-
-
 
 void read_rx_status(){
   for (int i=0; i<40; i++){
@@ -480,10 +479,8 @@ void benchmark_dma_loopback(){
 
   const unsigned bytes = 4;         // bytes per word (32-bit words)
   const unsigned tx_words = 84;     // words in each packet (4 header + 2 words per 40 uarts)
-  const unsigned tx_packets = 1000; // tx_packets to write
-  //const unsigned rx_words = 128*4;
-  // no extra:
-  const unsigned rx_words = 164;
+  const unsigned tx_packets = 10000; // tx_packets to write
+  const unsigned rx_words = 164; 
 
   XTime start_time;
   XTime stop_time;
