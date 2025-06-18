@@ -12,7 +12,7 @@ SRC_URI = "file://src \
            file://include \
 	   file://Makefile \
 	   file://gpio_init.sh \
-
+	     "
 
 INITSCRIPT_NAME = "gpio_init"
 INITSCRIPT_PARAMS = "start 99 S ."
