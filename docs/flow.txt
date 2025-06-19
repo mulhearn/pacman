@@ -28,6 +28,30 @@ xsct apps/demo/install.tcl
 cd demo
 xsct run.tcl
 
+
+# USAGE NOTE:
+# With some versions of VIVADO, xsct tool under linux hangs occassionally at:
+#
+# $ xsct build.tcl 
+# Starting vitis. This could take few seconds...Eclipse:
+# The Eclipse executable launcher no longer supports running with GTK + 2.x. Continuing using GTK+ 3.x.
+# done
+#
+# In this case, you have to kill the hung processes yourself, e.g. like:
+#
+# (Ctrl-c)
+ps
+#     PID TTY          TIME CMD
+#  154578 pts/1    00:00:01 bash
+#  212039 pts/1    00:00:00 eclipse
+#  212057 pts/1    00:00:10 java
+#  212196 pts/1    00:00:00 ps
+#
+kill -9 212039
+kill -9 212057
+# (but replace above with your own wayward process PIDs)
+
+
 #building the FSBL: (You'll need this for petalinux packaging!)
 xsct apps/pacman_fsbl/install.tcl
 ls -alh products/pacman_fsbl.elf
@@ -47,11 +71,14 @@ ls -alh BOOT.BIN image.ub boot.scr
 # untar (as root) the rootfs.tar.gz into partion 2 (linux) of an SD card
 
 # building just one user petalinux package (e.g. hwutil/pacman-server):
-../scripts/
-
-
-
-
+../scripts/build_hwutil.sh
+# build tar file from the generated RPM file:
+mkdir tmp
+cd tmp/
+rpm2cpio ../hwutil-latest.rpm | cpio -idmv
+tar -czf ../hwutil-latest.tar.gz ./
+cd ..
+rm -fr tmp
 
 #
 # Other Flows (Not Checked Recently...)

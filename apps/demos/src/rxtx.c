@@ -8,125 +8,75 @@
 #include "xil_printf.h"
 #include "sleep.h"
 
-
-#define ADDR_AXIL_REGS  XPAR_AXIL_TO_REGBUS_0_BASEADDR
-
-#define SCOPE_GLOBAL 0xF000
-#define ROLE_GLOBAL  0x0F00
-#define ROLE_TIMING  0x0E00
-
-#define SCOPE_TX       0x0000
-#define SCOPE_RX       0x4000
-#define UART_GLOBAL    0x3F00
-#define UART_BROADCAST 0x3B00
-
-#define C_ADDR_RX_STATUS    0x00
-#define C_ADDR_RX_CONFIG    0x04
-#define C_ADDR_RX_LOOK_A    0x10
-#define C_ADDR_RX_LOOK_B    0x14
-#define C_ADDR_RX_LOOK_C    0x18
-#define C_ADDR_RX_LOOK_D    0x1C
-#define C_ADDR_RX_STARTS    0x20
-#define C_ADDR_RX_BEATS     0x24
-#define C_ADDR_RX_UPDATES   0x28
-#define C_ADDR_RX_LOST      0x2C
-#define C_ADDR_RX_NCHAN     0x50
-#define C_ADDR_RX_GSTATUS   0xA0
-#define C_ADDR_RX_GFLAGS    0xA4
-#define C_ADDR_RX_ZERO_CNTS 0xA8
-#define C_ADDR_RX_FRCNT     0xB0
-#define C_ADDR_RX_FWCNT     0xB4
-#define C_ADDR_RX_DMAITR    0xB8
-
-#define C_ADDR_TX_STATUS    0x00
-#define C_ADDR_TX_CONFIG    0x04
-#define C_ADDR_TX_LOOK_C    0x18
-#define C_ADDR_TX_LOOK_D    0x1C
-#define C_ADDR_TX_GFLAGS    0x20
-#define C_ADDR_TX_STARTS    0x30
-#define C_ADDR_TX_NCHAN     0x40
+#include "axil.h"
+#include "rxtx.h"
 
 u32 tx_mask_b = 0xFF;
 u32 tx_mask_a = 0xFFFFFFFF;
 
-#define C_ADDR_GLOBAL_SCRA      0x00
-#define C_ADDR_GLOBAL_SCRB      0x04
-#define C_ADDR_GLOBAL_FW_MAJOR  0x10
-#define C_ADDR_GLOBAL_FW_MINOR  0x14
-#define C_ADDR_GLOBAL_FW_BUILD  0x18
-#define C_ADDR_GLOBAL_HW_CODE   0x1C
-#define C_ADDR_GLOBAL_ENABLES   0x20
+void rxtx_menu(){
+  xil_printf("RX/TX Menu: \r\n");
 
-#define C_ADDR_TIMING_STATUS  0x00
-#define C_ADDR_TIMING_STAMP   0x04
-#define C_ADDR_TIMING_TRIG    0x20
-#define C_ADDR_TIMING_SYNC    0x24
+  while(1){
+    xil_printf("choose an option:\r\n");
+    xil_printf("(0) exit RX/TX Menu \r\n");
+    xil_printf("(1) read tx status (2) read tx look (3) single tx (4) toggle tx mask (5) toggle tx config \r\n");
+    xil_printf("(6) read rx status (7) read rx look (8) single rx (9) toggle rx config \r\n");
+    xil_printf("(a) zero counts  (b) benchmark RX/TX loopback (c) benchmark TX \r\n");
+    xil_printf("(d) read DMA status (e) DMA reset \r\n");
 
-void read_global_status(){
-  xil_printf("fw major----------- %d   \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_FW_MAJOR));
-  xil_printf("fw minor----------- %d   \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_FW_MINOR));
-  xil_printf("fw build----------- 0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_FW_BUILD));
-  xil_printf("hw code------------ 0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_HW_CODE));
-  xil_printf("scratch a---------- 0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_SCRA));
-  xil_printf("scratch b---------- 0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_SCRB));
-  xil_printf("\r\n");
-  xil_printf("enables------------ 0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_ENABLES));
-  xil_printf("\r\n");
-  xil_printf("timing status-------0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_STATUS));
-  xil_printf("trig config---------0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_TRIG));
-  xil_printf("sync config---------0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_SYNC));
-  xil_printf("\r\n");
-  xil_printf("timestamp-----------0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_STAMP));
-}
-
-void check_trig_sync(){
-  unsigned stat, tstamp;
-  stat   = Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_STATUS);
-  tstamp = Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_STAMP);
-  xil_printf("timing status-------0x%x \r\n", stat);
-  xil_printf("time stamp----------0x%x \r\n", tstamp);
-  xil_printf("trig config---------0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_TRIG));
-  xil_printf("sync config---------0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_SYNC));
-
-  Xil_Out32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_TRIG, 0x00FF03FF);
-  Xil_Out32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_SYNC, 0x00FF03FF);
-  stat   = Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_STATUS);
-  tstamp = Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_STAMP);
-  xil_printf("timing status-------0x%x \r\n", stat);
-  xil_printf("time stamp----------0x%x \r\n", tstamp);
-}
-
-
-void toggle_scratch(){
-  unsigned scra, scrb;
-  static int mode = 0;
-  mode = (mode + 1) % 3;
-  switch(mode){
-    case 1:
-      scra = 0xAAAAAAAA;
-      scrb = 0xBBBBBBBB;
+    unsigned char c=inbyte();
+    xil_printf("pressed:  %c\n\r", c);
+    switch(c){
+    case '0':
+      return;
+    case '1':
+      read_tx_status();
       break;
-    case 2:
-      scra = 0x12341234;
-      scrb = 0x7777FFFF;
+    case '2':
+      read_tx_look();
+      break;
+    case '3':
+      single_tx();
+      break;
+    case '4':
+      toggle_tx_mask();
+      break;
+    case '5':
+      toggle_tx_config();
+      break;
+    case '6':
+      read_rx_status();
+      break;
+    case '7':
+      read_rx_look();
+      break;
+    case '8':
+      single_rx();
+      break;
+    case '9':
+      toggle_rx_config();
+      break;
+    case 'a':
+      zero_counts();
+      break;
+    case 'b':
+      benchmark_dma_loopback();
+      break;
+    case 'c':
+      benchmark_dma_write();
+      break;      
+    case 'd':
+      dma_status();
+      break;
+    case 'e':
+      reset_dma();
       break;
     default:
-      scra = 0x0;
-      scrb = 0x0;
+      xil_printf("invalid selection...\n\r");
+    }
   }
-  xil_printf("INFO: setting scratch a to 0x%08x and scratch b to 0x%08x \r\n", scra, scrb);
-  Xil_Out32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_SCRA, scra);
-  Xil_Out32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_SCRB, scrb);
 }
-
-void toggle_enables(){
-  unsigned enables[] = {0x00000000, 0x00010000, 0x00010001,  0x000103FF, 0x001103FF};
-  static int mode = 0;
-  mode = (mode + 1) % 5;
-  xil_printf("INFO: setting enables to 0x%08x \r\n", enables[mode]);
-  Xil_Out32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_GLOBAL+C_ADDR_GLOBAL_ENABLES, enables[mode]);
-}
-
 
 void toggle_tx_config(){
   static int mode = 0;
@@ -204,7 +154,6 @@ void read_rx_look(){
     xil_printf("Channel %2d Look:  0x%08x %08x %08x %08x\r\n", i, d, c, b, a);
   }
 }
-
 
 void read_tx_status(){
   for (int i=0; i<40; i++){
@@ -356,9 +305,6 @@ void reset_dma(){
   }
 }
 
-
-//#define ADDR_DMA        XPAR_AXI_DMA_0_BASEADDR
-
 void single_tx(){
   // TX buffer is a 128 bit header plus 40 uarts allocated 64 bits each.
   // This is a total of 84 32-bit words (4 header words, 80 uart words)
@@ -468,7 +414,6 @@ void single_rx(){
     xil_printf("*** TIMEOUT ERROR *** \r\n");
   }
 }
-
 
 void benchmark_dma_loopback(){
   unsigned timeout;
@@ -713,100 +658,3 @@ void benchmark_dma_write(){
   xil_printf("practical max:        %d tx payloads (64-bit+3 @ 10 MHz) per ms\r\n", p);
 
 }
-
-void toggle_dcache(){
-  static int mode = 0;
-  mode = (mode + 1) % 2;
-
-  if (mode == 0) {
-    xil_printf("enabling dcache\r\n");
-    Xil_DCacheEnable();
-  } else {
-    xil_printf("disabling dcache\r\n");
-    Xil_DCacheDisable();
-  }
-}
-
-int main(){
-  xil_printf("Demonstration Driver For PACMAN TX/RX \r\n");
-  xil_printf("Sanity number:  2\r\n");
-  xil_printf("Random Max:  0x%x Random Number:  0x%x \r\n", RAND_MAX, rand());
-
-  while(1){
-    xil_printf("choose an option:\r\n");
-    xil_printf("TX: (1) read tx status (2) read tx look (3) single tx (4) toggle tx mask (5) toggle tx config \r\n");
-    xil_printf("RX: (6) read rx status (7) read rx look (8) single rx (9) toggle rx config \r\n");
-    xil_printf("Both: (a) zero counts (b) toggle dcache \r\n");
-    xil_printf("DMA:  (c) read DMA status (d) DMA reset (e) benchmark DMA loopback (f) benchmark DMA write \r\n");
-    xil_printf("(g) read global status (h) toggle scratch (i) toggle enables (j) test trig and sync  \r\n");
-
-    unsigned char c=inbyte();
-    xil_printf("pressed:  %c\n\r", c);
-    switch(c){
-    case '1':
-      read_tx_status();
-      break;
-    case '2':
-      read_tx_look();
-      break;
-    case '3':
-      single_tx();
-      break;
-    case '4':
-      toggle_tx_mask();
-      break;
-    case '5':
-      toggle_tx_config();
-      break;
-    case '6':
-      read_rx_status();
-      break;
-    case '7':
-      read_rx_look();
-      break;
-    case '8':
-      single_rx();
-      break;
-    case '9':
-      toggle_rx_config();
-      break;
-    case 'a':
-      zero_counts();
-      break;
-    case 'b':
-      toggle_dcache();
-      break;
-    case 'c':
-      dma_status();
-      break;
-    case 'd':
-      reset_dma();
-      break;
-    case 'e':
-      benchmark_dma_loopback();
-      break;
-    case 'f':
-      benchmark_dma_write();
-      break;
-    case 'g':
-      read_global_status();
-      break;
-    case 'h':
-      toggle_scratch();
-      break;
-    case 'i':
-      toggle_enables();
-      break;
-    case 'j':
-      check_trig_sync();
-      break;
-    default:
-      xil_printf("invalid selection...\n\r");
-    }
-  }
-  return 0;
-}
-
-
-
-
