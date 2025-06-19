@@ -303,7 +303,7 @@ void toggle_voltages(){
 
 void read_voltages(){
   unsigned val;
-  
+
   xil_printf("READ_VOLTAGES:  setting config registers:\r\n");
   iic_set(ADDR_ADC_TILES+0, 1, 0b10000101, 0x0);
   iic_set(ADDR_ADC_TILES+1, 1, 0b10000101, 0x0);
@@ -318,8 +318,8 @@ void read_voltages(){
   iic_send(ADDR_ADC_TILES+2, 0);
   iic_send(ADDR_ADC_TILES+3, 0);
   iic_send(ADDR_ADC_TILES+4, 0);
-  iic_send(ADDR_ADC_BOARD,   0); 
-  
+  iic_send(ADDR_ADC_BOARD,   0);
+
   usleep(50000);
 
   unsigned addr = ADDR_ADC_BOARD;
@@ -359,11 +359,11 @@ void read_voltages(){
     val = iic_recv(addr, 0xc, 2);
     xil_printf(" value:  0x%x, %d --> %d mA \r\n",val,val, 20000*val/0xffff);
     val = iic_recv(addr, 0xd, 2);
-    xil_printf(" value:  0x%x, %d --> %d mA \r\n",val,val, 20000*val/0xffff);    
+    xil_printf(" value:  0x%x, %d --> %d mA \r\n",val,val, 20000*val/0xffff);
     val = iic_recv(addr, 0xe, 2);
     xil_printf(" value:  0x%x, %d --> %d mV \r\n",val,val, 9000*val/0xffff);
 
-  }  
+  }
 }
 
 void iic_menu(){

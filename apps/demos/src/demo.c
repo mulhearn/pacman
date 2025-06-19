@@ -32,20 +32,20 @@ void mdio_init()
 
 void read_mac_from_cpld(){
   xil_printf("INFO: reading MAC address from CPLD \r\n");
-  
+
   u16 a,b,c,d,e,f;
   long stat = 0;
-    
+
   stat |= XEmacPs_PhyRead(&EmacPs, PHY_ADDRESS, 0x9, &a);
   stat |= XEmacPs_PhyRead(&EmacPs, PHY_ADDRESS, 0xA, &c);
   stat |= XEmacPs_PhyRead(&EmacPs, PHY_ADDRESS, 0xB, &e);
 
   if (stat != XST_SUCCESS) {
     return;
-  } 
-  
+  }
+
   b = a&0xFF;
-  a = (a>>8)&0xFF;  
+  a = (a>>8)&0xFF;
   d = c&0xFF;
   c = (c>>8)&0xFF;
   f = e&0xFF;
@@ -58,18 +58,18 @@ void read_mac_from_cpld(){
 void toggle_cpld(){
   u16 cr;
   long stat = 0;
-    
+
   stat |= XEmacPs_PhyRead(&EmacPs, PHY_ADDRESS, 0x5, &cr);
 
   if (stat != XST_SUCCESS) {
     return;
-  } 
+  }
   xil_printf("INFO: success reading CR1 (LEDs) from CPLD: 0x%04x \r\n", cr);
 
 
   static int mode = 0;
   mode = (mode + 1) % 5;
-  if (mode == 0) {  
+  if (mode == 0) {
     xil_printf("Setting CPLD LED configuration to default (RED: slow blink for SD card bood, GREEN: MIO \r\n");
     XEmacPs_PhyWrite(&EmacPs, PHY_ADDRESS, 0x5, 0x00);
   } else if (mode == 1) {
@@ -153,7 +153,7 @@ void blink_leds(){
 
   static const int nblink = 5;
   static const int wait_usec = 100000;
-  
+
   xil_printf("BLINK LEDS:  blinking LED 3 via AXIL...\r\n");
   for (int iblink=0; iblink<nblink; iblink++){
     Xil_Out32(ADDR_AXIL_REGS+SCOPE_GLOBAL+C_ADDR_GLOBAL_LEDS, 0x1);
@@ -170,10 +170,10 @@ void blink_leds(){
     usleep(wait_usec);
   }
 
-  
 
 
-  
+
+
 }
 
 int main(){
@@ -189,7 +189,7 @@ int main(){
     xil_printf("Hardware initialization has FAILED.\r\n");
     return 0;
   }
-  
+
   while(1){
     xil_printf("choose an option:\r\n");
     xil_printf("(1) blink LEDs (2) read global status (3) toggle scratch (4) toggle enables (5) toggle dcache \r\n");
@@ -200,7 +200,7 @@ int main(){
     switch(c){
     case '1':
       blink_leds();
-      break;      
+      break;
     case '2':
       read_global_status();
       break;
@@ -215,10 +215,10 @@ int main(){
       break;
     case '6':
       iic_menu();
-      break;      
+      break;
     case '7':
       rxtx_menu();
-      break;      
+      break;
     case '8':
       timing_menu();
       break;

@@ -65,7 +65,7 @@ void rxtx_menu(){
       break;
     case 'c':
       benchmark_dma_write();
-      break;      
+      break;
     case 'd':
       dma_status();
       break;
@@ -425,7 +425,7 @@ void benchmark_dma_loopback(){
   const unsigned bytes = 4;         // bytes per word (32-bit words)
   const unsigned tx_words = 84;     // words in each packet (4 header + 2 words per 40 uarts)
   const unsigned tx_packets = 10000; // tx_packets to write
-  const unsigned rx_words = 164; 
+  const unsigned rx_words = 164;
 
   XTime start_time;
   XTime stop_time;

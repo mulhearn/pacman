@@ -32,7 +32,7 @@ xsct run.tcl
 # USAGE NOTE:
 # With some versions of VIVADO, xsct tool under linux hangs occassionally at:
 #
-# $ xsct build.tcl 
+# $ xsct build.tcl
 # Starting vitis. This could take few seconds...Eclipse:
 # The Eclipse executable launcher no longer supports running with GTK + 2.x. Continuing using GTK+ 3.x.
 # done

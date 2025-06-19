@@ -121,7 +121,7 @@ void adc_menu(){
   while(1){
     xil_printf("choose an option:\r\n");
     xil_printf("(0) exit ADC Menu \r\n");
-    xil_printf("(1) toggle ADC sleep (2) toggle circular buffer (3) toggle trigger (4) run trigger\r\n");    
+    xil_printf("(1) toggle ADC sleep (2) toggle circular buffer (3) toggle trigger (4) run trigger\r\n");
     xil_printf("(5) toggle BRAM patterns (6) write BRAM (7) read BRAM \r\n");
     unsigned char c=inbyte();
     xil_printf("pressed:  %c\n\r", c);
@@ -139,7 +139,7 @@ void adc_menu(){
       break;
     case '4':
       set_adc_mode_to_run();
-      break;  
+      break;
     case '5':
       toggle_adc_patterns();
       break;
