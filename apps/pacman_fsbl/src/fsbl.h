@@ -58,12 +58,12 @@
 *               		in linker file
 *               		Resolution: FSBL linker modified to create stack area
 *               		for FIQ, UNDEF
-*                       
-*                       705664: FSBL fails to decrypt the bitstream when 
+*
+*                       705664: FSBL fails to decrypt the bitstream when
 *                       the image is AES encrypted using non-zero key value
 *                       Resolution: Fabric cleaning will not be done
 *                       for AES-E-Fuse encryption
-*                       
+*
 *                       Watchdog disabled for AES E-Fuse encryption
 *
 * 5.00a sgd 05/17/13    Fallback support for E-Fuse encryption
@@ -75,18 +75,18 @@
 *                       692045	FSBL: Linker script of FSBL has PHDR workaround,
 * 					    this needs to be fixed
 * 					    Resolution: Removed PHDR from Linker file
-*                       
-*                       704287	FSBL: fsbl.h file has a few error codes that 
+*
+*                       704287	FSBL: fsbl.h file has a few error codes that
 *                       are not used by FSBL, that needs to be removed
 *                       Resolution: Removed unused error codes
 *
 *                       704379	FSBL: Check if DDR is in proper state before
 *                       handoff
 * 					    Resolution: Added DDR initialization check
-* 					                           
-*                       709077	If FSBL_DEBUG and FSBL_DEBUG_INFO are defined, 
+*
+*                       709077	If FSBL_DEBUG and FSBL_DEBUG_INFO are defined,
 *                       the debug level is FSBL_DEBUG only.
-*                       
+*
 *                       710128 FSBL: Linux boot failing without load attribute
 *                       set for Linux partitions in BIF
 *                       Resolution: FSBL will load partitions with valid load
@@ -135,34 +135,34 @@
 *
 * 7.00a kc  10/18/13    Integrated SD/MMC driver
 *			10/23/13	Support for armcc compiler added
-*						741003 FSBL has to check the HMAC error status after 
+*						741003 FSBL has to check the HMAC error status after
 *						decryption
-*						Resolution: Added code for checking the error status 
+*						Resolution: Added code for checking the error status
 *						after PCAP completion
-*						739968 FSBL should do the QSPI config settings for 
+*						739968 FSBL should do the QSPI config settings for
 *						Dual parallel configuration in IO mode
 *						Resolution: Added QSPI config settings in qspi.c
-*						724620 FSBL: How to handle PCAP_MODE after bitstream 
+*						724620 FSBL: How to handle PCAP_MODE after bitstream
 *						configuration.
-*						Resolution: PCAP_MODE and PCAP_PR bits are now cleared  
+*						Resolution: PCAP_MODE and PCAP_PR bits are now cleared
 * 						after PCAP transfer completion
-*						726178 In the 14.6 FSBL function FabricInit() PROG_B 
+*						726178 In the 14.6 FSBL function FabricInit() PROG_B
 *						is kept active for 5mS.
-*						Resolution: PROG_B is now kept active for 5ms only in case 
+*						Resolution: PROG_B is now kept active for 5ms only in case
 *						if efuse is the aes key source.
-*						755245 FSBL does not load partition if eMMC has only 
+*						755245 FSBL does not load partition if eMMC has only
 *						one partition
 *						Resolution: Changed the if condition for MMC
-*			12/04/13    764382 FSBL: How to handle PCAP_MODE after bitstream 
+*			12/04/13    764382 FSBL: How to handle PCAP_MODE after bitstream
 *						configuration
 *						Resolution: Reverted back the changes of 724620. PCAP_MODE
 *						and PCAP_PR bits are not changed
 * 8.00a kc  01/16/13    767798 Fsbl MD5 Checksum failiure for encrypted images
-* 						Resolution: For checksum enabled partitions, total 
+* 						Resolution: For checksum enabled partitions, total
 *						total partition image length is copied now.
 *						761895 FSBL should authenticate image only if
 *						partition owner was not set to u-boot
-*						Resolution: Partition owner check added in 
+*						Resolution: Partition owner check added in
 *						image_mover.c
 * 			02/20/14	775631 - FSBL: FsblGetGlobalTimer() is not proper
 *						Resolution: Function argument is updated from value
@@ -303,7 +303,7 @@ extern "C" {
 #ifndef FSBL_DEBUG_INFO
 #define FSBL_DEBUG_INFO
 #endif
-  
+
 /***************************** Include Files *********************************/
 #include "xil_io.h"
 #include "xparameters.h"

@@ -8,7 +8,7 @@
 
 #define TE0720
 
-/* 
+/*
  * Settings to copy MAC address into OCM for u-boot usage in environment
  */
 #define UBOOT_ENV_MAGIC 0xCAFEBABE
@@ -80,10 +80,10 @@ u32 TE_FsblHookBeforeHandoff_Custom(void)
   Status = XST_SUCCESS;
 
   xil_printf("\r\n--------------------------------------------------------------------------------\r\n");
-  xil_printf("Custom FsblHookBeforeHandoff for TE0720\r\n"); 
+  xil_printf("Custom FsblHookBeforeHandoff for TE0720\r\n");
 
   Status = te_read_IDCODE(); if(Status != XST_SUCCESS){ return XST_FAILURE; }
-  
+
   u16 rval16;
   u8 speed_grade;
   u8 pcb_rev;
@@ -98,13 +98,13 @@ u32 TE_FsblHookBeforeHandoff_Custom(void)
   u8 boot;
   u8 pudc;
   u8 boot_gen;
-   
-    
+
+
   char* wdt_status;
   char* pudc_mode;
   char* boot_mode;
-  char* bootmode_gen; 
-  char* cpld_bootmode;        
+  char* bootmode_gen;
+  char* cpld_bootmode;
   XEmacPs Emac;
   XEmacPs_Config *Mac_Config;
 
@@ -123,13 +123,13 @@ u32 TE_FsblHookBeforeHandoff_Custom(void)
    * Read out MAC Address bytes
    */
   Status = XEmacPs_PhyRead(&Emac, 0x1A,  9, &rval16); if(Status != XST_SUCCESS){ return XST_FAILURE; }
-  mac_addr[0] = (unsigned char)(rval16 >> 8);	
+  mac_addr[0] = (unsigned char)(rval16 >> 8);
   mac_addr[1] = (unsigned char)(rval16 & 0xFF);
   Status = XEmacPs_PhyRead(&Emac, 0x1A,  10, &rval16); if(Status != XST_SUCCESS){	return XST_FAILURE; }
-  mac_addr[2] = (unsigned char)(rval16 >> 8);	
+  mac_addr[2] = (unsigned char)(rval16 >> 8);
   mac_addr[3] = (unsigned char)(rval16 & 0xFF);
   Status = XEmacPs_PhyRead(&Emac, 0x1A,  11, &rval16); if(Status != XST_SUCCESS){	return XST_FAILURE; }
-  mac_addr[4] = (unsigned char)(rval16 >> 8);	
+  mac_addr[4] = (unsigned char)(rval16 >> 8);
   mac_addr[5] = (unsigned char)(rval16 & 0xFF);
 
   /*
@@ -153,7 +153,7 @@ u32 TE_FsblHookBeforeHandoff_Custom(void)
       else if ((rval16 & 0x3000)==0x3000) { temp_grade = 0x41; }
       else { temp_grade = 0x20; }
 
-      if ((rval16 & 0x0F00)==0x000) { model1 = 0x20;model2 = 0x20;model3 = 0x46; } 
+      if ((rval16 & 0x0F00)==0x000) { model1 = 0x20;model2 = 0x20;model3 = 0x46; }
       else if ((rval16 & 0x0F00)==0x100) { model1 = 0x20;model2 = 0x20;model3 = 0x52; }
       else if ((rval16 & 0x0F00)==0x200) { model1 = 0x20;model2 = 0x4C;model3 = 0x46; }
       else if ((rval16 & 0x0F00)==0x300) { model1 = 0x31;model2 = 0x34;model3 = 0x53; }
@@ -166,16 +166,16 @@ u32 TE_FsblHookBeforeHandoff_Custom(void)
       for(i = 0; i < 6; i++) {
         xil_printf("%02x ", mac_addr[i]);
       }
-      xil_printf("\n\r"); 
+      xil_printf("\n\r");
     }
   else
     {
       Status = XEmacPs_PhyRead(&Emac, 0x1A,  4, &rval16); if(Status != XST_SUCCESS){	return XST_FAILURE; }
       wdt = (rval16 >> 14) & 0x3;
-      if (wdt == 0b00) 
+      if (wdt == 0b00)
         {
 	  wdt_status = "Deactive";
-        }else if (wdt == 0b01) 
+        }else if (wdt == 0b01)
         {
 	  wdt_status = "Hardware_WDT";
         }else if (wdt == 0b10)
@@ -185,9 +185,9 @@ u32 TE_FsblHookBeforeHandoff_Custom(void)
         {
 	  wdt_status = "No WDT chip on the board. SOftware_WDT with PL clock";
         }
-        
-        
-        
+
+
+
       boot_gen = (rval16 >> 12) & 0x3;
       if (boot_gen == 0b00)
         {
@@ -230,7 +230,7 @@ u32 TE_FsblHookBeforeHandoff_Custom(void)
 	      boot_mode = "JTAG";
             }
 	  else if (boot == 0b10)
-            {            
+            {
 	      boot_mode = "QSPI";
             }
 	  else if (boot == 0b11)
@@ -239,8 +239,8 @@ u32 TE_FsblHookBeforeHandoff_Custom(void)
             }
 	  else if (boot == 0b01)
             {
-	      boot_mode = "undefined";               
-            } 
+	      boot_mode = "undefined";
+            }
 	  // xil_printf("\n\rSoM: TE0720 CPLD_BM=%s(%x) BOOTMOD_GEN=%x(%s) PUDC_MODE=%s(%d) BOOT_MODE=%s(%x) CPLD_REV=%02x", cpld_bootmode, cpld_bm, boot_gen, bootmode_gen, pudc_mode, pudc, boot_mode, boot, cpld_rev);
 	  // xil_printf("\n\rSoM: TE0720 WDT_STATUS=%s(%x) CPLD_BM=%s(%x) BOOTMOD_GEN=%x(%s) PUDC_MODE=%s(%d) BOOT_MODE=%s(%x) CPLD_REV=%02x", wdt_status, wdt, cpld_bootmode, cpld_bm, boot_gen, bootmode_gen, pudc_mode, pudc, boot_mode, boot, cpld_rev);
 	  xil_printf("\n\rCPLD_REV=%02x\n\r",cpld_rev);
@@ -248,19 +248,19 @@ u32 TE_FsblHookBeforeHandoff_Custom(void)
 	  xil_printf("\n\rCPLD_BM=%s(%x)\n\r",cpld_bootmode, cpld_bm);
 	  xil_printf("\n\rBOOTMOD_GEN=%x(%s)\n\r", boot_gen, bootmode_gen);
 	  xil_printf("\n\rPUDC_MODE=%s(%d)\n\r", pudc_mode, pudc);
-	  xil_printf("\n\rBOOT_MODE=%s(%x)\n\r", boot_mode, boot);        
+	  xil_printf("\n\rBOOT_MODE=%s(%x)\n\r", boot_mode, boot);
         } else
         {
 	  cpld_bootmode="Active";
 	  // Read register 12 (CR4[15:8])
-	  Status = XEmacPs_PhyRead(&Emac, 0x1A,  12, &rval16); if(Status != XST_SUCCESS){	return XST_FAILURE; }    
+	  Status = XEmacPs_PhyRead(&Emac, 0x1A,  12, &rval16); if(Status != XST_SUCCESS){	return XST_FAILURE; }
 	  boot = (rval16 >> 8) & 0x3;
 	  if (boot == 0b01)
             {
 	      boot_mode = "JTAG";
             }
 	  else if (boot == 0b10)
-            {            
+            {
 	      boot_mode = "QSPI";
             }
 	  else if (boot == 0b11)
@@ -269,8 +269,8 @@ u32 TE_FsblHookBeforeHandoff_Custom(void)
             }
 	  else if (boot == 0b00)
             {
-	      boot_mode = "undefined";               
-            }                
+	      boot_mode = "undefined";
+            }
 	  // xil_printf("\n\rSoM: TE0720 CPLD_BM=%s(%x) BOOTMOD_GEN=%x(%s) PUDC_MODE=%s(%d) BOOT_MODE=%s(%x) CPLD_REV=%02x", cpld_bootmode, cpld_bm, boot_gen, bootmode_gen, pudc_mode, pudc, boot_mode, boot, cpld_rev);
 	  // xil_printf("\n\rSoM: TE0720 WDT_STATUS=%s(%x) CPLD_BM=%s(%x) BOOTMOD_GEN=%x(%s) PUDC_MODE=%s(%d) BOOT_MODE=%s(%x) CPLD_REV=%02x", wdt_status, wdt, cpld_bootmode, cpld_bm, boot_gen, bootmode_gen, pudc_mode, pudc, boot_mode, boot, cpld_rev);
 	  xil_printf("\n\rCPLD_REV=%02x\n\r",cpld_rev);
@@ -280,9 +280,9 @@ u32 TE_FsblHookBeforeHandoff_Custom(void)
 	  xil_printf("\n\rPUDC_MODE=%s(%d)\n\r", pudc_mode, pudc);
 	  xil_printf("\n\rBOOT_MODE=%s(%x)\n\r", boot_mode, boot);
         }
-                   
+
       xil_printf("\n\rMAC: ");
-    
+
       for(i = 0; i < 6; i++) {
 	xil_printf("%02x ", mac_addr[i]);
       }
@@ -329,7 +329,7 @@ u32 TE_FsblHookBeforeHandoff_Custom(void)
 
   /* Select Page 0 */
   Status = XEmacPs_PhyWrite(&Emac, 0x00,  0x16, 0x0000); if(Status != XST_SUCCESS){ return XST_FAILURE; }
-    
+
 #ifdef TE0720
   /*
    * SC LED remap
@@ -343,10 +343,10 @@ u32 TE_FsblHookBeforeHandoff_Custom(void)
   Status = XEmacPs_PhyWrite(&Emac, 0x1A,  7, 0x0010); if(Status != XST_SUCCESS){ return XST_FAILURE; }
   Status = XEmacPs_PhyWrite(&Emac, 0x1A,  7, 0x0000); if(Status != XST_SUCCESS){ return XST_FAILURE; }
 #endif
-  
-  
+
+
   xil_printf("\r\n--------------------------------------------------------------------------------\r\n");
-  
+
   return (Status);
 }
 

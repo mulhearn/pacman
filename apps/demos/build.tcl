@@ -1,7 +1,7 @@
 # Set SDK workspace
 setws .
 
-# Build 
+# Build
 app build demo
 
 

@@ -7,7 +7,7 @@
 #include "xil_printf.h"
 #include "sleep.h"
 
-#define ADDR_AXIL_REGS  XPAR_AXIL_TO_REGBUS_0_BASEADDR 
+#define ADDR_AXIL_REGS  XPAR_AXIL_TO_REGBUS_0_BASEADDR
 
 void read_demo_reg(){
   xil_printf("FIFO read------- 0x%x  \r\n", Xil_In32(ADDR_AXIL_REGS+0x0000));
@@ -45,7 +45,7 @@ void dma_status(){
   xil_printf("Itr En (Error)----%d\r\n", ((cr&0x00004000)!=0));
   xil_printf("Always Zero-------%d\r\n", ((cr&0x00008000)!=0));
   xil_printf("IRQ Threshold-----%d\r\n", ((cr&0x00FF0000)>>16));
-  xil_printf("IRQ Delay---------%d\r\n", ((cr&0xFF000000)>>24));  
+  xil_printf("IRQ Delay---------%d\r\n", ((cr&0xFF000000)>>24));
   xil_printf("Status Bits: \r\n");
   xil_printf("Halted------------%d\r\n", ((sr&0x00000001)!=0));
   xil_printf("Idle--------------%d\r\n", ((sr&0x00000002)!=0));
@@ -64,7 +64,7 @@ void dma_status(){
   xil_printf("Itr (Error)-------%d\r\n", ((sr&0x00000400)!=0));
   xil_printf("Always Zero-------%d\r\n", ((sr&0x00000800)!=0));
   xil_printf("Stat Irq Thresh---%d\r\n", ((cr&0x00FF0000)>>16));
-  xil_printf("Stay Irq Delay----%d\r\n", ((cr&0xFF000000)>>24));  
+  xil_printf("Stay Irq Delay----%d\r\n", ((cr&0xFF000000)>>24));
 }
 
 void reset_dma(){
@@ -97,18 +97,18 @@ void single_read_dma(){
   unsigned rx_base = 0x1100000;
   u32 *rx_buf = (u32 *)rx_base;
   unsigned words = 4;
-  
+
   xil_printf("*** Sending run*** \r\n");
   Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x30, 0x01);
 
   dma_status();
-  
+
   for (int i=0; i<words; i++)
     rx_buf[i] = 0x0;
-  
+
   Xil_DCacheFlushRange((UINTPTR)rx_buf, words*4);
-    
-  xil_printf("*** Sending read *** \r\n");    
+
+  xil_printf("*** Sending read *** \r\n");
   Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x48, (u32) rx_buf);
   Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x58, words*4);
 
@@ -116,7 +116,7 @@ void single_read_dma(){
   unsigned start = 1;
   while(timeout){
     unsigned sr_s2mm = Xil_In32(XPAR_AXI_DMA_0_BASEADDR+0x34);
-    if ((sr_s2mm&0x2)!=0) 
+    if ((sr_s2mm&0x2)!=0)
       break;
     if (start){
       xil_printf("*** waiting for idle *** \r\n");
@@ -131,11 +131,11 @@ void single_read_dma(){
   }
 
   dma_status();
-  
+
   Xil_DCacheInvalidateRange((UINTPTR) rx_buf, words*4);
   for (int i=0; i<words; i++)
     xil_printf("received[%d]:  0x%x\r\n", i, rx_buf[i]);
-  
+
 }
 
 void check_dma(){
@@ -144,12 +144,12 @@ void check_dma(){
   unsigned timeout;
   unsigned bytes = 4; // bytes per word (32 bit words)
   unsigned words = 4; // words per payload (128 bit responses)
-  unsigned payloads = 32; // payloads per packet 
+  unsigned payloads = 32; // payloads per packet
   unsigned packets = 1024; // packets to read
   XTime start_time;
   XTime stop_time;
 
-  
+
   reset_dma();
   dma_status();
 
@@ -160,19 +160,19 @@ void check_dma(){
   start_demo(0xF);
 
   for (int i=0; i<packets*payloads*words; i++)
-    rx_buf[i] = 0x0;  
+    rx_buf[i] = 0x0;
   Xil_DCacheFlushRange((UINTPTR)rx_buf, packets*payloads*words*bytes);
 
   XTime_GetTime(&start_time);
-  
+
   for (int i=0;i<packets; i++){
     Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x48, (u32) &rx_buf[payloads*words*i]);
     Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x58, payloads*words*bytes);
-    
+
     timeout = 10000;
     while(timeout){
       unsigned sr_s2mm = Xil_In32(XPAR_AXI_DMA_0_BASEADDR+0x34);
-      if ((sr_s2mm&0x2)!=0) 
+      if ((sr_s2mm&0x2)!=0)
 	break;
       //usleep(1);
       timeout--;
@@ -183,25 +183,25 @@ void check_dma(){
     }
   }
   XTime_GetTime(&stop_time);
-  
+
   Xil_DCacheInvalidateRange((UINTPTR) rx_buf, packets*payloads*words*bytes);
 
 
   stop_demo();
   reset_dma();
-  
+
   for (int i=0; i<packets*payloads*words; i++){
     xil_printf("received[%d]:  0x%x\r\n", i, rx_buf[i]);
     if (i==5*words) {
       xil_printf("...\r\n");
-      i=(packets*payloads*words - 5*words); 
-    }  
+      i=(packets*payloads*words - 5*words);
+    }
   }
 
   u32 delta = (u32) (stop_time - start_time);
   xil_printf("elapsed timer counts:    %d (0x%x)\r\n", delta, delta);
   xil_printf("counts per second:       %d\r\n", COUNTS_PER_SECOND);
-  xil_printf("payloads per packet:     %d\r\n", payloads);  
+  xil_printf("payloads per packet:     %d\r\n", payloads);
   xil_printf("packets:                 %d\r\n", packets);
 
 
@@ -209,20 +209,20 @@ void check_dma(){
   unsigned m = 40*10000/64;
   xil_printf("achieved throughput:  %d rx payloads (128-bit) per ms\r\n", r);
   xil_printf("maximum demand:       %d rx payloads (128-bit) per ms\r\n", m);
-  
+
 }
 
-		
+
 int main(){
   xil_printf("Demonstration Driver For *** axis_demo *** \r\n");
   xil_printf("Sanity number:  1\r\n");
-  
+
   while(1){
     xil_printf("choose an option:\r\n");
     xil_printf("(1) read demo registers (2) start demo (3) stop demo \r\n");
     xil_printf("(4) DMA status (5) reset DMA (6) single DMA read \r\n");
     xil_printf("(7) run DMA benchmark \r\n");
-      
+
     unsigned char c=inbyte();
     xil_printf("pressed:  %c\n\r", c);
     switch(c){

@@ -1,6 +1,6 @@
 # Set SDK workspace
 setws .
-# Build 
+# Build
 # app build bareapp
 # Connect to a remote hw_server
 connect

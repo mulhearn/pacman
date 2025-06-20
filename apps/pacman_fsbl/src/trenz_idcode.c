@@ -202,7 +202,7 @@ u32 te_read_IDCODE(void)
     XST_SUCCESS) {
     return XST_FAILURE;
   }
-  
+
   xil_printf("\r\nDevice IDCODE: %x", ValueBack );
   tmval=(ValueBack & 0x0001F000)>>12;
   xil_printf("\r\nDevice Name: ");
