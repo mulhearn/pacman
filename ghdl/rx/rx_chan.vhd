@@ -13,7 +13,7 @@ entity rx_chan is
     ACLK          : in  std_logic;
     ARESETN       : in  std_logic;
     CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    STATUS_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);    
+    STATUS_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     GFLAGS_I      : in  std_logic_vector(C_RX_GFLAGS_WIDTH-1 downto 0);
     DATA_O        : out  std_logic_vector(C_RX_DATA_WIDTH-1 downto 0);
     VALID_O       : out  std_logic;
@@ -21,7 +21,7 @@ entity rx_chan is
     RX_I          : in std_logic;
     LOOPBACK_I    : in std_logic;
     TIMESTAMP_I   : in  std_logic_vector(31 downto 0);
-    DEBUG_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)    
+    DEBUG_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
   );
 end;
 
@@ -31,12 +31,12 @@ architecture behavioral of rx_chan is
       CLK         : in   std_logic;
       RST         : in   std_logic;
       CLKIN_RATIO : in   std_logic_vector (7 downto 0);
-      CLKIN_PHASE : in   std_logic_vector (3 downto 0);    
+      CLKIN_PHASE : in   std_logic_vector (3 downto 0);
       RX          : in   std_logic;
       DATA        : out  std_logic_vector (C_UART_DATA_WIDTH-1 DOWNTO 0);
       DATA_UPDATE : out  std_logic;
       BUSY        : out  std_logic
-    );  
+    );
   end component;
 
   signal clk        : std_logic;
@@ -45,7 +45,7 @@ architecture behavioral of rx_chan is
   signal status     : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal status_z   : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
 
-  signal data      : std_logic_vector(C_UART_DATA_WIDTH-1 downto 0);        
+  signal data      : std_logic_vector(C_UART_DATA_WIDTH-1 downto 0);
   signal valid      : std_logic;
   signal ready      : std_logic;
 
@@ -84,15 +84,15 @@ begin
     LOOPBACK_I when "01",
     '0' when "10",
     '1' when others;
-    
-  process(clk,rst)    
+
+  process(clk,rst)
   begin
     if (rst='1') then
       DATA_O <= (others => '0');
       valid  <= '0';
       lost   <= '0';
     elsif (rising_edge(clk)) then
-      lost   <= '0';      
+      lost   <= '0';
       if (mode = 1) then
         if (update = '1') then
           DATA_O <= (others => '0');
@@ -108,12 +108,12 @@ begin
         elsif (ready='1') then
           valid <= '0';
         end if;
-      else 
+      else
         DATA_O <= (others => '0');
       end if;
     end if;
   end process;
-  
+
   -- provide non-delayed status for convenient debugging
   DEBUG_O  <= status;
   -- status is registered:
@@ -122,17 +122,17 @@ begin
   status(0) <= busy;
   status(1) <= valid;
   status(2) <= ready;
-  
+
   status(4) <= start;
   status(5) <= update;
   status(6) <= lost;
 
   status(8) <= rx;
-  
+
   process(clk,rst)
   begin
     if (rst='1') then
-      status_z <= (others => '0');                  
+      status_z <= (others => '0');
       busy_z <= '0';
     elsif (rising_edge(clk)) then
       status_z <= status;
@@ -151,6 +151,6 @@ begin
         start <= '0';
       end if;
     end if;
-  end process;  
-end;  
+  end process;
+end;
 

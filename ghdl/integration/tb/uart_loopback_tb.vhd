@@ -2,7 +2,7 @@ library ieee;
 use std.textio.all;
 use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
-use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08 
+use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08
 
 --  Defines a testbench (without any ports)
 entity uart_loopback_tb is
@@ -14,13 +14,13 @@ architecture behaviour of uart_loopback_tb is
       CLK          : in  STD_LOGIC;
       RST          : in  STD_LOGIC;
       CLKOUT_RATIO : in  STD_LOGIC_VECTOR (7 downto 0);
-      CLKOUT_PHASE : in  STD_LOGIC_VECTOR (3 downto 0);    
+      CLKOUT_PHASE : in  STD_LOGIC_VECTOR (3 downto 0);
       MCLK        : in  STD_LOGIC;
       TX          : out STD_LOGIC;
       data        : in  STD_LOGIC_VECTOR (63 DOWNTO 0);
       data_update : in  STD_LOGIC;
       busy        : out STD_LOGIC
-    );  
+    );
   end component;
 
   component uart_rx is
@@ -28,26 +28,26 @@ architecture behaviour of uart_loopback_tb is
       CLK         : in   STD_LOGIC;
       RST         : in   STD_LOGIC;
       CLKIN_RATIO : in   STD_LOGIC_VECTOR (7 downto 0);
-      CLKIN_PHASE : in   STD_LOGIC_VECTOR (3 downto 0);    
+      CLKIN_PHASE : in   STD_LOGIC_VECTOR (3 downto 0);
       RX          : in   STD_LOGIC;
       data        : out  STD_LOGIC_VECTOR (63 DOWNTO 0);
       data_update : out  STD_LOGIC;
       busy        : out  STD_LOGIC
-    );  
+    );
   end component;
 
   signal aclk      : std_logic;
   signal uclk     : std_logic;
   signal aresetn  : std_logic;
   signal rst      : std_logic;
-  
+
 
   signal data     : std_logic_vector(63 DOWNTO 0) := X"1111FFFFFFFF1111";
   signal update   : std_logic := '0';
-  
-  signal TX       : std_logic;  
+
+  signal TX       : std_logic;
   signal TXBUSY   : std_logic;
-  
+
   signal RXDATA   : std_logic_vector(63 DOWNTO 0) := (others => '0');
   signal RXUPDATE : std_logic := '0';
   signal RXBUSY   : std_logic := '0';
@@ -82,7 +82,7 @@ begin
     wait;
   end process;
   rst <= not aresetn;
-  
+
   aclk_process : process
   begin
     aclk <= '1';
@@ -137,6 +137,6 @@ begin
     end if;
     writeline(output, l);
   end process;
-  
+
 end behaviour;
-        
+

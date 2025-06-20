@@ -2,24 +2,24 @@ library ieee;
 use std.textio.all;
 use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
-use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08 
+use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08
 library work;
 use work.common.all;
 
 --  Defines a testbench (without any ports)
 entity tx_buffer_tb is
 end tx_buffer_tb;
-     
+
 architecture behaviour of tx_buffer_tb is
   component tx_buffer is
     port (
       S_AXIS_ACLK        : in std_logic;
       S_AXIS_ARESETN     : in std_logic;
 
-      S_AXIS_TDATA       : in std_logic_vector(C_TX_AXIS_WIDTH-1 downto 0);      
+      S_AXIS_TDATA       : in std_logic_vector(C_TX_AXIS_WIDTH-1 downto 0);
       S_AXIS_TVALID      : in std_logic;
       S_AXIS_TREADY      : out std_logic;
-      S_AXIS_TKEEP       : in std_logic_vector(C_TX_AXIS_WIDTH/8-1 downto 0);      
+      S_AXIS_TKEEP       : in std_logic_vector(C_TX_AXIS_WIDTH/8-1 downto 0);
       S_AXIS_TLAST       : in std_logic;
 
       STATUS_O           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -33,7 +33,7 @@ architecture behaviour of tx_buffer_tb is
   signal count    : integer := 0;
   signal aclk     : std_logic;
   signal aresetn  : std_logic;
-  
+
   signal tdata    : std_logic_vector(C_TX_AXIS_WIDTH-1 downto 0) := (others => '0');
   signal tvalid   : std_logic := '0';
   signal tready   : std_logic;
@@ -47,7 +47,7 @@ begin
     S_AXIS_ACLK     => aclk,
     S_AXIS_ARESETN  => aresetn,
     S_AXIS_TDATA    => tdata,
-    S_AXIS_TVALID   => tvalid,   
+    S_AXIS_TVALID   => tvalid,
     S_AXIS_TREADY   => tready,
     S_AXIS_TKEEP    => (others=>'1'),
     S_AXIS_TLAST    => tlast,
@@ -55,12 +55,12 @@ begin
     VALID_O         => ovalid,
     READY_I         => oready
   );
-  
+
   aresetn_process : process
   begin
     aresetn <= '0';
     wait for 10 ns;
-    aresetn <= '1';    
+    aresetn <= '1';
     wait;
   end process;
 
@@ -76,7 +76,7 @@ begin
     oready <= x"0000000000";
     wait;
   end process;
-  
+
   stream_process : process
   begin
     wait for 1 ns;
@@ -190,7 +190,7 @@ begin
     tlast                 <= '0';
     wait;
   end process;
-    
+
   aclk_process : process
   begin
     count <= count + 1;
@@ -204,7 +204,7 @@ begin
     variable l : line;
   begin
     if (count < 35) then
-      wait for 10 ns;   
+      wait for 10 ns;
     else
       wait;
     end if;
@@ -242,6 +242,6 @@ begin
     end if;
     writeline(output, l);
   end process;
-  
+
 end behaviour;
-        
+

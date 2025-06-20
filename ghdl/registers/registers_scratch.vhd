@@ -16,16 +16,16 @@ entity registers_scratch is
     C_VAL_STAT    : unsigned(31 downto 0)  := x"1000F001";
     C_VAL_ROA     : unsigned(31 downto 0)  := x"11111111";
     C_VAL_ROB     : unsigned(31 downto 0)  := x"22222222"
-    );      
+    );
   port (
     ACLK	        : in std_logic;
     ARESETN	        : in std_logic;
 
     S_REGBUS_RB_RUPDATE : in  std_logic;
     S_REGBUS_RB_RADDR	: in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
-    S_REGBUS_RB_RDATA	: out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);      
+    S_REGBUS_RB_RDATA	: out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     S_REGBUS_RB_RACK    : out  std_logic;
-    
+
     S_REGBUS_RB_WUPDATE : in  std_logic;
     S_REGBUS_RB_WADDR	: in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
     S_REGBUS_RB_WDATA	: in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -45,7 +45,7 @@ architecture behavioral of registers_scratch is
   signal raddr    : std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
   signal rdata    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
   signal rack     : std_logic := '0';
-  
+
   signal wupdate  : std_logic;
   signal waddr    : std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
   signal wdata    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -55,12 +55,12 @@ architecture behavioral of registers_scratch is
   signal scra    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal scrb    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal stat    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
-  
+
 begin
   DEBUG <= scra;
   clk <= ACLK;
   rst <= not ARESETN;
-  
+
   --outputs:
   S_REGBUS_RB_RDATA	 <= rdata;
   S_REGBUS_RB_RACK	 <= rack;
@@ -80,7 +80,7 @@ begin
   variable scope   : integer;
   variable role    : integer;
   variable reg     : integer;
-  begin  
+  begin
     if (rst = '1') then
       rdata <= x"00000000";
       rack <= '0';
@@ -92,7 +92,7 @@ begin
         else
           scope := to_integer(unsigned(raddr(15 downto 12)));
           role  := to_integer(unsigned(raddr(11 downto 8)));
-          reg   := to_integer(unsigned(raddr(7 downto 0)));          
+          reg   := to_integer(unsigned(raddr(7 downto 0)));
           if ((scope=C_SCOPE) and (role=C_ROLE)) then
             if (reg=C_REG_SCRA) then
               rdata <= scra;
@@ -129,18 +129,18 @@ begin
   variable scope   : integer;
   variable role    : integer;
   variable reg     : integer;
-  begin  
+  begin
     if (rst = '1') then
       scra <= x"00000000";
       scrb <= x"00000000";
     else
       if (rising_edge(clk)) then
         if (wupdate='0') then
-            wack  <= '0';          
+            wack  <= '0';
         else
           scope := to_integer(unsigned(waddr(15 downto 12)));
           role  := to_integer(unsigned(waddr(11 downto 8)));
-          reg   := to_integer(unsigned(waddr(7 downto 0)));          
+          reg   := to_integer(unsigned(waddr(7 downto 0)));
           if ((scope=C_SCOPE) and (role=C_ROLE)) then
             if (reg=C_REG_SCRA) then
               scra<= wdata;
@@ -157,9 +157,9 @@ begin
             wack  <= '0';
           end if;
         end if;
-      end if;   
+      end if;
     end if;
   end process;
-  
-end;  
+
+end;
 

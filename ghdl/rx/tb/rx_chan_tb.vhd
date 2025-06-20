@@ -2,21 +2,21 @@ library ieee;
 use std.textio.all;
 use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
-use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08 
+use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08
 library work;
 use work.common.all;
 
 --  Defines a testbench (without any ports)
 entity rx_chan_tb is
 end rx_chan_tb;
-     
+
 architecture behaviour of rx_chan_tb is
   component rx_chan is
     port (
       ACLK          : in  std_logic;
       ARESETN       : in  std_logic;
       CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      STATUS_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);    
+      STATUS_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       GFLAGS_I      : in  std_logic_vector(C_RX_GFLAGS_WIDTH-1 downto 0);
       DATA_O        : out std_logic_vector(C_RX_DATA_WIDTH-1 downto 0);
       VALID_O       : out std_logic;
@@ -24,7 +24,7 @@ architecture behaviour of rx_chan_tb is
       RX_I          : in  std_logic;
       LOOPBACK_I    : in  std_logic;
       TIMESTAMP_I   : in  std_logic_vector(31 downto 0);
-      DEBUG_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)    
+      DEBUG_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
     );
   end component;
 
@@ -74,7 +74,7 @@ begin
     aresetn <= '1';
     wait;
   end process;
-  
+
   uclk_process : process
   begin
     uclk <= '1';
@@ -133,7 +133,7 @@ begin
     wait;
   end process;
 
-  
+
 
   output_process : process
     variable l : line;
@@ -149,10 +149,10 @@ begin
     start  := status(4);
     update := status(5);
     lost  := status(6);
-    
+
     if (show_output='1') then
       write (l, String'("c: "));
-      write (l, count, left, 5);        
+      write (l, count, left, 5);
       write  (l, String'("aclk: "));
       write  (l, aclk);
       write  (l, String'(" b: "));
@@ -190,10 +190,10 @@ begin
       writeline(output, l);
     end if;
   end process;
-  
 
-  
+
+
 
 
 end behaviour;
-        
+

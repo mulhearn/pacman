@@ -7,14 +7,14 @@ entity axil_demo_ro is
     C_DATA_WIDTH  : integer  := 32;
     C_ADDR_WIDTH  : integer  := 8
     );
-      
+
   port (
     S_AXI_ACLK	        : in std_logic;
     S_AXI_ARESETN	: in std_logic;
     S_AXI_ARADDR	: in std_logic_vector(C_ADDR_WIDTH-1 downto 0);
     S_AXI_ARPROT	: in std_logic_vector(2 downto 0);
     S_AXI_ARVALID	: in std_logic;
-    S_AXI_ARREADY	: out std_logic;    
+    S_AXI_ARREADY	: out std_logic;
     S_AXI_RDATA	        : out std_logic_vector(C_DATA_WIDTH-1 downto 0);
     S_AXI_RRESP	        : out std_logic_vector(1 downto 0);
     S_AXI_RVALID	: out std_logic;
@@ -27,7 +27,7 @@ entity axil_demo_ro is
     S_AXI_WDATA	        : in std_logic_vector(C_DATA_WIDTH-1 downto 0)      := (others => '0');
     S_AXI_WSTRB	        : in std_logic_vector((C_DATA_WIDTH/8)-1 downto 0)   := (others => '0');
     S_AXI_WVALID	: in std_logic                                    := '0';
-    S_AXI_WREADY	: out std_logic;                                           
+    S_AXI_WREADY	: out std_logic;
     S_AXI_BRESP	        : out std_logic_vector(1 downto 0);
     S_AXI_BVALID	: out std_logic;
     S_AXI_BREADY	: in std_logic
@@ -58,10 +58,10 @@ begin
   -- Ignore writes for now...
   S_AXI_AWREADY	<= '0';
   S_AXI_WREADY  <= '0';
-  S_AXI_BRESP	<= (others => '0');  
-  S_AXI_BVALID	<= '0';        
+  S_AXI_BRESP	<= (others => '0');
+  S_AXI_BVALID	<= '0';
 
-  
+
   clk <= S_AXI_ACLK;
 
   -- latch asynchronous reset on falling (opposite) edge so
@@ -72,10 +72,10 @@ begin
       rst <= not S_AXI_ARESETN;
     end if;
   end process;
-  
+
   -- latch our (not-ignored) inputs:
   process(clk)
-  begin  
+  begin
     if (rising_edge(clk)) then
       araddr  <= S_AXI_ARADDR;
       arvalid <= S_AXI_ARVALID;
@@ -84,24 +84,24 @@ begin
   end process;
 
 
-  -- Read only version: 
+  -- Read only version:
 
   -- We will not assert ready until a previous read has completed.
   -- (This simplification limits throughput to 50% of maximum, but doesn't
-  -- require anything fancy e.g. a "skid buffer")  
-  arready <= not rvalid;  
+  -- require anything fancy e.g. a "skid buffer")
+  arready <= not rvalid;
   rupdate <= (arready and arvalid);
-  
+
   -- Determine rvalid:
   process(clk)
     variable update : std_logic;
-  begin  
+  begin
     if (rst = '1') then
       rvalid  <= '0';
     else
       if (rising_edge(clk)) then
         -- rvalid goes high for (arready and arvalid) and then stays high until rready:
-        rvalid  <= (arready and arvalid) or (rvalid and not rready) ;        
+        rvalid  <= (arready and arvalid) or (rvalid and not rready) ;
       end if;
     end if;
   end process;
@@ -109,7 +109,7 @@ begin
   -- Send data
   process(clk)
   variable lowaddr : std_logic_vector(7 downto 0);
-  begin  
+  begin
     if (rst = '1') then
       rdata <= (others => '0');
     else
@@ -118,7 +118,7 @@ begin
       if (rising_edge(clk) and (rupdate='1')) then
         -- ignoring upper but could check they are zero
         lowaddr := araddr(7 downto 0);
-        case lowaddr is 
+        case lowaddr is
           when x"00" =>
             rdata <= x"FEEDDADA";
           when x"04" =>
@@ -126,12 +126,12 @@ begin
           when x"08" =>
             rdata <= x"11111111";
           when x"0C" =>
-            rdata <= x"22222222";            
+            rdata <= x"22222222";
           when x"10" =>
-            rdata <= x"33333333";            
+            rdata <= x"33333333";
           when others =>
             rdata <= x"FFFFFFFF";
-        end case;           
+        end case;
       end if;
     end if;
   end process;
@@ -139,5 +139,5 @@ begin
 
 
 
-end;  
+end;
 

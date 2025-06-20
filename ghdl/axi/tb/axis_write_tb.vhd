@@ -2,7 +2,7 @@ library ieee;
 use std.textio.all;
 use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
-use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08 
+use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08
 
 --  Defines a testbench (without any ports)
 entity axis_write_tb is
@@ -11,9 +11,9 @@ entity axis_write_tb is
     constant C_DEBUG_WIDTH : integer  := 8
     );
 begin
-  assert(C_AXIS_WIDTH >= 16) severity failure; -- Assumed for test output  
+  assert(C_AXIS_WIDTH >= 16) severity failure; -- Assumed for test output
 end axis_write_tb;
-     
+
 architecture behaviour of axis_write_tb is
   component axis_write is
     generic (
@@ -23,17 +23,17 @@ architecture behaviour of axis_write_tb is
     port (
       M_AXIS_ACLK        : in std_logic;
       M_AXIS_ARESETN     : in std_logic;
-      
-      M_AXIS_TDATA       : out std_logic_vector(C_AXIS_WIDTH-1 downto 0);      
+
+      M_AXIS_TDATA       : out std_logic_vector(C_AXIS_WIDTH-1 downto 0);
       M_AXIS_TVALID      : out std_logic;
       M_AXIS_TREADY      : in std_logic;
-      
-      M_AXIS_TKEEP       : out std_logic_vector(C_AXIS_WIDTH/8-1 downto 0);      
+
+      M_AXIS_TKEEP       : out std_logic_vector(C_AXIS_WIDTH/8-1 downto 0);
       M_AXIS_TLAST       : out std_logic;
-      
+
       BUSY_O             : out std_logic;
       WEN_I              : in  std_logic;
-      LAST_I             : in  std_logic;    
+      LAST_I             : in  std_logic;
       DATA_I             : in  std_logic_vector(C_AXIS_WIDTH-1 downto 0);
       DEBUG_O            : out std_logic_vector(C_DEBUG_WIDTH-1 downto 0)
       );
@@ -41,22 +41,22 @@ architecture behaviour of axis_write_tb is
 
   signal aclk     : std_logic;
   signal aresetn  : std_logic;
-  
-  signal odat     : std_logic_vector(C_AXIS_WIDTH-1 downto 0);      
+
+  signal odat     : std_logic_vector(C_AXIS_WIDTH-1 downto 0);
   signal val      : std_logic;
   signal rdy      : std_logic;
   signal last     : std_logic;
-  
+
   signal busy     : std_logic;
   signal wen      : std_logic;
   signal idat     : std_logic_vector(C_AXIS_WIDTH-1 downto 0);
   signal debug    : std_logic_vector(C_DEBUG_WIDTH-1 downto 0);
-    
+
 begin
   uut: axis_write port map (
     M_AXIS_ACLK    => aclk,
     M_AXIS_ARESETN => aresetn,
-    M_AXIS_TDATA   => odat, 
+    M_AXIS_TDATA   => odat,
     M_AXIS_TVALID  => val,
     M_AXIS_TREADY  => rdy,
     M_AXIS_TLAST   => last,
@@ -66,15 +66,15 @@ begin
     DATA_I   => idat,
     DEBUG_O  => debug
     );
-  
+
   aresetn_process : process
   begin
     aresetn <= '0';
     wait for 12 ns;
-    aresetn <= '1';    
+    aresetn <= '1';
     wait;
   end process;
-  
+
   aclk_process : process
   begin
     aclk <= '1';
@@ -138,26 +138,26 @@ begin
     write (l, String'(" | w:  busy:"));
     write (l, busy);
     write (l, String'(" wen: "));
-    write (l, wen);    
+    write (l, wen);
     write (l, String'(" idat: 0x"));
     hwrite (l, idat(15 downto 0));
     write (l, String'(" | s:  val:"));
     write (l, val);
     write (l, String'(" rdy: "));
-    write (l, rdy);    
+    write (l, rdy);
     write (l, String'(" odat: 0x"));
     hwrite (l, odat(15 downto 0));
     write (l, String'(" l: "));
-    write (l, last);    
+    write (l, last);
     write (l, String'(" depth: 0b"));
-    write (l, debug(1 downto 0));    
+    write (l, debug(1 downto 0));
 
-    
+
     if (aresetn = '0') then
       write (l, String'(" (RESET)"));
     end if;
     writeline(output, l);
   end process;
-  
+
 end behaviour;
-        
+

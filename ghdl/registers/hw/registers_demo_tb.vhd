@@ -2,35 +2,35 @@ library ieee;
 use std.textio.all;
 use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
-use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08 
+use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08
 library work;
 use work.common.all;
 
 --  Defines a testbench (without any ports)
 entity registers_demo_tb is
 end registers_demo_tb;
-     
+
 architecture behaviour of registers_demo_tb is
   component registers_demo is
     port (
       ACLK                 : in std_logic;
-      ARESETN              : in std_logic;    
+      ARESETN              : in std_logic;
       S_REGBUS_RB_RUPDATE  : in   std_logic;
       S_REGBUS_RB_RADDR    : in   std_logic_vector(15 downto 0);
-      S_REGBUS_RB_RDATA    : out  std_logic_vector(31 downto 0);      
+      S_REGBUS_RB_RDATA    : out  std_logic_vector(31 downto 0);
       S_REGBUS_RB_RACK     : out  std_logic;
-      
+
       S_REGBUS_RB_WUPDATE  : in   std_logic;
       S_REGBUS_RB_WADDR    : in   std_logic_vector(15 downto 0);
       S_REGBUS_RB_WDATA    : in   std_logic_vector(31 downto 0);
       S_REGBUS_RB_WACK     : out  std_logic
-    );  
+    );
   end component;
 
-  signal count    : integer := 0;  
+  signal count    : integer := 0;
   signal aclk     : std_logic;
   signal aresetn  : std_logic;
-  
+
   -- register BUS signals:
   signal raddr   : std_logic_vector(15 downto 0) := (others => '0');
   signal rupdate : std_logic := '0';
@@ -39,29 +39,29 @@ architecture behaviour of registers_demo_tb is
   signal waddr   : std_logic_vector(15 downto 0) := (others => '0');
   signal wupdate : std_logic := '0';
   signal wdata   : std_logic_vector(31 downto 0) := (others => '0');
-  signal wack    : std_logic := '0';  
-begin  
+  signal wack    : std_logic := '0';
+begin
   uut: registers_demo port map (
     ACLK                => aclk,
     ARESETN             => aresetn,
     S_REGBUS_RB_RUPDATE => rupdate,
     S_REGBUS_RB_RADDR   => raddr,
     S_REGBUS_RB_RDATA   => rdata,
-    S_REGBUS_RB_RACK    => rack,    
+    S_REGBUS_RB_RACK    => rack,
     S_REGBUS_RB_WUPDATE => wupdate,
     S_REGBUS_RB_WADDR   => waddr,
     S_REGBUS_RB_WDATA   => wdata,
     S_REGBUS_RB_WACK    => wack
   );
-  
+
   aresetn_process : process
   begin
     aresetn <= '0';
     wait for 12 ns;
-    aresetn <= '1';    
+    aresetn <= '1';
     wait;
   end process;
-  
+
   aclk_process : process
   begin
     count <= count + 1;
@@ -83,7 +83,7 @@ begin
     wait for 10 ns;
     rupdate <= '1';
     raddr <= x"FF08";
-    wait for 10 ns;    
+    wait for 10 ns;
     rupdate <= '1';
     raddr <= x"FF0C";
     wait for 10 ns;
@@ -95,10 +95,10 @@ begin
     wait for 10 ns;
     rupdate <= '1';
     raddr <= x"FE04";
-    wait for 10 ns;    
+    wait for 10 ns;
     rupdate <= '0';
     raddr <= x"0000";
-    wait for 10 ns;    
+    wait for 10 ns;
     rupdate <= '1';
     raddr <= x"0000";
     wait for 10 ns;
@@ -107,7 +107,7 @@ begin
     wait for 10 ns;
     rupdate <= '1';
     raddr <= x"0008";
-    wait for 10 ns;    
+    wait for 10 ns;
     rupdate <= '1';
     raddr <= x"000C";
     wait for 10 ns;
@@ -116,7 +116,7 @@ begin
     wait for 10 ns;
     rupdate <= '0';
     raddr <= x"0000";
-    wait for 10 ns;    
+    wait for 10 ns;
     rupdate <= '1';
     raddr <= x"1000";
     wait for 10 ns;
@@ -125,7 +125,7 @@ begin
     wait for 10 ns;
     rupdate <= '1';
     raddr <= x"1008";
-    wait for 10 ns;    
+    wait for 10 ns;
     rupdate <= '1';
     raddr <= x"100C";
     wait for 10 ns;
@@ -134,7 +134,7 @@ begin
     wait for 10 ns;
     rupdate <= '0';
     raddr <= x"0000";
-    wait for 10 ns;    
+    wait for 10 ns;
     wait;
   end process;
 
@@ -172,12 +172,12 @@ begin
     wdata <= x"00000000";
     wait;
   end process;
-  
+
   output_process : process
     variable l : line;
   begin
     if (count < 24) then
-      wait for 10 ns;   
+      wait for 10 ns;
     else
       wait;
     end if;
@@ -191,7 +191,7 @@ begin
     write (l, String'(" raddr: 0x"));
     hwrite (l, raddr);
     write (l, String'(" rdata: 0x"));
-    hwrite (l, rdata);    
+    hwrite (l, rdata);
     write (l, String'(" ra: "));
     write (l, rack);
 
@@ -200,7 +200,7 @@ begin
     write (l, String'(" waddr: 0x"));
     hwrite (l, waddr);
     write (l, String'(" wdata: 0x"));
-    hwrite (l, wdata);    
+    hwrite (l, wdata);
     write (l, String'(" wa: "));
     write (l, wack);
 
@@ -216,7 +216,7 @@ begin
     type result_t is array (0 to 16) of std_logic_vector(31 downto 0);
     variable results : result_t;
   begin
-    if (reads < 17) then      
+    if (reads < 17) then
       wait until ((rising_edge(aclk)) and (rack='1'));
       --write (l, String'("*** READ DETECTED *** "));
       --writeline(output, l);
@@ -257,9 +257,9 @@ begin
       assert(results(16) = x"CCCCCCCC") report("unexpected read result") severity failure;
 
       write (l, String'("*** Test results were all SUCCESSFUL!!! ***"));
-      writeline(output, l);      
+      writeline(output, l);
       wait;
     end if;
   end process;
 end behaviour;
-        
+

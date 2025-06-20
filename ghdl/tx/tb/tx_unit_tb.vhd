@@ -2,32 +2,32 @@ library ieee;
 use std.textio.all;
 use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
-use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08 
+use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08
 library work;
 use work.common.all;
 
 --  Defines a testbench (without any ports)
 entity tx_unit_tb is
 end tx_unit_tb;
-     
+
 architecture behaviour of tx_unit_tb is
   component tx_unit is
     port (
       S_AXIS_ACLK            : in std_logic;
       S_AXIS_ARESETN         : in std_logic;
-      UCLK_I                 : in  std_logic;    
-      
-      S_AXIS_TDATA           : in std_logic_vector(C_TX_AXIS_WIDTH-1 downto 0);      
+      UCLK_I                 : in  std_logic;
+
+      S_AXIS_TDATA           : in std_logic_vector(C_TX_AXIS_WIDTH-1 downto 0);
       S_AXIS_TVALID          : in std_logic;
       S_AXIS_TREADY          : out std_logic;
-      S_AXIS_TKEEP           : in std_logic_vector(C_TX_AXIS_WIDTH/8-1 downto 0);      
+      S_AXIS_TKEEP           : in std_logic_vector(C_TX_AXIS_WIDTH/8-1 downto 0);
       S_AXIS_TLAST           : in std_logic;
 
       S_REGBUS_RB_RADDR	     : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
       S_REGBUS_RB_RDATA	     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_RUPDATE    : in  std_logic;
       S_REGBUS_RB_RACK       : out std_logic;
-      
+
       S_REGBUS_RB_WUPDATE    : in  std_logic;
       S_REGBUS_RB_WADDR	     : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
       S_REGBUS_RB_WDATA	     : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -41,7 +41,7 @@ architecture behaviour of tx_unit_tb is
   signal aclk     : std_logic;
   signal aresetn  : std_logic;
   signal uclk     : std_logic;
-  
+
   signal tdata    : std_logic_vector(C_TX_AXIS_WIDTH-1 downto 0) := (others => '0');
   signal tvalid   : std_logic := '0';
   signal tready   : std_logic;
@@ -56,22 +56,22 @@ architecture behaviour of tx_unit_tb is
   signal waddr    : std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0) := (others => '0');
   signal wupdate  : std_logic := '0';
   signal wdata    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
-  signal wack     : std_logic := '0';  
+  signal wack     : std_logic := '0';
 
   signal posi     : std_logic_vector(C_NUM_UART-1 downto 0);
-  
+
   -- control the output for different stages of the demo:
   signal show_regbus_output : std_logic := '0';
   signal show_axis_output   : std_logic := '0';
   signal show_tx_output     : std_logic := '0';
-  
+
 begin
   uut: tx_unit port map (
     S_AXIS_ACLK     => aclk,
     S_AXIS_ARESETN  => aresetn,
     UCLK_I          => uclk,
     S_AXIS_TDATA    => tdata,
-    S_AXIS_TVALID   => tvalid,   
+    S_AXIS_TVALID   => tvalid,
     S_AXIS_TREADY   => tready,
     S_AXIS_TKEEP    => (others => '1'),
     S_AXIS_TLAST    => tlast,
@@ -94,12 +94,12 @@ begin
     aclk <= '0';
     wait for 5 ns;
   end process;
-  
+
   aresetn_process : process
   begin
     aresetn <= '0';
     wait for 10 ns;
-    aresetn <= '1';    
+    aresetn <= '1';
     wait;
   end process;
 
@@ -110,7 +110,7 @@ begin
     uclk <= '0';
     wait for 50 ns;
   end process;
-  
+
   stream_process : process
     variable ibuf : integer;
   begin
@@ -141,7 +141,7 @@ begin
         tlast <= '1';
       end if;
       wait for 10 ns;
-    end loop;    
+    end loop;
     tvalid                <= '0';
     tdata                 <= (others => '0');
     tlast                 <= '0';
@@ -176,7 +176,7 @@ begin
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"0030";
-    rupdate <= '1';    
+    rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"0000";
     rupdate <= '0';
@@ -216,26 +216,26 @@ begin
     wait for 10 ns;
     raddr   <= x"0000";
     rupdate <= '0';
-    wait for 10 ns;    
+    wait for 10 ns;
     show_regbus_output <= '0';
     wait for 8000 ns;
     show_regbus_output <= '1';
     raddr   <= x"0000";
     rupdate <= '1';
-    wait for 10 ns;    
+    wait for 10 ns;
     raddr   <= x"3F00";
     rupdate <= '1';
-    wait for 10 ns;    
+    wait for 10 ns;
     raddr   <= x"0030";
     rupdate <= '1';
-    wait for 10 ns;    
+    wait for 10 ns;
     raddr   <= x"0000";
     rupdate <= '0';
     wait for 10 ns;
     show_regbus_output <= '0';
     wait;
   end process;
- 
+
   write_process : process
   begin
     waddr   <= x"0000";
@@ -263,18 +263,18 @@ begin
     wait for 100 ns;
     waddr   <= x"3F20";
     wdata   <= x"00000000";
-    wupdate <= '1';    
+    wupdate <= '1';
     wait for 7200 ns;
     show_tx_output<='0';
     wait;
   end process;
-  
+
   regbus_output_process : process
     variable l : line;
   begin
     wait for 10 ns;
     if (show_regbus_output='1') then
-      
+
       write (l, String'("c: "));
       write (l, count, left, 4);
       write (l, String'(" || ra: 0x"));
@@ -304,7 +304,7 @@ begin
     variable l : line;
   begin
     wait for 10 ns;
-    if (show_axis_output='1') then      
+    if (show_axis_output='1') then
       write (l, String'("c: "));
       write (l, count, left, 4);
       --write (l, String'("aclk: "));
@@ -328,8 +328,8 @@ begin
   tx_output_process : process
     variable l : line;
   begin
-    wait for 100 ns;   
-    if (show_tx_output='1') then      
+    wait for 100 ns;
+    if (show_tx_output='1') then
       write (l, String'("c: "));
       write (l, count, left, 4);
       --write (l, String'("aclk: "));
@@ -343,7 +343,7 @@ begin
   end process;
 
 
-  
-  
+
+
 end behaviour;
-        
+

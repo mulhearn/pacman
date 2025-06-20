@@ -2,14 +2,14 @@ library ieee;
 use std.textio.all;
 use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
-use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08 
+use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08
 library work;
 use work.common.all;
 
 --  Defines a testbench (without any ports)
 entity tx_registers_tb is
 end tx_registers_tb;
-     
+
 architecture behaviour of tx_registers_tb is
   component tx_registers is
     port (
@@ -20,14 +20,14 @@ architecture behaviour of tx_registers_tb is
       S_REGBUS_RB_RDATA	     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_RUPDATE    : in  std_logic;
       S_REGBUS_RB_RACK       : out std_logic;
-      
+
       S_REGBUS_RB_WUPDATE    : in  std_logic;
       S_REGBUS_RB_WADDR	     : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
       S_REGBUS_RB_WDATA	     : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_WACK       : out std_logic;
 
       LOOK_I                 : in uart_tx_data_array_t;
-      STATUS_I               : in uart_reg_array_t;    
+      STATUS_I               : in uart_reg_array_t;
       BSTATUS_I    	     : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       CONFIG_O               : out uart_reg_array_t;
       GFLAGS_O               : out std_logic_vector(C_TX_GFLAGS_WIDTH-1 downto 0)
@@ -44,15 +44,15 @@ architecture behaviour of tx_registers_tb is
   signal waddr    : std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0) := (others => '0');
   signal wupdate  : std_logic := '0';
   signal wdata    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
-  signal wack     : std_logic := '0';  
+  signal wack     : std_logic := '0';
 
   signal config   : uart_reg_array_t;
   signal gflags   : std_logic_vector(C_TX_GFLAGS_WIDTH-1 downto 0);
-  
+
 begin
   uut0: tx_registers port map (
     ACLK           => aclk,
-    ARESETN        => aresetn,      
+    ARESETN        => aresetn,
     S_REGBUS_RB_RUPDATE => rupdate,
     S_REGBUS_RB_RADDR   => raddr,
     S_REGBUS_RB_RDATA   => rdata,
@@ -67,15 +67,15 @@ begin
     CONFIG_O  => config,
     GFLAGS_O => gflags
   );
-  
+
   aresetn_process : process
   begin
     aresetn <= '0';
     wait for 20 ns;
-    aresetn <= '1';    
+    aresetn <= '1';
     wait;
   end process;
-  
+
   aclk_process : process
   begin
     aclk <= '1';
@@ -107,15 +107,15 @@ begin
     wait for 10 ns;
     raddr   <= x"0C04";
     rupdate <= '1';
-    wait for 10 ns;    
+    wait for 10 ns;
     raddr   <= x"0C40";
     rupdate <= '1';
-    wait for 10 ns;    
+    wait for 10 ns;
     raddr   <= x"3F20";
     rupdate <= '1';
     wait for 20 ns;
     raddr   <= x"0030";
-    rupdate <= '1';    
+    rupdate <= '1';
     wait;
   end process;
 
@@ -176,6 +176,6 @@ begin
     end if;
     writeline(output, l);
   end process;
-  
+
 end behaviour;
-        
+

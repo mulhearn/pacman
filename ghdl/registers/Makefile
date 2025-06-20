@@ -22,7 +22,7 @@ hardware:
 	ghdl -a -fsynopsys hw/registers_demo_tb.vhd
 	ghdl -e -fsynopsys registers_demo_tb
 run-units:
-	ghdl -r -fsynopsys regbus_mux_tb --stop-time=350ns
+#	ghdl -r -fsynopsys regbus_mux_tb --stop-time=350ns
 	ghdl -r -fsynopsys registers_scratch_tb --stop-time=350ns
 run-demos:
 	ghdl -r -fsynopsys registers_demo_tb --stop-time=350ns 

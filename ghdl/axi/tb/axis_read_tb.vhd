@@ -2,7 +2,7 @@ library ieee;
 use std.textio.all;
 use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
-use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08 
+use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08
 library work;
 use work.common.all;
 
@@ -13,9 +13,9 @@ entity axis_read_tb is
     constant C_AXIS_BEATS   : integer  := 4
   );
 begin
-  assert(C_AXIS_WIDTH >= 16) severity failure; -- Assumed for test output      
+  assert(C_AXIS_WIDTH >= 16) severity failure; -- Assumed for test output
 end axis_read_tb;
-     
+
 architecture behaviour of axis_read_tb is
   component axis_read is
     generic (
@@ -26,36 +26,36 @@ architecture behaviour of axis_read_tb is
       S_AXIS_ACLK        : in std_logic;
       S_AXIS_ARESETN     : in std_logic;
 
-      S_AXIS_TDATA       : in std_logic_vector(C_AXIS_WIDTH-1 downto 0);      
+      S_AXIS_TDATA       : in std_logic_vector(C_AXIS_WIDTH-1 downto 0);
       S_AXIS_TVALID      : in std_logic;
       S_AXIS_TREADY      : out std_logic;
 
-      S_AXIS_TKEEP       : in std_logic_vector(C_AXIS_WIDTH/8-1 downto 0);      
+      S_AXIS_TKEEP       : in std_logic_vector(C_AXIS_WIDTH/8-1 downto 0);
       S_AXIS_TLAST       : in std_logic;
-    
+
       DATA_O             : out std_logic_vector(C_AXIS_WIDTH*C_AXIS_BEATS-1 downto 0);
       VALID_O            : out std_logic;
       READY_I            : in std_logic
-    );  
+    );
   end component;
 
   signal count    : integer := 0;
   signal aclk     : std_logic;
   signal aresetn  : std_logic;
-  
+
   signal tdata    : std_logic_vector(C_AXIS_WIDTH-1 downto 0) := (others => '0');
   signal tvalid   : std_logic := '0';
   signal tready   : std_logic;
   signal tlast    : std_logic := '0';
 
   signal odat     : std_logic_vector(C_AXIS_WIDTH*C_AXIS_BEATS-1 downto 0);
-  signal oval     : std_logic; 
+  signal oval     : std_logic;
 begin
   uut: axis_read port map (
     S_AXIS_ACLK     => aclk,
     S_AXIS_ARESETN  => aresetn,
     S_AXIS_TDATA    => tdata,
-    S_AXIS_TVALID   => tvalid,   
+    S_AXIS_TVALID   => tvalid,
     S_AXIS_TREADY   => tready,
     S_AXIS_TKEEP    => (others=>'1'),
     S_AXIS_TLAST    => tlast,
@@ -63,12 +63,12 @@ begin
     VALID_O         => oval,
     READY_I         => '0'
   );
-  
+
   aresetn_process : process
   begin
     aresetn <= '0';
     wait for 10 ns;
-    aresetn <= '1';    
+    aresetn <= '1';
     wait;
   end process;
 
@@ -97,7 +97,7 @@ begin
     tlast                 <= '0';
     wait for 20 ns;
   end process;
-    
+
   aclk_process : process
   begin
     count <= count + 1;
@@ -112,7 +112,7 @@ begin
     variable l : line;
   begin
     if (count < 18) then
-      wait for 10 ns;   
+      wait for 10 ns;
     else
       wait;
     end if;
@@ -140,6 +140,6 @@ begin
     end if;
     writeline(output, l);
   end process;
-  
+
 end behaviour;
-        
+

@@ -7,6 +7,17 @@ package common is
   constant C_NUM_TILE          : integer  := 10;
   constant C_NUM_UART          : integer  := 40;
 
+
+  constant C_NUM_LED           : integer  := 2;
+
+  -- soon to be obsolete:
+  constant C_NUM_ADC_BITS      : integer  := 12;
+
+  constant BRAM_ADDR_WIDTH       : integer  := 13;
+  constant ADC_DATA_WIDTH        : integer  := 12;
+  constant BRAM_DATA_WIDTH       : integer  := 32;
+
+
   constant C_TIMESTAMP_WIDTH   : integer  := 32;
 
   -- register bus data is 32 bits, address 16 bits.
@@ -26,6 +37,10 @@ package common is
   constant C_RX_NUM_CHAN       : integer  := C_NUM_UART + C_RX_EXTRA_CHAN;
   constant C_RX_TURN_MAX       : integer  := 64;
   constant C_RX_BEAT_MAX       : integer  := 32;
+
+
+  --arrays of std_logic_vectors with array length the number of tiles:
+  type ATC_array              is array (0 to C_NUM_TILE-1) of std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
   --arrays of std_logic_vectors with array length the number of uart channels:
   type uart_reg_array_t       is array (0 to C_NUM_UART-1) of std_logic_vector (C_RB_DATA_WIDTH-1 downto 0);
