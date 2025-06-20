@@ -15,6 +15,9 @@ SRC_URI = "file://src \
            file://report_power.sh \
            file://power_down.sh \
            file://pacman_util.py \
+           file://pump_socket.py \
+           file://dump_socket.py \
+           file://rep_socket.py \
 	   file://Makefile \
 		  "
 
@@ -24,7 +27,7 @@ INITSCRIPT_PARAMS = "start 99 S ."
 S = "${WORKDIR}"
 homedir = "/home/root"
 
-#inherit update-rc.d
+inherit update-rc.d
 
 do_compile() {
 	     oe_runmake
@@ -34,15 +37,21 @@ do_install() {
 	     install -d ${D}${bindir}
 	     install -m 0755 ${S}/pacman_cmdserver ${D}${bindir}
              install -m 0755 ${S}/pacman_dataserver ${D}${bindir}
-	     install -m 0755 ${S}/pacman_menu ${D}${bindir}
 	     install -m 0755 ${S}/pacman_units ${D}${bindir}
+	     install -m 0755 ${S}/pacman_push ${D}${bindir}
+	     install -m 0755 ${S}/pacman_counter ${D}${bindir}
+	     install -m 0755 ${S}/zmq_loopback ${D}${bindir}
+	     install -m 0755 ${S}/zmq_test ${D}${bindir}
 
              install -d ${D}${homedir}
              install -m 0755 ${S}/pacman_util.py ${D}${homedir}
+	     install -m 0755 ${S}/dump_socket.py ${D}${homedir}
+	     install -m 0755 ${S}/pump_socket.py ${D}${homedir}
+	     install -m 0755 ${S}/rep_socket.py ${D}${homedir}
              install -m 0755 ${S}/power_up_tile.sh ${D}${homedir}
-             install -m 0755 ${S}/report_power.sh ${D}${homedir}             
-             install -m 0755 ${S}/power_down.sh ${D}${homedir}             
-             
+             install -m 0755 ${S}/report_power.sh ${D}${homedir}
+             install -m 0755 ${S}/power_down.sh ${D}${homedir}
+
              install -d ${D}${sysconfdir}/init.d
 	     install -m 0755 ${S}/pacman_server.sh ${D}${sysconfdir}/init.d/pacman_server
              install -m 0755 ${S}/pacman_server.sh ${D}${bindir}/pacman_server

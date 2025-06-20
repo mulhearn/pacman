@@ -24,11 +24,11 @@ volatile uint32_t * G_PACMAN_DMA_TX_BUFFER = NULL;
 volatile uint32_t * G_PACMAN_DMA_RX_BUFFER = NULL;
 
 //PACMAN SERVER Scratch Registers (Accessible at PACMAN_SERVER_VIRTUAL_START + (0, 1)
-uint32_t G_PACMAN_SERVER_SCRA = 0x0; 
+uint32_t G_PACMAN_SERVER_SCRA = 0x0;
 uint32_t G_PACMAN_SERVER_SCRB = 0x0;
 
 int pacman_init(int verbose){
-  // initialize axi-lite 
+  // initialize axi-lite
   if (verbose){
     printf("INFO:  Initializing PACMAN AXI-Lite interface.\n");
   }
@@ -56,11 +56,32 @@ int pacman_init(int verbose){
   unsigned i2cmajor = i2c_read(0x220);
   unsigned i2cminor = i2c_read(0x221);
   unsigned i2cdebug = i2c_read(0x222);
+
   // I2C
   if (verbose){
     printf("INFO:  Running I2C firmware version %d.%d (Debug Code:  0x%x)\n", i2cmajor, i2cminor, i2cdebug);
   }
-      
+
+  // DEFAULT parameters
+  if (verbose){
+    printf("INFO:  Enabling Trigger, Sync, and Heartbeat words in the RX unit.\n");
+    printf("INFO:  Setting number of cycles per DMA package to 0x1FFF.\n");
+  }
+  G_PACMAN_AXIL[0x7FA4>>2] = 0x71FFF;
+
+  //if (verbose){
+  //  printf("INFO:  Limiting TX bandwidth.\n");
+  //}
+  //G_PACMAN_AXIL[0x3B04>>2] = 0x05281602;
+  G_PACMAN_AXIL[0x3B04>>2] = 0x00001602;
+
+  if (verbose){
+    printf("INFO:  Setting TS polarity to active low (will become default soon)\n");
+  }
+  G_PACMAN_AXIL[0xE444>>2] = 0x10;
+
+
+
   return EXIT_SUCCESS;
 }
 
@@ -88,7 +109,7 @@ void print_dma_status(unsigned cr, unsigned sr){
   printf("Itr En (Error)----%d\n", ((cr&0x00004000)!=0));
   printf("Always Zero-------%d\n", ((cr&0x00008000)!=0));
   printf("IRQ Threshold-----%d\n", ((cr&0x00FF0000)>>16));
-  printf("IRQ Delay---------%d\n", ((cr&0xFF000000)>>24));  
+  printf("IRQ Delay---------%d\n", ((cr&0xFF000000)>>24));
   printf("Status Bits: \n");
   printf("Halted------------%d\n", ((sr&0x00000001)!=0));
   printf("Idle--------------%d\n", ((sr&0x00000002)!=0));
@@ -107,26 +128,26 @@ void print_dma_status(unsigned cr, unsigned sr){
   printf("Itr (Error)-------%d\n", ((sr&0x00000400)!=0));
   printf("Always Zero-------%d\n", ((sr&0x00000800)!=0));
   printf("Stat Irq Thresh---%d\n", ((cr&0x00FF0000)>>16));
-  printf("Stay Irq Delay----%d\n", ((cr&0xFF000000)>>24));  
+  printf("Stay Irq Delay----%d\n", ((cr&0xFF000000)>>24));
 }
 
 int pacman_init_tx(int verbose, int skip_reset){
   unsigned timeout, cr, sr;
-  // initialize DMA TX 
+  // initialize DMA TX
   if (verbose){
     printf("INFO:  Initializing PACMAN DMA TX interface.\n");
     printf("INFO:  Initializing DMA contol interface (AXIL).\n");
   }
-  
+
   int dh = open("/dev/mem", O_RDWR|O_SYNC);
   G_PACMAN_DMA = (uint32_t*)mmap(NULL, DMA_LEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_ADDR);
 
   if (verbose){
     printf("INFO:  Initializing DMA TX_BUFFER.\n");
   }
-  
+
   G_PACMAN_DMA_TX_BUFFER = (uint32_t*)mmap(NULL, DMA_TX_MAXLEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_TX_ADDR);
-  
+
   if (skip_reset) {
     if (verbose)
       printf("INFO:  Skipping reset of DMA TX.\n");
@@ -139,18 +160,18 @@ int pacman_init_tx(int verbose, int skip_reset){
     while(timeout){
       usleep(1);
       if ((G_PACMAN_DMA[REG_DMA_TX_CONTROL>>2] & MASK_DMA_CR_RESET) == 0)
-	break;      
+	break;
       timeout--;
     }
     if (! timeout) {
       printf("ERROR:  Timeout waiting on DMA reset.");
       return EXIT_FAILURE;
-    } 
+    }
     if (verbose)
-      printf("INFO:  Reset of DMA TX was successful. (timeout=%d)\n", timeout);    
+      printf("INFO:  Reset of DMA TX was successful. (timeout=%d)\n", timeout);
   }
 
-  
+
   if (verbose)
     printf("INFO:  Setting DMA TX to RUN.\n");
 
@@ -161,29 +182,29 @@ int pacman_init_tx(int verbose, int skip_reset){
   while(timeout){
     usleep(1);
     if ((G_PACMAN_DMA[REG_DMA_TX_STATUS>>2] & MASK_DMA_SR_HALTED) == 0)
-      break;      
+      break;
     timeout--;
   }
   if (! timeout) {
     printf("ERROR:  Timeout waiting for DMA TX to leave the HALTED state.");
     return EXIT_FAILURE;
   } else {
-    printf("INFO:  DMA TX has left the HALTED state successfully. (timeout=%d)\n", timeout);    
+    printf("INFO:  DMA TX has left the HALTED state successfully. (timeout=%d)\n", timeout);
   }
-  
+
   // verify that we enter the RUN state:
   timeout=100;
   while(timeout){
     usleep(1);
     if ((G_PACMAN_DMA[REG_DMA_TX_CONTROL>>2] & MASK_DMA_CR_RUN) != 0)
-      break;      
+      break;
     timeout--;
   }
   if (! timeout) {
     printf("ERROR:  Timeout waiting for DMA TX to enter RUN state.");
     return EXIT_FAILURE;
   } else {
-    printf("INFO:  DMA TX has entered RUN state successfully. (timeout=%d)\n", timeout);    
+    printf("INFO:  DMA TX has entered RUN state successfully. (timeout=%d)\n", timeout);
   }
 
   cr = G_PACMAN_DMA[REG_DMA_TX_CONTROL>>2];
@@ -193,27 +214,27 @@ int pacman_init_tx(int verbose, int skip_reset){
   print_dma_status(cr, sr);
 
 
-  
+
   return EXIT_SUCCESS;
 }
 
 int pacman_init_rx(int verbose, int skip_reset){
   unsigned timeout, cr, sr;
-  // initialize DMA RX 
+  // initialize DMA RX
   if (verbose){
     printf("INFO:  Initializing PACMAN DMA RX interface.\n");
     printf("INFO:  Initializing DMA contol interface (AXIL).\n");
   }
-  
+
   int dh = open("/dev/mem", O_RDWR|O_SYNC);
   G_PACMAN_DMA = (uint32_t*)mmap(NULL, DMA_LEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_ADDR);
 
   if (verbose){
     printf("INFO:  Initializing DMA RX_BUFFER.\n");
   }
-  
+
   G_PACMAN_DMA_RX_BUFFER = (uint32_t*)mmap(NULL, DMA_RX_MAXLEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_RX_ADDR);
-  
+
   if (skip_reset) {
     if (verbose)
       printf("INFO:  Skipping reset of DMA RX.\n");
@@ -226,18 +247,18 @@ int pacman_init_rx(int verbose, int skip_reset){
     while(timeout){
       usleep(1);
       if ((G_PACMAN_DMA[REG_DMA_RX_CONTROL>>2] & MASK_DMA_CR_RESET) == 0)
-	break;      
+	break;
       timeout--;
     }
     if (! timeout) {
       printf("ERROR:  Timeout waiting on DMA reset.");
       return EXIT_FAILURE;
-    } 
+    }
     if (verbose)
-      printf("INFO:  Reset of DMA RX was successful. (timeout=%d)\n", timeout);    
+      printf("INFO:  Reset of DMA RX was successful. (timeout=%d)\n", timeout);
   }
 
-  
+
   if (verbose)
     printf("INFO:  Setting DMA RX to RUN.\n");
 
@@ -248,97 +269,98 @@ int pacman_init_rx(int verbose, int skip_reset){
   while(timeout){
     usleep(1);
     if ((G_PACMAN_DMA[REG_DMA_RX_STATUS>>2] & MASK_DMA_SR_HALTED) == 0)
-      break;      
+      break;
     timeout--;
   }
   if (! timeout) {
     printf("ERROR:  Timeout waiting for DMA RX to leave the HALTED state.");
     return EXIT_FAILURE;
   } else {
-    printf("INFO:  DMA RX has left the HALTED state successfully. (timeout=%d)\n", timeout);    
+    printf("INFO:  DMA RX has left the HALTED state successfully. (timeout=%d)\n", timeout);
   }
-  
+
   // verify that we enter the RUN state:
   timeout=100;
   while(timeout){
     usleep(1);
     if ((G_PACMAN_DMA[REG_DMA_RX_CONTROL>>2] & MASK_DMA_CR_RUN) != 0)
-      break;      
+      break;
     timeout--;
   }
   if (! timeout) {
     printf("ERROR:  Timeout waiting for DMA RX to enter RUN state.");
     return EXIT_FAILURE;
   } else {
-    printf("INFO:  DMA RX has entered RUN state successfully. (timeout=%d)\n", timeout);    
+    printf("INFO:  DMA RX has entered RUN state successfully. (timeout=%d)\n", timeout);
   }
 
-  printf("INFO:  Sending initial DMA read request.\n");      
-  G_PACMAN_DMA[0x0048>>2] = DMA_RX_ADDR;
-  G_PACMAN_DMA[0x0058>>2] = DMA_RX_MAXLEN; 
+  //printf("INFO:  Sending initial DMA read request.\n");
+  //G_PACMAN_DMA[0x0048>>2] = DMA_RX_ADDR;
+  //G_PACMAN_DMA[0x0058>>2] = DMA_RX_MAXLEN;
 
-  
+
   cr = G_PACMAN_DMA[REG_DMA_RX_CONTROL>>2];
   sr = G_PACMAN_DMA[REG_DMA_RX_STATUS>>2];
   printf("DMA RX control register (MM2S) - 0x%x \n", cr);
   printf("DMA RX status register  (MM2S) - 0x%x \n", sr);
   print_dma_status(cr, sr);
-  
+
   return EXIT_SUCCESS;
 }
 
 int pacman_poll_rx(){
-  // Naive version:  request data, then wait (possibly forever) for data to arrive..
-  unsigned max_words = 0x0400; // enough for > 20 read cycles of all 40 uarts
-  unsigned bytes = 0x4; // bytes per word
+  static int read_requested = 0;
+  static int start = 0;
+  // Current firmware has width of buffer length register set to 14 bits, maximum values 3FFF
+  // 0xFFF * 0x4 = 0x3FFC
+  // Firmware now increased to 20 bits
+  uint32_t max_words = 0xFFFF;
+  uint32_t bytes = 0x4; // bytes per word
   uint32_t rx_data[4];
-  
-  printf("*** Sending run*** \n");
-  G_PACMAN_DMA[(0x30)>>2] = 0x01;
 
-  printf("*** Clearing RX buffer *** \n");  
-  for (int i=0; i<max_words; i++)
-    G_PACMAN_DMA_RX_BUFFER[i] = 0;
+  if (! read_requested) {
+    read_requested = 1;
+    start = 1;
+    //printf("*** Sending run*** \n");
+    G_PACMAN_DMA[(0x30)>>2] = 0x01;
 
-  printf("INFO:  DMA request to read data.\n");    
-  G_PACMAN_DMA[0x0048>>2] = DMA_RX_ADDR;
-  G_PACMAN_DMA[0x0058>>2] = max_words*bytes;     
+    //printf("*** Clearing RX buffer *** \n");
+    for (int i=0; i<max_words; i++)
+      G_PACMAN_DMA_RX_BUFFER[i] = 0;
 
-  printf("INFO:  Checking for IDLE.\n");    
-  int start = 1;
-  while(1){
-    unsigned sr = G_PACMAN_DMA[(0x34)>>2];
-    if ((sr&0x2)!=0) 
-      break;
-    if (start){
-      printf("*** waiting for idle *** \n");
-      start = 0;
-    }
-    usleep(100);
+    //printf("INFO:  DMA request to read data.\n");
+    G_PACMAN_DMA[0x0048>>2] = DMA_RX_ADDR;
+    G_PACMAN_DMA[0x0058>>2] = max_words*bytes;
   }
 
-  // TODO:  This needs a clean up to check for space in buffer, log any lost packets, etc, etc, ...
-  printf("INFO:  New Data Has Arrived!\n");
-  
+  unsigned sr = G_PACMAN_DMA[(0x34)>>2];
+  if ((sr&0x2)==0){
+    if (start){
+      //printf("DEBUG:  *** waiting for idle *** \n");
+      start = 0;
+    }
+    return EXIT_SUCCESS;
+  }
+  read_requested = 0;
+
   for (int i=0; i<max_words/4; i++){
     rx_data[3] = G_PACMAN_DMA_RX_BUFFER[4*i+3];
     rx_data[2] = G_PACMAN_DMA_RX_BUFFER[4*i+2];
     rx_data[1] = G_PACMAN_DMA_RX_BUFFER[4*i+1];
-    rx_data[0] = G_PACMAN_DMA_RX_BUFFER[4*i+0];    
-    printf("%d 0x%08x %08x %08x %08x\n", i, rx_data[3], rx_data[2], rx_data[1], rx_data[0]);
+    rx_data[0] = G_PACMAN_DMA_RX_BUFFER[4*i+0];
+    //printf("%d 0x%08x %08x %08x %08x\n", i, rx_data[3], rx_data[2], rx_data[1], rx_data[0]);
     if (rx_data[0]==0) {
       if (rx_data[2] == i) {
-	printf("Valid packet of size %d\n", i);
+	printf("DEBUG:  valid packet of size %d\n", i);
       } else {
-	printf("*** Error Invalid Packet Detected ***\n");
+	printf("ERROR: *** Invalid Packet Detected ***\n");
+	printf("ERROR: 0x%x(%d) 0x%x %x %x %x \n", i, i, rx_data[0], rx_data[1], rx_data[2], rx_data[3]);
       }
-      break;      
+      break;
     }
-    printf("*** Filling buffer ***\n");
     rx_buffer_in(rx_data);
   }
-  usleep(1);
-    
+
   return EXIT_SUCCESS;
 }
 
@@ -346,30 +368,28 @@ int pacman_poll_tx(){
   unsigned cr, sr;
   static uint32_t output[TX_BUFFER_BYTES/4];
 
-  cr = G_PACMAN_DMA[REG_DMA_TX_CONTROL>>2];
-  sr = G_PACMAN_DMA[REG_DMA_TX_STATUS>>2];
-  printf("DMA TX control register (MM2S) - 0x%x \n", cr);
-  printf("DMA TX status register  (MM2S) - 0x%x \n", sr);
-  print_dma_status(cr, sr);
+  //cr = G_PACMAN_DMA[REG_DMA_TX_CONTROL>>2];
+  //sr = G_PACMAN_DMA[REG_DMA_TX_STATUS>>2];
+  //printf("DMA TX control register (MM2S) - 0x%x \n", cr);
+  //printf("DMA TX status register  (MM2S) - 0x%x \n", sr);
+  //print_dma_status(cr, sr);
 
-  if (tx_buffer_out(output) == 0)
-    return EXIT_SUCCESS;
-  
-  tx_buffer_print_output(output);
+  while (tx_buffer_out(output)==1){
+    tx_buffer_print_output(output);
 
-  for (int i=0; i<84*4; i++)
-    G_PACMAN_DMA_TX_BUFFER[i] = output[i];
+    for (int i=0; i<84*4; i++)
+      G_PACMAN_DMA_TX_BUFFER[i] = output[i];
 
-  G_PACMAN_DMA[0x0018>>2] = DMA_TX_ADDR;
-  G_PACMAN_DMA[0x0028>>2] = 84*4; 
+    G_PACMAN_DMA[0x0018>>2] = DMA_TX_ADDR;
+    G_PACMAN_DMA[0x0028>>2] = 84*4;
 
-  usleep(1000);
-  cr = G_PACMAN_DMA[REG_DMA_TX_CONTROL>>2];
-  sr = G_PACMAN_DMA[REG_DMA_TX_STATUS>>2];
-  printf("DMA TX control register (MM2S) - 0x%x \n", cr);
-  printf("DMA TX status register  (MM2S) - 0x%x \n", sr);
-  print_dma_status(cr, sr);
-  
+    usleep(100);
+    //cr = G_PACMAN_DMA[REG_DMA_TX_CONTROL>>2];
+    //sr = G_PACMAN_DMA[REG_DMA_TX_STATUS>>2];
+    //printf("DMA TX control register (MM2S) - 0x%x \n", cr);
+    //printf("DMA TX status register  (MM2S) - 0x%x \n", sr);
+    //print_dma_status(cr, sr);
+  }
   return EXIT_SUCCESS;
 }
 
@@ -382,6 +402,6 @@ int pacman_write(uint32_t addr, uint32_t value){
 
 uint32_t pacman_read(uint32_t addr, int * status){
   if (status)
-    *status = EXIT_SUCCESS;  
+    *status = EXIT_SUCCESS;
   return G_PACMAN_AXIL[addr>>2];
 }
