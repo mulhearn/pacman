@@ -47,7 +47,7 @@ architecture behaviour of slow_broadcast_tb is
   signal bcast     : std_logic_vector(C_BROADCAST_WIDTH-1 downto 0);
   signal single    : std_logic;
   signal debug     : std_logic_vector(7 downto 0);
-  
+
   signal show_output : std_logic := '0';
 begin
   uut: slow_broadcast port map (
@@ -99,7 +99,7 @@ begin
     update <= '0';
     wait;
   end process;
-  
+
   show_process : process
   begin
     show_output <= '1';
@@ -137,7 +137,7 @@ begin
       write  (l, String'(" a: "));
       write  (l, debug(1));
 
-      
+
       if (aresetn = '0') then
         write (l, String'(" (RESET)"));
       end if;

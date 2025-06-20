@@ -2,6 +2,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+--transfer counter_b to fast domain
+--counter_b is the counter of rising_edge in domain B
+
 entity timestamp is
   generic (
     constant C_TIMESTAMP_WIDTH     : integer := 32
@@ -9,13 +12,13 @@ entity timestamp is
 
   port (
     -- Clock Domain A: (Fast Clock)
-    CLK_A_I	        : in  std_logic;
-    RSTN_A_I	        : in  std_logic;
+    CLK_A_I	            : in  std_logic;
+    RSTN_A_I	          : in  std_logic;
     TIMESTAMP_A_O       : out std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
-    
+
     -- Clock Domain B: (Slow Clock)
     CLK_B_I             : in  std_logic;
-    RSTN_B_I            : in  std_logic;    
+    RSTN_B_I            : in  std_logic;
     TIMESTAMP_B_O       : out std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0)
     );
 end;
@@ -25,8 +28,8 @@ architecture behavioral of timestamp is
   signal clk_a       : std_logic;
   signal rstn_a      : std_logic;
   signal timestamp_a : unsigned(C_TIMESTAMP_WIDTH-1 downto 0);
-  signal timestamp_z : unsigned(C_TIMESTAMP_WIDTH-1 downto 0); 
-  
+  signal timestamp_z : unsigned(C_TIMESTAMP_WIDTH-1 downto 0);
+
   -- Clock Domain B signals:
   signal clk_b       : std_logic;
   signal rstn_b      : std_logic;
@@ -34,7 +37,7 @@ architecture behavioral of timestamp is
 
   -- double flopping at clock domain crossing:
   signal timestamp_meta : unsigned(C_TIMESTAMP_WIDTH-1 downto 0) := (others => '0'); -- metastable
-  signal timestamp_sync : unsigned(C_TIMESTAMP_WIDTH-1 downto 0) := (others => '0'); 
+  signal timestamp_sync : unsigned(C_TIMESTAMP_WIDTH-1 downto 0) := (others => '0');
 
   attribute ASYNC_REG : string;
   attribute ASYNC_REG of timestamp_meta: signal is "TRUE";
@@ -48,7 +51,7 @@ begin
   clk_b <= CLK_B_I;
   rstn_b <= RSTN_B_I;
   TIMESTAMP_B_O <= std_logic_vector(counter_b);
-  
+
   -- double flop synchronization of timestamp and sync signals (from B to A)
   process(clk_a, rstn_a)
   begin
@@ -75,7 +78,7 @@ begin
   process(clk_b, rstn_a, rstn_b)
   begin
     if ((rstn_a = '0') or (rstn_b = '0')) then
-      counter_b <= (others => '0');      
+      counter_b <= (others => '0');
     elsif (rising_edge(clk_b)) then
       counter_b <= counter_b + 1;
     end if;
