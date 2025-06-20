@@ -1,5 +1,5 @@
 --------------------------------------
-Ubuntu 22.04.4 LTS and Vivado 2020.2 
+Ubuntu 22.04.4 LTS and Vivado 2020.2
 --------------------------------------
 
 Installation of Vivado 2020.2 went smoothly (but see packages added for 2022.2 which are likely relevant).
@@ -21,7 +21,7 @@ libboost_signals.so => not found
 The two libraries not found (librdi and libboost_signals) are included with the software.
 
 --------------------------------------
-Ubuntu 22.04.4 LTS and Vivado 2022.2 
+Ubuntu 22.04.4 LTS and Vivado 2022.2
 --------------------------------------
 
 First had to add tinfo, libncurses5 and libncurses5-dev or install hung at "Generating Installed device list"
@@ -110,7 +110,7 @@ bash used by Ubuntu 18.04 LTS.  To work around this, we temporarily
 replace sed with a modified version during petalinux installation.  So
 do something like:
 
-$ mkdir ~/workaround 
+$ mkdir ~/workaround
 $ cd ~/workaround
 $ wget https://raw.githubusercontent.com/mulhearn/pacman/master/docs/workaround/sed
 $ chmod ugo+x sed

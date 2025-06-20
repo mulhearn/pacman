@@ -166,7 +166,7 @@ setting IIC clk rate to 200000...success.
 choose an option:
    (1) blink LEDs          (2) read voltage levels
    (3) power up tile 1     (4) power down tile 1
-   (5) init and check I2C  (6) check digital I/O 
+   (5) init and check I2C  (6) check digital I/O
 BLINK LEDS:  blinking LED 1 (MIO pin)...
 BLINK LEDS:  blinking LED 2 (MIO pin)...
 BLINK LEDS:  blinking LED 3 (HR pin)...
@@ -175,7 +175,7 @@ BLINK LEDS:  done.
 choose an option:
    (1) blink LEDs          (2) read voltage levels
    (3) power up tile 1     (4) power down tile 1
-   (5) init and check I2C  (6) check digital I/O 
+   (5) init and check I2C  (6) check digital I/O
 
 I2C is working to control the DACs:
 
@@ -244,7 +244,7 @@ I was able to do some simple loopback testing using the available TPs for MISO_1
 27 Feb 2020:
 ----------------------------------------------------------------
 
-I tried to reproduce the problems booting from SD card by rebooting 
+I tried to reproduce the problems booting from SD card by rebooting
 several times, and eventually encountering this error:
 
 reading image.ub
@@ -252,7 +252,7 @@ sdhci_transfer_data: Error detected in status(0x208000)!
 Error reading cluster
 ** Unable to read file image.ub **
 Zynq> <INTERRUPT>
-Zynq> 
+Zynq>
 
 Which led me to find these references:
 
