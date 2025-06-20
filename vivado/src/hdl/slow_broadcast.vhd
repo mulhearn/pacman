@@ -43,13 +43,14 @@ architecture behavioral of slow_broadcast is
   -- double flopping at clock domain crossing:
   signal update_meta : std_logic; -- metastable
   signal update_sync : std_logic; -- likely stable
-  signal ack_meta    : std_logic; -- metastable
-  signal ack_sync    : std_logic; -- likely stable
+  signal ack_meta : std_logic; -- metastable
+  signal ack_sync : std_logic; -- likely stable
+
   attribute ASYNC_REG : string;
   attribute ASYNC_REG of update_meta: signal is "TRUE";
   attribute ASYNC_REG of update_sync: signal is "TRUE";
-  attribute ASYNC_REG of ack_meta:    signal is "TRUE";
-  attribute ASYNC_REG of ack_sync:    signal is "TRUE";
+  attribute ASYNC_REG of ack_meta: signal is "TRUE";
+  attribute ASYNC_REG of ack_sync: signal is "TRUE";
 
   --type state_t is (IDLE, RUN, FINAL);
   --signal state_a : state_t := IDLE;
@@ -66,7 +67,7 @@ begin
   DEBUG_O(0) <= update;
   DEBUG_O(1) <= ack;
   DEBUG_O(7 downto 2) <= (others => '0');
-  
+
   -- double flop synchronization of ack signal (B to A)
   process(clk_a, rst_a)
   begin
