@@ -111,6 +111,16 @@ begin
     wait for 50 ns;
   end process;
 
+  runshow_process : process
+  begin
+    show_tx_output <= '0';
+    wait for 400 ns;
+    show_tx_output <= '1';
+    wait for 7200 ns;
+    show_tx_output <= '0';
+    wait;
+  end process;
+    
   stream_process : process
     variable ibuf : integer;
   begin
@@ -124,7 +134,7 @@ begin
     tdata(63 downto 0)    <= x"000000FFFFFFFFFF";
     tlast                 <= '0';
     wait for 10 ns;
-    for i in 0 to 39 loop
+    for i in 0 to 19 loop
       tvalid <= '1';
       tdata <= (others => '0');
       ibuf := 16#55555A00# + i;
@@ -135,7 +145,7 @@ begin
       tdata(95 downto 64)    <= std_logic_vector(to_unsigned(ibuf, 32));
       ibuf := 16#55555D00# + i;
       tdata(127 downto 96)    <= std_logic_vector(to_unsigned(ibuf, 32));
-      if (i < 39) then
+      if (i < 19) then
         tlast <= '0';
       else
         tlast <= '1';
@@ -182,7 +192,7 @@ begin
     rupdate <= '0';
     wait for 10 ns;
     show_regbus_output <= '0';
-    wait for 500 ns;
+    wait for 220 ns;
     show_regbus_output <= '1';
     raddr   <= x"0000";
     rupdate <= '1';
@@ -259,13 +269,9 @@ begin
     wdata   <= x"00000000";
     wupdate <= '0';
     wait for 1000 ns;
-    show_tx_output<='1';
-    wait for 100 ns;
     waddr   <= x"3F20";
     wdata   <= x"00000000";
     wupdate <= '1';
-    wait for 7200 ns;
-    show_tx_output<='0';
     wait;
   end process;
 
