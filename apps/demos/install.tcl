@@ -26,6 +26,8 @@ file copy apps/demos/src/gpiops.c  demo/demo/src/
 file copy apps/demos/src/gpiops.h  demo/demo/src/
 file copy apps/demos/src/iic.c     demo/demo/src/
 file copy apps/demos/src/iic.h     demo/demo/src/
+file copy apps/demos/src/dma.c    demo/demo/src/
+file copy apps/demos/src/dma.h    demo/demo/src/
 file copy apps/demos/src/rxtx.c    demo/demo/src/
 file copy apps/demos/src/rxtx.h    demo/demo/src/
 file copy apps/demos/src/timing.c  demo/demo/src/

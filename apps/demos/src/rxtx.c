@@ -9,10 +9,154 @@
 #include "sleep.h"
 
 #include "axil.h"
+#include "dma.h"
 #include "rxtx.h"
+
+void toggle_tx_config();
+void toggle_rx_config();
+void read_rx_status();
+void read_rx_look();
+void read_tx_status();
+void read_tx_look();
+void toggle_tx_mask();
+void zero_counts();
+void dma_status();
+void reset_dma();
+void single_tx();
+void single_rx();
+void benchmark_dma_loopback();
+void benchmark_dma_write();
 
 u32 tx_mask_b = 0xFF;
 u32 tx_mask_a = 0xFFFFFFFF;
+
+#define TX_BD_BASEADDR     0x1200000
+#define RX_BD_BASEADDR     0x1200040
+#define TX_BUF_BASEADDR    0x1100000
+#define RX_BUF_BASEADDR    0x2100000
+
+#define TX_BUF_BYTES 0x150  // 40 uarts x 64 bits => 20 128 bit word plus 1 128 bit header => 21*4*4 = 336 bytes 
+#define RX_BUF_BYTES 0x400  // More than enough for now...
+
+void init_bds(){
+  dma_init_single_bd_tx((u32*) TX_BD_BASEADDR, (u32*) TX_BUF_BASEADDR, TX_BUF_BYTES);
+  dma_init_single_bd_rx((u32*) RX_BD_BASEADDR, (u32*) RX_BUF_BASEADDR, RX_BUF_BYTES);
+}
+
+void init_rxtx(){
+  init_bds();
+}
+
+void show_bds(){
+  xil_printf("INFO:  TX BD:\r\n");
+  dma_show_bd((u32*) TX_BD_BASEADDR);
+  xil_printf("INFO:  RX BD:\r\n");
+  dma_show_bd((u32*) RX_BD_BASEADDR);
+}
+
+void clear_bds(){
+  xil_printf("INFO:  clearing TX BD.\r\n");
+  dma_clear_bd_status((u32*) TX_BD_BASEADDR);
+  xil_printf("INFO:  clearing RX BD\r\n");
+  dma_clear_bd_status((u32*) RX_BD_BASEADDR);
+}
+
+
+void clear_ioc(){
+  xil_printf("INFO:  clearing DMA TX IOC flag.\r\n");
+  dma_clear_tx_ioc(DMA_TIMEOUT);
+  xil_printf("INFO:  clearing DMA RX IOC flag\r\n");
+  dma_clear_rx_ioc(DMA_TIMEOUT);
+}
+
+
+void single_tx(){
+  // TX buffer is a 128 bit header plus 40 uarts allocated 64 bits each.
+  // This is a total of 84 32-bit words (4 header words, 80 uart words)
+  // The resulting AXI stream is 128 bits times 21 beats.
+
+  static int count = 0;
+  u32 *tx_buf = (u32 *) TX_BUF_BASEADDR;
+  unsigned words = TX_BUF_BYTES/4;
+
+  tx_buf[0]= tx_mask_a;
+  tx_buf[1]= tx_mask_b;
+  tx_buf[2]=0x00000000;
+  tx_buf[3]=0x00000000;
+
+  for (int i=0; i<(words-4); i++)
+    tx_buf[i+4] = 0xB000F000 + i + (count<<16);
+  count++;
+  
+  Xil_DCacheFlushRange((UINTPTR)tx_buf, words*4);
+
+  dma_single_tx((u32*) TX_BD_BASEADDR);
+
+  dma_wait_tx_ioc(DMA_TIMEOUT);
+  
+}
+
+void show_tx_buffer(){
+  xil_printf("INFO:  TX Buffer:\r\n");
+  dma_show_buffer((u32*) TX_BD_BASEADDR, 4);
+}
+
+//void single_rx(){
+//  dma_single_rx((u32*) RX_BD_BASEADDR);
+//  dma_wait_rx_ioc(DMA_TIMEOUT);
+//}
+
+//void show_rx_buffer(){
+//  xil_printf("INFO:  RX Buffer:\r\n");
+//  dma_show_transferred((u32*) RX_BD_BASEADDR, 4);
+//}
+
+void dma_menu(){
+  xil_printf("DMA Menu: \r\n");
+
+  while(1){
+    xil_printf("choose an option:\r\n");
+    xil_printf("(0) exit DMA Menu \r\n");
+    xil_printf("(1) reset TX (2) TX status (3) reset RX (4) RX status (5) long status \r\n");
+    xil_printf("(6) init BDs (7) clear BDs (8) show BDs (9) clear IOC flags\r\n");
+
+    unsigned char c=inbyte();
+    xil_printf("pressed:  %c\n\r", c);
+    switch(c){
+    case '0':
+      return;
+    case '1':
+      dma_reset_tx(DMA_TIMEOUT);
+      break;
+    case '2':
+      dma_show_tx_status();
+      break;
+    case '3':
+      dma_reset_rx(DMA_TIMEOUT);
+      break;
+    case '4':
+      dma_show_rx_status();
+      break;
+    case '5':
+      dma_show_long_status();
+      break;
+    case '6':
+      init_bds();
+      break;
+    case '7':
+      clear_bds();
+      break;
+    case '8':
+      show_bds();
+      break;
+    case '9':
+      clear_ioc();
+      break;
+    default:
+      xil_printf("invalid selection...\n\r");
+    }
+  }
+}
 
 void rxtx_menu(){
   xil_printf("RX/TX Menu: \r\n");
@@ -20,10 +164,9 @@ void rxtx_menu(){
   while(1){
     xil_printf("choose an option:\r\n");
     xil_printf("(0) exit RX/TX Menu \r\n");
-    xil_printf("(1) read tx status (2) read tx look (3) single tx (4) toggle tx mask (5) toggle tx config \r\n");
-    xil_printf("(6) read rx status (7) read rx look (8) single rx (9) toggle rx config \r\n");
-    xil_printf("(a) zero counts  (b) benchmark RX/TX loopback (c) benchmark TX \r\n");
-    xil_printf("(d) read DMA status (e) DMA reset \r\n");
+    xil_printf("(1) read tx status (2) read tx look (3) toggle tx mask (4) toggle tx config \r\n");
+    xil_printf("(5) read rx status (6) read rx look (7) toggle rx config (8) zero counts \r\n");
+    xil_printf("(a) single TX (b) show TX buffer \r\n");
 
     unsigned char c=inbyte();
     xil_printf("pressed:  %c\n\r", c);
@@ -37,40 +180,28 @@ void rxtx_menu(){
       read_tx_look();
       break;
     case '3':
-      single_tx();
-      break;
-    case '4':
       toggle_tx_mask();
       break;
-    case '5':
+    case '4':
       toggle_tx_config();
       break;
-    case '6':
+    case '5':
       read_rx_status();
       break;
-    case '7':
+    case '6':
       read_rx_look();
       break;
-    case '8':
-      single_rx();
-      break;
-    case '9':
+    case '7':
       toggle_rx_config();
       break;
-    case 'a':
+    case '8':
       zero_counts();
       break;
+    case 'a':
+      single_tx();
+      break;
     case 'b':
-      benchmark_dma_loopback();
-      break;
-    case 'c':
-      benchmark_dma_write();
-      break;
-    case 'd':
-      dma_status();
-      break;
-    case 'e':
-      reset_dma();
+      show_tx_buffer();
       break;
     default:
       xil_printf("invalid selection...\n\r");
@@ -201,219 +332,27 @@ void zero_counts(){
   Xil_Out32(ADDR_AXIL_REGS+SCOPE_RX+0x3F00+C_ADDR_RX_ZERO_CNTS, 0x0);
 }
 
-void dma_status(){
-  unsigned cr, sr;
-  cr = Xil_In32(XPAR_AXI_DMA_0_BASEADDR+0x30);
-  sr = Xil_In32(XPAR_AXI_DMA_0_BASEADDR+0x34);
-  xil_printf("DMA control register (S2MM) - 0x%x \r\n", cr);
-  xil_printf("DMA status register  (S2MM) - 0x%x \r\n", sr);
 
-  xil_printf("Control Bits: \r\n");
-  xil_printf("RS (Run/Stop)-----%d\r\n", ((cr&0x00000001)!=0));
-  xil_printf("Always One--------%d\r\n", ((cr&0x00000002)!=0));
-  xil_printf("Reset-------------%d\r\n", ((cr&0x00000004)!=0));
-  xil_printf("Keyhole-----------%d\r\n", ((cr&0x00000008)!=0));
-  xil_printf("Cycle BD Enable---%d\r\n", ((cr&0x00000010)!=0));
-  xil_printf("Always Zero-------%d\r\n", ((cr&0x00000FE0)!=0));
-  xil_printf("Itr En (Comp)-----%d\r\n", ((cr&0x00001000)!=0));
-  xil_printf("Itr En (Delay)----%d\r\n", ((cr&0x00002000)!=0));
-  xil_printf("Itr En (Error)----%d\r\n", ((cr&0x00004000)!=0));
-  xil_printf("Always Zero-------%d\r\n", ((cr&0x00008000)!=0));
-  xil_printf("IRQ Threshold-----%d\r\n", ((cr&0x00FF0000)>>16));
-  xil_printf("IRQ Delay---------%d\r\n", ((cr&0xFF000000)>>24));
-  xil_printf("Status Bits: \r\n");
-  xil_printf("Halted------------%d\r\n", ((sr&0x00000001)!=0));
-  xil_printf("Idle--------------%d\r\n", ((sr&0x00000002)!=0));
-  xil_printf("Always Zero-------%d\r\n", ((sr&0x00000004)!=0));
-  xil_printf("SGIncld-----------%d\r\n", ((sr&0x00000008)!=0));
-  xil_printf("DMAIntErr---------%d\r\n", ((sr&0x00000010)!=0));
-  xil_printf("DMASecErr---------%d\r\n", ((sr&0x00000020)!=0));
-  xil_printf("DMADecErr---------%d\r\n", ((sr&0x00000040)!=0));
-  xil_printf("Always Zero-------%d\r\n", ((sr&0x00000080)!=0));
-  xil_printf("SGIntErr----------%d\r\n", ((sr&0x00000100)!=0));
-  xil_printf("SGSecErr----------%d\r\n", ((sr&0x00000200)!=0));
-  xil_printf("SGDecErr----------%d\r\n", ((sr&0x00000400)!=0));
-  xil_printf("Always Zero-------%d\r\n", ((sr&0x00000800)!=0));
-  xil_printf("Itr (IOC)---------%d\r\n", ((sr&0x00000100)!=0));
-  xil_printf("Itr (Delay)-------%d\r\n", ((sr&0x00000200)!=0));
-  xil_printf("Itr (Error)-------%d\r\n", ((sr&0x00000400)!=0));
-  xil_printf("Always Zero-------%d\r\n", ((sr&0x00000800)!=0));
-  xil_printf("Stat Irq Thresh---%d\r\n", ((cr&0x00FF0000)>>16));
-  xil_printf("Stay Irq Delay----%d\r\n", ((cr&0xFF000000)>>24));
-
-  cr = Xil_In32(XPAR_AXI_DMA_0_BASEADDR+0x00);
-  sr = Xil_In32(XPAR_AXI_DMA_0_BASEADDR+0x04);
-  xil_printf("DMA control register (MM2S) - 0x%x \r\n", cr);
-  xil_printf("DMA status register  (MM2S) - 0x%x \r\n", sr);
-
-  xil_printf("Control Bits: \r\n");
-  xil_printf("RS (Run/Stop)-----%d\r\n", ((cr&0x00000001)!=0));
-  xil_printf("Always One--------%d\r\n", ((cr&0x00000002)!=0));
-  xil_printf("Reset-------------%d\r\n", ((cr&0x00000004)!=0));
-  xil_printf("Keyhole-----------%d\r\n", ((cr&0x00000008)!=0));
-  xil_printf("Cycle BD Enable---%d\r\n", ((cr&0x00000010)!=0));
-  xil_printf("Always Zero-------%d\r\n", ((cr&0x00000FE0)!=0));
-  xil_printf("Itr En (Comp)-----%d\r\n", ((cr&0x00001000)!=0));
-  xil_printf("Itr En (Delay)----%d\r\n", ((cr&0x00002000)!=0));
-  xil_printf("Itr En (Error)----%d\r\n", ((cr&0x00004000)!=0));
-  xil_printf("Always Zero-------%d\r\n", ((cr&0x00008000)!=0));
-  xil_printf("IRQ Threshold-----%d\r\n", ((cr&0x00FF0000)>>16));
-  xil_printf("IRQ Delay---------%d\r\n", ((cr&0xFF000000)>>24));
-  xil_printf("Status Bits: \r\n");
-  xil_printf("Halted------------%d\r\n", ((sr&0x00000001)!=0));
-  xil_printf("Idle--------------%d\r\n", ((sr&0x00000002)!=0));
-  xil_printf("Always Zero-------%d\r\n", ((sr&0x00000004)!=0));
-  xil_printf("SGIncld-----------%d\r\n", ((sr&0x00000008)!=0));
-  xil_printf("DMAIntErr---------%d\r\n", ((sr&0x00000010)!=0));
-  xil_printf("DMASecErr---------%d\r\n", ((sr&0x00000020)!=0));
-  xil_printf("DMADecErr---------%d\r\n", ((sr&0x00000040)!=0));
-  xil_printf("Always Zero-------%d\r\n", ((sr&0x00000080)!=0));
-  xil_printf("SGIntErr----------%d\r\n", ((sr&0x00000100)!=0));
-  xil_printf("SGSecErr----------%d\r\n", ((sr&0x00000200)!=0));
-  xil_printf("SGDecErr----------%d\r\n", ((sr&0x00000400)!=0));
-  xil_printf("Always Zero-------%d\r\n", ((sr&0x00000800)!=0));
-  xil_printf("Itr (IOC)---------%d\r\n", ((sr&0x00000100)!=0));
-  xil_printf("Itr (Delay)-------%d\r\n", ((sr&0x00000200)!=0));
-  xil_printf("Itr (Error)-------%d\r\n", ((sr&0x00000400)!=0));
-  xil_printf("Always Zero-------%d\r\n", ((sr&0x00000800)!=0));
-  xil_printf("Stat Irq Thresh---%d\r\n", ((cr&0x00FF0000)>>16));
-  xil_printf("Stay Irq Delay----%d\r\n", ((cr&0xFF000000)>>24));
-}
-
-void reset_dma(){
-  // Using XPAR_AXI_DMA_0_BASEADDR  defined in xparameters.h
-
-  xil_printf("INFO:  Sending DMA reset \r\n");
-  Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x00, 0x04);
-  Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x30, 0x04);
-
-  unsigned timeout = 10;
-  while(timeout){
-    unsigned cw = Xil_In32(XPAR_AXI_DMA_0_BASEADDR+0x00);
-    unsigned cr = Xil_In32(XPAR_AXI_DMA_0_BASEADDR+0x30);
-
-    if (((cw&0x4)==0) && ((cr&0x4)==0))
-      break;
-    xil_printf("INFO: ...waiting on reset... \r\n");
-    timeout--;
-  }
-  if (! timeout) {
-    xil_printf("*** ERROR:  failed to reset... *** \r\n");
-    return;
-  } else {
-    xil_printf("INFO:  DMA reset complete.  \r\n");
-  }
-}
-
-void single_tx(){
-  // TX buffer is a 128 bit header plus 40 uarts allocated 64 bits each.
-  // This is a total of 84 32-bit words (4 header words, 80 uart words)
-  // The resulting AXI stream is 128 bits times 21 beats.
-
-  static int count = 0;
-  unsigned tx_base = 0x1100000;
-  u32 *tx_buf = (u32 *)tx_base;
-  unsigned words = 84;
-
-  xil_printf("*** Sending run*** \r\n");
-  Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x00, 0x01);
-
-  dma_status();
-
-  tx_buf[0]= tx_mask_a;
-  tx_buf[1]= tx_mask_b;
-  tx_buf[2]=0x00000000;
-  tx_buf[3]=0x00000000;
-
-  for (int i=0; i<(words-4); i++)
-    tx_buf[i+4] = 0xB000F000 + i + (count<<16);
-
-  Xil_DCacheFlushRange((UINTPTR)tx_buf, words*4);
-
-  xil_printf("*** Sending write *** \r\n");
-  xil_printf(" count = %d \r\n", count);
-  count++;
-
-  Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x18, (u32) tx_buf);
-  Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x28, words*4);
-
-  unsigned timeout = 10000;
-  unsigned start = 1;
-  while(timeout){
-    unsigned sr = Xil_In32(XPAR_AXI_DMA_0_BASEADDR+0x04);
-    if ((sr&0x2)!=0)
-      break;
-    if (start){
-      xil_printf("*** waiting for idle *** \r\n");
-      start = 0;
-    }
-    usleep(1000);
-    timeout--;
-  }
-  if (! timeout) {
-    xil_printf("*** ERROR:  failed to reach idle before timeout! *** \r\n");
-    return;
-  }
-
-  dma_status();
-
-}
 
 void single_rx(){
   // RX buffer is 32 beats of 128 bit each.
 
-  unsigned rx_base = 0x1300000;
-  u32 *rx_buf = (u32 *)rx_base;
-  unsigned max_words = 0x0400; // enough for > 20 read cycles of all 40 uarts
-  unsigned bytes = 0x4; // bytes per word
-
-  //xil_printf("*** Sending run*** \r\n");
-  Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x30, 0x01);
-
-  for (int i=0; i<max_words; i++)
-    rx_buf[i] = 0;
-
-  Xil_DCacheFlushRange((UINTPTR)rx_buf, max_words*bytes);
-
-  xil_printf("*** Sending read *** \r\n");
-  Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x48, (u32) rx_buf);
-  Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x58, max_words*bytes);
-
-  unsigned timeout = 10000;
-  unsigned start = 1;
-  while(timeout){
-    unsigned sr = Xil_In32(XPAR_AXI_DMA_0_BASEADDR+0x34);
-    if ((sr&0x2)!=0)
-      break;
-    if (start){
-      xil_printf("*** waiting for idle *** \r\n");
-      start = 0;
-    }
-    usleep(1);
-    timeout--;
-  }
-
-  Xil_DCacheInvalidateRange((UINTPTR) rx_buf, max_words*bytes);
-
-  for (int i=0; i<max_words/4; i++){
-    unsigned d = rx_buf[4*i+3];
-    unsigned c = rx_buf[4*i+2];
-    unsigned b = rx_buf[4*i+1];
-    unsigned a = rx_buf[4*i+0];
-    xil_printf("%d 0x%08x %08x %08x %08x\r\n", i, d, c, b, a);
-    if (a==0) {
-      if (c == i) {
-	xil_printf("Valid packet of size %d\r\n", i);
-      } else {
-	xil_printf("*** Error Invalid Packet Detected ***\r\n", i);
-      }
-      break;
-    }
-  }
-  if (! timeout) {
-    xil_printf("*** TIMEOUT ERROR *** \r\n");
-  }
+  //unsigned rx_base = 0x1300000;
+  //u32 *rx_buf = (u32 *)rx_base;
+  //unsigned max_words = 0x0400; // enough for > 20 read cycles of all 40 uarts
+  //unsigned bytes = 0x4; // bytes per word
 }
+
+
+
+
+
+
+
+
+
+// *** NOT YET CONVERTED TO SG SINGLE BD MODE ***
+
 
 void benchmark_dma_loopback(){
   unsigned timeout;
@@ -429,8 +368,6 @@ void benchmark_dma_loopback(){
 
   XTime start_time;
   XTime stop_time;
-
-  reset_dma();
 
   xil_printf("INFO:  Sending run to DMA TX and RX \r\n");
   Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x00, 0x01); // TX
@@ -588,8 +525,6 @@ void benchmark_dma_write(){
   XTime start_time;
   XTime stop_time;
 
-  reset_dma();
-  dma_status();
 
   xil_printf("*** Sending run*** \r\n");
   Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x00, 0x01);
@@ -639,8 +574,6 @@ void benchmark_dma_write(){
   XTime_GetTime(&stop_time);
 
   Xil_DCacheInvalidateRange((UINTPTR) tx_buf, words*bytes);
-
-  reset_dma();
 
   u32 delta = (u32) (stop_time - start_time);
   unsigned payloads = 40;

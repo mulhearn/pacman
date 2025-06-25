@@ -169,22 +169,18 @@ void blink_leds(){
     Xil_Out32(ADDR_AXIL_REGS+SCOPE_GLOBAL+C_ADDR_GLOBAL_LEDS, 0x0);
     usleep(wait_usec);
   }
-
-
-
-
-
 }
 
 int main(){
-  xil_printf("Demonstration Driver For PACMAN TX/RX \r\n");
-  xil_printf("Sanity number:  2\r\n");
+  xil_printf("Menu-Driver Demonstration Driver For PACMAN\r\n");
+  xil_printf("Sanity number:  1\r\n");
   xil_printf("Random Max:  0x%x Random Number:  0x%x \r\n", RAND_MAX, rand());
 
   int status = 0;
   status |= init_gpiops();
   status |= init_iic();
   mdio_init();
+  init_rxtx();
   if (status != XST_SUCCESS) {
     xil_printf("Hardware initialization has FAILED.\r\n");
     return 0;
@@ -193,8 +189,8 @@ int main(){
   while(1){
     xil_printf("choose an option:\r\n");
     xil_printf("(1) blink LEDs (2) read global status (3) toggle scratch (4) toggle enables (5) toggle dcache \r\n");
-    xil_printf("(6) I2C menu (7) RX/TX menu (8) timing menu (9) ADC menu\r\n");
-    xil_printf("(a) read MAC From CPLD (b) toggle CPLD config \r\n");
+    xil_printf("(6) read MAC From CPLD (7) toggle CPLD config \r\n");
+    xil_printf("(a) I2C menu (b) DMA menu (c) RX/TX menu (d) timing menu (e) ADC menu\r\n");
     unsigned char c=inbyte();
     xil_printf("pressed:  %c\n\r", c);
     switch(c){
@@ -214,22 +210,25 @@ int main(){
       toggle_dcache();
       break;
     case '6':
-      iic_menu();
-      break;
-    case '7':
-      rxtx_menu();
-      break;
-    case '8':
-      timing_menu();
-      break;
-    case '9':
-      adc_menu();
-      break;
-    case 'a':
       read_mac_from_cpld();
       break;
-    case 'b':
+    case '7':
       toggle_cpld();
+      break;
+    case 'a':
+      iic_menu();
+      break;
+    case 'b':
+      dma_menu();
+      break;      
+    case 'c':
+      rxtx_menu();
+      break;
+    case 'd':
+      timing_menu();
+      break;
+    case 'e':
+      adc_menu();
       break;
     default:
       xil_printf("invalid selection...\n\r");
