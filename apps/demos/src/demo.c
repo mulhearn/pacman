@@ -13,7 +13,7 @@
 #include "iic.h"
 #include "rxtx.h"
 #include "timing.h"
-//#include "adc.h"
+#include "adc.h"
 
 
 #include "xemacps.h"
@@ -190,7 +190,7 @@ int main(){
     xil_printf("choose an option:\r\n");
     xil_printf("(1) blink LEDs (2) read global status (3) toggle scratch (4) toggle enables (5) toggle dcache \r\n");
     xil_printf("(6) read MAC From CPLD (7) toggle CPLD config \r\n");
-    xil_printf("(a) I2C menu (b) DMA menu (c) RX/TX menu (d) timing menu \r\n");
+    xil_printf("(a) I2C menu (b) DMA menu (c) RX/TX menu (d) timing menu (e) ADC menu\r\n");
     unsigned char c=inbyte();
     xil_printf("pressed:  %c\n\r", c);
     switch(c){
@@ -226,6 +226,9 @@ int main(){
       break;
     case 'd':
       timing_menu();
+      break;
+    case 'e':
+      adc_menu();
       break;
     default:
       xil_printf("invalid selection...\n\r");

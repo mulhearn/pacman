@@ -19,8 +19,8 @@ file copy apps/demos/build.tcl demo/
 file copy -force apps/demos/src/demo.c demo/demo/src/demo.c
 
 # Copy the include and src files used by the main application:
-# file copy apps/demos/src/adc.c     demo/demo/src/
-# file copy apps/demos/src/adc.h     demo/demo/src/
+file copy apps/demos/src/adc.c     demo/demo/src/
+file copy apps/demos/src/adc.h     demo/demo/src/
 file copy apps/demos/src/axil.h    demo/demo/src/
 file copy apps/demos/src/gpiops.c  demo/demo/src/
 file copy apps/demos/src/gpiops.h  demo/demo/src/

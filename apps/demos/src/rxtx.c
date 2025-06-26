@@ -108,6 +108,11 @@ void single_rx(){
 
 void show_rx_buffer(){
   xil_printf("INFO:  RX Buffer:\r\n");
+  dma_show_buffer((u32*) RX_BD_BASEADDR, 4);
+}
+
+void show_rx_transferred(){
+  xil_printf("INFO:  RX Buffer:\r\n");
   dma_show_transferred((u32*) RX_BD_BASEADDR, 4);
 }
 
@@ -166,7 +171,7 @@ void rxtx_menu(){
     xil_printf("(0) exit RX/TX Menu \r\n");
     xil_printf("(1) read tx status (2) read tx look (3) toggle tx mask (4) toggle tx config \r\n");
     xil_printf("(5) read rx status (6) read rx look (7) toggle rx config (8) zero counts \r\n");
-    xil_printf("(a) single TX (b) show TX buffer (c) single RX (d) show RX buffer \r\n");
+    xil_printf("(a) single TX (b) show TX buffer (c) single RX (d) show RX buffer (e) show RX transferred \r\n");
 
     unsigned char c=inbyte();
     xil_printf("pressed:  %c\n\r", c);
@@ -208,6 +213,9 @@ void rxtx_menu(){
       break;
     case 'd':
       show_rx_buffer();
+      break;
+    case 'e':
+      show_rx_transferred();
       break;
     default:
       xil_printf("invalid selection...\n\r");
