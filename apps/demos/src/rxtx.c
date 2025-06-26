@@ -101,15 +101,15 @@ void show_tx_buffer(){
   dma_show_buffer((u32*) TX_BD_BASEADDR, 4);
 }
 
-//void single_rx(){
-//  dma_single_rx((u32*) RX_BD_BASEADDR);
-//  dma_wait_rx_ioc(DMA_TIMEOUT);
-//}
+void single_rx(){
+  dma_single_rx((u32*) RX_BD_BASEADDR);
+  dma_wait_rx_ioc(DMA_TIMEOUT);
+}
 
-//void show_rx_buffer(){
-//  xil_printf("INFO:  RX Buffer:\r\n");
-//  dma_show_transferred((u32*) RX_BD_BASEADDR, 4);
-//}
+void show_rx_buffer(){
+  xil_printf("INFO:  RX Buffer:\r\n");
+  dma_show_transferred((u32*) RX_BD_BASEADDR, 4);
+}
 
 void dma_menu(){
   xil_printf("DMA Menu: \r\n");
@@ -166,7 +166,7 @@ void rxtx_menu(){
     xil_printf("(0) exit RX/TX Menu \r\n");
     xil_printf("(1) read tx status (2) read tx look (3) toggle tx mask (4) toggle tx config \r\n");
     xil_printf("(5) read rx status (6) read rx look (7) toggle rx config (8) zero counts \r\n");
-    xil_printf("(a) single TX (b) show TX buffer \r\n");
+    xil_printf("(a) single TX (b) show TX buffer (c) single RX (d) show RX buffer \r\n");
 
     unsigned char c=inbyte();
     xil_printf("pressed:  %c\n\r", c);
@@ -202,6 +202,12 @@ void rxtx_menu(){
       break;
     case 'b':
       show_tx_buffer();
+      break;
+    case 'c':
+      single_rx();
+      break;
+    case 'd':
+      show_rx_buffer();
       break;
     default:
       xil_printf("invalid selection...\n\r");
@@ -334,14 +340,6 @@ void zero_counts(){
 
 
 
-void single_rx(){
-  // RX buffer is 32 beats of 128 bit each.
-
-  //unsigned rx_base = 0x1300000;
-  //u32 *rx_buf = (u32 *)rx_base;
-  //unsigned max_words = 0x0400; // enough for > 20 read cycles of all 40 uarts
-  //unsigned bytes = 0x4; // bytes per word
-}
 
 
 
