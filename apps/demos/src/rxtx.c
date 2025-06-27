@@ -338,19 +338,23 @@ void read_tx_look(){
 
 void toggle_tx_mask(){
   static int mode = 0;
-  mode = (mode + 1) % 3;
+  mode = (mode + 1) % 4;
   switch(mode){
-    case 1:
-      tx_mask_b = 0x0;
-      tx_mask_a = 0xFFFFFFFF;
-      break;
-    case 2:
-      tx_mask_b = 0x0;
-      tx_mask_a = 0x1;
-      break;
-    default:
-      tx_mask_b = 0xFF;
-      tx_mask_a = 0xFFFFFFFF;
+  case 1:
+    tx_mask_b = 0x0;
+    tx_mask_a = 0x0;
+    break;
+  case 2:
+    tx_mask_b = 0x0;
+    tx_mask_a = 0x1;
+    break;
+  case 3:
+    tx_mask_b = 0x0;
+    tx_mask_a = 0xFFFFFFFF;
+    break;
+  default:
+    tx_mask_b = 0xFF;
+    tx_mask_a = 0xFFFFFFFF;
   }
   xil_printf("RX mask:  0x%08x %08x \r\n", tx_mask_b, tx_mask_a);
 }
@@ -379,16 +383,19 @@ void benchmark_dma_tx(){
   for (int i=0; i<(words-4); i++)
     buf[i+4] = rand();
 
+  Xil_DCacheFlushRange((UINTPTR)buf, words*4);
+  
   dma_halt_tx(DMA_TIMEOUT);
   dma_clear_bd_status(bd);
 
   dma_clear_tx_ioc(DMA_TIMEOUT);
 
-  xil_printf("INFO: setting current descriptor address to 0x%08x\r\n", bd);
   dma_write_register(MM2S_CURDESC, (u32) bd);
 
   dma_run_tx(DMA_TIMEOUT);
 
+  //dma_write_register(MM2S_TAILDESC, (u32) bd);
+  //dma_wait_tx_ioc(DMA_TIMEOUT);
   
   XTime start_time;
   XTime stop_time;
@@ -396,8 +403,8 @@ void benchmark_dma_tx(){
   XTime_GetTime(&start_time);
   unsigned timeout = 0;
   for (int i=0;i<packets; i++){
-    dma_clear_tx_ioc(DMA_TIMEOUT);
     dma_clear_bd_status(bd);
+    dma_clear_tx_ioc(DMA_TIMEOUT);
     //usleep(1);
     dma_write_register(MM2S_TAILDESC, (u32) bd);
     timeout = dma_wait_tx_ioc(DMA_TIMEOUT);
