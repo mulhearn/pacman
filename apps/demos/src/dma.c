@@ -11,7 +11,7 @@
 
 #include "dma.h"
 
-#define VERBOSE 1
+#define VERBOSE 0
 
 //
 // Local utility functions, not in header:
@@ -147,189 +147,183 @@ void print_dma_control_long(u32 value) {
 
 
 // reset the TX
-void dma_reset_tx(unsigned timeout){
-  xil_printf("INFO:  Resetting DMA TX \r\n");
+unsigned dma_reset_tx(unsigned timeout){
+
   dma_write_register(MM2S_DMACR, DMACR_RESET);
 
   if (timeout > 0){
-    while (timeout && (dma_read_register(MM2S_DMACR) & DMACR_RESET)){ usleep(10); timeout--; }
+    while (timeout && (dma_read_register(MM2S_DMACR) & DMACR_RESET)){ usleep(1); timeout--; }
     if (! timeout) {
       xil_printf("ERROR:  timeout wating on RESET to clear.\r\n");
-      return;
+    } else if (VERBOSE) {
+      xil_printf("INFO:  DMA reset complete.  (timeout=%d) \r\n", timeout);
     }
   }
-  if (VERBOSE)
-    xil_printf("INFO:  DMA reset complete.  (timeout=%d) \r\n", timeout);
+  
+  return timeout;
 }
 
 // reset the RX
-void dma_reset_rx(unsigned timeout){
-  xil_printf("INFO:  Resetting DMA RX \r\n");
+unsigned dma_reset_rx(unsigned timeout){
   dma_write_register(S2MM_DMACR, DMACR_RESET);
 
   if (timeout>0){
-    while (timeout && (dma_read_register(S2MM_DMACR) & DMACR_RESET)){ usleep(10); timeout--; }
+    while (timeout && (dma_read_register(S2MM_DMACR) & DMACR_RESET)){ usleep(1); timeout--; }
 
     if (! timeout) {
       xil_printf("ERROR:  timeout wating on RESET to clear.\r\n");
-      return;
+    } else if (VERBOSE) {
+      xil_printf("INFO:  DMA reset complete.  (timeout=%d) \r\n", timeout);
     }
   }
-  if (VERBOSE)
-    xil_printf("INFO:  DMA reset complete.  (timeout=%d) \r\n", timeout);
+  return timeout;
 }
 
-void dma_halt_tx(unsigned timeout){
-  xil_printf("INFO:  Stopping DMA TX \r\n");
+unsigned dma_halt_tx(unsigned timeout){
+  
   dma_write_register(MM2S_DMACR, 0);
 
   if (timeout > 0){
     while (timeout && ((dma_read_register(MM2S_DMACR) & DMACR_RUNSTOP)||((dma_read_register(MM2S_DMASR) & DMASR_HALTED)==0))){
-      usleep(10);
+      usleep(1);
       timeout--;
     }
     if (! timeout) {
       xil_printf("ERROR:  timeout wating on HALT state.\r\n");
-      return;
+    } else if (VERBOSE) {
+      xil_printf("INFO:  DMA halt complete.  (timeout=%d) \r\n", timeout);
     }
-  }
-  if (VERBOSE)
-    xil_printf("INFO:  DMA halt complete.  (timeout=%d) \r\n", timeout);
+  }  
+  return timeout;
 }
 
-void dma_halt_rx(unsigned timeout){
-  xil_printf("INFO:  Stopping DMA RX \r\n");
+unsigned dma_halt_rx(unsigned timeout){
+
   dma_write_register(S2MM_DMACR, 0);
 
   if (timeout > 0){
     while (timeout && ((dma_read_register(S2MM_DMACR) & DMACR_RUNSTOP)||((dma_read_register(S2MM_DMASR) & DMASR_HALTED)==0))){
-      usleep(10);
+      usleep(1);
       timeout--;
     }
     if (! timeout) {
       xil_printf("ERROR:  timeout wating on HALT state.\r\n");
-      return;
+    } else if (VERBOSE) {
+      xil_printf("INFO:  DMA is halted.  (timeout=%d) \r\n", timeout);
     }
   }
-  if (VERBOSE)
-    xil_printf("INFO:  DMA is halted.  (timeout=%d) \r\n", timeout);
+  return timeout;
 }
 
-void dma_run_tx(unsigned timeout){
-  xil_printf("INFO:  Starting DMA TX \r\n");
+unsigned dma_run_tx(unsigned timeout){
+
   dma_write_register(MM2S_DMACR, DMACR_RUNSTOP);
 
   if (timeout > 0){
     while (timeout && (((dma_read_register(MM2S_DMACR) & DMACR_RUNSTOP)==0)||(dma_read_register(MM2S_DMASR) & DMASR_HALTED))){
-      usleep(10);
+      usleep(1);
       timeout--;
     }
     if (! timeout) {
       xil_printf("ERROR:  timeout wating on RUN state.\r\n");
-      return;
+    } else if (VERBOSE) {
+      xil_printf("INFO:  DMA is running.  (timeout=%d) \r\n", timeout);
     }
   }
-  if (VERBOSE)
-    xil_printf("INFO:  DMA is running.  (timeout=%d) \r\n", timeout);
+  return timeout;
 }
 
-void dma_run_rx(unsigned timeout){
-  xil_printf("INFO:  Starting DMA RX \r\n");
+unsigned dma_run_rx(unsigned timeout){
+
   dma_write_register(S2MM_DMACR, DMACR_RUNSTOP);
 
   if (timeout > 0){
     while (timeout && (((dma_read_register(S2MM_DMACR) & DMACR_RUNSTOP)==0)||(dma_read_register(S2MM_DMASR) & DMASR_HALTED))){
-      usleep(10);
+      usleep(1);
       timeout--;
     }
+    
     if (! timeout) {
       xil_printf("ERROR:  timeout wating on RUN state.\r\n");
-      return;
+    } else if (VERBOSE){
+      xil_printf("INFO:  DMA is running.  (timeout=%d) \r\n", timeout);
     }
-  }
-  if (VERBOSE)
-    xil_printf("INFO:  DMA is running.  (timeout=%d) \r\n", timeout);
+  }  
+  return timeout;
 }
 
 //
 // IOC flags:
 //
 
-void dma_clear_tx_ioc(unsigned timeout){
-  if (VERBOSE)
-    xil_printf("INFO:  clearing DMA TX IOC flag\r\n");
-  dma_write_register(MM2S_DMASR, DMASR_IOC_IRQ);
+unsigned dma_clear_tx_ioc(unsigned timeout){
 
+  dma_write_register(MM2S_DMASR, DMASR_IOC_IRQ);
+  
   if (timeout > 0){
     while (timeout && (dma_read_register(MM2S_DMASR) & DMASR_IOC_IRQ)){
-      usleep(10);
+      usleep(1);
       timeout--;
     }
     if (! timeout) {
       xil_printf("ERROR:  timeout wating for TX IOC to clear\r\n");
-      return;
+    } else if (VERBOSE) {
+      xil_printf("INFO:  DMA TX IOC flag is cleared  (timeout=%d) \r\n", timeout);
     }
   }
-  if (VERBOSE)
-    xil_printf("INFO:  DMA TX IOC flag is cleared  (timeout=%d) \r\n", timeout);
+  return timeout;
 }
 
-void dma_clear_rx_ioc(unsigned timeout){
-  if (VERBOSE)
-    xil_printf("INFO:  clearing DMA RX IOC flag\r\n");
-  dma_write_register(S2MM_DMASR, DMASR_IOC_IRQ);
+unsigned dma_clear_rx_ioc(unsigned timeout){
 
+  dma_write_register(S2MM_DMASR, DMASR_IOC_IRQ);
+  
   if (timeout > 0){
     while (timeout && (dma_read_register(S2MM_DMASR) & DMASR_IOC_IRQ)){
-      usleep(10);
+      usleep(1);
       timeout--;
     }
     if (! timeout) {
-      xil_printf("ERROR:  timeout wating for RX IOC to clear\r\n");
-      return;
+      xil_printf("ERROR:  timeout wating for TX IOC to clear\r\n");
+    } else if (VERBOSE) {
+      xil_printf("INFO:  DMA TX IOC flag is cleared  (timeout=%d) \r\n", timeout);
     }
   }
-  if (VERBOSE)
-    xil_printf("INFO:  DMA TX IOC flag is cleared  (timeout=%d) \r\n", timeout);
+  return timeout;
 }
 
-
-void dma_wait_tx_ioc(unsigned timeout){
-  if (VERBOSE)
-    xil_printf("INFO:  waiting for DMA TX IOC flag\r\n");
-
+  
+unsigned dma_wait_tx_ioc(unsigned timeout){
   if (timeout > 0){
     while (timeout && ((dma_read_register(MM2S_DMASR) & DMASR_IOC_IRQ)==0)){
-      usleep(10);
+      usleep(1);
       timeout--;
     }
     if (! timeout) {
       xil_printf("ERROR:  timeout waiting for TX IOC.\r\n");
-      return;
+      return 0;
+    } else if (VERBOSE) {
+      xil_printf("INFO:  DMA TX IOC flag was raised  (timeout=%d) \r\n", timeout);
     }
   }
-  if (VERBOSE)
-    xil_printf("INFO:  DMA TX IOC flag was raised  (timeout=%d) \r\n", timeout);
+  return timeout;
 }
 
-void dma_wait_rx_ioc(unsigned timeout){
-  if (VERBOSE)
-    xil_printf("INFO:  waiting for DMA RX IOC flag\r\n");
+unsigned dma_wait_rx_ioc(unsigned timeout){
 
   if (timeout > 0){
     while (timeout && ((dma_read_register(S2MM_DMASR) & DMASR_IOC_IRQ)==0)){
-      usleep(10);
+      usleep(1);
       timeout--;
     }
     if (! timeout) {
       xil_printf("ERROR:  timeout wating for RX IOC\r\n");
-      return;
+    } else if (VERBOSE) {
+      xil_printf("INFO:  DMA RX IOC flag was raised  (timeout=%d) \r\n", timeout);
     }
   }
-  if (VERBOSE)
-    xil_printf("INFO:  DMA RX IOC flag was raised  (timeout=%d) \r\n", timeout);
+  return timeout;
 }
-
 
 //
 // Buffer Descriptor Utilities:
@@ -392,7 +386,8 @@ void dma_clear_buffer(u32 *bd) {
     return;
   }
 
-  xil_printf("INFO: clearing buffer of size 0x%x (%d)\r\n", len, len);
+  if (VERBOSE)
+    xil_printf("INFO: clearing buffer of size 0x%x (%d)\r\n", len, len);
   for (int i=0; i<len/4; i++){
     buf[i]=0;
   }
@@ -400,7 +395,7 @@ void dma_clear_buffer(u32 *bd) {
   Xil_DCacheFlushRange((UINTPTR)buf, len);
 }
 
-void dma_print_buffer(u32 *buf, unsigned len, int ncol) {
+void dma_print_buffer(u32 *buf, unsigned len, int ncol, int max_words) {
   if (buf==NULL){
     xil_printf("ERROR:  BD not initialized.\r\n");
     return;
@@ -408,7 +403,10 @@ void dma_print_buffer(u32 *buf, unsigned len, int ncol) {
   Xil_DCacheInvalidateRange((UINTPTR)buf, len);
 
   int words = len / DMA_BYTES_PER_WORD;
-  for (int i=0; i<words; i++){
+  if ((max_words > 0) && (words > max_words))
+    words = max_words;
+  
+  for (int i=0; i<words; i++){    
     if ((i%ncol)==0)
       xil_printf("%4d: ", i/ncol);
     xil_printf("0x%08x ", buf[i]);
@@ -419,24 +417,23 @@ void dma_print_buffer(u32 *buf, unsigned len, int ncol) {
     xil_printf("\r\n");
 }
 
-void dma_show_buffer(u32* bd, int ncol){
+void dma_show_buffer(u32* bd, int ncol, int max_words){
   Xil_DCacheInvalidateRange((UINTPTR)bd, DMA_BD_BYTES);
 
   u32 *buf = (u32*) bd[DMA_BD_BUFFER_ADDRESS];
   unsigned len = bd[DMA_BD_CONTROL]&DMA_BD_CONTROL_LEN;
 
-  dma_print_buffer(buf, len, ncol);
+  dma_print_buffer(buf, len, ncol, max_words);
 }
 
-void dma_show_transferred(u32* bd, int ncol){
+void dma_show_transferred(u32* bd, int ncol, int max_words){
   Xil_DCacheInvalidateRange((UINTPTR)bd, DMA_BD_BYTES);
 
   u32 *buf = (u32*) bd[DMA_BD_BUFFER_ADDRESS];
   unsigned len = bd[DMA_BD_STATUS]&DMA_BD_STATUS_TRANSFERRED;
 
-  dma_print_buffer(buf, len, ncol);
+  dma_print_buffer(buf, len, ncol, max_words);
 }
-
 
 void dma_single_tx(u32* bd){
 
@@ -445,12 +442,14 @@ void dma_single_tx(u32* bd){
 
   dma_clear_tx_ioc(DMA_TIMEOUT);
 
-  xil_printf("INFO: setting current descriptor address to 0x%08x\r\n", bd);
+  if (VERBOSE)
+    xil_printf("INFO: setting current descriptor address to 0x%08x\r\n", bd);
   dma_write_register(MM2S_CURDESC, (u32) bd);
 
   dma_run_tx(DMA_TIMEOUT);
 
-  xil_printf("INFO: setting tail address to 0x%08x\r\n", bd);
+  if (VERBOSE)
+    xil_printf("INFO: setting tail address to 0x%08x\r\n", bd);
   dma_write_register(MM2S_TAILDESC, (u32) bd);
 
 }
@@ -462,12 +461,15 @@ void dma_single_rx(u32* bd){
 
   dma_clear_rx_ioc(DMA_TIMEOUT);
 
-  xil_printf("INFO: setting current descriptor address\r\n");
+  if (VERBOSE)
+    xil_printf("INFO: setting current descriptor address\r\n");
   dma_write_register(S2MM_CURDESC, (u32) bd);
 
   dma_run_rx(DMA_TIMEOUT);
 
-  xil_printf("INFO: setting tail address\r\n");
+  if (VERBOSE)
+    xil_printf("INFO: setting tail address\r\n");
+
   dma_write_register(S2MM_TAILDESC, (u32) bd);
 
 }

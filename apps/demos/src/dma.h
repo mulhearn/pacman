@@ -114,21 +114,22 @@ void dma_show_long_status();
 
 // reset/halt/run the  TX/RX DMA engines (waits <timeout> for completion unless timeout=0)
 // suggested default timeout:
-#define DMA_TIMEOUT 10 // timeout=10 ==> 100 us maximum wait
-void dma_reset_tx(unsigned timeout);
-void dma_reset_rx(unsigned timeout);
-void dma_halt_tx(unsigned timeout);
-void dma_halt_rx(unsigned timeout);
-void dma_run_tx(unsigned timeout);
-void dma_run_rx(unsigned timeout);
+#define DMA_TIMEOUT 100 // timeout=1 ==> 100 us maximum wait
+// returns 0 for all errors and non-zero timeout remaining otherwise
+unsigned dma_reset_tx(unsigned timeout);
+unsigned dma_reset_rx(unsigned timeout);
+unsigned dma_halt_tx(unsigned timeout);
+unsigned dma_halt_rx(unsigned timeout);
+unsigned dma_run_tx(unsigned timeout);
+unsigned dma_run_rx(unsigned timeout);
 
 // clear IOC flags (waits <timeout> for completion unless timeout=0)
 // (IOC flag is set even whem the corresponding HW interrupt is disable)
-void dma_clear_tx_ioc(unsigned timeout);
-void dma_clear_rx_ioc(unsigned timeout);
+unsigned dma_clear_tx_ioc(unsigned timeout);
+unsigned dma_clear_rx_ioc(unsigned timeout);
 // wait on IOC flag to be raised (waits <timeout> unless timeout=0)
-void dma_wait_tx_ioc(unsigned timeout);
-void dma_wait_rx_ioc(unsigned timeout);
+unsigned dma_wait_tx_ioc(unsigned timeout);
+unsigned dma_wait_rx_ioc(unsigned timeout);
 
 // scatter/gather buffer descriptors
 // initialize a BD located at <bd>, with next BD at <nxt>, buffer at <buf> of size <size_bytes>.
@@ -144,10 +145,11 @@ void dma_show_bd(u32 *bd);
 void dma_clear_bd_status(u32* bd);
 // print the contents of the buffer associated with the BD <bd>, in <ncol> column format.
 // (i.e. length of buffer taken from control register)
-void dma_show_buffer(u32* bd, int ncol);
+void dma_show_buffer(u32* bd, int ncol, int max_words);
 // print the *transferred* contents of the buffer associated with the BD, in <ncol> column format.
 // (i.e. length of buffer taken from status register)
-void dma_show_transferred(u32* bd, int ncol);
+void dma_show_transferred(u32* bd, int ncol, int max_words);
+
 // set the contents of the buffer associated with the BD <bd> to zero.
 void dma_clear_buffer(u32* bd);
 

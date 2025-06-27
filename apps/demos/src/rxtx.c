@@ -39,7 +39,9 @@ u32 tx_mask_a = 0xFFFFFFFF;
 #define RX_BUF_BYTES 0x400  // More than enough for now...
 
 void init_bds(){
+  xil_printf("INFO:  initializing single TX BD:\r\n");
   dma_init_single_bd_tx((u32*) TX_BD_BASEADDR, (u32*) TX_BUF_BASEADDR, TX_BUF_BYTES);
+  xil_printf("INFO:  initializing single RX BD:\r\n");  
   dma_init_single_bd_rx((u32*) RX_BD_BASEADDR, (u32*) RX_BUF_BASEADDR, RX_BUF_BYTES);
 }
 
@@ -92,28 +94,34 @@ void single_tx(){
 
   dma_single_tx((u32*) TX_BD_BASEADDR);
 
-  dma_wait_tx_ioc(DMA_TIMEOUT);
+  if (dma_wait_tx_ioc(DMA_TIMEOUT) > 0){
+    xil_printf("INFO: single TX yielded TX IOC flag high (SUCCESS)\r\n");
+  }
   
 }
 
 void show_tx_buffer(){
   xil_printf("INFO:  TX Buffer:\r\n");
-  dma_show_buffer((u32*) TX_BD_BASEADDR, 4);
+  dma_show_buffer((u32*) TX_BD_BASEADDR, 4, 1000);
 }
 
 void single_rx(){
   dma_single_rx((u32*) RX_BD_BASEADDR);
-  dma_wait_rx_ioc(DMA_TIMEOUT);
+
+  if (dma_wait_rx_ioc(DMA_TIMEOUT) > 0){
+    xil_printf("INFO: single RX yielded RX IOC flag high (SUCCESS)\r\n");
+  }
+
 }
 
 void show_rx_buffer(){
   xil_printf("INFO:  RX Buffer:\r\n");
-  dma_show_buffer((u32*) RX_BD_BASEADDR, 4);
+  dma_show_buffer((u32*) RX_BD_BASEADDR, 4, 1000);
 }
 
 void show_rx_transferred(){
   xil_printf("INFO:  RX Buffer:\r\n");
-  dma_show_transferred((u32*) RX_BD_BASEADDR, 4);
+  dma_show_transferred((u32*) RX_BD_BASEADDR, 4, 1000);
 }
 
 void dma_menu(){
@@ -163,6 +171,8 @@ void dma_menu(){
   }
 }
 
+void benchmark_dma_tx();
+
 void rxtx_menu(){
   xil_printf("RX/TX Menu: \r\n");
 
@@ -172,6 +182,7 @@ void rxtx_menu(){
     xil_printf("(1) read tx status (2) read tx look (3) toggle tx mask (4) toggle tx config \r\n");
     xil_printf("(5) read rx status (6) read rx look (7) toggle rx config (8) zero counts \r\n");
     xil_printf("(a) single TX (b) show TX buffer (c) single RX (d) show RX buffer (e) show RX transferred \r\n");
+    xil_printf("(f) benchmark TX \r\n");
 
     unsigned char c=inbyte();
     xil_printf("pressed:  %c\n\r", c);
@@ -216,6 +227,9 @@ void rxtx_menu(){
       break;
     case 'e':
       show_rx_transferred();
+      break;
+    case 'f':
+      benchmark_dma_tx();
       break;
     default:
       xil_printf("invalid selection...\n\r");
@@ -347,13 +361,70 @@ void zero_counts(){
 }
 
 
+//
+// Benchmarks:
+//
 
+void benchmark_dma_tx(){
+  u32 *bd  = (u32 *) TX_BD_BASEADDR;
+  u32 *buf = (u32 *) TX_BUF_BASEADDR;
+  const unsigned words = TX_BUF_BYTES/4; // words in TX buffer (= 1 DMA packet)
+  const unsigned packets = 10000;        // DMA packets to send
+ 
+  buf[0]= tx_mask_a;
+  buf[1]= tx_mask_b;
+  buf[2]=0x00000000;
+  buf[3]=0x00000000;
 
+  for (int i=0; i<(words-4); i++)
+    buf[i+4] = rand();
 
+  dma_halt_tx(DMA_TIMEOUT);
+  dma_clear_bd_status(bd);
 
+  dma_clear_tx_ioc(DMA_TIMEOUT);
 
+  xil_printf("INFO: setting current descriptor address to 0x%08x\r\n", bd);
+  dma_write_register(MM2S_CURDESC, (u32) bd);
 
+  dma_run_tx(DMA_TIMEOUT);
 
+  
+  XTime start_time;
+  XTime stop_time;
+
+  XTime_GetTime(&start_time);
+  unsigned timeout = 0;
+  for (int i=0;i<packets; i++){
+    dma_clear_tx_ioc(DMA_TIMEOUT);
+    dma_clear_bd_status(bd);
+    //usleep(1);
+    dma_write_register(MM2S_TAILDESC, (u32) bd);
+    timeout = dma_wait_tx_ioc(DMA_TIMEOUT);
+    if (timeout==0){
+      xil_printf("ERROR: timeout waiting on IOC flag at packet %d \r\n", i);
+      return;
+    } else if (timeout < 5){
+      xil_printf("INFO: timeout %d \r\n", timeout);
+    }
+  }
+  XTime_GetTime(&stop_time);
+
+  u32 delta = (u32) (stop_time - start_time);
+  unsigned payloads = 40;
+  xil_printf("elapsed timer counts:      %d (0x%x)\r\n", delta, delta);
+  xil_printf("counts per second:         %d\r\n", COUNTS_PER_SECOND);
+  xil_printf("tx payloads per packet:    %d\r\n", payloads);
+  xil_printf("packets:                   %d\r\n", packets);
+
+  unsigned r = (unsigned) (((float) COUNTS_PER_SECOND) * payloads * packets / delta / 1000);
+  unsigned m = 40.0*10000/66;
+  unsigned p = 40.0*10000/67;
+
+  xil_printf("achieved throughput:  %d tx payloads per ms\r\n", r);
+  xil_printf("maximum tx rate:      %d tx payloads (64-bit+2 @ 10 MHz) per ms\r\n", m);
+  xil_printf("practical max:        %d tx payloads (64-bit+3 @ 10 MHz) per ms\r\n", p);
+}
 
 
 
@@ -521,79 +592,3 @@ void benchmark_dma_loopback(){
 }
 
 
-void benchmark_dma_write(){
-  unsigned timeout;
-  unsigned tx_base = 0x1100000;
-  u32 *tx_buf = (u32 *)tx_base;
-  const unsigned bytes = 4;      // bytes per word (32-bit words)
-  const unsigned words = 84;     // words in each packet (4 header + 2 words per 40 uarts)
-  const unsigned packets = 10000; // packets to write
-  XTime start_time;
-  XTime stop_time;
-
-
-  xil_printf("*** Sending run*** \r\n");
-  Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x00, 0x01);
-
-  XTime_GetTime(&start_time);
-
-  tx_buf[0]=0xFFFFFFFF;
-  tx_buf[1]=0x000000FF;
-  tx_buf[2]=0x00000000;
-  tx_buf[3]=0x00000000;
-
-  for (int iword=0; iword<(words-4); iword++)
-    tx_buf[iword+4] = 1;
-
-  Xil_DCacheFlushRange((UINTPTR)tx_buf, words*bytes);
-
-  for (int i=0;i<packets; i++){
-
-    timeout = 10000;
-    while(timeout){
-      unsigned bstatus = Xil_In32(ADDR_AXIL_REGS+SCOPE_TX+0x3F00+C_ADDR_TX_STATUS);
-      if (bstatus == 0x1)
-	break;
-      //xil_printf("*** waiting for ready *** \r\n");
-      //usleep(1);
-      timeout--;
-    }
-
-    Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x18, ((u32) &tx_buf[0]) );
-    Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x28, words*bytes);
-
-    timeout = 10000;
-    while(timeout){
-      unsigned sr = Xil_In32(XPAR_AXI_DMA_0_BASEADDR+0x04);
-      if ((sr&0x2)!=0)
-	break;
-      //xil_printf("*** waiting for idle *** \r\n");
-      //usleep(1);
-      timeout--;
-    }
-    if (! timeout) {
-      xil_printf("*** ERROR:  failed to reach idle before timeout! *** \r\n");
-      return;
-    }
-
-  }
-  XTime_GetTime(&stop_time);
-
-  Xil_DCacheInvalidateRange((UINTPTR) tx_buf, words*bytes);
-
-  u32 delta = (u32) (stop_time - start_time);
-  unsigned payloads = 40;
-  xil_printf("elapsed timer counts:      %d (0x%x)\r\n", delta, delta);
-  xil_printf("counts per second:         %d\r\n", COUNTS_PER_SECOND);
-  xil_printf("tx payloads per packet:    %d\r\n", payloads);
-  xil_printf("packets:                   %d\r\n", packets);
-
-  unsigned r = (unsigned) (((float) COUNTS_PER_SECOND) * payloads * packets / delta / 1000);
-  unsigned m = 40.0*10000/66;
-  unsigned p = 40.0*10000/67;
-
-  xil_printf("achieved throughput:  %d tx payloads per ms\r\n", r);
-  xil_printf("maximum tx rate:      %d tx payloads (64-bit+2 @ 10 MHz) per ms\r\n", m);
-  xil_printf("practical max:        %d tx payloads (64-bit+3 @ 10 MHz) per ms\r\n", p);
-
-}
