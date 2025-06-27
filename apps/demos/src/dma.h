@@ -131,6 +131,12 @@ unsigned dma_clear_rx_ioc(unsigned timeout);
 unsigned dma_wait_tx_ioc(unsigned timeout);
 unsigned dma_wait_rx_ioc(unsigned timeout);
 
+// poll IOC flag for tx/rx (single read, no timeout)
+unsigned dma_poll_tx_ioc();
+unsigned dma_poll_rx_ioc();
+
+
+
 // scatter/gather buffer descriptors
 // initialize a BD located at <bd>, with next BD at <nxt>, buffer at <buf> of size <size_bytes>.
 // control flags <flags> are the defines DMA_BD_CONTROL_X

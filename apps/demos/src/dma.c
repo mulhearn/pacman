@@ -325,6 +325,15 @@ unsigned dma_wait_rx_ioc(unsigned timeout){
   return timeout;
 }
 
+unsigned dma_poll_tx_ioc(){
+  return (dma_read_register(MM2S_DMASR) & DMASR_IOC_IRQ) ? 1 : 0;
+}
+
+unsigned dma_poll_rx_ioc(){
+  return (dma_read_register(S2MM_DMASR) & DMASR_IOC_IRQ) ? 1 : 0;
+}
+
+
 //
 // Buffer Descriptor Utilities:
 //
