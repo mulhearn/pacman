@@ -21,13 +21,13 @@ SRC_URI = "file://src \
 	   file://Makefile \
 		  "
 
-INITSCRIPT_NAME = "pacman_server"
-INITSCRIPT_PARAMS = "start 99 S ."
+#INITSCRIPT_NAME = "pacman_server"
+#INITSCRIPT_PARAMS = "start 99 S ."
 
 S = "${WORKDIR}"
 homedir = "/home/root"
 
-inherit update-rc.d
+#inherit update-rc.d
 
 do_compile() {
 	     oe_runmake
@@ -52,8 +52,8 @@ do_install() {
              install -m 0755 ${S}/report_power.sh ${D}${homedir}
              install -m 0755 ${S}/power_down.sh ${D}${homedir}
 
-             install -d ${D}${sysconfdir}/init.d
-	     install -m 0755 ${S}/pacman_server.sh ${D}${sysconfdir}/init.d/pacman_server
+#             install -d ${D}${sysconfdir}/init.d
+#	     install -m 0755 ${S}/pacman_server.sh ${D}${sysconfdir}/init.d/pacman_server
              install -m 0755 ${S}/pacman_server.sh ${D}${bindir}/pacman_server
 }
 
