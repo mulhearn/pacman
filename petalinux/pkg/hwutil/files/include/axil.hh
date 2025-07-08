@@ -1,6 +1,8 @@
 #ifndef axil_hh
 #define axil_hh
 
+#include <stdint.h>
+
 // GLOBAL REGISTERS:
 #define C_SCOPE_GLOBAL          0xF000
 #define C_ADDR_GLOBAL_SCRA      0xF00
