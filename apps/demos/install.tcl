@@ -19,19 +19,25 @@ file copy apps/demos/build.tcl demo/
 file copy -force apps/demos/src/demo.c demo/demo/src/demo.c
 
 # Copy the include and src files used by the main application:
-file copy apps/demos/src/adc.c     demo/demo/src/
-file copy apps/demos/src/adc.h     demo/demo/src/
-file copy apps/demos/src/axil.h    demo/demo/src/
-file copy apps/demos/src/gpiops.c  demo/demo/src/
-file copy apps/demos/src/gpiops.h  demo/demo/src/
+file copy apps/demos/src/hardware.h demo/demo/src/
+file copy apps/demos/src/axil_hw.h  demo/demo/src/
+file copy apps/demos/src/iic.h      demo/demo/src/
+file copy apps/demos/src/global.h   demo/demo/src/
+file copy apps/demos/src/adc.h      demo/demo/src/
+file copy apps/demos/src/gpiops.h   demo/demo/src/
+file copy apps/demos/src/dma.h      demo/demo/src/
+file copy apps/demos/src/rxtx.h     demo/demo/src/
+file copy apps/demos/src/timing.h   demo/demo/src/
+
+file copy apps/demos/src/axil_hw.c demo/demo/src/
+file copy apps/demos/src/global.c demo/demo/src/
 file copy apps/demos/src/iic.c     demo/demo/src/
-file copy apps/demos/src/iic.h     demo/demo/src/
+file copy apps/demos/src/adc.c     demo/demo/src/
+file copy apps/demos/src/gpiops.c  demo/demo/src/
 file copy apps/demos/src/dma.c    demo/demo/src/
-file copy apps/demos/src/dma.h    demo/demo/src/
 file copy apps/demos/src/rxtx.c    demo/demo/src/
-file copy apps/demos/src/rxtx.h    demo/demo/src/
 file copy apps/demos/src/timing.c  demo/demo/src/
-file copy apps/demos/src/timing.h  demo/demo/src/
+
 
 # Run the application:
 cd demo

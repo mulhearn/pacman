@@ -8,7 +8,8 @@
 #include "xil_printf.h"
 #include "sleep.h"
 
-#include "axil.h"
+#include "axil_hw.h"
+#include "global.h"
 #include "dma.h"
 #include "rxtx.h"
 

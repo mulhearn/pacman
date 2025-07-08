@@ -9,7 +9,8 @@
 #include "xtime_l.h"
 #include "xaxidma.h"
 
-#include "axil.h"
+#include "axil_hw.h"
+#include "global.h"
 
 #define C_SCOPE_TIMING 0xE000
 

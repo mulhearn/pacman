@@ -9,7 +9,8 @@
 #include "sleep.h"
 
 #include "gpiops.h"
-#include "axil.h"
+#include "axil_hw.h"
+#include "global.h"
 #include "iic.h"
 #include "rxtx.h"
 #include "timing.h"
@@ -87,54 +88,6 @@ void toggle_cpld(){
   }
 }
 
-
-void read_global_status(){
-  xil_printf("fw major----------- %d   \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+C_ADDR_GLOBAL_FW_MAJOR));
-  xil_printf("fw minor----------- %d   \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+C_ADDR_GLOBAL_FW_MINOR));
-  xil_printf("fw build----------- 0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+C_ADDR_GLOBAL_FW_BUILD));
-  xil_printf("hw code------------ 0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+C_ADDR_GLOBAL_HW_CODE));
-  xil_printf("scratch a---------- 0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRA));
-  xil_printf("scratch b---------- 0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRB));
-  xil_printf("\r\n");
-  xil_printf("enables------------ 0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+C_ADDR_GLOBAL_ENABLES));
-  xil_printf("\r\n");
-  //xil_printf("timing status-------0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_STATUS));
-  //xil_printf("trig config---------0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_TRIG));
-  //xil_printf("sync config---------0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_SYNC));
-  //xil_printf("\r\n");
-  //xil_printf("timestamp-----------0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_STAMP));
-}
-
-void toggle_scratch(){
-  unsigned scra, scrb;
-  static int mode = 0;
-  mode = (mode + 1) % 3;
-  switch(mode){
-    case 1:
-      scra = 0xAAAAAAAA;
-      scrb = 0xBBBBBBBB;
-      break;
-    case 2:
-      scra = 0x12341234;
-      scrb = 0x7777FFFF;
-      break;
-    default:
-      scra = 0x0;
-      scrb = 0x0;
-  }
-  xil_printf("INFO: setting scratch a to 0x%08x and scratch b to 0x%08x \r\n", scra, scrb);
-  Xil_Out32(ADDR_AXIL_REGS+SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRA, scra);
-  Xil_Out32(ADDR_AXIL_REGS+SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRB, scrb);
-}
-
-void toggle_enables(){
-  unsigned enables[] = {0x00000000, 0x00010000, 0x00010001,  0x000103FF, 0x001103FF};
-  static int mode = 0;
-  mode = (mode + 1) % 5;
-  xil_printf("INFO: setting enables to 0x%08x \r\n", enables[mode]);
-  Xil_Out32(ADDR_AXIL_REGS+SCOPE_GLOBAL+C_ADDR_GLOBAL_ENABLES, enables[mode]);
-}
-
 void toggle_dcache(){
   static int mode = 0;
   mode = (mode + 1) % 2;
@@ -201,10 +154,10 @@ int main(){
       read_global_status();
       break;
     case '3':
-      toggle_scratch();
+      toggle_global_scratch();
       break;
     case '4':
-      toggle_enables();
+      toggle_global_enables();
       break;
     case '5':
       toggle_dcache();
