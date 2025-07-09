@@ -7,17 +7,16 @@
 #include "xstatus.h"
 #include "xil_printf.h"
 #include "sleep.h"
+#include "xemacps.h"
 
-#include "gpiops.h"
 #include "hw_access.h"
+#include "dma.h"
 #include "global.h"
+#include "gpiops.h"
 #include "iic.h"
 #include "rxtx.h"
 #include "timing.h"
 #include "adc.h"
-
-
-#include "xemacps.h"
 
 #define EMAC_DEVICE_ID      XPAR_XEMACPS_0_DEVICE_ID
 #define PHY_ADDRESS         0x1A    // Your CPLD PHY address
@@ -121,6 +120,97 @@ void blink_leds(){
     usleep(wait_usec);
     Xil_Out32(AXIL_REGISTERS_BASEADDR+SCOPE_GLOBAL+C_ADDR_GLOBAL_LEDS, 0x0);
     usleep(wait_usec);
+  }
+}
+
+void rxtx_menu(){
+  printf("RX/TX Menu: \r\n");
+
+  while(1){
+    printf("choose an option:\r\n");
+    printf("(0) exit RX/TX Menu \r\n");
+    printf("(1) read tx status (2) read tx look (3) toggle tx mask (4) toggle tx config \r\n");
+    printf("(5) read rx status (6) read rx look (7) toggle rx config (8) zero counts \r\n");
+    printf("(a) init BDs (b) clear BDs (c) show BDs (d) clear IOC flags\r\n");
+    printf("(e) single TX  (f) single RX \r\n");
+    printf("(m) show TX buffer (n) show RX buffer (o) show RX transferred \r\n");
+    printf("...\r\n");
+    printf("(t) reset TX DMA (u) TX DMA status (v) reset RX DMA (w) RX DMA status (x) long DMA status \r\n");
+
+    unsigned char c=inbyte();
+    printf("pressed:  %c\n\r", c);
+    switch(c){
+    case '0':
+      return;
+    case '1':
+      read_tx_status();
+      break;
+    case '2':
+      read_tx_look();
+      break;
+    case '3':
+      toggle_tx_mask();
+      break;
+    case '4':
+      toggle_tx_config();
+      break;
+    case '5':
+      read_rx_status();
+      break;
+    case '6':
+      read_rx_look();
+      break;
+    case '7':
+      toggle_rx_config();
+      break;
+    case '8':
+      zero_rxtx_counts();
+      break;
+    case 'a':
+      init_rxtx_bds();
+      break;
+    case 'b':
+      clear_rxtx_bds();
+      break;
+    case 'c':
+      show_rxtx_bds();
+      break;
+    case 'd':
+      clear_rxtx_ioc();
+      break;
+    case 'e':
+      single_tx();
+      break;
+    case 'f':
+      single_rx();
+      break;
+    case 'm':
+      show_tx_buffer();
+      break;
+    case 'n':
+      show_rx_buffer();
+      break;
+    case 'o':
+      show_rx_transferred();
+      break;
+    case 't':
+      dma_reset_tx(DMA_TIMEOUT);
+      break;
+    case 'u':
+      dma_show_tx_status();
+      break;
+    case 'v':
+      dma_reset_rx(DMA_TIMEOUT);
+      break;
+    case 'w':
+      dma_show_rx_status();
+      break;
+    case 'x':
+      dma_show_long_status();
+      break;
+    default:
+      printf("invalid selection...\n\r");
+    }
   }
 }
 

@@ -35,7 +35,25 @@
 #define C_ADDR_TX_NCHAN     0x40
 
 void init_rxtx();
-void rxtx_menu();
+
+// menu hooks:
+void read_tx_status();
+void read_tx_look();
+void toggle_tx_config();
+void toggle_tx_mask();
+void read_rx_status();
+void read_rx_look();
+void toggle_rx_config();
+void zero_rxtx_counts();
+void init_rxtx_bds();
+void clear_rxtx_bds();
+void show_rxtx_bds();
+void clear_rxtx_ioc();
+void show_tx_buffer();
+void show_rx_buffer();
+void show_rx_transferred();
+void single_tx();
+void single_rx();
 
 #endif // __RXTX_H_
 
