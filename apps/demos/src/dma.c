@@ -7,31 +7,31 @@
 // Local utility functions, not in header:
 //
 
-void print_dma_control(u32 value);
-void print_dma_status(u32 value);
-void print_dma_status_long(u32 value);
-void print_dma_control_long(u32 value);
+void print_dma_control(hw_val_t value);
+void print_dma_status(hw_val_t value);
+void print_dma_status_long(hw_val_t value);
+void print_dma_control_long(hw_val_t value);
 
 //
 // Read and interpret the status and control registers:
 //
 
 void dma_show_tx_status(){
-  u32 cr = dma_read_register(MM2S_DMACR);
-  u32 sr = dma_read_register(MM2S_DMASR);
+  hw_val_t cr = dma_read_register(MM2S_DMACR);
+  hw_val_t sr = dma_read_register(MM2S_DMASR);
   print_dma_control(cr);
   print_dma_status(sr);
 }
 
 void dma_show_rx_status(){
-  u32 cr = dma_read_register(MM2S_DMACR);
-  u32 sr = dma_read_register(MM2S_DMASR);
+  hw_val_t cr = dma_read_register(MM2S_DMACR);
+  hw_val_t sr = dma_read_register(MM2S_DMASR);
   print_dma_control(cr);
   print_dma_status(sr);
 }
 
 void dma_show_long_status(){
-  u32 cr, sr;
+  hw_val_t cr, sr;
   printf("INFO:  Long format of DMA TX status (MM2S): \r\n");
   cr = dma_read_register(MM2S_DMACR);
   sr = dma_read_register(MM2S_DMASR);
@@ -46,7 +46,7 @@ void dma_show_long_status(){
 
 
 
-void print_dma_control(u32 value) {
+void print_dma_control(hw_val_t value) {
     printf("DMA Control: 0x%08x [", value);
     if (value & DMACR_RUNSTOP)     printf(" RUN");
     if (value & DMACR_RESET)       printf(" RESET");
@@ -58,7 +58,7 @@ void print_dma_control(u32 value) {
     printf(" ]\r\n");
 }
 
-void print_dma_status(u32 value) {
+void print_dma_status(hw_val_t value) {
   printf("DMA Status: 0x%08x [", value);
   if (value & DMASR_HALTED)      printf(" HALTED");
   if (value & DMASR_IDLE)        printf(" IDLE");
@@ -75,7 +75,7 @@ void print_dma_status(u32 value) {
   printf(" ]\r\n");
 }
 
-void print_dma_status_long(u32 value) {
+void print_dma_status_long(hw_val_t value) {
     printf("DMA Status Register: 0x%08x\r\n", value);
     printf("  HALTED      : %s\r\n", (value & DMASR_HALTED) ? "Yes" : "No");
     printf("  IDLE        : %s\r\n", (value & DMASR_IDLE) ? "Yes" : "No");
@@ -99,7 +99,7 @@ void print_dma_status_long(u32 value) {
     printf("  IRQ Delay Status    : %d\r\n", (value & DMASR_IRQ_DELAY_MASK) >> DMASR_IRQ_DELAY_SHIFT);
 }
 
-void print_dma_control_long(u32 value) {
+void print_dma_control_long(hw_val_t value) {
     printf("DMA Control Register: 0x%08x\r\n", value);
     printf("  RUN/STOP     : %s\r\n", (value & DMACR_RUNSTOP) ? "Running" : "Stopped");
     printf("  RESET        : %s\r\n", (value & DMACR_RESET) ? "Asserted" : "Inactive");
@@ -369,7 +369,7 @@ void dma_clear_buffer(hw_addr_t addr) {
   hw_ptr_t bd = dma_ptr(addr);
   HW_INVALIDATE_DCACHE(bd, DMA_BD_BYTES);
 
-  u32 *buf = (u32*) bd[DMA_BD_BUFFER_ADDRESS];
+  hw_ptr_t buf = dma_ptr(bd[DMA_BD_BUFFER_ADDRESS]);
   unsigned len = bd[DMA_BD_CONTROL]&DMA_BD_CONTROL_LEN;
 
   if (buf==NULL){

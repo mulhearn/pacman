@@ -5,11 +5,8 @@
 #include "global.h"
 #include "rxtx.h"
 
-// TODO: remove:
-#include "xtime_l.h"
-
-u32 tx_mask_b = 0xFF;
-u32 tx_mask_a = 0xFFFFFFFF;
+hw_val_t tx_mask_b = 0xFF;
+hw_val_t tx_mask_a = 0xFFFFFFFF;
 
 
 // this is reserved in system-user.dtsi and located within the HP AXI interface for DMA (0x00000000 - 0x3FFFFFFF):
@@ -345,7 +342,7 @@ void benchmark_rxtx_loopback(){
   dma_halt_rx(10*DMA_TIMEOUT);
   dma_clear_bd_status(RX_BD_BASEADDR);
   dma_clear_rx_ioc(DMA_TIMEOUT);
-  dma_write_register(S2MM_CURDESC, (u32) RX_BD_BASEADDR);
+  dma_write_register(S2MM_CURDESC, RX_BD_BASEADDR);
   dma_run_rx(DMA_TIMEOUT);
 
   // Loop until done or a timeout occurs:
@@ -359,9 +356,9 @@ void benchmark_rxtx_loopback(){
   start_hw_timer();
 
   // start first TX:
-  dma_write_register(MM2S_TAILDESC, (u32) TX_BD_BASEADDR);
+  dma_write_register(MM2S_TAILDESC, TX_BD_BASEADDR);
   // start first RX:
-  dma_write_register(S2MM_TAILDESC, (u32) RX_BD_BASEADDR);
+  dma_write_register(S2MM_TAILDESC, RX_BD_BASEADDR);
 
   while (tx_timeout && rx_timeout && (rx_bytes < rx_expected)){
     if (dma_poll_tx_ioc()){
@@ -408,7 +405,7 @@ void benchmark_rxtx_loopback(){
 
   if ((tx_timeout==0) || (rx_timeout==0)){
     printf("ERROR: a timeout occurred during RX/TX benchmark.");
-    printf("INFO:  rx_timeout:  %d tx_timeout: %d \r\n");
+    printf("INFO:  rx_timeout:  %d tx_timeout: %d \r\n", rx_timeout, tx_timeout);
   }
 }
 
