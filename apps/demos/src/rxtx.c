@@ -1,7 +1,12 @@
+#include <stdlib.h>
+
 #include "hw_access.h"
 #include "dma.h"
 #include "global.h"
 #include "rxtx.h"
+
+// TODO: remove:
+#include "xtime_l.h"
 
 u32 tx_mask_b = 0xFF;
 u32 tx_mask_a = 0xFFFFFFFF;
@@ -232,50 +237,42 @@ void zero_rxtx_counts(){
 }
 
 
-/*
-
 //
 // Benchmarks:
 //
 
-void benchmark_dma_tx(){
-  u32 *bd  = (u32 *) TX_BD_BASEADDR;
-  u32 *buf = (u32 *) TX_BUF_BASEADDR;
+void benchmark_tx(){
+
   const unsigned words = TX_BUF_BYTES/4; // words in TX buffer (= 1 DMA packet)
   const unsigned packets = 10000;        // DMA packets to send
 
-  buf[0]= tx_mask_a;
-  buf[1]= tx_mask_b;
-  buf[2]=0x00000000;
-  buf[3]=0x00000000;
+  hw_ptr_t tx_buf = dma_ptr(TX_BUF_BASEADDR);
+  tx_buf[0]= tx_mask_a;
+  tx_buf[1]= tx_mask_b;
+  tx_buf[2]=0x00000000;
+  tx_buf[3]=0x00000000;
 
   for (int i=0; i<(words-4); i++)
-    buf[i+4] = rand();
+    tx_buf[i+4] = rand();
 
-  Xil_DCacheFlushRange((UINTPTR)buf, words*4);
+  HW_FLUSH_DCACHE(tx_buf, words*4);
 
   dma_halt_tx(DMA_TIMEOUT);
-  dma_clear_bd_status(bd);
+  dma_clear_bd_status(TX_BD_BASEADDR);
 
   dma_clear_tx_ioc(DMA_TIMEOUT);
 
-  dma_write_register(MM2S_CURDESC, (u32) bd);
+  dma_write_register(MM2S_CURDESC, TX_BD_BASEADDR);
 
   dma_run_tx(DMA_TIMEOUT);
 
-  //dma_write_register(MM2S_TAILDESC, (u32) bd);
-  //dma_wait_tx_ioc(DMA_TIMEOUT);
-
-  XTime start_time;
-  XTime stop_time;
-
-  XTime_GetTime(&start_time);
+  start_hw_timer();
   unsigned timeout = 0;
   for (int i=0;i<packets; i++){
-    dma_clear_bd_status(bd);
+    dma_clear_bd_status(TX_BD_BASEADDR);
     dma_clear_tx_ioc(DMA_TIMEOUT);
     //usleep(1);
-    dma_write_register(MM2S_TAILDESC, (u32) bd);
+    dma_write_register(MM2S_TAILDESC, TX_BD_BASEADDR);
     timeout = dma_wait_tx_ioc(DMA_TIMEOUT);
     if (timeout==0){
       printf("ERROR: timeout waiting on IOC flag at packet %d \r\n", i);
@@ -284,61 +281,65 @@ void benchmark_dma_tx(){
       printf("INFO: timeout %d \r\n", timeout);
     }
   }
-  XTime_GetTime(&stop_time);
+  stop_hw_timer();
 
-  u32 delta = (u32) (stop_time - start_time);
-  unsigned payloads = 40;
-  printf("elapsed timer counts:      %d (0x%x)\r\n", delta, delta);
-  printf("counts per second:         %d\r\n", COUNTS_PER_SECOND);
-  printf("tx payloads per packet:    %d\r\n", payloads);
-  printf("packets:                   %d\r\n", packets);
+  unsigned elapsed_us = hw_timer_elapsed_us();
+  unsigned uarts = 40;
 
-  unsigned r = (unsigned) (((float) COUNTS_PER_SECOND) * payloads * packets / delta / 1000);
-  unsigned m = 40.0*10000/66;
-  unsigned p = 40.0*10000/67;
+  printf("INFO:  elapsed microseconds:    %d (0x%x)\r\n", elapsed_us, elapsed_us);
+  printf("INFO:  tx payloads per packet:  %d\r\n", uarts);
+  printf("INFO:  packets:                 %d\r\n", packets);
 
-  printf("INFO:  achieved throughput:  %d tx payloads per ms\r\n", r);
-  printf("INFO:  maximum tx rate:      %d tx payloads (64-bit+2 @ 10 MHz) per ms\r\n", m);
-  printf("INFO:  practical max:        %d tx payloads (64-bit+3 @ 10 MHz) per ms\r\n", p);
+  if (elapsed_us == 0)
+    return;
+
+  unsigned a = 1000 * uarts * packets / elapsed_us;
+  unsigned m = uarts*10000/66;
+  unsigned p = uarts*10000/67;
+
+  printf("INFO:  achieved throughput:     %d tx uart packets per ms\r\n", a);
+  printf("INFO:  maximum tx rate:         %d tx uart packets (64-bit+2 @ 10 MHz) per ms\r\n", m);
+  printf("INFO:  practical max:           %d tx uart packets (64-bit+3 @ 10 MHz) per ms\r\n", p);
 }
 
-
-void benchmark_dma_rxtx_loopback(){
+void benchmark_rxtx_loopback(){
   // DISCLAIMER:  assumes 40 (larpix) packets per DMA TX packet
 
-  const unsigned rx_header_bytes = 16;   // Each DMA TX packet includes a 128 bit header word
-  const unsigned tx_packets = 10000;        // DMA TX packets to send
-  const unsigned rx_expected = 16*40*tx_packets;   // Each DMA TX packet includes a 128 bit header word
+  const unsigned uarts            = 40;
+  const unsigned uart_bytes       = 16;           // 128-bits per uart channel
+  const unsigned tx_packets       = 10000;        // DMA TX packets to send
+  const unsigned rx_trailer_bytes = 16;           // Each DMA RX packet has a 128-bit trailer
+  const unsigned rx_expected = uarts * uart_bytes * tx_packets;
 
-  XTime start_time;
-  XTime stop_time;
-
-  u32 *tx_bd  = (u32 *) TX_BD_BASEADDR;
-  u32 *tx_buf = (u32 *) TX_BUF_BASEADDR;
-  u32 *rx_bd  = (u32 *) RX_BD_BASEADDR;
 
   // prepare the TX buffer with a random payload:
-  const unsigned tx_words = TX_BUF_BYTES/4; // words in TX buffer (= 1 DMA packet)
+  hw_ptr_t tx_buf = dma_ptr(TX_BUF_BASEADDR);
   tx_buf[0]= tx_mask_a;
   tx_buf[1]= tx_mask_b;
   tx_buf[2]=0x00000000;
   tx_buf[3]=0x00000000;
-  for (int i=0; i<(tx_words-4); i++)
+
+  const unsigned words = TX_BUF_BYTES/4; // words in TX buffer (= 1 DMA packet)
+  for (int i=0; i<(words-4); i++)
     tx_buf[i+4] = rand();
-  Xil_DCacheFlushRange((UINTPTR)tx_buf, tx_words*4);
+
+  HW_FLUSH_DCACHE(tx_buf, words*4);
+
+  // get pointer to the RX buffer descriptor
+  hw_ptr_t rx_bd = dma_ptr(RX_BD_BASEADDR);
 
   // Inititalize and run TX:
   dma_halt_tx(10*DMA_TIMEOUT);
-  dma_clear_bd_status(tx_bd);
+  dma_clear_bd_status(TX_BD_BASEADDR);
   dma_clear_tx_ioc(DMA_TIMEOUT);
-  dma_write_register(MM2S_CURDESC, (u32) tx_bd);
+  dma_write_register(MM2S_CURDESC, TX_BD_BASEADDR);
   dma_run_tx(DMA_TIMEOUT);
 
   // Inititalize and run RX:
   dma_halt_rx(10*DMA_TIMEOUT);
-  dma_clear_bd_status(rx_bd);
+  dma_clear_bd_status(RX_BD_BASEADDR);
   dma_clear_rx_ioc(DMA_TIMEOUT);
-  dma_write_register(S2MM_CURDESC, (u32) rx_bd);
+  dma_write_register(S2MM_CURDESC, (u32) RX_BD_BASEADDR);
   dma_run_rx(DMA_TIMEOUT);
 
   // Loop until done or a timeout occurs:
@@ -349,70 +350,61 @@ void benchmark_dma_rxtx_loopback(){
   unsigned rx_rcvd  = 0;
   unsigned rx_bytes = 0;
 
-  XTime_GetTime(&start_time);
+  start_hw_timer();
 
   // start first TX:
-  dma_write_register(MM2S_TAILDESC, (u32) tx_bd);
+  dma_write_register(MM2S_TAILDESC, (u32) TX_BD_BASEADDR);
   // start first RX:
-  dma_write_register(S2MM_TAILDESC, (u32) rx_bd);
+  dma_write_register(S2MM_TAILDESC, (u32) RX_BD_BASEADDR);
 
   while (tx_timeout && rx_timeout && (rx_bytes < rx_expected)){
     if (dma_poll_tx_ioc()){
       tx_sent++;
       tx_timeout = timeout;
-      dma_clear_bd_status(tx_bd);
+      dma_clear_bd_status(TX_BD_BASEADDR);
       dma_clear_tx_ioc(DMA_TIMEOUT);
       if (tx_sent < tx_packets)
-	dma_write_register(MM2S_TAILDESC, (u32) tx_bd);
+	dma_write_register(MM2S_TAILDESC, TX_BD_BASEADDR);
     }
     if (dma_poll_rx_ioc()){
       rx_rcvd++;
       unsigned bytes = rx_bd[DMA_BD_STATUS]&DMA_BD_STATUS_TRANSFERRED;
-      if (bytes > rx_header_bytes)
-	rx_bytes += bytes - rx_header_bytes;
+      if (bytes > rx_trailer_bytes)
+	rx_bytes += bytes - rx_trailer_bytes;
       rx_timeout = timeout;
-      dma_clear_bd_status(rx_bd);
+      dma_clear_bd_status(RX_BD_BASEADDR);
       dma_clear_rx_ioc(DMA_TIMEOUT);
-      dma_write_register(S2MM_TAILDESC, (u32) rx_bd);
+      // TODO: add condition here that rx_bytes < rx_expected before:
+      dma_write_register(S2MM_TAILDESC, RX_BD_BASEADDR);
     }
     rx_timeout--;
     if (tx_sent < tx_packets)
       tx_timeout--;
     usleep(1);
   }
-  XTime_GetTime(&stop_time);
+  stop_hw_timer();
 
-  printf("INFO:  tx packets sent:      %6d expecting: %6d \r\n", tx_sent, tx_packets);
-  printf("INFO:  rx bytes received:    %6d expecting: %6d \r\n", rx_bytes, rx_expected);
-  printf("INFO:  rx packets received:  %6d \r\n", rx_rcvd);
+  unsigned elapsed_us = hw_timer_elapsed_us();
+  printf("INFO:  elapsed microseconds:        %d (0x%x)\r\n", elapsed_us, elapsed_us);
+  printf("INFO:  uart payloads per tx packet: %d\r\n", uarts);
+  printf("INFO:  tx packets:                  %d\r\n", tx_packets);
 
-  if ((tx_timeout==0) || (rx_timeout==0)){
-    printf("ERROR: a timeout occurred during benchmark.");
-    printf("INFO:  rx_timeout:  ");
-  }
-  if (rx_timeout==0){
-    printf("ERROR: benchmark not completed due to TX timeout");
+  if (elapsed_us == 0)
     return;
-  }
 
-  u32 delta = (u32) (stop_time - start_time);
-  unsigned payloads = 40;
-  unsigned packets = tx_packets;
-  printf("INFO:  elapsed timer counts:      %d (0x%x)\r\n", delta, delta);
-  printf("INFO:  counts per second:         %d\r\n", COUNTS_PER_SECOND);
-  printf("INFO:  tx payloads per packet:    %d\r\n", payloads);
-  printf("INFO:  packets:                   %d\r\n", packets);
-
-  unsigned r = (unsigned) (((float) COUNTS_PER_SECOND) * payloads * packets / delta / 1000);
+  unsigned a = 1000 * uarts * tx_packets / elapsed_us;
   unsigned m = 40.0*10000/66;
   unsigned p = 40.0*10000/67;
 
-  printf("INFO:  achieved throughput:  %d tx payloads per ms\r\n", r);
-  printf("INFO:  maximum tx rate:      %d tx payloads (64-bit+2 @ 10 MHz) per ms\r\n", m);
-  printf("INFO:  practical max:        %d tx payloads (64-bit+3 @ 10 MHz) per ms\r\n", p);
+  printf("INFO:  achieved throughput:     %d uart packets per ms\r\n", a);
+  printf("INFO:  maximum tx rate:         %d uart packets (64-bit+2 @ 10 MHz) per ms\r\n", m);
+  printf("INFO:  practical max:           %d uart packets (64-bit+3 @ 10 MHz) per ms\r\n", p);
 
+  if ((tx_timeout==0) || (rx_timeout==0)){
+    printf("ERROR: a timeout occurred during RX/TX benchmark.");
+    printf("INFO:  rx_timeout:  %d tx_timeout: %d \r\n");
+  }
 }
 
 
 
-*/

@@ -1,6 +1,8 @@
 #include "xil_io.h"
+#include "xtime_l.h"
 
 #include "hw_access.h"
+
 
 void init_axil_driver(){}
 
@@ -32,4 +34,19 @@ void     dma_write_register (hw_addr_t offset, hw_val_t value){
 
 hw_ptr_t dma_ptr(hw_addr_t addr){
   return (hw_ptr_t) addr;
+}
+
+static XTime G_START_TIME;
+static XTime G_STOP_TIME;
+
+void start_hw_timer(){
+  XTime_GetTime(&G_START_TIME);
+}
+void stop_hw_timer(){
+  XTime_GetTime(&G_STOP_TIME);
+}
+
+unsigned hw_timer_elapsed_us(){
+  XTime elapsed_us = ((G_STOP_TIME - G_START_TIME) * 1000000ULL) / COUNTS_PER_SECOND ;
+  return (unsigned) elapsed_us;
 }

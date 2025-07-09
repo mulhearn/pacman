@@ -55,6 +55,9 @@ void show_rx_transferred();
 void single_tx();
 void single_rx();
 
+void benchmark_tx();
+void benchmark_rxtx_loopback();
+
 #endif // __RXTX_H_
 
 

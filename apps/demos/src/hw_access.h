@@ -31,11 +31,6 @@ typedef u32 hw_val_t;
 typedef volatile u32 * hw_ptr_t;
 
 //
-// printf utility: uses xil_printf
-//
-#define printf xil_printf
-
-//
 // AXI-Lite Registers:
 //
 
@@ -90,6 +85,18 @@ void     dma_write_register (hw_addr_t offset, hw_val_t value);
 
 hw_ptr_t dma_ptr(hw_addr_t addr);
 
+
+//
+// printf utility: uses xil_printf
+//
+#define printf xil_printf
+
+//
+// timer utility:
+//
+void start_hw_timer();
+void stop_hw_timer();
+unsigned hw_timer_elapsed_us();
 
 #endif // __HW_ACCESS_H__
 

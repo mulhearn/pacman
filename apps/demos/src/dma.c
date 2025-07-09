@@ -1,7 +1,7 @@
 #include "hw_access.h"
 #include "dma.h"
 
-#define VERBOSE 1
+#define VERBOSE 0
 
 //
 // Local utility functions, not in header:
