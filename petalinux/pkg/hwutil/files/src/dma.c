@@ -1,4 +1,4 @@
-#include "dma.hh"
+#include "dma.h"
 
 #include <stdint.h>
 #include <unistd.h>
@@ -9,10 +9,7 @@
 //#include <cstring>
 //#include <sys/time.h>
 
-
 #define VERBOSE 0
-
-
 
 // HACKS: these calls not needed in linux version, so empty imps here:
 

@@ -1,18 +1,16 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
-#include <cstdint>
+#include <stdint.h>
 #include <linux/i2c-dev.h>
 #include <linux/i2c.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
 
-#include "i2c.hh"
-
+#include "i2c.h"
 
 #define I2C_DEBUG_TAG     0xABCD
-
 
 // I2C Address Space - PACMAN Rev 5
 
@@ -98,7 +96,7 @@ int i2c_set(uint8_t addr, uint8_t val) {
     return write(G_I2C_FH, buf,1);
 }
 
-int i2c_set(uint8_t addr, uint8_t reg, uint32_t val, uint8_t nbytes) {
+int i2c_set_reg(uint8_t addr, uint8_t reg, uint32_t val, uint8_t nbytes) {
     // write n nbytes to register reg on i2c device at addr
     if (i2c_addr(addr) < 0) return -1;
     uint8_t buf[nbytes+1];
@@ -149,7 +147,24 @@ int i2c_rw(uint8_t addr, uint8_t reg, uint8_t* buf, uint32_t nbytes) {
     return nbytes;
 }
 
-int i2c_recv(uint8_t addr, uint8_t reg, uint8_t* buf, uint32_t nbytes) {
+
+int i2c_recv(uint8_t addr, uint8_t* buf, uint32_t nbytes) {
+    // read nbytes from i2c device at addr into buf
+    if (i2c_addr(addr) < 0) return -1;
+    memset(buf,0,nbytes);
+    if (read(G_I2C_FH, buf,nbytes) != nbytes) {
+        printf("***ERROR*** i2c_recv:  Failed to read!\n");
+        return -1;
+    }
+    #if VERBOSE
+    printf("i2c_recv: addr x%02x read: ",addr);
+    for (int i = 0; i < nbytes; i++) printf("x%02x ",buf[i]);
+    printf("\n");
+    #endif
+    return nbytes;
+}
+
+int i2c_recv_reg(uint8_t addr, uint8_t reg, uint8_t* buf, uint32_t nbytes) {
     // read nbytes from register reg on i2c device at addr into buf
     if (i2c_addr(addr) < 0) return -1;
     if (i2c_set(addr,reg) != 1) {
@@ -169,22 +184,6 @@ int i2c_recv(uint8_t addr, uint8_t reg, uint8_t* buf, uint32_t nbytes) {
     return nbytes;
 }
 
-int i2c_recv(uint8_t addr, uint8_t* buf, uint32_t nbytes) {
-    // read nbytes from i2c device at addr into buf
-    if (i2c_addr(addr) < 0) return -1;
-    memset(buf,0,nbytes);
-    if (read(G_I2C_FH, buf,nbytes) != nbytes) {
-        printf("***ERROR*** i2c_recv:  Failed to read!\n");
-        return -1;
-    }
-    #if VERBOSE
-    printf("i2c_recv: addr x%02x read: ",addr);
-    for (int i = 0; i < nbytes; i++) printf("x%02x ",buf[i]);
-    printf("\n");
-    #endif
-    return nbytes;
-}
-
 void i2c_set_vdda(uint32_t chan, uint32_t val){
   uint8_t reg    = 0x30 + chan;
   const uint8_t nbytes = 2;
@@ -194,7 +193,7 @@ void i2c_set_vdda(uint32_t chan, uint32_t val){
   printf("i2c_set_vdda:  tile: %d value: 0x%x\n", chan+1, val);
   printf("i2c_set_vdda:  reg: 0x%x\n", reg);
   #endif
-  int ret = i2c_set(ADDR_DAC_VDDA, reg, val, nbytes);
+  int ret = i2c_set_reg(ADDR_DAC_VDDA, reg, val, nbytes);
 
   if (ret != nbytes+1){
     printf("**ERROR** i2c_set_vdda: i2c_set returned %d when expecting %d\n", ret, nbytes+1);
@@ -212,7 +211,7 @@ void i2c_set_vddd(uint32_t chan, uint32_t val){
   printf("i2c_set_vddd:  tile: %d value: 0x%x\n", chan+1, val);
   printf("i2c_set_vddd:  reg: 0x%x\n", reg);
   #endif
-  int ret = i2c_set(ADDR_DAC_VDDD, reg, val, nbytes);
+  int ret = i2c_set_reg(ADDR_DAC_VDDD, reg, val, nbytes);
 
   if (ret != nbytes+1){
     printf("**ERROR** i2c_set_vddd: i2c_set returned %d when expecting %d\n", ret, nbytes+1);
@@ -235,7 +234,7 @@ uint32_t i2c_mon_vdda(uint32_t chan){
 
   int status = 0;
   // set config registers for single shot mode:
-  status |= (i2c_set(addr, 1, 0x8500, nbytes) != (nbytes+1));
+  status |= (i2c_set_reg(addr, 1, 0x8500, nbytes) != (nbytes+1));
   // send refresh to start conversions:
   status |= (i2c_set(addr, 0) != 1);
   usleep(5000);
@@ -244,7 +243,7 @@ uint32_t i2c_mon_vdda(uint32_t chan){
   usleep(5000);
   // read requested value:
   status |= (i2c_set(addr, reg) != 1);
-  status |= (i2c_recv(addr, reg, buf, nbytes)!=nbytes);
+  status |= (i2c_recv_reg(addr, reg, buf, nbytes)!=nbytes);
 
   if (status){
     printf("**ERROR** i2c_mon_vdda:  I2C error.\n");
@@ -272,7 +271,7 @@ uint32_t i2c_mon_vddd(uint32_t chan){
 
   int status = 0;
   // set config registers for single shot mode:
-  status |= (i2c_set(addr, 1, 0x8500, nbytes) != (nbytes+1));
+  status |= (i2c_set_reg(addr, 1, 0x8500, nbytes) != (nbytes+1));
   // send refresh to start conversions:
   status |= (i2c_set(addr, 0) != 1);
   usleep(5000);
@@ -281,7 +280,7 @@ uint32_t i2c_mon_vddd(uint32_t chan){
   usleep(5000);
   // read requested value:
   status |= (i2c_set(addr, reg) != 1);
-  status |= (i2c_recv(addr, reg, buf, nbytes)!=nbytes);
+  status |= (i2c_recv_reg(addr, reg, buf, nbytes)!=nbytes);
 
   if (status){
     printf("**ERROR** i2c_mon_vddd:  I2C error.\n");
@@ -309,7 +308,7 @@ uint32_t i2c_mon_idda(uint32_t chan){
 
   int status = 0;
   // set config registers for single shot mode:
-  status |= (i2c_set(addr, 1, 0x8500, nbytes) != (nbytes+1));
+  status |= (i2c_set_reg(addr, 1, 0x8500, nbytes) != (nbytes+1));
   // send refresh to start conversions:
   status |= (i2c_set(addr, 0) != 1);
   usleep(5000);
@@ -318,7 +317,7 @@ uint32_t i2c_mon_idda(uint32_t chan){
   usleep(5000);
   // read requested value:
   status |= (i2c_set(addr, reg) != 1);
-  status |= (i2c_recv(addr, reg, buf, nbytes)!=nbytes);
+  status |= (i2c_recv_reg(addr, reg, buf, nbytes)!=nbytes);
 
   if (status){
     printf("**ERROR** i2c_mon_idda:  I2C error.\n");
@@ -347,7 +346,7 @@ uint32_t i2c_mon_iddd(uint32_t chan){
 
   int status = 0;
   // set config registers for single shot mode:
-  status |= (i2c_set(addr, 1, 0x8500, nbytes) != (nbytes+1));
+  status |= (i2c_set_reg(addr, 1, 0x8500, nbytes) != (nbytes+1));
   // send refresh to start conversions:
   status |= (i2c_set(addr, 0) != 1);
   usleep(5000);
@@ -356,7 +355,7 @@ uint32_t i2c_mon_iddd(uint32_t chan){
   usleep(5000);
   // read requested value:
   status |= (i2c_set(addr, reg) != 1);
-  status |= (i2c_recv(addr, reg, buf, nbytes)!=nbytes);
+  status |= (i2c_recv_reg(addr, reg, buf, nbytes)!=nbytes);
 
   if (status){
     printf("**ERROR** i2c_mon_iddd:  I2C error.\n");
@@ -392,9 +391,9 @@ void i2c_set_muxa(uint32_t val){
 
   printf("i2c_set_muxa:  value: %d  code: %d \n", val, code);
   int rep, status = 1;
-  rep = i2c_set(ADDR_MUX_P, reg, code, nbytes);
+  rep = i2c_set_reg(ADDR_MUX_P, reg, code, nbytes);
   status *= (rep == nbytes+1);
-  rep = i2c_set(ADDR_MUX_N, reg, code, nbytes);
+  rep = i2c_set_reg(ADDR_MUX_N, reg, code, nbytes);
   status *= (rep == nbytes+1);
   if (status!=1){
     printf("**ERROR** i2c_set_muxa:  i2c_set was not successful\n");
@@ -410,9 +409,9 @@ void i2c_set_muxb(uint32_t val){
 
   printf("i2c_set_muxb:  value: %d  code: %d \n", val, code);
   int rep, status = 1;
-  rep = i2c_set(ADDR_MUX_P, reg, code, nbytes);
+  rep = i2c_set_reg(ADDR_MUX_P, reg, code, nbytes);
   status *= (rep == nbytes+1);
-  rep = i2c_set(ADDR_MUX_N, reg, code, nbytes);
+  rep = i2c_set_reg(ADDR_MUX_N, reg, code, nbytes);
   status *= (rep == nbytes+1);
   if (status!=1){
     printf("**ERROR** i2c_set_muxb:  i2c_set was not successful\n");

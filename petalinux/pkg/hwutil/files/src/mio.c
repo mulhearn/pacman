@@ -4,11 +4,11 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
-#include <cstring>
+#include <string.h>
 #include <stdint.h>
 #include <sys/time.h>
 
-#include "mio.hh"
+#include "mio.h"
 
 //static int G_I2C_FH = -1;
 static uint32_t G_MIO_STATUS = 0;

@@ -4,17 +4,13 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
-#include <cstring>
+#include <string.h>
 #include <stdint.h>
-//#include "version.hh"
-//#include "addr_conf.hh"
 #include <sys/time.h>
 
-#include "led.hh"
-
-#include "mio.hh"
-#include "axil.hh"
-
+#include "led.h"
+#include "mio.h"
+#include "axil.h"
 
 void init_led(){
 }

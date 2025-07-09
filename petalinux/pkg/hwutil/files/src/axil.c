@@ -4,11 +4,11 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
-#include <cstring>
+#include <string.h>
 #include <stdint.h>
 #include <sys/time.h>
 
-#include "axil.hh"
+#include "axil.h"
 
 // PACMAN AXI-Lite interface HW Address:
 #define PACMAN_AXIL_ADDR 0x40000000

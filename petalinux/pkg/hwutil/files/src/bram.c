@@ -4,11 +4,11 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
-#include <cstring>
+#include <string.h>
 #include <stdint.h>
 #include <sys/time.h>
 
-#include "bram.hh"
+#include "bram.h"
 
 // PACMAN AXI-Lite interface to BRAM:
 #define PACMAN_BRAM_ADDR 0x42000000

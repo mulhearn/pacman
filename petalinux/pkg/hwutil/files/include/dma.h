@@ -1,5 +1,5 @@
-#ifndef __DMA_HH_
-#define __DMA_HH_
+#ifndef __DMA_H_
+#define __DMA_H_
 
 #include <stdint.h>
 
@@ -174,18 +174,6 @@ void dma_clear_buffer(u32* bd);
 void dma_single_tx(u32* bd);
 void dma_single_rx(u32* bd);
 
-
-
-
-
-
-
-
-
-
-
-
-
-#endif // __RXTX_H_
+#endif // __DMA_H_
 
 

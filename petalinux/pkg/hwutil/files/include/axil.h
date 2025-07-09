@@ -1,5 +1,5 @@
-#ifndef axil_hh
-#define axil_hh
+#ifndef __AXIL_H__
+#define __AXIL_H__
 
 #include <stdint.h>
 
@@ -94,4 +94,4 @@ void      close_axil();
 void      write_axil(uint32_t addr, uint32_t value);
 uint32_t  read_axil(uint32_t addr);
 
-#endif
+#endif // __AXIL_H__

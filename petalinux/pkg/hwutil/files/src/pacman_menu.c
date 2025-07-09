@@ -4,17 +4,17 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
-#include <cstring>
+#include <string.h>
 #include <stdint.h>
 #include <sys/time.h>
 
-#include "mio.hh"
-#include "axil.hh"
-#include "bram.hh"
-#include "dma.hh"
-#include "led.hh"
-#include "i2c.hh"
-#include "rxtx.hh"
+#include "mio.h"
+#include "axil.h"
+#include "bram.h"
+#include "dma.h"
+#include "led.h"
+#include "i2c.h"
+#include "rxtx.h"
 
 // *** LED ***
 

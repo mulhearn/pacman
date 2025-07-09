@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "axil.hh"
-#include "dma.hh"
+#include "axil.h"
+#include "dma.h"
 
 // *** RX and TX UNITs ***
 
