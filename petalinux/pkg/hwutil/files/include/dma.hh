@@ -5,7 +5,7 @@
 
 //
 // Linux interface:
-// 
+//
 
 void init_dma();
 

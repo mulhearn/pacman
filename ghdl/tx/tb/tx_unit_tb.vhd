@@ -120,7 +120,7 @@ begin
     show_tx_output <= '0';
     wait;
   end process;
-    
+
   stream_process : process
     variable ibuf : integer;
   begin

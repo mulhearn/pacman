@@ -135,13 +135,13 @@ u32 tx_mask_a = 0xFFFFFFFF;
 #define TX_BUF_BASEADDR    0x1100000
 #define RX_BUF_BASEADDR    0x2100000
 
-#define TX_BUF_BYTES 0x150  // 40 uarts x 64 bits => 20 128 bit word plus 1 128 bit header => 21*4*4 = 336 bytes 
+#define TX_BUF_BYTES 0x150  // 40 uarts x 64 bits => 20 128 bit word plus 1 128 bit header => 21*4*4 = 336 bytes
 #define RX_BUF_BYTES 0x400  // More than enough for now...
 
 void init_bds(){
   printf("INFO:  initializing single TX BD:\r\n");
   dma_init_single_bd_tx((u32*) TX_BD_BASEADDR, (u32*) TX_BUF_BASEADDR, TX_BUF_BYTES);
-  printf("INFO:  initializing single RX BD:\r\n");  
+  printf("INFO:  initializing single RX BD:\r\n");
   dma_init_single_bd_rx((u32*) RX_BD_BASEADDR, (u32*) RX_BUF_BASEADDR, RX_BUF_BYTES);
 }
 
@@ -190,7 +190,7 @@ void single_tx(){
   for (int i=0; i<(words-4); i++)
     tx_buf[i+4] = 0xB000F000 + i + (count<<16);
   count++;
-  
+
   //Xil_DCacheFlushRange((UINTPTR)tx_buf, words*4);
 
   dma_single_tx((u32*) TX_BD_BASEADDR);
@@ -198,7 +198,7 @@ void single_tx(){
   if (dma_wait_tx_ioc(DMA_TIMEOUT) > 0){
     printf("INFO: single TX yielded TX IOC flag high (SUCCESS)\r\n");
   }
-  
+
 }
 
 void show_tx_buffer(){
@@ -230,7 +230,7 @@ void rxtx_menu(){
     printf("RX/TX menu:  choose an option:\n");
     printf("(0) main menu (1) toggle RX global config (2) reset counts \n");
     printf("(10) read TX registers (11) read TX look (12) toggle TX config \n");
-    printf("(20) read RX registers (21) read RX look (22) toggle RX config \n");    
+    printf("(20) read RX registers (21) read RX look (22) toggle RX config \n");
     printf("(30) TX DMA reset (31) TX DMA status (32) RX DMA reset (33) RX DMA status (34) long DMA status \n");
     printf("(35) init BDs (36) clear BDs (37) show BDs (38) clear IOC flags \n");
     int input;
@@ -242,10 +242,10 @@ void rxtx_menu(){
       return;
     case 1:
       toggle_rx_global_config();
-      break;      
+      break;
     case 2:
       rxtx_reset_counts();
-      break;      
+      break;
     case 10:
       read_tx_registers();
       break;
@@ -309,7 +309,7 @@ void benchmark_dma_tx(){
   u32 *buf = (u32 *) TX_BUF_BASEADDR;
   const unsigned words = TX_BUF_BYTES/4; // words in TX buffer (= 1 DMA packet)
   const unsigned packets = 10000;        // DMA packets to send
- 
+
   buf[0]= tx_mask_a;
   buf[1]= tx_mask_b;
   buf[2]=0x00000000;
@@ -319,7 +319,7 @@ void benchmark_dma_tx(){
     buf[i+4] = rand();
 
   Xil_DCacheFlushRange((UINTPTR)buf, words*4);
-  
+
   dma_halt_tx(DMA_TIMEOUT);
   dma_clear_bd_status(bd);
 
@@ -331,7 +331,7 @@ void benchmark_dma_tx(){
 
   //dma_write_register(MM2S_TAILDESC, (u32) bd);
   //dma_wait_tx_ioc(DMA_TIMEOUT);
-  
+
   XTime start_time;
   XTime stop_time;
 
@@ -378,13 +378,13 @@ void benchmark_dma_rxtx_loopback(){
 
   XTime start_time;
   XTime stop_time;
-  
+
   u32 *tx_bd  = (u32 *) TX_BD_BASEADDR;
   u32 *tx_buf = (u32 *) TX_BUF_BASEADDR;
   u32 *rx_bd  = (u32 *) RX_BD_BASEADDR;
 
   // prepare the TX buffer with a random payload:
-  const unsigned tx_words = TX_BUF_BYTES/4; // words in TX buffer (= 1 DMA packet) 
+  const unsigned tx_words = TX_BUF_BYTES/4; // words in TX buffer (= 1 DMA packet)
   tx_buf[0]= tx_mask_a;
   tx_buf[1]= tx_mask_b;
   tx_buf[2]=0x00000000;
@@ -421,7 +421,7 @@ void benchmark_dma_rxtx_loopback(){
   dma_write_register(MM2S_TAILDESC, (u32) tx_bd);
   // start first RX:
   dma_write_register(S2MM_TAILDESC, (u32) rx_bd);
-  
+
   while (tx_timeout && rx_timeout && (rx_bytes < rx_expected)){
     if (dma_poll_tx_ioc()){
       tx_sent++;
@@ -435,23 +435,23 @@ void benchmark_dma_rxtx_loopback(){
       rx_rcvd++;
       unsigned bytes = rx_bd[DMA_BD_STATUS]&DMA_BD_STATUS_TRANSFERRED;
       if (bytes > rx_header_bytes)
-	rx_bytes += bytes - rx_header_bytes;      
+	rx_bytes += bytes - rx_header_bytes;
       rx_timeout = timeout;
       dma_clear_bd_status(rx_bd);
       dma_clear_rx_ioc(DMA_TIMEOUT);
-      dma_write_register(S2MM_TAILDESC, (u32) rx_bd);      
+      dma_write_register(S2MM_TAILDESC, (u32) rx_bd);
     }
     rx_timeout--;
     if (tx_sent < tx_packets)
       tx_timeout--;
     usleep(1);
-  }  
+  }
   XTime_GetTime(&stop_time);
 
   printf("INFO:  tx packets sent:      %6d expecting: %6d \r\n", tx_sent, tx_packets);
   printf("INFO:  rx bytes received:    %6d expecting: %6d \r\n", rx_bytes, rx_expected);
   printf("INFO:  rx packets received:  %6d \r\n", rx_rcvd);
-  
+
   if ((tx_timeout==0) || (rx_timeout==0)){
     printf("ERROR: a timeout occurred during benchmark.");
     printf("INFO:  rx_timeout:  ");

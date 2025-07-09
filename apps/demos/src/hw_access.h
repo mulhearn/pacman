@@ -37,7 +37,7 @@ typedef volatile u32 * hw_ptr_t;
 
 //
 // AXI-Lite Registers:
-// 
+//
 
 // Base Hardware Address for the AXI-Lite Interface to PACMAN Registers
 #define AXIL_REGISTERS_BASEADDR  XPAR_AXIL_TO_REGBUS_0_BASEADDR
@@ -59,7 +59,7 @@ void     axil_write_register (hw_addr_t offset, hw_val_t value);
 
 //
 // DMA Registers:
-// 
+//
 
 // Base Hardware Address for the AXI-Lite Interface to DMA
 #define DMA_REGISTERS_BASEADDR XPAR_AXI_DMA_0_BASEADDR
@@ -81,7 +81,7 @@ void     dma_write_register (hw_addr_t offset, hw_val_t value);
 
 //
 // DMA Buffers:
-// 
+//
 
 // *** TODO needs a no-op init hook for when using mmap under linux... ***
 

@@ -321,15 +321,15 @@ void read_voltages(){
   iic_send(ADDR_ADC_BOARD,   0);
 
   usleep(5000);
-  
+
   xil_printf("READ VOLTAGES:  sending refesh to ADCs (read):\r\n");
   iic_send(ADDR_ADC_TILES+0, 0);
   iic_send(ADDR_ADC_TILES+1, 0);
   iic_send(ADDR_ADC_TILES+2, 0);
   iic_send(ADDR_ADC_TILES+3, 0);
   iic_send(ADDR_ADC_TILES+4, 0);
-  iic_send(ADDR_ADC_BOARD,   0); 
-  
+  iic_send(ADDR_ADC_BOARD,   0);
+
   usleep(5000);
 
   unsigned addr = ADDR_ADC_BOARD;

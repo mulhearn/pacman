@@ -42,7 +42,7 @@ u32 * make_pointer(u32 upper, u32 lower){
   uint64_t x = upper;
   x = x << 32;
   x = x + lower;
-  return (u32 *) x;  
+  return (u32 *) x;
 }
 
 
@@ -57,7 +57,7 @@ void init_dma(){
   printf("INFO:  Initializing DMA contol interface (AXIL).\n");
   G_UTIL_DMA = (uint32_t*)mmap(NULL, DMA_REGISTERS_LEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_REGISTERS_BASEADDR);
   printf("INFO:  Lower Address:  0x%08x (Upper: 0x%08x)\n", lower_address((u32 *) G_UTIL_DMA), upper_address((u32 *) G_UTIL_DMA));
-  
+
   //printf("INFO:  Initializing DMA TX_BUFFER.\n");
   //G_UTIL_DMA_TX_BUFFER = (uint32_t*)mmap(NULL, DMA_TX_MAXLEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_TX_ADDR);
 
@@ -227,7 +227,7 @@ unsigned dma_reset_tx(unsigned timeout){
       printf("INFO:  DMA reset complete.  (timeout=%d) \r\n", timeout);
     }
   }
-  
+
   return timeout;
 }
 
@@ -248,7 +248,7 @@ unsigned dma_reset_rx(unsigned timeout){
 }
 
 unsigned dma_halt_tx(unsigned timeout){
-  
+
   dma_write_register(MM2S_DMACR, 0);
 
   if (timeout > 0){
@@ -261,7 +261,7 @@ unsigned dma_halt_tx(unsigned timeout){
     } else if (VERBOSE) {
       printf("INFO:  DMA halt complete.  (timeout=%d) \r\n", timeout);
     }
-  }  
+  }
   return timeout;
 }
 
@@ -310,13 +310,13 @@ unsigned dma_run_rx(unsigned timeout){
       usleep(1);
       timeout--;
     }
-    
+
     if (! timeout) {
       printf("ERROR:  timeout wating on RUN state.\r\n");
     } else if (VERBOSE){
       printf("INFO:  DMA is running.  (timeout=%d) \r\n", timeout);
     }
-  }  
+  }
   return timeout;
 }
 
@@ -327,7 +327,7 @@ unsigned dma_run_rx(unsigned timeout){
 unsigned dma_clear_tx_ioc(unsigned timeout){
 
   dma_write_register(MM2S_DMASR, DMASR_IOC_IRQ);
-  
+
   if (timeout > 0){
     while (timeout && (dma_read_register(MM2S_DMASR) & DMASR_IOC_IRQ)){
       usleep(1);
@@ -345,7 +345,7 @@ unsigned dma_clear_tx_ioc(unsigned timeout){
 unsigned dma_clear_rx_ioc(unsigned timeout){
 
   dma_write_register(S2MM_DMASR, DMASR_IOC_IRQ);
-  
+
   if (timeout > 0){
     while (timeout && (dma_read_register(S2MM_DMASR) & DMASR_IOC_IRQ)){
       usleep(1);
@@ -360,7 +360,7 @@ unsigned dma_clear_rx_ioc(unsigned timeout){
   return timeout;
 }
 
-  
+
 unsigned dma_wait_tx_ioc(unsigned timeout){
   if (timeout > 0){
     while (timeout && ((dma_read_register(MM2S_DMASR) & DMASR_IOC_IRQ)==0)){
@@ -486,8 +486,8 @@ void dma_print_buffer(u32 *buf, unsigned len, int ncol, int max_words) {
   int words = len / DMA_BYTES_PER_WORD;
   if ((max_words > 0) && (words > max_words))
     words = max_words;
-  
-  for (int i=0; i<words; i++){    
+
+  for (int i=0; i<words; i++){
     if ((i%ncol)==0)
       printf("%4d: ", i/ncol);
     printf("0x%08x ", buf[i]);
