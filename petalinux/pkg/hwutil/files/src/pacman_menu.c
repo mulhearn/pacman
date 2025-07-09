@@ -485,6 +485,104 @@ void power_menu(){
   return;
 }
 
+void rxtx_menu(){
+  while(1){
+    printf("RXTX MENU:  choose an option:\n");
+    printf("(0) main menu \n");
+    printf("(1) read tx status (2) read tx look (3) toggle tx mask (4) toggle tx config \r\n");
+    printf("(5) read rx status (6) read rx look (7) toggle rx config (8) zero counts \r\n");
+    printf("(10) init BDs (11) clear BDs (12) show BDs (13) clear IOC flags\r\n");
+    printf("(14) single TX  (15) single RX \r\n");
+    printf("(16) show TX buffer (17) show RX buffer (18) show RX transferred \r\n");
+    printf("(20) reset TX DMA (21) TX DMA status (22) reset RX DMA (23) RX DMA status (24) long DMA status \r\n");
+    printf("(30) benchmark TX (31) benchmark RX/TX loopback \r\n");
+
+    int input;
+    scanf("%d", &input);
+    printf("INFO: selected %d\n", input);
+
+    switch(input){
+    case 0:
+      return;
+    case 1:
+      read_tx_status();
+      break;
+    case 2:
+      read_tx_look();
+      break;
+    case 3:
+      toggle_tx_mask();
+      break;
+    case 4:
+      toggle_tx_config();
+      break;
+    case 5:
+      read_rx_status();
+      break;
+    case 6:
+      read_rx_look();
+      break;
+    case 7:
+      toggle_rx_config();
+      break;
+    case 8:
+      zero_rxtx_counts();
+      break;
+    case 10:
+      init_rxtx_bds();
+      break;
+    case 11:
+      clear_rxtx_bds();
+      break;
+    case 12:
+      show_rxtx_bds();
+      break;
+    case 13:
+      clear_rxtx_ioc();
+      break;
+   case 14:
+      single_tx();
+      break;
+    case 15:
+      single_rx();
+      break;
+    case 16:
+      show_tx_buffer();
+      break;
+    case 17:
+      show_rx_buffer();
+      break;
+    case 18:
+      show_rx_transferred();
+      break;
+    case 20:
+      dma_reset_tx(DMA_TIMEOUT);
+      break;
+    case 21:
+      dma_show_tx_status();
+      break;
+    case 22:
+      dma_reset_rx(DMA_TIMEOUT);
+      break;
+    case 23:
+      dma_show_rx_status();
+      break;
+    case 24:
+      dma_show_long_status();
+      break;
+    case 30:
+      benchmark_tx();
+      break;
+    case 31:
+      benchmark_rxtx_loopback();
+      break;
+    default:
+      printf("invalid selection...\n\r");
+    }
+  }
+  return;
+}
+
 void timing_menu(){
   while(1){
     printf("TIMING MENU:  choose an option:\n");
@@ -626,7 +724,7 @@ void main_menu(){
       power_menu();
       break;
     case 5:
-      //rxtx_menu();
+      rxtx_menu();
       break;
     case 6:
       timing_menu();
@@ -648,7 +746,7 @@ int main(){
   init_mio();
   init_axil_driver();
   init_bram();
-  //init_rxtx();
+  init_rxtx();
   init_led();
   init_i2c();
   main_menu();

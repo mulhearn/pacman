@@ -247,7 +247,7 @@ void zero_rxtx_counts(){
 void benchmark_tx(){
 
   const unsigned words = TX_BUF_BYTES/4; // words in TX buffer (= 1 DMA packet)
-  const unsigned packets = 10000;        // DMA packets to send
+  const unsigned packets = 100000;        // DMA packets to send
 
   hw_ptr_t tx_buf = dma_ptr(TX_BUF_BASEADDR);
   tx_buf[0]= tx_mask_a;
@@ -310,7 +310,7 @@ void benchmark_rxtx_loopback(){
 
   const unsigned uarts            = 40;
   const unsigned uart_bytes       = 16;           // 128-bits per uart channel
-  const unsigned tx_packets       = 10000;        // DMA TX packets to send
+  const unsigned tx_packets       = 100000;        // DMA TX packets to send
   const unsigned rx_trailer_bytes = 16;           // Each DMA RX packet has a 128-bit trailer
   const unsigned rx_expected = uarts * uart_bytes * tx_packets;
 
