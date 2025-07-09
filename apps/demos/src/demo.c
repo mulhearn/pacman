@@ -9,7 +9,7 @@
 #include "sleep.h"
 
 #include "gpiops.h"
-#include "axil_hw.h"
+#include "hw_access.h"
 #include "global.h"
 #include "iic.h"
 #include "rxtx.h"
@@ -109,17 +109,17 @@ void blink_leds(){
 
   xil_printf("BLINK LEDS:  blinking LED 3 via AXIL...\r\n");
   for (int iblink=0; iblink<nblink; iblink++){
-    Xil_Out32(ADDR_AXIL_REGS+SCOPE_GLOBAL+C_ADDR_GLOBAL_LEDS, 0x1);
+    Xil_Out32(AXIL_REGISTERS_BASEADDR+SCOPE_GLOBAL+C_ADDR_GLOBAL_LEDS, 0x1);
     usleep(wait_usec);
-    Xil_Out32(ADDR_AXIL_REGS+SCOPE_GLOBAL+C_ADDR_GLOBAL_LEDS, 0x0);
+    Xil_Out32(AXIL_REGISTERS_BASEADDR+SCOPE_GLOBAL+C_ADDR_GLOBAL_LEDS, 0x0);
     usleep(wait_usec);
   }
 
   xil_printf("BLINK LEDS:  blinking LED 4 via AXIL...\r\n");
   for (int iblink=0; iblink<nblink; iblink++){
-    Xil_Out32(ADDR_AXIL_REGS+SCOPE_GLOBAL+C_ADDR_GLOBAL_LEDS, 0x2);
+    Xil_Out32(AXIL_REGISTERS_BASEADDR+SCOPE_GLOBAL+C_ADDR_GLOBAL_LEDS, 0x2);
     usleep(wait_usec);
-    Xil_Out32(ADDR_AXIL_REGS+SCOPE_GLOBAL+C_ADDR_GLOBAL_LEDS, 0x0);
+    Xil_Out32(AXIL_REGISTERS_BASEADDR+SCOPE_GLOBAL+C_ADDR_GLOBAL_LEDS, 0x0);
     usleep(wait_usec);
   }
 }
@@ -143,7 +143,7 @@ int main(){
     xil_printf("choose an option:\r\n");
     xil_printf("(1) blink LEDs (2) read global status (3) toggle scratch (4) toggle enables (5) toggle dcache \r\n");
     xil_printf("(6) read MAC From CPLD (7) toggle CPLD config \r\n");
-    xil_printf("(a) I2C menu (b) DMA menu (c) RX/TX menu (d) timing menu (e) ADC menu\r\n");
+    xil_printf("(a) I2C menu (b) RX/TX menu (c) timing menu (d) ADC menu\r\n");
     unsigned char c=inbyte();
     xil_printf("pressed:  %c\n\r", c);
     switch(c){
@@ -172,15 +172,12 @@ int main(){
       iic_menu();
       break;
     case 'b':
-      dma_menu();
-      break;      
-    case 'c':
       rxtx_menu();
       break;
-    case 'd':
+    case 'c':
       timing_menu();
       break;
-    case 'e':
+    case 'd':
       adc_menu();
       break;
     default:

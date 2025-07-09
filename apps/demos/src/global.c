@@ -1,5 +1,4 @@
-#include "hardware.h"
-#include "axil_hw.h"
+#include "hw_access.h"
 #include "global.h"
 
 void read_global_status(){

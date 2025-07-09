@@ -35,8 +35,6 @@
 #define C_ADDR_TX_NCHAN     0x40
 
 void init_rxtx();
-
-void dma_menu();
 void rxtx_menu();
 
 #endif // __RXTX_H_

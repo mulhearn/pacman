@@ -9,7 +9,7 @@
 #include "xtime_l.h"
 #include "xaxidma.h"
 
-#include "axil_hw.h"
+#include "hw_access.h"
 #include "global.h"
 
 #define C_SCOPE_TIMING 0xE000
@@ -38,7 +38,7 @@
 #define C_ADDR_TIMING_CONFIG_H_FIRST  0x480
 
 void read_timing_registers(){
-  const unsigned BASE = ADDR_AXIL_REGS+C_SCOPE_TIMING;
+  const unsigned BASE = AXIL_REGISTERS_BASEADDR+C_SCOPE_TIMING;
 
   xil_printf("timing status---------------0x%x \r\n", Xil_In32(BASE+C_ADDR_TIMING_STATUS));
   xil_printf("timestamp-------------------0x%x \r\n", Xil_In32(BASE+C_ADDR_TIMING_STAMP));
@@ -63,7 +63,7 @@ void read_timing_registers(){
 }
 
 void toggle_timing_counts(){
-  const unsigned BASE = ADDR_AXIL_REGS+C_SCOPE_TIMING;
+  const unsigned BASE = AXIL_REGISTERS_BASEADDR+C_SCOPE_TIMING;
   static int mode = 0;
   mode = (mode + 1) % 2;
   if (mode == 0) {
@@ -78,7 +78,7 @@ void toggle_timing_counts(){
 }
 
 void toggle_timing_config(){
-  const unsigned BASE = ADDR_AXIL_REGS+C_SCOPE_TIMING;
+  const unsigned BASE = AXIL_REGISTERS_BASEADDR+C_SCOPE_TIMING;
 
   static int mode = 0;
   mode = (mode + 1) % 3;
@@ -119,7 +119,7 @@ void toggle_timing_config(){
 }
 
 void poke_timing(){
-  const unsigned BASE = ADDR_AXIL_REGS+C_SCOPE_TIMING;
+  const unsigned BASE = AXIL_REGISTERS_BASEADDR+C_SCOPE_TIMING;
   Xil_Out32(BASE+C_ADDR_TIMING_POKE_C,0x0);
   Xil_Out32(BASE+C_ADDR_TIMING_POKE_D,0x0);
 }
