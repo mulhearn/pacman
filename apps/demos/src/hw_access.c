@@ -32,6 +32,9 @@ void     dma_write_register (hw_addr_t offset, hw_val_t value){
   Xil_Out32(DMA_REGISTERS_BASEADDR+offset, value);
 }
 
+void init_dma_buffer(hw_addr_t baseaddr, hw_addr_t size){
+}
+
 hw_ptr_t dma_ptr(hw_addr_t addr){
   return (hw_ptr_t) addr;
 }

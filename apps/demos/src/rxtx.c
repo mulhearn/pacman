@@ -11,14 +11,18 @@
 u32 tx_mask_b = 0xFF;
 u32 tx_mask_a = 0xFFFFFFFF;
 
-#define TX_BD_BASEADDR     0x1200000
-#define RX_BD_BASEADDR     0x1200040
-#define TX_BUF_BASEADDR    0x1100000
-#define RX_BUF_BASEADDR    0x2100000
+
+// this is reserved in system-user.dtsi and located within the HP AXI interface for DMA (0x00000000 - 0x3FFFFFFF):
+#define DMA_BUFFER_BASEADDR  0x20000000
+#define DMA_BUFFER_SIZE      0x10000000  // 256 MB
+
+#define TX_BD_BASEADDR       0x20000000
+#define RX_BD_BASEADDR       0x20000040
+#define TX_BUF_BASEADDR      0x21000000
+#define RX_BUF_BASEADDR      0x22000000
 
 #define TX_BUF_BYTES 0x150  // 40 uarts x 64 bits => 20 128 bit word plus 1 128 bit header => 21*4*4 = 336 bytes
 #define RX_BUF_BYTES 0x400  // More than enough for now...
-
 
 void init_rxtx_bds(){
   printf("INFO:  initializing single TX BD:\r\n");
@@ -28,6 +32,8 @@ void init_rxtx_bds(){
 }
 
 void init_rxtx(){
+  init_dma_driver();
+  init_dma_buffer(DMA_BUFFER_BASEADDR, DMA_BUFFER_SIZE);
   init_rxtx_bds();
 }
 

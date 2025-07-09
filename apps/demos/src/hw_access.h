@@ -78,7 +78,7 @@ void     dma_write_register (hw_addr_t offset, hw_val_t value);
 // DMA Buffers:
 //
 
-// *** TODO needs a no-op init hook for when using mmap under linux... ***
+void init_dma_buffer(hw_addr_t baseaddr, hw_addr_t size);
 
 #define HW_FLUSH_DCACHE(ptr, len)      Xil_DCacheFlushRange((UINTPTR)(ptr), (len))
 #define HW_INVALIDATE_DCACHE(ptr, len) Xil_DCacheInvalidateRange((UINTPTR)(ptr), (len))
