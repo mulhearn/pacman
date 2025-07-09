@@ -8,8 +8,10 @@
 #include <stdint.h>
 #include <sys/time.h>
 
+#include "hw_access.h"
+#include "global.h"
+#include "registers.h"
 #include "mio.h"
-#include "axil.h"
 #include "bram.h"
 #include "dma.h"
 #include "led.h"
@@ -28,16 +30,16 @@ void blink_leds(){
 // *** GLOBAL UNIT ***
 
 void read_global_registers(){
-  printf("fw major----------- %d   \n", read_axil(C_SCOPE_GLOBAL+C_ADDR_GLOBAL_FW_MAJOR));
-  printf("fw minor----------- %d   \n", read_axil(C_SCOPE_GLOBAL+C_ADDR_GLOBAL_FW_MINOR));
-  printf("fw build----------- 0x%x \n", read_axil(C_SCOPE_GLOBAL+C_ADDR_GLOBAL_FW_BUILD));
-  printf("hw code------------ 0x%x \n", read_axil(C_SCOPE_GLOBAL+C_ADDR_GLOBAL_HW_CODE));
-  printf("scratch a---------- 0x%x \n", read_axil(C_SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRA));
-  printf("scratch b---------- 0x%x \n", read_axil(C_SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRB));
+  printf("fw major----------- %d   \n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_FW_MAJOR));
+  printf("fw minor----------- %d   \n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_FW_MINOR));
+  printf("fw build----------- 0x%x \n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_FW_BUILD));
+  printf("hw code------------ 0x%x \n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_HW_CODE));
+  printf("scratch a---------- 0x%x \n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRA));
+  printf("scratch b---------- 0x%x \n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRB));
   printf("\n");
-  printf("enables------------ 0x%x \n", read_axil(C_SCOPE_GLOBAL+C_ADDR_GLOBAL_ENABLES));
+  printf("enables------------ 0x%x \n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_ENABLES));
   printf("\n");
-  unsigned adc = read_axil(C_SCOPE_GLOBAL+C_ADDR_GLOBAL_ADC_LOOK);
+  unsigned adc = axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_ADC_LOOK);
   printf("adc look (deprecated) -- 0x%08x \n", adc);
 }
 
@@ -46,7 +48,7 @@ void toggle_global_enables(){
   static int mode = 0;
   mode = (mode + 1) % 5;
   printf("INFO: setting enables to 0x%08x \n", enables[mode]);
-  write_axil(C_SCOPE_GLOBAL+C_ADDR_GLOBAL_ENABLES, enables[mode]);
+  axil_write_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_ENABLES, enables[mode]);
 }
 
 void toggle_global_scratch(){
@@ -67,8 +69,8 @@ void toggle_global_scratch(){
       scrb = 0x0;
   }
   printf("INFO: setting scratch a to 0x%08x and scratch b to 0x%08x \n", scra, scrb);
-  write_axil(C_SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRA, scra);
-  write_axil(C_SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRB, scrb);
+  axil_write_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRA, scra);
+  axil_write_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRB, scrb);
 }
 
 // *** POWER UNIT ***
@@ -162,30 +164,30 @@ void record_iv_curves(){
 
 void read_timing_registers(){
   printf("TIMING REGISTERS:\n");
-  printf("timing status-------------0x%x \n", read_axil(C_SCOPE_TIMING+C_ADDR_TIMING_STATUS));
-  printf("timestamp-----------------0x%x \n", read_axil(C_SCOPE_TIMING+C_ADDR_TIMING_STAMP));
-  printf("config polarity-----------0x%x \n", read_axil(C_SCOPE_TIMING+C_ADDR_TIMING_CONFIG_POLARITY));
-  printf("config timestamp sync-----0x%x \n", read_axil(C_SCOPE_TIMING+C_ADDR_TIMING_CONFIG_TS));
+  printf("timing status-------------0x%x \n", axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_STATUS));
+  printf("timestamp-----------------0x%x \n", axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_STAMP));
+  printf("config polarity-----------0x%x \n", axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_CONFIG_POLARITY));
+  printf("config timestamp sync-----0x%x \n", axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_CONFIG_TS));
   for (int i=0; i<10; i++)
-    printf("config tile %2d ATC G---0x%x \n", i+1, read_axil(C_SCOPE_TIMING+C_ADDR_TIMING_CONFIG_G_FIRST+4*i));
+    printf("config tile %2d ATC G---0x%x \n", i+1, axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_CONFIG_G_FIRST+4*i));
   for (int i=0; i<10; i++)
-    printf("config tile %2d ATC H---0x%x \n", i+1, read_axil(C_SCOPE_TIMING+C_ADDR_TIMING_CONFIG_H_FIRST+4*i));
+    printf("config tile %2d ATC H---0x%x \n", i+1, axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_CONFIG_H_FIRST+4*i));
 }
 
 void read_timing_counts(){
   printf("TIMING SYSTEM COUNTERS:\n");
-  printf("count LEMO A (fast) ------0x%x \n", read_axil(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_LEMO_A_F));
-  printf("count LEMO B (fast) ------0x%x \n", read_axil(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_LEMO_B_F));
-  printf("count LEMO A (slow) ------0x%x \n", read_axil(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_LEMO_A_S));
-  printf("count LEMO B (slow) ------0x%x \n", read_axil(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_LEMO_B_S));
-  printf("count POKE C (slow) ------0x%x \n", read_axil(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_POKE_C_S));
-  printf("count POKE D (slow) ------0x%x \n", read_axil(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_POKE_D_S));
+  printf("count LEMO A (fast) ------0x%x \n", axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_LEMO_A_F));
+  printf("count LEMO B (fast) ------0x%x \n", axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_LEMO_B_F));
+  printf("count LEMO A (slow) ------0x%x \n", axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_LEMO_A_S));
+  printf("count LEMO B (slow) ------0x%x \n", axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_LEMO_B_S));
+  printf("count POKE C (slow) ------0x%x \n", axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_POKE_C_S));
+  printf("count POKE D (slow) ------0x%x \n", axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_POKE_D_S));
 
-  printf("count timestamp sync-----0x%x \n", read_axil(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_TS));
+  printf("count timestamp sync-----0x%x \n", axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_TS));
   for (int i=0; i<10; i++)
-    printf("count tile %2d ATC G---0x%x \n", i+1, read_axil(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_G_FIRST+4*i));
+    printf("count tile %2d ATC G---0x%x \n", i+1, axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_G_FIRST+4*i));
   for (int i=0; i<10; i++)
-    printf("count tile %2d ATC H---0x%x \n", i+1, read_axil(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_H_FIRST+4*i));
+    printf("count tile %2d ATC H---0x%x \n", i+1, axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_H_FIRST+4*i));
 }
 
 void toggle_timing_input_polarity(){
@@ -193,7 +195,7 @@ void toggle_timing_input_polarity(){
   static int mode = 0;
   mode = (mode + 1) % 2;
   printf("INFO: setting input polarity to 0x%x \n", polarity[mode]);
-  write_axil(C_SCOPE_TIMING + C_ADDR_TIMING_CONFIG_POLARITY, polarity[mode]);
+  axil_write_register(C_SCOPE_TIMING + C_ADDR_TIMING_CONFIG_POLARITY, polarity[mode]);
 }
 
 void toggle_timing_ts_sync_config(){
@@ -201,7 +203,7 @@ void toggle_timing_ts_sync_config(){
   static int mode = 0;
   mode = (mode + 1) % 2;
   printf("INFO: setting timestamp sync config to 0x%x \n", config[mode]);
-  write_axil(C_SCOPE_TIMING + C_ADDR_TIMING_CONFIG_TS, config[mode]);
+  axil_write_register(C_SCOPE_TIMING + C_ADDR_TIMING_CONFIG_TS, config[mode]);
 }
 
 void toggle_timing_g_config(){
@@ -211,7 +213,7 @@ void toggle_timing_g_config(){
 
   printf("INFO: setting all G config to 0x%x\n", config[mode]);
   for (int i=0; i<10; i++)
-    write_axil(C_SCOPE_TIMING+C_ADDR_TIMING_CONFIG_G_FIRST+4*i, config[mode]);
+    axil_write_register(C_SCOPE_TIMING+C_ADDR_TIMING_CONFIG_G_FIRST+4*i, config[mode]);
 }
 
 void toggle_timing_h_config(){
@@ -221,7 +223,7 @@ void toggle_timing_h_config(){
 
   printf("INFO: setting all G config to 0x%x\n", config[mode]);
   for (int i=0; i<10; i++)
-    write_axil(C_SCOPE_TIMING+C_ADDR_TIMING_CONFIG_H_FIRST+4*i, config[mode]);
+    axil_write_register(C_SCOPE_TIMING+C_ADDR_TIMING_CONFIG_H_FIRST+4*i, config[mode]);
 }
 
 void toggle_timing_counts(){
@@ -229,21 +231,21 @@ void toggle_timing_counts(){
   mode = (mode + 1) % 2;
   if (mode == 0) {
     printf("INFO: stopping counts \n");
-    write_axil(C_SCOPE_TIMING+C_ADDR_TIMING_STOP_COUNTS, 0x0);
+    axil_write_register(C_SCOPE_TIMING+C_ADDR_TIMING_STOP_COUNTS, 0x0);
   } else {
     printf("INFO: reseting and starting counts \r\n");
-    write_axil(C_SCOPE_TIMING+C_ADDR_TIMING_STOP_COUNTS, 0x0);
-    write_axil(C_SCOPE_TIMING+C_ADDR_TIMING_RESET_COUNTS, 0x0);
-    write_axil(C_SCOPE_TIMING+C_ADDR_TIMING_START_COUNTS, 0x0);
+    axil_write_register(C_SCOPE_TIMING+C_ADDR_TIMING_STOP_COUNTS, 0x0);
+    axil_write_register(C_SCOPE_TIMING+C_ADDR_TIMING_RESET_COUNTS, 0x0);
+    axil_write_register(C_SCOPE_TIMING+C_ADDR_TIMING_START_COUNTS, 0x0);
   }
 }
 
 void poke_timing_input_c(){
-  write_axil(C_SCOPE_TIMING+C_ADDR_TIMING_POKE_C, 0x0);
+  axil_write_register(C_SCOPE_TIMING+C_ADDR_TIMING_POKE_C, 0x0);
 }
 
 void poke_timing_input_d(){
-  write_axil(C_SCOPE_TIMING+C_ADDR_TIMING_POKE_D, 0x0);
+  axil_write_register(C_SCOPE_TIMING+C_ADDR_TIMING_POKE_D, 0x0);
 }
 
 
@@ -254,14 +256,14 @@ static unsigned G_ADC_INPUT = 0;
 
 void read_adc_registers(){
   printf("ADC REGISTERS: \n");
-  printf("ADC status-------------0x%x \n", read_axil(C_SCOPE_ADC+C_ADDR_ADC_STATUS));
-  printf("ADC look---------------0x%x \n", read_axil(C_SCOPE_ADC+C_ADDR_ADC_LOOK));
-  printf("ADC last---------------0x%x \n", read_axil(C_SCOPE_ADC+C_ADDR_ADC_LAST));
-  printf("ADC state--------------0x%x \n", read_axil(C_SCOPE_ADC+C_ADDR_ADC_STATE));
-  printf("ADC config-------------0x%x \n", read_axil(C_SCOPE_ADC+C_ADDR_ADC_CONFIG));
-  printf("ADC clkpar-------------0x%x \n", read_axil(C_SCOPE_ADC+C_ADDR_ADC_CLKPAR));
-  printf("ADC scratch------------0x%x \n", read_axil(C_SCOPE_ADC+C_ADDR_ADC_SCRATCH));
-  printf("ADC ROA----------------0x%x \n", read_axil(C_SCOPE_ADC+C_ADDR_ADC_ROA));
+  printf("ADC status-------------0x%x \n", axil_read_register(C_SCOPE_ADC+C_ADDR_ADC_STATUS));
+  printf("ADC look---------------0x%x \n", axil_read_register(C_SCOPE_ADC+C_ADDR_ADC_LOOK));
+  printf("ADC last---------------0x%x \n", axil_read_register(C_SCOPE_ADC+C_ADDR_ADC_LAST));
+  printf("ADC state--------------0x%x \n", axil_read_register(C_SCOPE_ADC+C_ADDR_ADC_STATE));
+  printf("ADC config-------------0x%x \n", axil_read_register(C_SCOPE_ADC+C_ADDR_ADC_CONFIG));
+  printf("ADC clkpar-------------0x%x \n", axil_read_register(C_SCOPE_ADC+C_ADDR_ADC_CLKPAR));
+  printf("ADC scratch------------0x%x \n", axil_read_register(C_SCOPE_ADC+C_ADDR_ADC_SCRATCH));
+  printf("ADC ROA----------------0x%x \n", axil_read_register(C_SCOPE_ADC+C_ADDR_ADC_ROA));
 }
 
 void toggle_adc_on_off(){
@@ -271,11 +273,11 @@ void toggle_adc_on_off(){
   if (mode == 0) {
     printf("INFO: setting ADC sleep to on and disabling inputs\n");
     write_mio(0,0x1);
-    write_axil(C_SCOPE_GLOBAL+C_ADDR_GLOBAL_ENABLES, 0x00000000);
+    axil_write_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_ENABLES, 0x00000000);
   } else {
     printf("INFO: setting ADC sleep to off and enabling inputs\n");
     write_mio(0,0x0);
-    write_axil(C_SCOPE_GLOBAL+C_ADDR_GLOBAL_ENABLES, 0x00100000);
+    axil_write_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_ENABLES, 0x00100000);
   }
 }
 
@@ -286,7 +288,7 @@ void toggle_adc_daq_test_patterns(){
   mode = (mode + 1) % 7;
 
   printf("INFO:  setting ADC config to %x \r\n", config[mode]);
-  write_axil(C_SCOPE_ADC+C_ADDR_ADC_CONFIG, config[mode]);
+  axil_write_register(C_SCOPE_ADC+C_ADDR_ADC_CONFIG, config[mode]);
 
   if (mode==0){
     for (unsigned i=0; i<G_ADC_BUFFER_SIZE; i++){
@@ -299,7 +301,7 @@ void toggle_adc_daq_test_patterns(){
 void set_adc_daq_off(){
   unsigned config = 0x0;
   printf("INFO:  setting ADC config to %x \r\n", config);
-  write_axil(C_SCOPE_ADC+C_ADDR_ADC_CONFIG, config);
+  axil_write_register(C_SCOPE_ADC+C_ADDR_ADC_CONFIG, config);
 }
 
 void clear_bram(){
@@ -342,8 +344,8 @@ void read_bram_by_address(){
 }
 
 void read_bram_time_ordered(){
-  unsigned last_adr = 0x1FFF & read_axil(C_SCOPE_ADC+C_ADDR_ADC_STATUS);
-  unsigned last_val = read_axil(C_SCOPE_ADC+C_ADDR_ADC_LAST);
+  unsigned last_adr = 0x1FFF & axil_read_register(C_SCOPE_ADC+C_ADDR_ADC_STATUS);
+  unsigned last_val = axil_read_register(C_SCOPE_ADC+C_ADDR_ADC_LAST);
 
   printf("LAST ADDRESS:  0x%x\n", last_adr);
   printf("LAST VALUE:    0x%x\n", last_val);
@@ -367,9 +369,9 @@ void read_bram_time_ordered(){
 
 void copy_adc_buffer_to_file(){
   FILE *file;
-  unsigned config   = read_axil(C_SCOPE_ADC+C_ADDR_ADC_CONFIG);
-  unsigned last_adr = 0x1FFF & read_axil(C_SCOPE_ADC+C_ADDR_ADC_STATUS);
-  unsigned last_val = read_axil(C_SCOPE_ADC+C_ADDR_ADC_LAST);
+  unsigned config   = axil_read_register(C_SCOPE_ADC+C_ADDR_ADC_CONFIG);
+  unsigned last_adr = 0x1FFF & axil_read_register(C_SCOPE_ADC+C_ADDR_ADC_STATUS);
+  unsigned last_val = axil_read_register(C_SCOPE_ADC+C_ADDR_ADC_LAST);
 
   file = fopen("adc.txt", "a");
   if (file == NULL) {
@@ -430,18 +432,18 @@ void set_adc_circular_buffer(){
   G_ADC_BUFFER_SIZE = 1024;
   unsigned config = 0x10000013;
   printf("INFO:  setting ADC config to %x \r\n", config);
-  write_axil(C_SCOPE_ADC+C_ADDR_ADC_CONFIG, config);
+  axil_write_register(C_SCOPE_ADC+C_ADDR_ADC_CONFIG, config);
 }
 
 void set_adc_trigger(){
   G_ADC_BUFFER_SIZE = 1024;
   unsigned config = 0x10000033;
   printf("INFO:  setting ADC config to %x \r\n", config);
-  write_axil(C_SCOPE_ADC+C_ADDR_ADC_CONFIG, config);
+  axil_write_register(C_SCOPE_ADC+C_ADDR_ADC_CONFIG, config);
 }
 
 void set_adc_mode_to_run(){
-  write_axil(C_SCOPE_ADC+C_ADDR_ADC_COMMAND, 0x2);
+  axil_write_register(C_SCOPE_ADC+C_ADDR_ADC_COMMAND, 0x2);
 }
 
 void poke_timing(){
@@ -624,7 +626,7 @@ void main_menu(){
       power_menu();
       break;
     case 5:
-      rxtx_menu();
+      //rxtx_menu();
       break;
     case 6:
       timing_menu();
@@ -644,9 +646,9 @@ int main(){
   //printf("Random Max:  0x%x Random Number:  0x%x \n", RAND_MAX, rand());
 
   init_mio();
-  init_axil();
+  init_axil_driver();
   init_bram();
-  init_dma();
+  //init_rxtx();
   init_led();
   init_i2c();
   main_menu();

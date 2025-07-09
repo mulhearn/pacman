@@ -1,13 +1,7 @@
 #ifndef __DMA_H_
 #define __DMA_H_
 
-#include <stdint.h>
-
-//
-// Linux interface:
-//
-
-void init_dma();
+#include "hw_access.h"
 
 // DMA driver for AXI DMA (See PG021, as of June 24, 2025)
 //
@@ -22,10 +16,6 @@ void init_dma();
 // Notation:
 // - We refer to MM2S as transmitter (TX) and S2MM as receiver (RX)
 
-// cleanup once working ...
-#define DMA_REGISTERS_BASEADDR 0x40400000
-#define DMA_REGISTERS_LEN      0x00010000
-typedef uint32_t u32;
 
 // 32-bit addressing
 #define DMA_BYTES_PER_WORD 4
@@ -112,10 +102,6 @@ typedef uint32_t u32;
 #define DMA_BD_STATUS_EOF         0x04000000
 #define DMA_BD_STATUS_TRANSFERRED 0x03FFFFFF
 
-// read/write DMA registers via the dedicated AXI-LITE control interface
-u32  dma_read_register(u32 addr);
-void dma_write_register(u32 addr, u32 value);
-
 // read and display the status and control registers for TX/RX
 void dma_show_tx_status();
 void dma_show_rx_status();
@@ -147,32 +133,42 @@ unsigned dma_poll_tx_ioc();
 unsigned dma_poll_rx_ioc();
 
 
-
 // scatter/gather buffer descriptors
-// initialize a BD located at <bd>, with next BD at <nxt>, buffer at <buf> of size <size_bytes>.
+// initialize a BD located at HW address <bd>, with next BD at HW address <nxt>, buffer at HW address <buf> of size <size_bytes>.
 // control flags <flags> are the defines DMA_BD_CONTROL_X
-void dma_init_bd(u32 *bd, u32 *nxt, u32 *buf, u32 size_bytes, u32 flags);
+void dma_init_bd(hw_addr_t addr, hw_addr_t next_addr, hw_addr_t buf_addr, hw_val_t size_bytes, hw_val_t flags);
+
 // initialize a single BD with flags appropriate for TX (SOF / EOF)
-void dma_init_single_bd_tx(u32 *bd, u32 *buf, u32 size_bytes);
+void dma_init_single_bd_tx(hw_addr_t addr, hw_addr_t buf_addr, hw_val_t size_bytes);
+
 // initialize a single BD with flags appropriate for RX
-void dma_init_single_bd_rx(u32 *bd, u32 *buf, u32 size_bytes);
-// show a BD:
-void dma_show_bd(u32 *bd);
-// clear the status field of a BD
-void dma_clear_bd_status(u32* bd);
-// print the contents of the buffer associated with the BD <bd>, in <ncol> column format.
-// (i.e. length of buffer taken from control register)
-void dma_show_buffer(u32* bd, int ncol, int max_words);
-// print the *transferred* contents of the buffer associated with the BD, in <ncol> column format.
-// (i.e. length of buffer taken from status register)
-void dma_show_transferred(u32* bd, int ncol, int max_words);
+void dma_init_single_bd_rx(hw_addr_t addr, hw_addr_t buf_addr, hw_val_t size_bytes);
 
-// set the contents of the buffer associated with the BD <bd> to zero.
-void dma_clear_buffer(u32* bd);
+// show a BD at HW address <addr>:
+void dma_show_bd(hw_addr_t addr);
 
-// single TX/RX request:
-void dma_single_tx(u32* bd);
-void dma_single_rx(u32* bd);
+// clear the status of a BD at HW address <addr>:
+void dma_clear_bd_status(hw_addr_t addr);
+
+// set the contents of the buffer associated with the BD at address <addr> to zero.
+// CAREFUL: the address refers to BD, not the buffer associated with BD!
+void dma_clear_buffer(hw_addr_t addr);
+
+// print the contents of the buffer associated with the BD at address <addr>, in <ncol> column format
+// the length of buffer is taken from control register, but show at most <max_words>
+// CAREFUL: the address refers to BD, not the buffer associated with BD!
+void dma_show_buffer(hw_addr_t addr, int ncol, int max_words);
+
+
+// print the *transferred* contents of the buffer associated with the BD at address <addr>, in <ncol> column format
+// the length of buffer is taken from status register, but show at most <max_words>
+// CAREFUL: the address refers to BD, not the buffer associated with BD!
+void dma_show_transferred(hw_addr_t addr, int ncol, int max_words);
+
+
+// single TX/RX request for the BD at address <addr>.
+void dma_single_tx(hw_addr_t addr);
+void dma_single_rx(hw_addr_t addr);
 
 #endif // __DMA_H_
 

@@ -1,111 +1,37 @@
+#include "hw_access.h"
 #include "dma.h"
 
-#include <stdint.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/mman.h>
-#include <fcntl.h>
-//#include <cstring>
-//#include <sys/time.h>
-
 #define VERBOSE 0
-
-// HACKS: these calls not needed in linux version, so empty imps here:
-
-#define UINTPTR uint64_t
-
-void Xil_DCacheInvalidateRange(UINTPTR buf, u32 len){
-}
-
-void Xil_DCacheFlushRange(UINTPTR buf, u32 len){
-}
-
-// MORE HACKS:
-
-u32 lower_address(u32 * ptr){
-  const uint64_t mask = 0x00000000FFFFFFFF;
-  uint64_t x = ((uint64_t) ptr) & mask;
-  return x;
-}
-
-u32 upper_address(u32 * ptr){
-  const uint64_t mask = 0xFFFFFFFF00000000;
-  uint64_t x = ((uint64_t) ptr) & mask;
-  return x>>32;
-}
-
-u32 * make_pointer(u32 upper, u32 lower){
-  uint64_t x = upper;
-  x = x << 32;
-  x = x + lower;
-  return (u32 *) x;
-}
-
-
-static volatile uint32_t * G_UTIL_DMA  = NULL;
-//static volatile uint32_t * G_UTIL_DMA_TX_BUFFER = NULL;
-//static volatile uint32_t * G_UTIL_DMA_RX_BUFFER = NULL;
-
-void init_dma(){
-  printf("INFO:  Opening /dev/mem.\n");
-  int dh = open("/dev/mem", O_RDWR|O_SYNC);
-
-  printf("INFO:  Initializing DMA contol interface (AXIL).\n");
-  G_UTIL_DMA = (uint32_t*)mmap(NULL, DMA_REGISTERS_LEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_REGISTERS_BASEADDR);
-  printf("INFO:  Lower Address:  0x%08x (Upper: 0x%08x)\n", lower_address((u32 *) G_UTIL_DMA), upper_address((u32 *) G_UTIL_DMA));
-
-  //printf("INFO:  Initializing DMA TX_BUFFER.\n");
-  //G_UTIL_DMA_TX_BUFFER = (uint32_t*)mmap(NULL, DMA_TX_MAXLEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_TX_ADDR);
-
-  //printf("INFO:  Initializing DMA RX_BUFFER.\n");
-  //G_UTIL_DMA_RX_BUFFER = (uint32_t*)mmap(NULL, DMA_RX_MAXLEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, DMA_RX_ADDR);
-}
-
 
 //
 // Local utility functions, not in header:
 //
 
-void print_dma_control(u32 value);
-void print_dma_status(u32 value);
-void print_dma_status_long(u32 value);
-void print_dma_control_long(u32 value);
-
-//
-// Read/Write DMA register via the AXI-LITE control intefrace
-//
-
-u32  dma_read_register(u32 addr){
-  return G_UTIL_DMA[addr>>2];
-}
-
-void dma_write_register(u32 addr, u32 value){
-  G_UTIL_DMA[addr>>2] = value;
-}
-
-
+void print_dma_control(hw_val_t value);
+void print_dma_status(hw_val_t value);
+void print_dma_status_long(hw_val_t value);
+void print_dma_control_long(hw_val_t value);
 
 //
 // Read and interpret the status and control registers:
 //
 
 void dma_show_tx_status(){
-  u32 cr = dma_read_register(MM2S_DMACR);
-  u32 sr = dma_read_register(MM2S_DMASR);
+  hw_val_t cr = dma_read_register(MM2S_DMACR);
+  hw_val_t sr = dma_read_register(MM2S_DMASR);
   print_dma_control(cr);
   print_dma_status(sr);
 }
 
 void dma_show_rx_status(){
-  u32 cr = dma_read_register(MM2S_DMACR);
-  u32 sr = dma_read_register(MM2S_DMASR);
+  hw_val_t cr = dma_read_register(MM2S_DMACR);
+  hw_val_t sr = dma_read_register(MM2S_DMASR);
   print_dma_control(cr);
   print_dma_status(sr);
 }
 
 void dma_show_long_status(){
-  u32 cr, sr;
+  hw_val_t cr, sr;
   printf("INFO:  Long format of DMA TX status (MM2S): \r\n");
   cr = dma_read_register(MM2S_DMACR);
   sr = dma_read_register(MM2S_DMASR);
@@ -120,7 +46,7 @@ void dma_show_long_status(){
 
 
 
-void print_dma_control(u32 value) {
+void print_dma_control(hw_val_t value) {
     printf("DMA Control: 0x%08x [", value);
     if (value & DMACR_RUNSTOP)     printf(" RUN");
     if (value & DMACR_RESET)       printf(" RESET");
@@ -132,7 +58,7 @@ void print_dma_control(u32 value) {
     printf(" ]\r\n");
 }
 
-void print_dma_status(u32 value) {
+void print_dma_status(hw_val_t value) {
   printf("DMA Status: 0x%08x [", value);
   if (value & DMASR_HALTED)      printf(" HALTED");
   if (value & DMASR_IDLE)        printf(" IDLE");
@@ -149,7 +75,7 @@ void print_dma_status(u32 value) {
   printf(" ]\r\n");
 }
 
-void print_dma_status_long(u32 value) {
+void print_dma_status_long(hw_val_t value) {
     printf("DMA Status Register: 0x%08x\r\n", value);
     printf("  HALTED      : %s\r\n", (value & DMASR_HALTED) ? "Yes" : "No");
     printf("  IDLE        : %s\r\n", (value & DMASR_IDLE) ? "Yes" : "No");
@@ -173,7 +99,7 @@ void print_dma_status_long(u32 value) {
     printf("  IRQ Delay Status    : %d\r\n", (value & DMASR_IRQ_DELAY_MASK) >> DMASR_IRQ_DELAY_SHIFT);
 }
 
-void print_dma_control_long(u32 value) {
+void print_dma_control_long(hw_val_t value) {
     printf("DMA Control Register: 0x%08x\r\n", value);
     printf("  RUN/STOP     : %s\r\n", (value & DMACR_RUNSTOP) ? "Running" : "Stopped");
     printf("  RESET        : %s\r\n", (value & DMACR_RESET) ? "Asserted" : "Inactive");
@@ -188,21 +114,6 @@ void print_dma_control_long(u32 value) {
     printf("  IRQ Threshold: %d\r\n", (value & DMACR_IRQ_THRESHOLD_MASK) >> DMACR_IRQ_THRESHOLD_SHIFT);
     printf("  IRQ Delay    : %d\r\n", (value & DMACR_IRQ_DELAY_MASK) >> DMACR_IRQ_DELAY_SHIFT);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -398,46 +309,48 @@ unsigned dma_poll_rx_ioc(){
   return (dma_read_register(S2MM_DMASR) & DMASR_IOC_IRQ) ? 1 : 0;
 }
 
-
-
 //
 // Buffer Descriptor Utilities:
 //
 
-void dma_init_bd(u32 *bd, u32 *nxt, u32 *buf, u32 size_bytes, u32 flags){
+void dma_init_bd(hw_addr_t addr, hw_addr_t next_addr, hw_addr_t buf_addr, hw_val_t size_bytes, hw_val_t flags){
   if (size_bytes > DMA_BD_CONTROL_LEN)
     size_bytes = DMA_BD_CONTROL_LEN;
+
+  hw_ptr_t bd = dma_ptr(addr);
 
   for (int i=0; i<16; i++){
     bd[i] = 0;
   }
 
-  // assumes within 32-bit address space...
-  bd[DMA_BD_NXTDESC] = lower_address(nxt);
-  bd[DMA_BD_BUFFER_ADDRESS] = lower_address(buf);
-
+  bd[DMA_BD_NXTDESC] = (hw_val_t) next_addr;
+  bd[DMA_BD_BUFFER_ADDRESS] = (hw_val_t) buf_addr;
   bd[DMA_BD_CONTROL] = size_bytes | flags;
 
-  Xil_DCacheFlushRange((UINTPTR)bd, DMA_BD_BYTES);
+  HW_FLUSH_DCACHE(bd, DMA_BD_BYTES);
 
-  dma_clear_buffer(bd);
+  dma_clear_buffer(addr);
 }
 
-void dma_init_single_bd_tx(u32 *bd, u32 *buf, u32 size_bytes){
-  dma_init_bd(bd, bd, buf, size_bytes, DMA_BD_CONTROL_SOF | DMA_BD_CONTROL_EOF );
+// initialize a single BD with flags appropriate for TX (SOF / EOF)
+void dma_init_single_bd_tx(hw_addr_t addr, hw_addr_t buf_addr, hw_val_t size_bytes){
+  dma_init_bd(addr, addr, buf_addr, size_bytes, DMA_BD_CONTROL_SOF | DMA_BD_CONTROL_EOF );
 }
 
-void dma_init_single_bd_rx(u32 *bd, u32 *buf, u32 size_bytes){
-  dma_init_bd(bd, bd, buf, size_bytes, 0);
+// initialize a single BD with flags appropriate for RX
+void dma_init_single_bd_rx(hw_addr_t addr, hw_addr_t buf_addr, hw_val_t size_bytes){
+  dma_init_bd(addr, addr, buf_addr, size_bytes, 0 );
 }
 
-void dma_show_bd(u32 *bd) {
-  Xil_DCacheInvalidateRange((UINTPTR)bd, DMA_BD_BYTES);
+void dma_show_bd(hw_addr_t addr) {
+  hw_ptr_t bd = dma_ptr(addr);
 
-  u32 next_desc   = bd[DMA_BD_NXTDESC];
-  u32 buffer_addr = bd[DMA_BD_BUFFER_ADDRESS];
-  u32 control     = bd[DMA_BD_CONTROL];
-  u32 status      = bd[DMA_BD_STATUS];
+  HW_INVALIDATE_DCACHE(bd, DMA_BD_BYTES);
+
+  hw_val_t next_desc   = bd[DMA_BD_NXTDESC];
+  hw_val_t buffer_addr = bd[DMA_BD_BUFFER_ADDRESS];
+  hw_val_t control     = bd[DMA_BD_CONTROL];
+  hw_val_t status      = bd[DMA_BD_STATUS];
 
   printf("DMA Buffer Descriptor:\r\n");
   printf("  Next Descriptor : 0x%08x\r\n", next_desc);
@@ -446,15 +359,17 @@ void dma_show_bd(u32 *bd) {
   printf("  Status          : 0x%08x\r\n", status);
 }
 
-void dma_clear_bd_status(u32 *bd) {
+void dma_clear_bd_status(hw_addr_t addr) {
+  hw_ptr_t bd = dma_ptr(addr);
   bd[DMA_BD_STATUS] = 0;
-  Xil_DCacheFlushRange((UINTPTR)bd, DMA_BD_BYTES);
+  HW_FLUSH_DCACHE(bd, DMA_BD_BYTES);
 }
 
-void dma_clear_buffer(u32 *bd) {
-  Xil_DCacheInvalidateRange((UINTPTR)bd, DMA_BD_BYTES);
+void dma_clear_buffer(hw_addr_t addr) {
+  hw_ptr_t bd = dma_ptr(addr);
+  HW_INVALIDATE_DCACHE(bd, DMA_BD_BYTES);
 
-  u32 *buf = make_pointer(0, bd[DMA_BD_BUFFER_ADDRESS]);
+  hw_ptr_t buf = dma_ptr(bd[DMA_BD_BUFFER_ADDRESS]);
   unsigned len = bd[DMA_BD_CONTROL]&DMA_BD_CONTROL_LEN;
 
   if (buf==NULL){
@@ -468,17 +383,15 @@ void dma_clear_buffer(u32 *bd) {
     buf[i]=0;
   }
 
-  Xil_DCacheFlushRange((UINTPTR)buf, len);
+  HW_FLUSH_DCACHE(buf, len);
 }
 
-
-
-void dma_print_buffer(u32 *buf, unsigned len, int ncol, int max_words) {
+void dma_print_buffer(hw_ptr_t buf, hw_val_t len, int ncol, int max_words) {
   if (buf==NULL){
     printf("ERROR:  BD not initialized.\r\n");
     return;
   }
-  Xil_DCacheInvalidateRange((UINTPTR)buf, len);
+  HW_INVALIDATE_DCACHE(buf, len);
 
   int words = len / DMA_BYTES_PER_WORD;
   if ((max_words > 0) && (words > max_words))
@@ -495,63 +408,62 @@ void dma_print_buffer(u32 *buf, unsigned len, int ncol, int max_words) {
     printf("\r\n");
 }
 
-void dma_show_buffer(u32* bd, int ncol, int max_words){
-  Xil_DCacheInvalidateRange((UINTPTR)bd, DMA_BD_BYTES);
+void dma_show_buffer(hw_addr_t addr, int ncol, int max_words){
+  hw_ptr_t bd = dma_ptr(addr);
+  HW_INVALIDATE_DCACHE(bd, DMA_BD_BYTES);
 
-  u32 *buf = make_pointer(0, bd[DMA_BD_BUFFER_ADDRESS]);
-  unsigned len = bd[DMA_BD_CONTROL]&DMA_BD_CONTROL_LEN;
-
-  dma_print_buffer(buf, len, ncol, max_words);
-}
-
-void dma_show_transferred(u32* bd, int ncol, int max_words){
-  Xil_DCacheInvalidateRange((UINTPTR)bd, DMA_BD_BYTES);
-
-  u32 *buf = make_pointer(0, bd[DMA_BD_BUFFER_ADDRESS]);
-  unsigned len = bd[DMA_BD_STATUS]&DMA_BD_STATUS_TRANSFERRED;
+  hw_ptr_t buf = dma_ptr(bd[DMA_BD_BUFFER_ADDRESS]);
+  hw_val_t len = bd[DMA_BD_CONTROL] & DMA_BD_CONTROL_LEN;
 
   dma_print_buffer(buf, len, ncol, max_words);
 }
 
+void dma_show_transferred(hw_addr_t addr, int ncol, int max_words){
+  hw_ptr_t bd = dma_ptr(addr);
+  HW_INVALIDATE_DCACHE(bd, DMA_BD_BYTES);
 
+  hw_ptr_t buf = dma_ptr(bd[DMA_BD_BUFFER_ADDRESS]);
+  hw_val_t len = bd[DMA_BD_STATUS]&DMA_BD_STATUS_TRANSFERRED;
 
+  dma_print_buffer(buf, len, ncol, max_words);
+}
 
-void dma_single_tx(u32* bd){
+void dma_single_tx(hw_addr_t addr){
 
   dma_halt_tx(DMA_TIMEOUT);
-  dma_clear_bd_status(bd);
+  dma_clear_bd_status(addr);
 
   dma_clear_tx_ioc(DMA_TIMEOUT);
 
   if (VERBOSE)
-    printf("INFO: setting current descriptor address\r\n");
-  dma_write_register(MM2S_CURDESC, lower_address(bd));
+    printf("INFO: setting TX current descriptor address to 0x%08x\r\n", addr);
+  dma_write_register(MM2S_CURDESC, addr);
 
   dma_run_tx(DMA_TIMEOUT);
 
   if (VERBOSE)
-    printf("INFO: setting tail address\r\n");
-  dma_write_register(MM2S_TAILDESC, lower_address(bd));
+    printf("INFO: setting TX tail address to 0x%08x\r\n", addr);
+  dma_write_register(MM2S_TAILDESC, addr);
 
 }
 
-void dma_single_rx(u32* bd){
+void dma_single_rx(hw_addr_t addr){
 
   dma_halt_rx(DMA_TIMEOUT);
-  dma_clear_bd_status(bd);
+  dma_clear_bd_status(addr);
 
   dma_clear_rx_ioc(DMA_TIMEOUT);
 
   if (VERBOSE)
-    printf("INFO: setting current descriptor address\r\n");
-  dma_write_register(S2MM_CURDESC, lower_address(bd));
+    printf("INFO: setting RX current descriptor address to 0x%08x\r\n", addr);
+  dma_write_register(S2MM_CURDESC, addr);
 
   dma_run_rx(DMA_TIMEOUT);
 
   if (VERBOSE)
-    printf("INFO: setting tail address\r\n");
+    printf("INFO: setting TX tail address to 0x%08x\r\n", addr);
 
-  dma_write_register(S2MM_TAILDESC, lower_address(bd));
+  dma_write_register(S2MM_TAILDESC, addr);
 
 }
 

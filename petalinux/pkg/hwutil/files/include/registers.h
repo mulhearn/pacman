@@ -1,20 +1,7 @@
-#ifndef __AXIL_H__
-#define __AXIL_H__
+#ifndef __REGISTERS_H__
+#define __REGISTERS_H__
 
 #include <stdint.h>
-
-// GLOBAL REGISTERS:
-#define C_SCOPE_GLOBAL          0xF000
-#define C_ADDR_GLOBAL_SCRA      0xF00
-#define C_ADDR_GLOBAL_SCRB      0xF04
-#define C_ADDR_GLOBAL_FW_MAJOR  0xF10
-#define C_ADDR_GLOBAL_FW_MINOR  0xF14
-#define C_ADDR_GLOBAL_FW_BUILD  0xF18
-#define C_ADDR_GLOBAL_HW_CODE   0xF1C
-#define C_ADDR_GLOBAL_ENABLES   0xF20
-#define C_ADDR_GLOBAL_STATUS    0xF30
-#define C_ADDR_GLOBAL_LEDS      0xF34
-#define C_ADDR_GLOBAL_ADC_LOOK  0xF40
 
 // TIMING REGISTERS:
 #define C_SCOPE_TIMING 0xE000
@@ -86,12 +73,5 @@
 #define C_ADDR_TX_STARTS    0x30
 #define C_ADDR_TX_NCHAN     0x40
 
-uint32_t  get_axil_status();
-void      clear_axil_status();
-void      init_axil();
-void      close_axil();
 
-void      write_axil(uint32_t addr, uint32_t value);
-uint32_t  read_axil(uint32_t addr);
-
-#endif // __AXIL_H__
+#endif // __REGISTERS_H__
