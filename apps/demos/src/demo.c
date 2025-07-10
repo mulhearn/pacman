@@ -132,7 +132,7 @@ void rxtx_menu(){
     printf("(1) read tx status (2) read tx look (3) toggle tx mask (4) toggle tx config \r\n");
     printf("(5) read rx status (6) read rx look (7) toggle rx config (8) zero counts \r\n");
     printf("(a) init BDs (b) clear BDs (c) show BDs (d) clear IOC flags\r\n");
-    printf("(e) single TX  (f) single RX \r\n");
+    printf("(e) single TX  (f) single RX (g) chain TX (h) chain RX \r\n");
     printf("(m) show TX buffer (n) show RX buffer (o) show RX transferred \r\n");
     printf("...\r\n");
     printf("(t) reset TX DMA (u) TX DMA status (v) reset RX DMA (w) RX DMA status (x) long DMA status \r\n");
@@ -183,6 +183,12 @@ void rxtx_menu(){
       break;
     case 'f':
       single_rx();
+      break;
+    case 'g':
+      chain_tx();
+      break;
+    case 'h':
+      chain_rx();
       break;
     case 'm':
       show_tx_buffer();
@@ -282,7 +288,3 @@ int main(){
   }
   return 0;
 }
-
-
-
-
