@@ -8,6 +8,7 @@
 hw_val_t tx_mask_b = 0xFF;
 hw_val_t tx_mask_a = 0xFFFFFFFF;
 
+static unsigned G_TX_COUNTER = 0;
 
 // this is reserved in system-user.dtsi and located within the HP AXI interface for DMA (0x00000000 - 0x3FFFFFFF):
 #define DMA_BUFFER_BASEADDR  0x20000000
@@ -28,7 +29,7 @@ void init_rxtx_descriptor_ring_mode(){
   dma_reset_rx(DMA_TIMEOUT);
 
   printf("INFO:  initializing TX BD ring:\r\n");
-  dma_init_bd_ring(TX_BD_BASEADDR, 8, TX_BUF_BYTES, DMA_BD_CONTROL_SOF | DMA_BD_CONTROL_EOF, 0);
+  dma_init_bd_ring(TX_BD_BASEADDR, 8, TX_BUF_BYTES, DMA_BD_CONTROL_SOF | DMA_BD_CONTROL_EOF, DMA_BD_STATUS_COMPLETE);
   printf("INFO:  initializing RX BD ring:\r\n");
   dma_init_bd_ring(RX_BD_BASEADDR, 8, RX_BUF_BYTES, 0, 0);
 
@@ -37,14 +38,18 @@ void init_rxtx_descriptor_ring_mode(){
   dma_write_rx_curdesc(dma_get_next_bd_addr(RX_BD_BASEADDR));
   dma_write_rx_taildesc(RX_BD_BASEADDR);
 
+
+  dma_init_batch_tx_tail(TX_BD_BASEADDR);
+  dma_init_batch_rx_tail(RX_BD_BASEADDR);
+
   dma_run_tx(DMA_TIMEOUT);
   dma_run_rx(DMA_TIMEOUT);
 
   dma_write_rx_taildesc(RX_BD_BASEADDR);
 
   // send initial empty TX
-  // writing the registers defeats the protection (hacky hacky ...)
-  dma_write_register(MM2S_TAILDESC, TX_BD_BASEADDR);
+  dma_clear_bd_status(TX_BD_BASEADDR);
+  dma_write_tx_taildesc(TX_BD_BASEADDR);
 }
 
 void show_rxtx_bds(){
@@ -87,8 +92,9 @@ void single_tx(){
   // The resulting AXI stream is 128 bits times 21 beats.
 
   hw_addr_t nxta = dma_get_next_bd_addr(dma_read_tx_taildesc());
+  // keep batch tail synced even when doing single buffers:
+  dma_init_batch_tx_tail(nxta);
 
-  static int count = 0;
   hw_ptr_t tx_buf = dma_get_buffer(nxta);
   unsigned words = TX_BUF_BYTES/4;
 
@@ -98,11 +104,11 @@ void single_tx(){
   tx_buf[3]=0x00000000;
 
   for (int i=0; i<(words-4); i++)
-    tx_buf[i+4] = 0xB000F000 + i + (count<<16);
-  count++;
+    tx_buf[i+4] = 0xB000F000 + i + (G_TX_COUNTER<<16);
+  G_TX_COUNTER++;
 
   HW_FLUSH_DCACHE(tx_buf, words*4);
-
+  dma_clear_tx_ioc();
   dma_clear_bd_status(nxta);
   dma_write_tx_taildesc(nxta);
 
@@ -116,12 +122,62 @@ void single_rx(){
 
   if (dma_read_bd_status(nxta) & DMA_BD_STATUS_COMPLETE){
     printf("INFO:  RX success.\r\n");
+    // keep batch tail synced even when doing single buffers:
+    dma_init_batch_rx_tail(nxta);
     dma_clear_bd_status(nxta);
     dma_write_rx_taildesc(nxta);
   } else {
     printf("INFO:  nothing RXed.\r\n");
   }
 }
+
+void batch_tx(){
+  unsigned words = TX_BUF_BYTES/4;
+  unsigned count = 0;
+  hw_addr_t nxta;
+
+  while((count < 10) && (dma_next_available_tx_bd(&nxta))){
+    printf("INFO:  working on buffer %d at HW addr 0x%08X \r\n", count, nxta);
+    hw_ptr_t tx_buf = dma_get_buffer(nxta);
+
+    tx_buf[0]= tx_mask_a;
+    tx_buf[1]= tx_mask_b;
+    tx_buf[2]=0x00000000;
+    tx_buf[3]=0x00000000;
+
+    for (int i=0; i<(words-4); i++)
+      tx_buf[i+4] = 0xB000F000 + i + (G_TX_COUNTER<<16);
+    HW_FLUSH_DCACHE(tx_buf, words*4);
+
+    dma_add_tx_bd(nxta);
+    count++;
+    G_TX_COUNTER++;
+  }
+
+  dma_clear_tx_ioc();
+  printf("INFO:  sending batch of %d TX buffers \r\n", count);
+  dma_tx_batch();
+
+  // NOTE: the IOC fires on the first complete transfer, so this only confirms one buffer was sent
+  if (dma_wait_tx_ioc(DMA_TIMEOUT) > 0){
+    printf("INFO:  batch TX yielded TX IOC flag high (SUCCESS)\r\n");
+  }
+}
+
+void batch_rx(){
+  unsigned count = 0;
+  hw_addr_t nxta;
+
+  while((count < 10) && dma_next_available_rx_bd(&nxta)){
+    // do work on buffer ...
+    count++;
+    dma_add_rx_bd(nxta);
+  }
+
+  printf("INFO:  sending batch of %d RX buffers \r\n", count);
+  dma_rx_batch();
+}
+
 
 void benchmark_dma_tx();
 void benchmark_dma_rxtx_loopback();

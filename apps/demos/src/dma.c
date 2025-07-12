@@ -289,15 +289,6 @@ void dma_write_rx_taildesc(hw_addr_t bd_addr){
   dma_write_register(S2MM_TAILDESC, bd_addr);
 }
 
-// show the current and tail BD HW addresses for TX/RX:
-void dma_show_tx_current_tail_addrs(){
-  printf("INFO:  TX current 0x%08X tail 0x%08X \r\n", dma_read_tx_curdesc(), dma_read_tx_taildesc());
-}
-
-void dma_show_rx_current_tail_addrs(){
-  printf("INFO:  RX current 0x%08X tail 0x%08X \r\n", dma_read_rx_curdesc(), dma_read_rx_taildesc());
-}
-
 //
 // IOC flags:
 //
@@ -349,51 +340,6 @@ void dma_clear_tx_ioc(void){
 void dma_clear_rx_ioc(void){
   dma_write_register(S2MM_DMASR, DMASR_IOC_IRQ);
 }
-
-
-
-//unsigned dma_poll_tx_idle(void){
-//  return (dma_read_register(MM2S_DMASR) & DMASR_IDLE) ? 1 : 0;
-//}
-
-//unsigned dma_poll_rx_idle(void){
-//  return (dma_read_register(S2MM_DMASR) & DMASR_IDLE) ? 1 : 0;
-//}
-
-/*
-unsigned dma_wait_tx_idle(unsigned timeout){
-  if (timeout > 0){
-    while (timeout && (dma_poll_tx_idle()==0)){
-      usleep(1);
-      timeout--;
-    }
-    if (! timeout) {
-      printf("ERROR:  timeout waiting for TX to reach IDLE.\r\n");
-      return 0;
-    } else if (VERBOSE) {
-      printf("INFO:  DMA TX IDLE was reached  (timeout=%d) \r\n", timeout);
-    }
-  }
-  return timeout;
-}
-
-unsigned dma_wait_rx_idle(unsigned timeout){
-  if (timeout > 0){
-    while (timeout && (dma_poll_rx_idle()==0)){
-      usleep(1);
-      timeout--;
-    }
-    if (! timeout) {
-      printf("ERROR:  timeout waiting for RX to reach IDLE.\r\n");
-      return 0;
-    } else if (VERBOSE) {
-      printf("INFO:  DMA RX IDLE was reached  (timeout=%d) \r\n", timeout);
-    }
-  }
-  return timeout;
-}
-*/
-
 
 //
 // Buffer Descriptor Utilities:
@@ -453,7 +399,6 @@ hw_addr_t dma_get_next_bd_addr(hw_addr_t bd_addr){
 hw_val_t dma_poll_bd_complete (hw_addr_t bd_addr){
   return ((dma_read_bd_status(bd_addr) & DMA_BD_STATUS_COMPLETE)==0)?0:1;
 }
-
 
 unsigned dma_count_bd_ring(hw_addr_t bd_addr){
   unsigned count = 0;
@@ -518,6 +463,7 @@ void dma_init_bd_ring (hw_addr_t bd_addr, unsigned nring, hw_val_t buf_size, hw_
   }
   printf("INFO:  first free address above buffer:  0x%08X\r\n", buf_addr + nring*aligned_size);
 }
+
 
 void dma_show_bd_ring(hw_addr_t bd_addr) {
   unsigned count = 0;
@@ -674,6 +620,69 @@ void dma_show_transferred_ring(hw_addr_t bd_addr, int ncol, int max_words){
     cur_addr = dma_get_next_bd_addr(cur_addr);
     count++;
   } while (cur_addr != bd_addr);
+}
 
+//
+// Batch TX / RX:
+//
+
+static hw_addr_t G_BATCH_TX_TAIL = 0;
+static hw_addr_t G_BATCH_RX_TAIL = 0;
+
+// show the current and tail BD HW addresses for TX/RX:
+void dma_show_tx_current_tail_addrs(){
+  printf("INFO:  TX current 0x%08X tail 0x%08X batch tail 0x%08X \r\n", dma_read_tx_curdesc(), dma_read_tx_taildesc(), G_BATCH_TX_TAIL);
+}
+
+void dma_show_rx_current_tail_addrs(){
+  printf("INFO:  RX current 0x%08X tail 0x%08X batch tail 0x%08X \r\n", dma_read_rx_curdesc(), dma_read_rx_taildesc(), G_BATCH_RX_TAIL);
+}
+
+void dma_init_batch_tx_tail(hw_addr_t bd_addr){
+  printf("INFO:  setting TX batch tail to 0x%08X \r\n", bd_addr);
+  G_BATCH_TX_TAIL = bd_addr;
+}
+
+void dma_init_batch_rx_tail(hw_addr_t bd_addr){
+  printf("INFO:  setting RX batch tail to 0x%08X \r\n", bd_addr);
+  G_BATCH_RX_TAIL = bd_addr;
+}
+
+unsigned dma_next_available_tx_bd(hw_addr_t * bd_addr){
+  hw_addr_t nxta = dma_get_next_bd_addr(G_BATCH_TX_TAIL);
+  if (nxta == dma_read_tx_curdesc())
+    return 0;
+  if (! dma_poll_bd_complete(nxta))
+    return 0;
+  *bd_addr = nxta;
+  return 1;
+}
+
+unsigned dma_next_available_rx_bd(hw_addr_t * bd_addr){
+  hw_addr_t nxta = dma_get_next_bd_addr(G_BATCH_RX_TAIL);
+  if (nxta == dma_read_rx_curdesc())
+    return 0;
+  if (! dma_poll_bd_complete(nxta))
+    return 0;
+  *bd_addr = nxta;
+  return 1;
+}
+
+void dma_add_tx_bd(hw_addr_t bd_addr){
+  dma_clear_bd_status(bd_addr);
+  G_BATCH_TX_TAIL = bd_addr;
+}
+
+void dma_add_rx_bd(hw_addr_t bd_addr){
+  dma_clear_bd_status(bd_addr);
+  G_BATCH_RX_TAIL = bd_addr;
+}
+
+void dma_tx_batch(){
+  dma_write_tx_taildesc(G_BATCH_TX_TAIL);
+}
+
+void dma_rx_batch(){
+  dma_write_rx_taildesc(G_BATCH_RX_TAIL);
 }
 

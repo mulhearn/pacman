@@ -60,5 +60,8 @@ void show_rx_transferred();
 void single_tx();
 void single_rx();
 
+void batch_tx();
+void batch_rx();
+
 
 #endif // __RXTX_H_

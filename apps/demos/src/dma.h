@@ -213,4 +213,19 @@ void dma_show_transferred (hw_addr_t bd_addr, int ncol, int max_words);
 // as above but for the ring of buffers starting at HW addr <bd_addr>
 void dma_show_transferred_ring (hw_addr_t bd_addr, int ncol, int max_words);
 
+
+// Batch TX/RX support:
+
+void dma_init_batch_tx_tail(hw_addr_t bd_addr);
+void dma_init_batch_rx_tail(hw_addr_t bd_addr);
+
+unsigned dma_next_available_tx_bd(hw_addr_t * bd_addr);
+unsigned dma_next_available_rx_bd(hw_addr_t * bd_addr);
+
+void dma_add_tx_bd(hw_addr_t bd_addr);
+void dma_add_rx_bd(hw_addr_t bd_addr);
+
+void dma_tx_batch();
+void dma_rx_batch();
+
 #endif // __DMA_H_
