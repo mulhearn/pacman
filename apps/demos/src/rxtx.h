@@ -41,24 +41,19 @@ void read_tx_status();
 void read_tx_look();
 void toggle_tx_config();
 void toggle_tx_mask();
+
 void read_rx_status();
 void read_rx_look();
 void toggle_rx_config();
+void toggle_rx_global_config();
 void zero_rxtx_counts();
-void init_rxtx_bds();
-void clear_rxtx_bds();
+
+void init_rxtx_descriptor_ring_mode();
 void show_rxtx_bds();
-void clear_rxtx_ioc();
-void show_tx_buffer();
-void show_rx_buffer();
-void show_rx_transferred();
+void show_rxtx_head_tail();
+
 void single_tx();
 void single_rx();
 
-void chain_tx();
-void chain_rx();
-
-void benchmark_tx();
-void benchmark_rxtx_loopback();
 
 #endif // __RXTX_H_

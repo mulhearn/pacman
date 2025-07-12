@@ -18,16 +18,33 @@ hw_val_t tx_mask_a = 0xFFFFFFFF;
 #define TX_BUF_BYTES 0x150  // 40 uarts x 64 bits => 20 128 bit word plus 1 128 bit header => 21*4*4 = 336 bytes
 #define RX_BUF_BYTES 0x400  // More than enough for now...
 
-void init_rxtx_bds(){
-  printf("INFO:  initializing single TX BD:\r\n");
-  dma_init_tx_bd_ring(TX_BD_BASEADDR, 16, TX_BUF_BYTES);
-  printf("INFO:  initializing single RX BD:\r\n");
-  dma_init_rx_bd_ring(RX_BD_BASEADDR, 1, RX_BUF_BYTES);
-}
-
 void init_rxtx(){
   init_dma_driver();
   init_dma_buffer(DMA_BUFFER_BASEADDR, DMA_BUFFER_SIZE);
+}
+
+void init_rxtx_descriptor_ring_mode(){
+  dma_reset_tx(DMA_TIMEOUT);
+  dma_reset_rx(DMA_TIMEOUT);
+
+  printf("INFO:  initializing TX BD ring:\r\n");
+  dma_init_bd_ring(TX_BD_BASEADDR, 8, TX_BUF_BYTES, DMA_BD_CONTROL_SOF | DMA_BD_CONTROL_EOF, 0);
+  printf("INFO:  initializing RX BD ring:\r\n");
+  dma_init_bd_ring(RX_BD_BASEADDR, 8, RX_BUF_BYTES, 0, 0);
+
+  dma_write_tx_curdesc(TX_BD_BASEADDR);
+  dma_write_tx_taildesc(TX_BD_BASEADDR);
+  dma_write_rx_curdesc(dma_get_next_bd_addr(RX_BD_BASEADDR));
+  dma_write_rx_taildesc(RX_BD_BASEADDR);
+
+  dma_run_tx(DMA_TIMEOUT);
+  dma_run_rx(DMA_TIMEOUT);
+
+  dma_write_rx_taildesc(RX_BD_BASEADDR);
+
+  // send initial empty TX
+  // writing the registers defeats the protection (hacky hacky ...)
+  dma_write_register(MM2S_TAILDESC, TX_BD_BASEADDR);
 }
 
 void show_rxtx_bds(){
@@ -35,6 +52,11 @@ void show_rxtx_bds(){
   dma_show_bd_ring(TX_BD_BASEADDR);
   printf("INFO:  RX BD:\r\n");
   dma_show_bd_ring(RX_BD_BASEADDR);
+}
+
+void show_rxtx_head_tail(){
+  dma_show_tx_current_tail_addrs();
+  dma_show_rx_current_tail_addrs();
 }
 
 void clear_rxtx_bds(){
@@ -46,9 +68,9 @@ void clear_rxtx_bds(){
 
 void clear_rxtx_ioc(){
   printf("INFO:  clearing DMA TX IOC flag.\r\n");
-  dma_clear_tx_ioc(DMA_TIMEOUT);
+  dma_clear_tx_ioc();
   printf("INFO:  clearing DMA RX IOC flag\r\n");
-  dma_clear_rx_ioc(DMA_TIMEOUT);
+  dma_clear_rx_ioc();
 }
 
 void show_tx_buffer(){
@@ -71,8 +93,10 @@ void single_tx(){
   // This is a total of 84 32-bit words (4 header words, 80 uart words)
   // The resulting AXI stream is 128 bits times 21 beats.
 
+  hw_addr_t nxta = dma_get_next_bd_addr(dma_read_tx_taildesc());
+
   static int count = 0;
-  hw_ptr_t tx_buf = dma_get_buffer(TX_BD_BASEADDR);
+  hw_ptr_t tx_buf = dma_get_buffer(nxta);
   unsigned words = TX_BUF_BYTES/4;
 
   tx_buf[0]= tx_mask_a;
@@ -86,51 +110,8 @@ void single_tx(){
 
   HW_FLUSH_DCACHE(tx_buf, words*4);
 
-  dma_chain_tx(TX_BD_BASEADDR, TX_BD_BASEADDR);
-
-  if (dma_wait_tx_ioc(DMA_TIMEOUT) > 0){
-    printf("INFO: single TX yielded TX IOC flag high (SUCCESS)\r\n");
-  }
-}
-
-void chain_tx(){
-  // TX buffer is a 128 bit header plus 40 uarts allocated 64 bits each.
-  // This is a total of 84 32-bit words (4 header words, 80 uart words)
-  // The resulting AXI stream is 128 bits times 21 beats.
-
-  static int count = 0;
-
-  unsigned tx_chain_size = 10;
-  unsigned tx_ring_size  = dma_count_bd_ring(TX_BD_BASEADDR);
-  if (tx_ring_size < tx_chain_size){
-    printf("ERROR: TX ring size %d is smaller than chain size %d\r\n", tx_ring_size, tx_chain_size);
-    return;
-  }
-
-  hw_addr_t head_addr = TX_BD_BASEADDR;
-  hw_addr_t tail_addr = TX_BD_BASEADDR;
-  hw_addr_t cur_addr  = TX_BD_BASEADDR;
-
-  unsigned words = TX_BUF_BYTES/4;
-  for (int i=0; i<tx_chain_size; i++){
-    hw_ptr_t tx_buf = dma_get_buffer(cur_addr);
-
-    tx_buf[0]= tx_mask_a;
-    tx_buf[1]= tx_mask_b;
-    tx_buf[2]=0x00000000;
-    tx_buf[3]=0x00000000;
-
-    for (int i=0; i<(words-4); i++)
-      tx_buf[i+4] = 0xB000F000 + i + (count<<16);
-
-    HW_FLUSH_DCACHE(tx_buf, words*4);
-
-    tail_addr = cur_addr;
-    cur_addr  = dma_get_next_bd_addr(cur_addr);
-    count++;
-  }
-
-  dma_chain_tx(head_addr, tail_addr);
+  dma_clear_bd_status(nxta);
+  dma_write_tx_taildesc(nxta);
 
   if (dma_wait_tx_ioc(DMA_TIMEOUT) > 0){
     printf("INFO: single TX yielded TX IOC flag high (SUCCESS)\r\n");
@@ -138,15 +119,15 @@ void chain_tx(){
 }
 
 void single_rx(){
-  dma_chain_rx(RX_BD_BASEADDR, RX_BD_BASEADDR);
+  hw_addr_t nxta = dma_get_next_bd_addr(dma_read_rx_taildesc());
 
-  if (dma_wait_rx_ioc(DMA_TIMEOUT) > 0){
-    printf("INFO: single RX yielded RX IOC flag high (SUCCESS)\r\n");
+  if (dma_read_bd_status(nxta) & DMA_BD_STATUS_COMPLETE){
+    printf("INFO:  RX success.\r\n");
+    dma_clear_bd_status(nxta);
+    dma_write_rx_taildesc(nxta);
+  } else {
+    printf("INFO:  nothing RXed.\r\n");
   }
-}
-
-
-void chain_rx(){
 }
 
 void benchmark_dma_tx();
@@ -197,6 +178,20 @@ void toggle_rx_config(){
     axil_write_register(SCOPE_RX+(1<<8)+C_ADDR_RX_CONFIG, config);
     axil_write_register(SCOPE_RX+(2<<8)+C_ADDR_RX_CONFIG, config);
     axil_write_register(SCOPE_RX+(3<<8)+C_ADDR_RX_CONFIG, config);
+  }
+}
+
+void toggle_rx_global_config(){
+  static int mode = 0;
+  mode = (mode + 1) % 2;
+  if (mode==0){
+    unsigned config = 0x00000000;
+    printf("INFO: Setting RX global config to 0x%08X \r\n", config);
+    axil_write_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_GFLAGS, config);
+  } else if (mode==1) {
+    unsigned config = 0x00000001;
+    printf("INFO: Setting RX global config to 0x%08X \r\n", config);
+    axil_write_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_GFLAGS, config);
   }
 }
 
@@ -374,15 +369,15 @@ void benchmark_rxtx_loopback(){
 
   // Inititalize and run TX:
   dma_halt_tx(10*DMA_TIMEOUT);
-  dma_clear_bd_status(TX_BD_BASEADDR);
-  dma_clear_tx_ioc(DMA_TIMEOUT);
+  dma_clear_bd_status_ring(TX_BD_BASEADDR);
+  dma_clear_tx_ioc();
   dma_write_register(MM2S_CURDESC, TX_BD_BASEADDR);
   dma_run_tx(DMA_TIMEOUT);
 
   // Inititalize and run RX:
   dma_halt_rx(10*DMA_TIMEOUT);
-  dma_clear_bd_status(RX_BD_BASEADDR);
-  dma_clear_rx_ioc(DMA_TIMEOUT);
+  dma_clear_bd_status_ring(RX_BD_BASEADDR);
+  dma_clear_rx_ioc();
   dma_write_register(S2MM_CURDESC, RX_BD_BASEADDR);
   dma_run_rx(DMA_TIMEOUT);
 
@@ -406,7 +401,7 @@ void benchmark_rxtx_loopback(){
       tx_sent++;
       tx_timeout = timeout;
       dma_clear_bd_status(TX_BD_BASEADDR);
-      dma_clear_tx_ioc(DMA_TIMEOUT);
+      dma_clear_tx_ioc();
       if (tx_sent < tx_packets)
 	dma_write_register(MM2S_TAILDESC, TX_BD_BASEADDR);
     }
@@ -417,7 +412,7 @@ void benchmark_rxtx_loopback(){
 	rx_bytes += bytes - rx_trailer_bytes;
       rx_timeout = timeout;
       dma_clear_bd_status(RX_BD_BASEADDR);
-      dma_clear_rx_ioc(DMA_TIMEOUT);
+      dma_clear_rx_ioc();
       // TODO: add condition here that rx_bytes < rx_expected before:
       dma_write_register(S2MM_TAILDESC, RX_BD_BASEADDR);
     }
@@ -470,7 +465,7 @@ void benchmark_tx_single(){
   dma_halt_tx(DMA_TIMEOUT);
   dma_clear_bd_status(TX_BD_BASEADDR);
 
-  dma_clear_tx_ioc(DMA_TIMEOUT);
+  dma_clear_tx_ioc();
 
   dma_write_register(MM2S_CURDESC, TX_BD_BASEADDR);
 
@@ -480,7 +475,7 @@ void benchmark_tx_single(){
   unsigned timeout = 0;
   for (int i=0;i<packets; i++){
     dma_clear_bd_status(TX_BD_BASEADDR);
-    dma_clear_tx_ioc(DMA_TIMEOUT);
+    dma_clear_tx_ioc();
     //usleep(1);
     dma_write_register(MM2S_TAILDESC, TX_BD_BASEADDR);
     timeout = dma_wait_tx_ioc(DMA_TIMEOUT);

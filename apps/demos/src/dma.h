@@ -15,7 +15,7 @@
 //
 // Notation:
 // - We refer to MM2S as transmitter (TX) and S2MM as receiver (RX)
-
+// - We refer to buffer descriptors as BDs.
 
 // 32-bit addressing
 #define DMA_BYTES_PER_WORD 4
@@ -72,16 +72,16 @@
 // Scatter Gather Descriptor Fields:
 
 // Each BD is 16 32-bit words, for a total of 0x40 (64) bytes:
-#define DMA_BD_WORDS        16   // 32-bit words
-#define DMA_BD_BYTES        64
+#define DMA_BD_WORDS 16   // 32-bit words
+#define DMA_BD_BYTES 64
 
 // From Table 25, converted to 32-bit array indices.
-#define DMA_BD_NXTDESC               0  // 0x00: Next Descriptor Pointer (LSB)
-#define DMA_BD_NXTDESC_MSB           1  // 0x04: Next Descriptor Pointer (MSB)
-#define DMA_BD_BUFFER_ADDRESS        2  // 0x08: Buffer Address (LSB)
-#define DMA_BD_BUFFER_ADDRESS_MSB    3  // 0x0C: Buffer Address (MSB)
-#define DMA_BD_CONTROL               6  // 0x18: Control
-#define DMA_BD_STATUS                7  // 0x1C: Status
+#define DMA_BD_NXTDESC            0  // 0x00: Next Descriptor Pointer (LSB)
+#define DMA_BD_NXTDESC_MSB        1  // 0x04: Next Descriptor Pointer (MSB)
+#define DMA_BD_BUFFER_ADDRESS     2  // 0x08: Buffer Address (LSB)
+#define DMA_BD_BUFFER_ADDRESS_MSB 3  // 0x0C: Buffer Address (MSB)
+#define DMA_BD_CONTROL            6  // 0x18: Control
+#define DMA_BD_STATUS             7  // 0x1C: Status
 // Note that the status field has a different interpretation for MM2S and S2MM (see below)
 
 // Scatter Gather Descriptor Control Field bit layout for MM2S:
@@ -102,100 +102,145 @@
 #define DMA_BD_STATUS_EOF         0x04000000
 #define DMA_BD_STATUS_TRANSFERRED 0x03FFFFFF
 
+// suggested default timeout for DMA: (parameter timeout below)
+#define DMA_TIMEOUT 100 // timeout=100 ==> 100 us maximum wait
+
+// byte alignment for DMA buffers
+# define DMA_BUFFER_ALIGN_BYTES 16
+
+// the maximum number of BDs allowed in a ring (for sanity):
+#define DMA_MAX_BD_RING_SIZE 1024
+
 // read and display the status and control registers for TX/RX
-void dma_show_tx_status();
-void dma_show_rx_status();
+void dma_show_tx_status (void);
+void dma_show_rx_status (void);
 
 // read and display a long format version the TX and RX status and control registers
-void dma_show_long_status();
+void dma_show_long_status (void);
 
-// reset/halt/run the  TX/RX DMA engines (waits <timeout> for completion unless timeout=0)
-// suggested default timeout:
-#define DMA_TIMEOUT 100 // timeout=100 ==> 100 us maximum wait
+// RESET/HALT/RUN the TX/RX DMA engines (waits <timeout> for completion unless timeout=0)
 // returns 0 for all errors and non-zero timeout remaining otherwise
-unsigned dma_reset_tx(unsigned timeout);
-unsigned dma_reset_rx(unsigned timeout);
-unsigned dma_halt_tx(unsigned timeout);
-unsigned dma_halt_rx(unsigned timeout);
-unsigned dma_run_tx(unsigned timeout);
-unsigned dma_run_rx(unsigned timeout);
+unsigned dma_reset_tx (unsigned timeout);
+unsigned dma_reset_rx (unsigned timeout);
+unsigned dma_halt_tx  (unsigned timeout);
+unsigned dma_halt_rx  (unsigned timeout);
+unsigned dma_run_tx   (unsigned timeout);
+unsigned dma_run_rx   (unsigned timeout);
 
-// clear IOC flags (waits <timeout> for completion unless timeout=0)
-// (IOC flag is set even whem the corresponding HW interrupt is disable)
-unsigned dma_clear_tx_ioc(unsigned timeout);
-unsigned dma_clear_rx_ioc(unsigned timeout);
-// wait on IOC flag to be raised (waits <timeout> unless timeout=0)
-unsigned dma_wait_tx_ioc(unsigned timeout);
-unsigned dma_wait_rx_ioc(unsigned timeout);
-// wait on IDLE state (waits <timeout> unless timeout=0)
-unsigned dma_wait_tx_idle(unsigned timeout);
-unsigned dma_wait_rx_idle(unsigned timeout);
+// poll for HALT:
+unsigned dma_poll_tx_halt();
+unsigned dma_poll_rx_halt();
 
+// read/write TX/RX current/tail buffer descriptor HW addresses:
+hw_addr_t dma_read_tx_curdesc   (void);
+hw_addr_t dma_read_rx_curdesc   (void);
+hw_addr_t dma_read_tx_taildesc  (void);
+hw_addr_t dma_read_rx_taildesc  (void);
+void      dma_write_tx_curdesc  (hw_addr_t bd_addr);
+void      dma_write_rx_curdesc  (hw_addr_t bd_addr);
+void      dma_write_tx_taildesc (hw_addr_t bd_addr);
+void      dma_write_rx_taildesc (hw_addr_t bd_addr);
+
+// show the HW addresses for the current and tail BDs for TX and RX
+void dma_show_tx_current_tail_addrs();
+void dma_show_rx_current_tail_addrs();
 
 // poll IOC flag for tx/rx (single read, no timeout)
-unsigned dma_poll_tx_ioc();
-unsigned dma_poll_rx_ioc();
+unsigned dma_poll_tx_ioc (void);
+unsigned dma_poll_rx_ioc (void);
+
+// wait on IOC flag to be raised (waits <timeout> unless timeout=0)
+unsigned dma_wait_tx_ioc (unsigned timeout);
+unsigned dma_wait_rx_ioc (unsigned timeout);
+
+// clear IOC flags for TX/RX (does not wait for clear, as new completions may occur)
+// (NOTE: IOC flag is set even when the corresponding HW interrupt is disabled)
+void dma_clear_tx_ioc (void);
+void dma_clear_rx_ioc (void);
+
+// poll tx/rx for IDLE (single read, no timeout)
+unsigned dma_poll_tx_idle (void);
+unsigned dma_poll_rx_idle (void);
+
+// wait on IDLE state (waits <timeout> unless timeout=0)
+unsigned dma_wait_tx_idle (unsigned timeout);
+unsigned dma_wait_rx_idle (unsigned timeout);
 
 
-// scatter/gather buffer descriptors
-// initialize a BD located at HW address <bd_addr>, with next BD at HW address <nxt_addr>, buffer at HW address <buf_addr> of size <buf_size> in bytes,
-// and with BD flags set to <bd_flags>
-void dma_init_bd(hw_addr_t bd_addr, hw_addr_t next_addr, hw_addr_t buf_addr, hw_val_t buf_size, hw_val_t bd_flags);
+// Buffer Descriptor (BD) utitilies:
 
-// starting at HW address <bd_addr> initialize <n> BDs with flags appropriate for TX (SOF / EOF)
-void dma_init_tx_bd_ring(hw_addr_t bd_addr, hw_val_t n, hw_val_t buf_size);
+// sanity check that bd_addr points to a properly initialized BD (nonzero addresses and lengths)
+unsigned dma_valid_bd (hw_addr_t bd_addr);
 
-// starting at HW address <bd_addr> initialize <n> BDs with flags appropriate for RX
-void dma_init_rx_bd_ring(hw_addr_t bd_addr, hw_val_t n, hw_val_t buf_size);
-
-// show ring of BDs starting at HW address <bd_addr>:
-void dma_show_bd_ring(hw_addr_t bd_addr);
+// ... unsafe version for now ... experimenting
+hw_val_t dma_read_bd_status  (hw_addr_t bd_addr);
+void     dma_write_bd_status (hw_addr_t bd_addr, hw_val_t value);
+void     dma_clear_bd_status (hw_addr_t bd_addr);
 
 // get the HW address of the next BD after the one at HW address <bd_addr>.
-hw_addr_t dma_get_next_bd_addr(hw_addr_t bd_addr);
+hw_addr_t dma_get_next_bd_addr (hw_addr_t bd_addr);
 
-// get the HW address of the BD for which the next HW address is <bd_addr>.
-hw_addr_t dma_get_prev_bd_addr(hw_addr_t bd_addr);
+// count the number of valid BDs in the ring starting at HW address <bd_addr>:
+// returns 0 if any invalid BD is detected, so checking dma_count_bd_ring() > 0 is a good sanity check on the ring.
+unsigned dma_count_bd_ring (hw_addr_t bd_addr);
 
-// count the number of BDs in the ring starting at HW address <bd_addr>:
-unsigned dma_count_bd_ring(hw_addr_t bd_addr);
+// initialize a BD located at HW address <bd_addr>, with next BD at HW address <nxt_addr>,
+// buffer at HW address <buf_addr> of size <buf_size> in bytes,
+// with BD flags set to <bd_flags> and status initialized to <bd_status>:
+void dma_init_bd (hw_addr_t bd_addr, hw_addr_t next_addr, hw_addr_t buf_addr, hw_val_t buf_size, hw_val_t bd_flags,  hw_val_t bd_status);
+
+// initialize a ring of <nring> consecutive BDs, with each BD initialized as above.
+// buffers begin immediately above the ring of BDs, byte aligned to DMA_BUFFER_ALIGN_BYTES
+void dma_init_bd_ring (hw_addr_t bd_addr, unsigned nring, hw_val_t buf_size, hw_val_t bd_flags,  hw_val_t bd_status);
+
+// show ring of BDs starting at HW address <bd_addr>:
+void dma_show_bd_ring (hw_addr_t bd_addr);
+
+
+
+
+
+//
+// ... Under review for relocation / reorganization ...
+//
+
+
+
+
+// set to zero the contents of the buffer associated with the BD at address <bd_addr>.
+void dma_clear_buffer (hw_addr_t bd_addr);
+
 
 // get the HW address that is offset i * DMA_BD_BYTES from <bd_addr>
 // CAREFUL: this is not cyclic!  The returned HW address may or may not be a BD!
-hw_addr_t dma_get_ith_bd(hw_addr_t bd_addr, int i);
+hw_addr_t dma_get_ith_bd (hw_addr_t bd_addr, int i);
 
-// clear the status of a BD at HW address <bd_addr>:
-void dma_clear_bd_status(hw_addr_t bd_addr);
 
 // clear the status of all BDs in the ring starting at HW address <bd_addr>:
-void dma_clear_bd_status_ring(hw_addr_t bd_addr);
+void dma_clear_bd_status_ring (hw_addr_t bd_addr);
 
-// set to zero the contents of the buffer associated with the BD at address <bd_addr>.
-void dma_clear_buffer(hw_addr_t bd_addr);
 
 // set to zero the contents of the buffers associated with all BDs in a ring starting at HW address <bd_addr>.
-void dma_clear_buffer_ring(hw_addr_t bd_addr);
-
-
+void dma_clear_buffer_ring (hw_addr_t bd_addr);
 
 // get a pointer to the buffer associated with the BD at address <bd_addr>.
-hw_ptr_t dma_get_buffer(hw_addr_t bd_addr);
+hw_ptr_t dma_get_buffer (hw_addr_t bd_addr);
 
 // print the contents of the buffer associated with the BD at address <bd_addr>, in <ncol> column format
 // the length of buffer is taken from control register, but show at most <max_words>
-void dma_show_buffer(hw_addr_t bd_addr, int ncol, int max_words);
+void dma_show_buffer (hw_addr_t bd_addr, int ncol, int max_words);
 // as above but for the ring of buffers starting at HW addr <bd_addr>
-void dma_show_buffer_ring(hw_addr_t bd_addr, int ncol, int max_words);
+void dma_show_buffer_ring (hw_addr_t bd_addr, int ncol, int max_words);
 
 // print the *transferred* contents of the buffer associated with the BD at address <bd_addr>, in <ncol> column format
 // the length of buffer is taken from status register, but show at most <max_words>
 // CAREFUL: the address refers to BD, not the buffer associated with BD!
-void dma_show_transferred(hw_addr_t bd_addr, int ncol, int max_words);
+void dma_show_transferred (hw_addr_t bd_addr, int ncol, int max_words);
 // as above but for the ring of buffers starting at HW addr <bd_addr>
-void dma_show_transferred_ring(hw_addr_t bd_addr, int ncol, int max_words);
+void dma_show_transferred_ring (hw_addr_t bd_addr, int ncol, int max_words);
 
 // single TX/RX request for the BDs from <head_addr> to <tail_addr>.
-void dma_chain_tx(hw_addr_t head_addr, hw_addr_t tail_addr);
-void dma_chain_rx(hw_addr_t head_addr, hw_addr_t tail_addr);
+void dma_chain_tx (hw_addr_t head_addr, hw_addr_t tail_addr);
+void dma_chain_rx (hw_addr_t head_addr, hw_addr_t tail_addr);
 
 #endif // __DMA_H_
