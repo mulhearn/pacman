@@ -59,13 +59,6 @@ void show_rxtx_head_tail(){
   dma_show_rx_current_tail_addrs();
 }
 
-void clear_rxtx_bds(){
-  printf("INFO:  clearing TX BD.\r\n");
-  dma_clear_bd_status_ring(TX_BD_BASEADDR);
-  printf("INFO:  clearing RX BD\r\n");
-  dma_clear_bd_status_ring(RX_BD_BASEADDR);
-}
-
 void clear_rxtx_ioc(){
   printf("INFO:  clearing DMA TX IOC flag.\r\n");
   dma_clear_tx_ioc();
@@ -281,6 +274,7 @@ void zero_rxtx_counts(){
 //
 
 void benchmark_tx(){
+  /*
   const unsigned packets = 10000;        // DMA packets to send
   unsigned tx_chain_size = 10;
   unsigned chains = packets/tx_chain_size;
@@ -339,9 +333,11 @@ void benchmark_tx(){
   printf("INFO:  achieved throughput:     %d tx uart packets per ms\r\n", a);
   printf("INFO:  maximum tx rate:         %d tx uart packets (64-bit+2 @ 10 MHz) per ms\r\n", m);
   printf("INFO:  practical max:           %d tx uart packets (64-bit+3 @ 10 MHz) per ms\r\n", p);
+  */
 }
 
 void benchmark_rxtx_loopback(){
+  /*
   // DISCLAIMER:  assumes 40 (larpix) packets per DMA TX packet
 
   const unsigned uarts            = 40;
@@ -443,11 +439,12 @@ void benchmark_rxtx_loopback(){
     printf("ERROR: a timeout occurred during RX/TX benchmark.");
     printf("INFO:  rx_timeout:  %d tx_timeout: %d \r\n", rx_timeout, tx_timeout);
   }
+  */
 }
 
 
 void benchmark_tx_single(){
-
+  /*
   const unsigned words = TX_BUF_BYTES/4; // words in TX buffer (= 1 DMA packet)
   const unsigned packets = 10000;        // DMA packets to send
 
@@ -505,4 +502,5 @@ void benchmark_tx_single(){
   printf("INFO:  achieved throughput:     %d tx uart packets per ms\r\n", a);
   printf("INFO:  maximum tx rate:         %d tx uart packets (64-bit+2 @ 10 MHz) per ms\r\n", m);
   printf("INFO:  practical max:           %d tx uart packets (64-bit+3 @ 10 MHz) per ms\r\n", p);
+  */
 }

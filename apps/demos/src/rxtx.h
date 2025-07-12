@@ -52,6 +52,11 @@ void init_rxtx_descriptor_ring_mode();
 void show_rxtx_bds();
 void show_rxtx_head_tail();
 
+void clear_rxtx_ioc();
+void show_tx_buffer();
+void show_rx_buffer();
+void show_rx_transferred();
+
 void single_tx();
 void single_rx();
 

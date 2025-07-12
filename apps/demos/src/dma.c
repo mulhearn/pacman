@@ -276,12 +276,6 @@ void dma_write_rx_curdesc(hw_addr_t bd_addr){
 }
 
 void dma_write_tx_taildesc(hw_addr_t bd_addr){
-  // preventing setting TAIL To HEAD if we are running DMA:
-  if ( (!dma_poll_tx_halt()) && (dma_read_tx_curdesc() == bd_addr)){
-    printf("ERROR:  DMA is not in HALT state while attempting to set RX tail to current buffer descriptor\r\n");
-    return;
-  }
-
   if (VERBOSE)
     printf("INFO:  setting TX tail buffer descriptor address to 0x%08x\r\n", bd_addr);
 
@@ -289,12 +283,6 @@ void dma_write_tx_taildesc(hw_addr_t bd_addr){
 }
 
 void dma_write_rx_taildesc(hw_addr_t bd_addr){
-  // preventing setting TAIL To HEAD if we are running DMA:
-  if ( (!dma_poll_rx_halt()) && (dma_read_rx_curdesc() == bd_addr)){
-    printf("ERROR:  DMA is not in HALT state while attempting to set RX tail to current buffer descriptor\r\n");
-    return;
-  }
-
   if (VERBOSE)
     printf("INFO:  setting RX tail buffer descriptor address to 0x%08x\r\n", bd_addr);
 
@@ -364,14 +352,15 @@ void dma_clear_rx_ioc(void){
 
 
 
-unsigned dma_poll_tx_idle(void){
-  return (dma_read_register(MM2S_DMASR) & DMASR_IDLE) ? 1 : 0;
-}
+//unsigned dma_poll_tx_idle(void){
+//  return (dma_read_register(MM2S_DMASR) & DMASR_IDLE) ? 1 : 0;
+//}
 
-unsigned dma_poll_rx_idle(void){
-  return (dma_read_register(S2MM_DMASR) & DMASR_IDLE) ? 1 : 0;
-}
+//unsigned dma_poll_rx_idle(void){
+//  return (dma_read_register(S2MM_DMASR) & DMASR_IDLE) ? 1 : 0;
+//}
 
+/*
 unsigned dma_wait_tx_idle(unsigned timeout){
   if (timeout > 0){
     while (timeout && (dma_poll_tx_idle()==0)){
@@ -403,6 +392,8 @@ unsigned dma_wait_rx_idle(unsigned timeout){
   }
   return timeout;
 }
+*/
+
 
 //
 // Buffer Descriptor Utilities:
@@ -458,6 +449,11 @@ hw_addr_t dma_get_next_bd_addr(hw_addr_t bd_addr){
   HW_INVALIDATE_DCACHE(bd, DMA_BD_BYTES);
   return bd[DMA_BD_NXTDESC];
 }
+
+hw_val_t dma_poll_bd_complete (hw_addr_t bd_addr){
+  return ((dma_read_bd_status(bd_addr) & DMA_BD_STATUS_COMPLETE)==0)?0:1;
+}
+
 
 unsigned dma_count_bd_ring(hw_addr_t bd_addr){
   unsigned count = 0;
@@ -523,8 +519,6 @@ void dma_init_bd_ring (hw_addr_t bd_addr, unsigned nring, hw_val_t buf_size, hw_
   printf("INFO:  first free address above buffer:  0x%08X\r\n", buf_addr + nring*aligned_size);
 }
 
-
-
 void dma_show_bd_ring(hw_addr_t bd_addr) {
   unsigned count = 0;
   hw_addr_t cur_addr = bd_addr;
@@ -554,24 +548,14 @@ void dma_show_bd_ring(hw_addr_t bd_addr) {
 }
 
 
+//
+// Buffer Descriptor Utilities:
+//
 
-
-
-
-
-
-hw_addr_t dma_get_ith_bd(hw_addr_t bd_addr, int i){
-  return bd_addr + i * DMA_BD_BYTES;
-}
-
-
-void dma_clear_bd_status_ring(hw_addr_t bd_addr){
-  hw_addr_t cur_addr = bd_addr;
-
-  do {
-    dma_clear_bd_status(cur_addr);
-    cur_addr = dma_get_next_bd_addr(cur_addr);
-  } while ((cur_addr != bd_addr) && (cur_addr != 0));
+hw_ptr_t dma_get_buffer(hw_addr_t bd_addr){
+  hw_ptr_t bd = dma_ptr(bd_addr);
+  HW_INVALIDATE_DCACHE(bd, DMA_BD_BYTES);
+  return dma_ptr(bd[DMA_BD_BUFFER_ADDRESS]);
 }
 
 void dma_clear_buffer(hw_addr_t bd_addr) {
@@ -595,19 +579,19 @@ void dma_clear_buffer(hw_addr_t bd_addr) {
   HW_FLUSH_DCACHE(buf, len);
 }
 
-void dma_clear_buffer_ring(hw_addr_t bd_addr) {
+void dma_clear_buffer_ring(hw_addr_t bd_addr){
   hw_addr_t cur_addr = bd_addr;
+
+  unsigned bd_ring_count = dma_count_bd_ring(bd_addr);
+  if (bd_ring_count == 0){
+    printf("ERROR: invalid ring detected with ring size zero.\r\n");
+    return;
+  }
 
   do {
     dma_clear_buffer(cur_addr);
     cur_addr = dma_get_next_bd_addr(cur_addr);
-  } while ((cur_addr != bd_addr) && (cur_addr != 0));
-}
-
-hw_ptr_t dma_get_buffer(hw_addr_t bd_addr){
-  hw_ptr_t bd = dma_ptr(bd_addr);
-  HW_INVALIDATE_DCACHE(bd, DMA_BD_BYTES);
-  return dma_ptr(bd[DMA_BD_BUFFER_ADDRESS]);
+  } while (cur_addr != bd_addr);
 }
 
 void dma_print_buffer(hw_ptr_t buf, hw_val_t len, int ncol, int max_words) {
@@ -646,16 +630,25 @@ void dma_show_buffer_ring(hw_addr_t bd_addr, int ncol, int max_words){
   unsigned count = 0;
   hw_addr_t cur_addr = bd_addr;
 
+  unsigned bd_ring_count = dma_count_bd_ring(bd_addr);
+  if (bd_ring_count == 0){
+    printf("ERROR: invalid ring detected with ring size zero.\r\n");
+    return;
+  }
+
   do {
     printf("INFO:  contents of buffer %d\r\n", count);
     dma_show_buffer(cur_addr, ncol, max_words);
     cur_addr = dma_get_next_bd_addr(cur_addr);
     count++;
-  } while ((cur_addr != bd_addr) && (cur_addr != 0));
+  } while (cur_addr != bd_addr);
 }
 
 
 void dma_show_transferred(hw_addr_t bd_addr, int ncol, int max_words){
+  if (! dma_poll_bd_complete(bd_addr))
+    return;
+
   hw_ptr_t bd = dma_ptr(bd_addr);
   HW_INVALIDATE_DCACHE(bd, DMA_BD_BYTES);
 
@@ -666,59 +659,21 @@ void dma_show_transferred(hw_addr_t bd_addr, int ncol, int max_words){
 }
 
 void dma_show_transferred_ring(hw_addr_t bd_addr, int ncol, int max_words){
+  unsigned count = 0;
+  hw_addr_t cur_addr = bd_addr;
 
-}
-
-void dma_chain_tx(hw_addr_t head_addr, hw_addr_t tail_addr){
-
-  dma_halt_tx(DMA_TIMEOUT);
-  dma_clear_bd_status_ring(head_addr);
-  dma_clear_tx_ioc();
-
-  if (VERBOSE)
-    printf("INFO:  setting TX current descriptor address to 0x%08x\r\n", head_addr);
-  dma_write_register(MM2S_CURDESC, head_addr);
-
-  dma_run_tx(DMA_TIMEOUT);
-  dma_write_register(MM2S_TAILDESC, tail_addr);
-
-  if (VERBOSE)
-    printf("INFO:  setting TX tail address to 0x%08x\r\n", tail_addr);
-
-  dma_write_register(MM2S_TAILDESC, tail_addr);
-
-}
-
-void dma_chain_rx(hw_addr_t head_addr, hw_addr_t tail_addr){
-
-  dma_halt_rx(DMA_TIMEOUT);
-  dma_clear_bd_status_ring(head_addr);
-
-  dma_clear_rx_ioc();
-
-  dma_write_rx_curdesc(head_addr);
-
-  dma_run_rx(DMA_TIMEOUT);
-
-  if (VERBOSE)
-    printf("INFO:  setting TX tail address to 0x%08x\r\n", tail_addr);
-
-  dma_write_register(S2MM_TAILDESC, tail_addr);
-
-}
-
-
-
-
-hw_addr_t dma_get_prev_bd_addr(hw_addr_t bd_addr){
   unsigned bd_ring_count = dma_count_bd_ring(bd_addr);
   if (bd_ring_count == 0){
     printf("ERROR: invalid ring detected with ring size zero.\r\n");
-    return 0;
+    return;
   }
-  hw_addr_t cur_addr = bd_addr;
-  for (int i=1;i<bd_ring_count;i++){
+
+  do {
+    printf("INFO:  transferred contents of buffer %d\r\n", count);
+    dma_show_transferred(cur_addr, ncol, max_words);
     cur_addr = dma_get_next_bd_addr(cur_addr);
-  }
-  return cur_addr;
+    count++;
+  } while (cur_addr != bd_addr);
+
 }
+

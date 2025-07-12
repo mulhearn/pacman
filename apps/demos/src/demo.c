@@ -132,10 +132,9 @@ void rxtx_menu(){
     printf("(1) read tx status (2) read tx look (3) toggle tx mask (4) toggle tx config \r\n");
     printf("(5) read rx status (6) read rx look (7) toggle rx config (8) toggle rx global config \r\n");
     printf("(9) zero counts \r\n");
-    printf("(a) init descriptor ring mode (b) show BDs (c) show head/tail \r\n");
-    printf("(d) single TX (e) single RX \r\n");
-    // (d) clear IOC flags\r\n");
-    //printf("(m) show TX buffer (n) show RX buffer (o) show RX transferred \r\n");
+    printf("(a) init descriptor ring mode (b) show BDs (c) show head/tail (d) clear IOC flags \r\n");
+    printf("(e) single TX (f) single RX \r\n");
+    printf("(m) show TX buffer (n) show RX buffer (o) show RX transferred \r\n");
     printf("...\r\n");
     printf("(t) reset TX DMA (u) TX DMA status (v) reset RX DMA (w) RX DMA status (x) long DMA status \r\n");
     //printf("(y) benchmark TX (z) benchmark RX/TX loopback \r\n");
@@ -181,10 +180,22 @@ void rxtx_menu(){
       show_rxtx_head_tail();
       break;
     case 'd':
-      single_tx();
+      clear_rxtx_ioc();
       break;
     case 'e':
+      single_tx();
+      break;
+    case 'f':
       single_rx();
+      break;
+    case 'm':
+      show_tx_buffer();
+      break;
+    case 'n':
+      show_rx_buffer();
+      break;
+    case 'o':
+      show_rx_transferred();
       break;
     case 't':
       dma_reset_tx(DMA_TIMEOUT);
