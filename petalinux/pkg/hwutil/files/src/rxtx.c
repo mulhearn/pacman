@@ -8,6 +8,7 @@
 hw_val_t tx_mask_b = 0xFF;
 hw_val_t tx_mask_a = 0xFFFFFFFF;
 
+static unsigned G_TX_COUNTER = 0;
 
 // this is reserved in system-user.dtsi and located within the HP AXI interface for DMA (0x00000000 - 0x3FFFFFFF):
 #define DMA_BUFFER_BASEADDR  0x20000000
@@ -18,62 +19,87 @@ hw_val_t tx_mask_a = 0xFFFFFFFF;
 #define TX_BUF_BYTES 0x150  // 40 uarts x 64 bits => 20 128 bit word plus 1 128 bit header => 21*4*4 = 336 bytes
 #define RX_BUF_BYTES 0x400  // More than enough for now...
 
-void init_rxtx_bds(){
-  printf("INFO:  initializing single TX BD:\r\n");
-  dma_init_tx_bd_ring(TX_BD_BASEADDR, 16, TX_BUF_BYTES);
-  printf("INFO:  initializing single RX BD:\r\n");
-  dma_init_rx_bd_ring(RX_BD_BASEADDR, 1, RX_BUF_BYTES);
-}
+#define TX_BUF_WORDS TX_BUF_BYTES/4
 
-void init_rxtx(){
+
+void init_rxtx(void){
   init_dma_driver();
   init_dma_buffer(DMA_BUFFER_BASEADDR, DMA_BUFFER_SIZE);
 }
 
-void show_rxtx_bds(){
+void init_rxtx_descriptor_ring_mode(int ring_size){
+  dma_reset_tx(DMA_TIMEOUT);
+  dma_reset_rx(DMA_TIMEOUT);
+
+  printf("INFO:  initializing TX BD ring:\r\n");
+  dma_init_bd_ring(TX_BD_BASEADDR, ring_size, TX_BUF_BYTES, DMA_BD_CONTROL_SOF | DMA_BD_CONTROL_EOF, DMA_BD_STATUS_COMPLETE);
+  printf("INFO:  initializing RX BD ring:\r\n");
+  dma_init_bd_ring(RX_BD_BASEADDR, ring_size, RX_BUF_BYTES, 0, 0);
+
+  dma_write_tx_curdesc(TX_BD_BASEADDR);
+  dma_write_tx_taildesc(TX_BD_BASEADDR);
+  dma_write_rx_curdesc(dma_get_next_bd_addr(RX_BD_BASEADDR));
+  dma_write_rx_taildesc(RX_BD_BASEADDR);
+
+
+  dma_init_batch_tx_tail(TX_BD_BASEADDR);
+  dma_init_batch_rx_tail(RX_BD_BASEADDR);
+
+  dma_run_tx(DMA_TIMEOUT);
+  dma_run_rx(DMA_TIMEOUT);
+
+  dma_write_rx_taildesc(RX_BD_BASEADDR);
+
+  // send initial empty TX
+  dma_clear_bd_status(TX_BD_BASEADDR);
+  dma_write_tx_taildesc(TX_BD_BASEADDR);
+}
+
+void show_rxtx_bds(void){
   printf("INFO:  TX BD:\r\n");
   dma_show_bd_ring(TX_BD_BASEADDR);
   printf("INFO:  RX BD:\r\n");
   dma_show_bd_ring(RX_BD_BASEADDR);
 }
 
-void clear_rxtx_bds(){
-  printf("INFO:  clearing TX BD.\r\n");
-  dma_clear_bd_status_ring(TX_BD_BASEADDR);
-  printf("INFO:  clearing RX BD\r\n");
-  dma_clear_bd_status_ring(RX_BD_BASEADDR);
+void show_rxtx_head_tail(void){
+  dma_show_tx_current_tail_addrs();
+  dma_show_rx_current_tail_addrs();
 }
 
-void clear_rxtx_ioc(){
+void clear_rxtx_ioc(void){
   printf("INFO:  clearing DMA TX IOC flag.\r\n");
-  dma_clear_tx_ioc(DMA_TIMEOUT);
+  dma_clear_tx_ioc();
   printf("INFO:  clearing DMA RX IOC flag\r\n");
-  dma_clear_rx_ioc(DMA_TIMEOUT);
+  dma_clear_rx_ioc();
 }
 
-void show_tx_buffer(){
+void show_tx_buffer(void){
   printf("INFO:  TX Buffer:\r\n");
   dma_show_buffer_ring(TX_BD_BASEADDR, 4, 1000);
 }
 
-void show_rx_buffer(){
+void show_rx_buffer(void){
   printf("INFO:  RX Buffer:\r\n");
   dma_show_buffer_ring(RX_BD_BASEADDR, 4, 1000);
 }
 
-void show_rx_transferred(){
+void show_rx_transferred(void){
   printf("INFO:  RX Buffer:\r\n");
   dma_show_transferred_ring(RX_BD_BASEADDR, 4, 1000);
 }
 
-void single_tx(){
+void single_tx(void){
   // TX buffer is a 128 bit header plus 40 uarts allocated 64 bits each.
   // This is a total of 84 32-bit words (4 header words, 80 uart words)
   // The resulting AXI stream is 128 bits times 21 beats.
 
-  static int count = 0;
-  hw_ptr_t tx_buf = dma_get_buffer(TX_BD_BASEADDR);
-  unsigned words = TX_BUF_BYTES/4;
+  hw_addr_t nxta = dma_get_next_bd_addr(dma_read_tx_taildesc());
+  // keep batch tail synced even when doing single buffers:
+  dma_init_batch_tx_tail(nxta);
+
+  hw_ptr_t tx_buf = dma_get_buffer(nxta);
+  unsigned words = TX_BUF_WORDS;
 
   tx_buf[0]= tx_mask_a;
   tx_buf[1]= tx_mask_b;
@@ -81,39 +107,41 @@ void single_tx(){
   tx_buf[3]=0x00000000;
 
   for (int i=0; i<(words-4); i++)
-    tx_buf[i+4] = 0xB000F000 + i + (count<<16);
-  count++;
+    tx_buf[i+4] = 0xB000F000 + i + (G_TX_COUNTER<<16);
+  G_TX_COUNTER++;
 
   HW_FLUSH_DCACHE(tx_buf, words*4);
-
-  dma_chain_tx(TX_BD_BASEADDR, TX_BD_BASEADDR);
+  dma_clear_tx_ioc();
+  dma_clear_bd_status(nxta);
+  dma_write_tx_taildesc(nxta);
 
   if (dma_wait_tx_ioc(DMA_TIMEOUT) > 0){
     printf("INFO: single TX yielded TX IOC flag high (SUCCESS)\r\n");
   }
 }
 
-void chain_tx(){
-  // TX buffer is a 128 bit header plus 40 uarts allocated 64 bits each.
-  // This is a total of 84 32-bit words (4 header words, 80 uart words)
-  // The resulting AXI stream is 128 bits times 21 beats.
+void single_rx(void){
+  hw_addr_t nxta = dma_get_next_bd_addr(dma_read_rx_taildesc());
 
-  static int count = 0;
-
-  unsigned tx_chain_size = 10;
-  unsigned tx_ring_size  = dma_count_bd_ring(TX_BD_BASEADDR);
-  if (tx_ring_size < tx_chain_size){
-    printf("ERROR: TX ring size %d is smaller than chain size %d\r\n", tx_ring_size, tx_chain_size);
-    return;
+  if (dma_read_bd_status(nxta) & DMA_BD_STATUS_COMPLETE){
+    printf("INFO:  RX success.\r\n");
+    // keep batch tail synced even when doing single buffers:
+    dma_init_batch_rx_tail(nxta);
+    dma_clear_bd_status(nxta);
+    dma_write_rx_taildesc(nxta);
+  } else {
+    printf("INFO:  nothing RXed.\r\n");
   }
+}
 
-  hw_addr_t head_addr = TX_BD_BASEADDR;
-  hw_addr_t tail_addr = TX_BD_BASEADDR;
-  hw_addr_t cur_addr  = TX_BD_BASEADDR;
+void batch_tx(void){
+  unsigned words = TX_BUF_WORDS;
+  unsigned count = 0;
+  hw_addr_t nxta;
 
-  unsigned words = TX_BUF_BYTES/4;
-  for (int i=0; i<tx_chain_size; i++){
-    hw_ptr_t tx_buf = dma_get_buffer(cur_addr);
+  while((count < 10) && (dma_next_available_tx_bd(&nxta))){
+    printf("INFO:  working on buffer %d at HW addr 0x%08X \r\n", count, nxta);
+    hw_ptr_t tx_buf = dma_get_buffer(nxta);
 
     tx_buf[0]= tx_mask_a;
     tx_buf[1]= tx_mask_b;
@@ -121,39 +149,44 @@ void chain_tx(){
     tx_buf[3]=0x00000000;
 
     for (int i=0; i<(words-4); i++)
-      tx_buf[i+4] = 0xB000F000 + i + (count<<16);
-
+      tx_buf[i+4] = 0xB000F000 + i + (G_TX_COUNTER<<16);
     HW_FLUSH_DCACHE(tx_buf, words*4);
 
-    tail_addr = cur_addr;
-    cur_addr  = dma_get_next_bd_addr(cur_addr);
+    dma_add_tx_bd(nxta);
     count++;
+    G_TX_COUNTER++;
   }
 
-  dma_chain_tx(head_addr, tail_addr);
+  dma_clear_tx_ioc();
+  printf("INFO:  sending batch of %d TX buffers \r\n", count);
+  dma_tx_batch();
 
+  // NOTE: the IOC fires on the first complete transfer, so this only confirms one buffer was sent
   if (dma_wait_tx_ioc(DMA_TIMEOUT) > 0){
-    printf("INFO: single TX yielded TX IOC flag high (SUCCESS)\r\n");
+    printf("INFO:  batch TX yielded TX IOC flag high (SUCCESS)\r\n");
   }
 }
 
-void single_rx(){
-  dma_chain_rx(RX_BD_BASEADDR, RX_BD_BASEADDR);
+void batch_rx(void){
+  unsigned count = 0;
+  hw_addr_t nxta;
 
-  if (dma_wait_rx_ioc(DMA_TIMEOUT) > 0){
-    printf("INFO: single RX yielded RX IOC flag high (SUCCESS)\r\n");
+  while((count < 10) && dma_next_available_rx_bd(&nxta)){
+    // do work on buffer ...
+    count++;
+    dma_add_rx_bd(nxta);
   }
+
+  printf("INFO:  sending batch of %d RX buffers \r\n", count);
+  dma_rx_batch();
 }
 
-
-void chain_rx(){
-}
 
 void benchmark_dma_tx();
 void benchmark_dma_rxtx_loopback();
 
 
-void toggle_tx_config(){
+void toggle_tx_config(void){
   static int mode = 0;
   mode = (mode + 1) % 3;
   if (mode==0){
@@ -171,7 +204,7 @@ void toggle_tx_config(){
   }
 }
 
-void toggle_rx_config(){
+void toggle_rx_config(void){
   static int mode = 0;
   mode = (mode + 1) % 4;
   if (mode==0){
@@ -200,7 +233,21 @@ void toggle_rx_config(){
   }
 }
 
-void read_rx_status(){
+void toggle_rx_global_config(void){
+  static int mode = 0;
+  mode = (mode + 1) % 2;
+  if (mode==0){
+    unsigned config = 0x00000000;
+    printf("INFO: Setting RX global config to 0x%08X \r\n", config);
+    axil_write_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_GFLAGS, config);
+  } else if (mode==1) {
+    unsigned config = 0x00000001;
+    printf("INFO: Setting RX global config to 0x%08X \r\n", config);
+    axil_write_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_GFLAGS, config);
+  }
+}
+
+void read_rx_status(void){
   for (int i=0; i<40; i++){
     unsigned cshift = (i<<8);
     unsigned status = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_STATUS);
@@ -219,7 +266,7 @@ void read_rx_status(){
   printf("DMA ITR------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_DMAITR));
 }
 
-void read_rx_look(){
+void read_rx_look(void){
   for (int i=0; i<40; i++){
     unsigned cshift = (i<<8);
     unsigned a = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_LOOK_A);
@@ -230,7 +277,7 @@ void read_rx_look(){
   }
 }
 
-void read_tx_status(){
+void read_tx_status(void){
   for (int i=0; i<40; i++){
     unsigned cshift = (i<<8);
     unsigned status = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_STATUS);
@@ -243,7 +290,7 @@ void read_tx_status(){
   printf("bstatus----------- 0x%x    \r\n", axil_read_register(SCOPE_TX+0x3F00+C_ADDR_TX_STATUS));
 }
 
-void read_tx_look(){
+void read_tx_look(void){
   for (int i=0; i<40; i++){
     unsigned cshift = (i<<8);
     unsigned d = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_LOOK_D);
@@ -252,7 +299,7 @@ void read_tx_look(){
   }
 }
 
-void toggle_tx_mask(){
+void toggle_tx_mask(void){
   static int mode = 0;
   mode = (mode + 1) % 4;
   switch(mode){
@@ -275,7 +322,7 @@ void toggle_tx_mask(){
   printf("RX mask:  0x%08x %08x \r\n", tx_mask_b, tx_mask_a);
 }
 
-void zero_rxtx_counts(){
+void zero_rxtx_counts(void){
   axil_write_register(SCOPE_TX+0x3F00+C_ADDR_TX_STARTS, 0x0);
   axil_write_register(SCOPE_RX+0x3F00+C_ADDR_RX_ZERO_CNTS, 0x0);
 }
@@ -285,50 +332,47 @@ void zero_rxtx_counts(){
 // Benchmarks:
 //
 
-void benchmark_tx(){
-  const unsigned packets = 10000;        // DMA packets to send
-  unsigned tx_chain_size = 10;
-  unsigned chains = packets/tx_chain_size;
-  unsigned tx_ring_size  = dma_count_bd_ring(TX_BD_BASEADDR);
-  if (tx_ring_size < tx_chain_size){
-    printf("ERROR: TX ring size %d is smaller than chain size %d\r\n", tx_ring_size, tx_chain_size);
-    return;
-  }
+void benchmark_tx(void){
+  // assuming 40 uarts
+  const unsigned packets    = 10000; // DMA packets to send
+  const unsigned uarts      = 40;
+  const unsigned batch_size = 100;
+  const unsigned words      = TX_BUF_WORDS; // words in TX buffer (= 1 DMA packet)
 
-  hw_addr_t head_addr = TX_BD_BASEADDR;
-  hw_addr_t tail_addr = TX_BD_BASEADDR;
-  hw_addr_t cur_addr  = TX_BD_BASEADDR;
+  unsigned tx_sent = 0;
 
-  unsigned words = TX_BUF_BYTES/4;
-  for (int i=0; i<tx_chain_size; i++){
-    hw_ptr_t tx_buf = dma_get_buffer(cur_addr);
-
-    tx_buf[0]= tx_mask_a;
-    tx_buf[1]= tx_mask_b;
-    tx_buf[2]=0x00000000;
-    tx_buf[3]=0x00000000;
-
-    for (int i=0; i<(words-4); i++)
-      tx_buf[i+4] = rand();
-
-    HW_FLUSH_DCACHE(tx_buf, words*4);
-
-    tail_addr = cur_addr;
-    cur_addr  = dma_get_next_bd_addr(cur_addr);
-  }
+  init_rxtx_descriptor_ring_mode(128);
 
   start_hw_timer();
-  //unsigned timeout = 0;
-  for (int i=0;i<chains; i++){
-    dma_chain_tx(head_addr, tail_addr);
-    dma_wait_tx_ioc(DMA_TIMEOUT);
-    dma_wait_tx_idle(DMA_TIMEOUT);
-    //usleep(100);
+  while (tx_sent < packets) {
+    unsigned batch_count = 0;
+    hw_addr_t nxta = 0;
+    while((batch_count < batch_size) && (dma_next_available_tx_bd(&nxta))){
+      //printf("INFO:  working on buffer %d at HW addr 0x%08X \r\n", batch_count, nxta);
+      hw_ptr_t tx_buf = dma_get_buffer(nxta);
+
+      tx_buf[0]= tx_mask_a;
+      tx_buf[1]= tx_mask_b;
+      tx_buf[2]=0x00000000;
+      tx_buf[3]=0x00000000;
+
+      //for (int i=0; i<(words-4); i++)
+      //tx_buf[i+4] = rand();
+
+      HW_FLUSH_DCACHE(tx_buf, words*4);
+
+      dma_add_tx_bd(nxta);
+      batch_count++;
+    }
+    if (batch_count > 0){
+      tx_sent += batch_count;
+      dma_tx_batch();
+    }
   }
+  dma_wait_tx_idle(100000);
   stop_hw_timer();
 
   unsigned elapsed_us = hw_timer_elapsed_us();
-  unsigned uarts = 40;
 
   printf("INFO:  elapsed microseconds:    %d (0x%x)\r\n", elapsed_us, elapsed_us);
   printf("INFO:  tx payloads per packet:  %d\r\n", uarts);
@@ -346,7 +390,106 @@ void benchmark_tx(){
   printf("INFO:  practical max:           %d tx uart packets (64-bit+3 @ 10 MHz) per ms\r\n", p);
 }
 
-void benchmark_rxtx_loopback(){
+void benchmark_rxtx_loopback(void){
+
+  const unsigned tx_packets  = 10000; // DMA packets to send
+  const unsigned uarts       = 40;    // *** assuming all 40 uarts enabled ***
+  const unsigned uart_bytes  = 16;    // 128-bits per uart channel
+  const unsigned batch_size  = 100;
+  const unsigned words       = TX_BUF_WORDS; // words in TX buffer (= 1 DMA packet)
+  const unsigned rx_expected = uarts * uart_bytes * tx_packets;
+  const unsigned rx_trailer_bytes = 16; // Each DMA RX packet has a 128-bit trailer
+
+  const unsigned timeout = 10000;
+  unsigned rx_timeout = timeout;
+  unsigned tx_timeout = timeout;
+  unsigned tx_sent  = 0;
+  unsigned rx_rcvd  = 0;
+  unsigned rx_bytes = 0;
+
+  init_rxtx_descriptor_ring_mode(128);
+
+  start_hw_timer();
+  while (tx_timeout && rx_timeout && (rx_bytes < rx_expected)){
+    if (tx_sent < tx_packets) {
+      tx_timeout--;
+      unsigned batch_count = 0;
+      hw_addr_t nxta = 0;
+      while((batch_count < batch_size) && (dma_next_available_tx_bd(&nxta))){
+	//printf("INFO:  working on buffer %d at HW addr 0x%08X \r\n", batch_count, nxta);
+	hw_ptr_t tx_buf = dma_get_buffer(nxta);
+
+	tx_buf[0]= tx_mask_a;
+	tx_buf[1]= tx_mask_b;
+	tx_buf[2]=0x00000000;
+	tx_buf[3]=0x00000000;
+
+	//for (int i=0; i<(words-4); i++)
+	//tx_buf[i+4] = rand();
+
+	HW_FLUSH_DCACHE(tx_buf, words*4);
+
+	dma_add_tx_bd(nxta);
+	batch_count++;
+      }
+      if (batch_count > 0){
+	tx_timeout = timeout;
+	tx_sent += batch_count;
+	dma_tx_batch();
+      }
+    }
+    {
+      rx_timeout--;
+      unsigned batch_count = 0;
+      hw_addr_t nxta = 0;
+      while((batch_count < batch_size) && (dma_next_available_rx_bd(&nxta))){
+	unsigned xbytes = dma_poll_bd_transferred(nxta);
+	if (xbytes > rx_trailer_bytes){
+	  rx_bytes += xbytes - rx_trailer_bytes;
+	} else {
+	  printf("ERROR: invalid RX packet of size %d bytes found \r\n", xbytes);
+	  return;
+	}
+	batch_count++;
+	dma_add_rx_bd(nxta);
+      }
+      if (batch_count > 0){
+	rx_timeout = timeout;
+	rx_rcvd += batch_count;
+	dma_rx_batch();
+      }
+    }
+  }
+  stop_hw_timer();
+
+  printf("INFO:  tx_sent: %d rx_rcvd: %d rx_bytes %d expected: %d \r\n", tx_sent, rx_rcvd, rx_bytes, rx_expected);
+
+  if ((tx_timeout==0) || (rx_timeout==0)){
+    printf("ERROR: a timeout occurred during RX/TX benchmark \r\n");
+    printf("INFO:  rx_timeout:  %d tx_timeout: %d \r\n", rx_timeout, tx_timeout);
+    return;
+  }
+
+  unsigned elapsed_us = hw_timer_elapsed_us();
+
+  printf("INFO:  elapsed microseconds:    %d (0x%x)\r\n", elapsed_us, elapsed_us);
+  printf("INFO:  tx payloads per packet:  %d\r\n", uarts);
+  printf("INFO:  packets:                 %d\r\n", tx_packets);
+
+  if (elapsed_us == 0)
+    return;
+
+  unsigned a = 1000 * uarts * tx_packets / elapsed_us;
+  unsigned m = uarts*10000/66;
+  unsigned p = uarts*10000/67;
+
+  printf("INFO:  achieved throughput:     %d tx uart packets per ms\r\n", a);
+  printf("INFO:  maximum tx rate:         %d tx uart packets (64-bit+2 @ 10 MHz) per ms\r\n", m);
+  printf("INFO:  practical max:           %d tx uart packets (64-bit+3 @ 10 MHz) per ms\r\n", p);
+
+
+  /*
+
   // DISCLAIMER:  assumes 40 (larpix) packets per DMA TX packet
 
   const unsigned uarts            = 40;
@@ -363,7 +506,7 @@ void benchmark_rxtx_loopback(){
   tx_buf[2]=0x00000000;
   tx_buf[3]=0x00000000;
 
-  const unsigned words = TX_BUF_BYTES/4; // words in TX buffer (= 1 DMA packet)
+  const unsigned words = TX_BUF_WORDS; // words in TX buffer (= 1 DMA packet)
   for (int i=0; i<(words-4); i++)
     tx_buf[i+4] = rand();
 
@@ -374,15 +517,15 @@ void benchmark_rxtx_loopback(){
 
   // Inititalize and run TX:
   dma_halt_tx(10*DMA_TIMEOUT);
-  dma_clear_bd_status(TX_BD_BASEADDR);
-  dma_clear_tx_ioc(DMA_TIMEOUT);
+  dma_clear_bd_status_ring(TX_BD_BASEADDR);
+  dma_clear_tx_ioc();
   dma_write_register(MM2S_CURDESC, TX_BD_BASEADDR);
   dma_run_tx(DMA_TIMEOUT);
 
   // Inititalize and run RX:
   dma_halt_rx(10*DMA_TIMEOUT);
-  dma_clear_bd_status(RX_BD_BASEADDR);
-  dma_clear_rx_ioc(DMA_TIMEOUT);
+  dma_clear_bd_status_ring(RX_BD_BASEADDR);
+  dma_clear_rx_ioc();
   dma_write_register(S2MM_CURDESC, RX_BD_BASEADDR);
   dma_run_rx(DMA_TIMEOUT);
 
@@ -406,7 +549,7 @@ void benchmark_rxtx_loopback(){
       tx_sent++;
       tx_timeout = timeout;
       dma_clear_bd_status(TX_BD_BASEADDR);
-      dma_clear_tx_ioc(DMA_TIMEOUT);
+      dma_clear_tx_ioc();
       if (tx_sent < tx_packets)
 	dma_write_register(MM2S_TAILDESC, TX_BD_BASEADDR);
     }
@@ -417,7 +560,7 @@ void benchmark_rxtx_loopback(){
 	rx_bytes += bytes - rx_trailer_bytes;
       rx_timeout = timeout;
       dma_clear_bd_status(RX_BD_BASEADDR);
-      dma_clear_rx_ioc(DMA_TIMEOUT);
+      dma_clear_rx_ioc();
       // TODO: add condition here that rx_bytes < rx_expected before:
       dma_write_register(S2MM_TAILDESC, RX_BD_BASEADDR);
     }
@@ -444,16 +587,13 @@ void benchmark_rxtx_loopback(){
   printf("INFO:  maximum tx rate:         %d uart packets (64-bit+2 @ 10 MHz) per ms\r\n", m);
   printf("INFO:  practical max:           %d uart packets (64-bit+3 @ 10 MHz) per ms\r\n", p);
 
-  if ((tx_timeout==0) || (rx_timeout==0)){
-    printf("ERROR: a timeout occurred during RX/TX benchmark.");
-    printf("INFO:  rx_timeout:  %d tx_timeout: %d \r\n", rx_timeout, tx_timeout);
-  }
+  */
 }
 
 
-void benchmark_tx_single(){
-
-  const unsigned words = TX_BUF_BYTES/4; // words in TX buffer (= 1 DMA packet)
+void benchmark_tx_single(void){
+  /*
+  const unsigned words = TX_BUF_WORDS; // words in TX buffer (= 1 DMA packet)
   const unsigned packets = 10000;        // DMA packets to send
 
   hw_ptr_t tx_buf = dma_get_buffer(TX_BD_BASEADDR);
@@ -470,7 +610,7 @@ void benchmark_tx_single(){
   dma_halt_tx(DMA_TIMEOUT);
   dma_clear_bd_status(TX_BD_BASEADDR);
 
-  dma_clear_tx_ioc(DMA_TIMEOUT);
+  dma_clear_tx_ioc();
 
   dma_write_register(MM2S_CURDESC, TX_BD_BASEADDR);
 
@@ -480,7 +620,7 @@ void benchmark_tx_single(){
   unsigned timeout = 0;
   for (int i=0;i<packets; i++){
     dma_clear_bd_status(TX_BD_BASEADDR);
-    dma_clear_tx_ioc(DMA_TIMEOUT);
+    dma_clear_tx_ioc();
     //usleep(1);
     dma_write_register(MM2S_TAILDESC, TX_BD_BASEADDR);
     timeout = dma_wait_tx_ioc(DMA_TIMEOUT);
@@ -510,4 +650,5 @@ void benchmark_tx_single(){
   printf("INFO:  achieved throughput:     %d tx uart packets per ms\r\n", a);
   printf("INFO:  maximum tx rate:         %d tx uart packets (64-bit+2 @ 10 MHz) per ms\r\n", m);
   printf("INFO:  practical max:           %d tx uart packets (64-bit+3 @ 10 MHz) per ms\r\n", p);
+  */
 }
