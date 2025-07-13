@@ -34,34 +34,37 @@
 #define C_ADDR_TX_STARTS    0x30
 #define C_ADDR_TX_NCHAN     0x40
 
-void init_rxtx();
+void init_rxtx(void);
 
 // menu hooks:
-void read_tx_status();
-void read_tx_look();
-void toggle_tx_config();
-void toggle_tx_mask();
+void read_tx_status(void);
+void read_tx_look(void);
+void toggle_tx_config(void);
+void toggle_tx_mask(void);
 
-void read_rx_status();
-void read_rx_look();
-void toggle_rx_config();
-void toggle_rx_global_config();
-void zero_rxtx_counts();
+void read_rx_status(void);
+void read_rx_look(void);
+void toggle_rx_config(void);
+void toggle_rx_global_config(void);
+void zero_rxtx_counts(void);
 
-void init_rxtx_descriptor_ring_mode();
-void show_rxtx_bds();
-void show_rxtx_head_tail();
+void init_rxtx_descriptor_ring_mode(int ring_size);
+void show_rxtx_bds(void);
+void show_rxtx_head_tail(void);
 
-void clear_rxtx_ioc();
-void show_tx_buffer();
-void show_rx_buffer();
-void show_rx_transferred();
+void clear_rxtx_ioc(void);
+void show_tx_buffer(void);
+void show_rx_buffer(void);
+void show_rx_transferred(void);
 
-void single_tx();
-void single_rx();
+void single_tx(void);
+void single_rx(void);
 
-void batch_tx();
-void batch_rx();
+void batch_tx(void);
+void batch_rx(void);
 
+
+void benchmark_tx(void);
+void benchmark_rxtx_loopback(void);
 
 #endif // __RXTX_H_

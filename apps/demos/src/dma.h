@@ -157,6 +157,13 @@ void     dma_clear_rx_ioc (void);
 unsigned dma_wait_tx_ioc (unsigned timeout);
 unsigned dma_wait_rx_ioc (unsigned timeout);
 
+// poll for IDLE state of TX/RX
+unsigned dma_poll_tx_idle (void);
+unsigned dma_poll_rx_idle (void);
+
+// wait for IDLE state (waits <timeout> unless timeout=0)
+unsigned dma_wait_tx_idle (unsigned timeout);
+unsigned dma_wait_rx_idle (unsigned timeout);
 
 // Buffer Descriptor (BD) utitilies:
 
@@ -170,6 +177,10 @@ void     dma_clear_bd_status  (hw_addr_t bd_addr);
 
 // poll if this BD has complete bit set in status field:
 hw_val_t dma_poll_bd_complete (hw_addr_t bd_addr);
+
+// poll length of transfer in this status field of this BD:
+hw_val_t dma_poll_bd_transferred (hw_addr_t bd_addr);
+
 
 // get the HW address of the next BD after the one at HW address <bd_addr>.
 hw_addr_t dma_get_next_bd_addr (hw_addr_t bd_addr);

@@ -1,7 +1,7 @@
 #include "hw_access.h"
 #include "dma.h"
 
-#define VERBOSE 1
+#define VERBOSE 0
 
 //
 // Local utility functions, not in header:
@@ -341,6 +341,48 @@ void dma_clear_rx_ioc(void){
   dma_write_register(S2MM_DMASR, DMASR_IOC_IRQ);
 }
 
+
+unsigned dma_poll_tx_idle(void){
+  return (dma_read_register(MM2S_DMASR) & DMASR_IDLE) ? 1 : 0;
+}
+
+unsigned dma_poll_rx_idle(void){
+  return (dma_read_register(S2MM_DMASR) & DMASR_IDLE) ? 1 : 0;
+}
+
+unsigned dma_wait_tx_idle(unsigned timeout){
+  if (timeout > 0){
+    while (timeout && (dma_poll_tx_idle()==0)){
+      usleep(1);
+      timeout--;
+    }
+    if (! timeout) {
+      printf("ERROR:  timeout waiting for TX to reach IDLE.\r\n");
+      return 0;
+    } else if (VERBOSE) {
+      printf("INFO:  DMA TX IDLE state reached  (timeout=%d) \r\n", timeout);
+    }
+  }
+  return timeout;
+}
+
+unsigned dma_wait_rx_idle(unsigned timeout){
+
+  if (timeout > 0){
+    while (timeout && (dma_poll_rx_idle()==0)){
+      usleep(1);
+      timeout--;
+    }
+    if (! timeout) {
+      printf("ERROR:  timeout waiting for RX to reach IDLE.\r\n");
+      return 0;
+    } else if (VERBOSE) {
+      printf("INFO:  DMA RX IDLE state reached  (timeout=%d) \r\n", timeout);
+    }
+  }
+  return timeout;
+}
+
 //
 // Buffer Descriptor Utilities:
 //
@@ -399,6 +441,12 @@ hw_addr_t dma_get_next_bd_addr(hw_addr_t bd_addr){
 hw_val_t dma_poll_bd_complete (hw_addr_t bd_addr){
   return ((dma_read_bd_status(bd_addr) & DMA_BD_STATUS_COMPLETE)==0)?0:1;
 }
+
+hw_val_t dma_poll_bd_transferred (hw_addr_t bd_addr){
+  return (dma_read_bd_status(bd_addr) & DMA_BD_STATUS_TRANSFERRED);
+}
+
+
 
 unsigned dma_count_bd_ring(hw_addr_t bd_addr){
   unsigned count = 0;
