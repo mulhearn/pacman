@@ -62,9 +62,10 @@ int pacman_init(int verbose){
   // DEFAULT parameters
   if (verbose){
     printf("INFO:  Enabling Trigger, Sync, and Heartbeat words in the RX unit.\n");
-    printf("INFO:  Setting number of cycles per DMA package to 0x1FFF.\n");
+    //printf("INFO:  Setting number of cycles per DMA package to 0x1FFF.\n");
   }
-  G_PACMAN_AXIL[0x7FA4>>2] = 0x71FFF;
+  //G_PACMAN_AXIL[0x7FA4>>2] = 0x71FFF;
+  G_PACMAN_AXIL[0x7FA4>>2] = 0x70000;
 
   //if (verbose){
   //  printf("INFO:  Limiting TX bandwidth.\n");
@@ -79,7 +80,7 @@ int pacman_init(int verbose){
 
   // duplicate (harmless) effort here while merging new driver code into PACMAN server.
   init_axil_driver();
-  
+
   return EXIT_SUCCESS;
 }
 
@@ -101,7 +102,7 @@ int pacman_poll_rx(){
   unsigned batch_count = 0;
   hw_addr_t nxta;
   uint32_t rx_data[4];
-  
+
   while((batch_count < batch_size) && dma_next_available_rx_bd(&nxta)){
     // several checks are possible here: xbytes size makes sense, trailer matches, etc...
     // but keeping as simple as possible for integration of new driver ...
@@ -114,8 +115,8 @@ int pacman_poll_rx(){
 	rx_data[2] = rx_buf[4*i+2];
 	rx_data[1] = rx_buf[4*i+1];
 	rx_data[0] = rx_buf[4*i+0];
+	rx_buffer_in(rx_data);
       }
-      rx_buffer_in(rx_data);
     }
     batch_count++;
     dma_add_rx_bd(nxta);
@@ -124,28 +125,34 @@ int pacman_poll_rx(){
     printf("INFO:  returning %d RX buffers \r\n", batch_count);
     dma_rx_batch();
   }
-  
+
   return EXIT_SUCCESS;
 }
 
 int pacman_poll_tx(){
   static uint32_t output[TX_BUFFER_BYTES/4];
 
-  while (tx_buffer_out(output)==1){
-    tx_buffer_print_output(output);
-  }
+  const unsigned batch_size = 100;
+  unsigned batch_count = 0;
+  hw_addr_t nxta;
+  uint32_t rx_data[4];
 
-  //for (int i=0; i<84*4; i++)
-  //  G_PACMAN_DMA_TX_BUFFER[i] = output[i];
-  //G_PACMAN_DMA[0x0018>>2] = DMA_TX_ADDR;
-  //G_PACMAN_DMA[0x0028>>2] = 84*4;
-  //usleep(100);
-  //cr = G_PACMAN_DMA[REG_DMA_TX_CONTROL>>2];
-  //sr = G_PACMAN_DMA[REG_DMA_TX_STATUS>>2];
-  //printf("DMA TX control register (MM2S) - 0x%x \n", cr);
-  //printf("DMA TX status register  (MM2S) - 0x%x \n", sr);
-  //print_dma_status(cr, sr);
-  //}
+  while((batch_count < batch_size) && dma_next_available_tx_bd(&nxta)){
+    if (tx_buffer_out(output)==1){
+      tx_buffer_print_output(output);
+      hw_ptr_t tx_buf = dma_get_buffer(nxta);
+      for (int i=0; i<84*4; i++)
+	tx_buf[i] = output[i];
+      dma_add_tx_bd(nxta);
+      batch_count++;
+    } else {
+      break;
+    }
+  }
+  if (batch_count > 0){
+    printf("INFO:  sending %d TX buffers \r\n", batch_count);
+    dma_tx_batch();
+  }
   return EXIT_SUCCESS;
 }
 

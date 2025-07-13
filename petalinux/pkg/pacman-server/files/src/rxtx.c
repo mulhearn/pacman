@@ -28,7 +28,7 @@ void init_rxtx(void){
 }
 
 void init_tx_descriptor_ring_mode(int ring_size){
-  dma_reset_tx(DMA_TIMEOUT);
+  //dma_reset_tx(DMA_TIMEOUT);
 
   printf("INFO:  initializing TX BD ring:\r\n");
   dma_init_bd_ring(TX_BD_BASEADDR, ring_size, TX_BUF_BYTES, DMA_BD_CONTROL_SOF | DMA_BD_CONTROL_EOF, DMA_BD_STATUS_COMPLETE);
@@ -45,7 +45,7 @@ void init_tx_descriptor_ring_mode(int ring_size){
 }
 
 void init_rx_descriptor_ring_mode(int ring_size){
-  dma_reset_rx(DMA_TIMEOUT);
+  //dma_reset_rx(DMA_TIMEOUT);
 
   printf("INFO:  initializing RX BD ring:\r\n");
   dma_init_bd_ring(RX_BD_BASEADDR, ring_size, RX_BUF_BYTES, 0, 0);
