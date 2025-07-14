@@ -11,14 +11,11 @@
 static void * ctx = NULL;
 static void * req = NULL;
 
-//#define MAX_BUFFER_SIZE 1024
-//#define MAX_BUFFER_SIZE 16384
-
 // BUFFER SIZE:  8 + N * 16
 //#define MAX_BUFFER_SIZE 648
-#define MAX_BUFFER_SIZE 2568
+//#define MAX_BUFFER_SIZE 2568
 //#define MAX_BUFFER_SIZE 10248
-//#define MAX_BUFFER_SIZE 20488
+#define MAX_BUFFER_SIZE 20488
 uint32_t tx_buffer[MAX_BUFFER_SIZE/4];
 
 static volatile bool msg_done = true;
@@ -31,8 +28,8 @@ int main(int argc, char* argv[]){
 
   // empirically determined:
   struct timeval delay = {1, 0};
-  //struct timeval tau   = {0, 132};
-  struct timeval tau   = {0, 264};
+  struct timeval tau   = {0, 132};
+  //struct timeval tau   = {0, 264};
   //struct timeval tau   = {0, 2000};
   struct timeval cur, target, start, end;
   double elapsed_time;
@@ -66,11 +63,20 @@ int main(int argc, char* argv[]){
   int tot_words  = 0;
   int N = 10000;
 
-  printf("INFO: benchmarking %d TX/RX\n", N);
+  //printf("DEBUG: preparing a message with %d requests.\n", nreq);
+  unsigned nreq = (MAX_BUFFER_SIZE-8)/16;
+  tx_buffer[0]=0x3F;
+  tx_buffer[1]=((nreq)&0xFFFF)<<16;
+  for (int i=0; i<nreq; i++){
+    tx_buffer[2+4*i+0]=0x0044 + (((i%40)+1)<<8);
+    tx_buffer[2+4*i+1]=0x00;
+    tx_buffer[2+4*i+2]=rand();
+    tx_buffer[2+4*i+3]=rand();
+  }
 
+  printf("INFO: benchmarking %d TX/RX\n", N);
   while(tx_count < N){
     zmq_msg_t msg;
-    unsigned nreq = (MAX_BUFFER_SIZE-8)/16;
 
     gettimeofday(&cur, NULL);
     if (timercmp(&cur, &target, <)){
@@ -110,7 +116,7 @@ int main(int argc, char* argv[]){
   printf("INFO: tx_count: %d\n", tx_count);
   uint64_t data    = tx_count * (MAX_BUFFER_SIZE-8);
   uint64_t packets = data / 16;
-  double mbps = data*1000/(elapsed_time*1024*1024);
+  double mbps = 8*data*1000/(elapsed_time*1024*1024); // Mega *bits* per second
   double ppms = packets/elapsed_time;
   printf("INFO: total bytes:        %lu\n", data);
   printf("INFO: total packets:      %lu\n", packets);

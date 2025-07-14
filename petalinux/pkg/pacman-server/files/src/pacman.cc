@@ -86,12 +86,30 @@ int pacman_init(int verbose){
 
 int pacman_init_tx(int verbose, int skip_reset){
   init_rxtx();
+
+  // reset of S2MM halts MM2S in DMA SG mode, so cmdserver (TX) handles both resets:
+  dma_reset_tx(DMA_TIMEOUT);
+  dma_reset_rx(DMA_TIMEOUT);
+
   init_tx_descriptor_ring_mode(128);
   return EXIT_SUCCESS;
 }
 
 int pacman_init_rx(int verbose, int skip_reset){
   init_rxtx();
+
+  printf("INFO:  Waiting for TX server to initialize first.\r\n");
+  // give pacman_cmdserver a head start:
+  usleep(100000);
+
+  // confirm it is running:
+  unsigned timeout = dma_wait_tx_run(100000);
+  if (timeout == 0){
+    printf("ERROR:  RX is not running.  Due to single DMA core, must initialize TX (pacman_cmdserver) before starting RX (pacman_dataserver\r\n");
+    exit(0);
+  }
+
+  printf("INFO:  Initializing RX descriptor ring.\r\n");
   init_rx_descriptor_ring_mode(128);
   return EXIT_SUCCESS;
 }
@@ -125,7 +143,6 @@ int pacman_poll_rx(){
     printf("INFO:  returning %d RX buffers \r\n", batch_count);
     dma_rx_batch();
   }
-
   return EXIT_SUCCESS;
 }
 
