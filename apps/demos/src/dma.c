@@ -123,14 +123,17 @@ void print_dma_control_long(hw_val_t value) {
 // reset the TX
 unsigned dma_reset_tx(unsigned timeout){
 
+  if (VERBOSE)
+    printf("INFO:  resetting DMA TX (MM2S) \r\n");
+
   dma_write_register(MM2S_DMACR, DMACR_RESET);
 
   if (timeout > 0){
     while (timeout && (dma_read_register(MM2S_DMACR) & DMACR_RESET)){ usleep(1); timeout--; }
     if (! timeout) {
-      printf("ERROR:  timeout wating on RESET to clear.\r\n");
+      printf("ERROR:  timeout waiting on RESET to clear.\r\n");
     } else if (VERBOSE) {
-      printf("INFO:  DMA reset complete.  (timeout=%d) \r\n", timeout);
+      printf("INFO:  TX DMA reset complete.  (timeout=%d) \r\n", timeout);
     }
   }
 
@@ -139,15 +142,19 @@ unsigned dma_reset_tx(unsigned timeout){
 
 // reset the RX
 unsigned dma_reset_rx(unsigned timeout){
+
+  if (VERBOSE)
+    printf("INFO:  resetting DMA RX (S2MM) \r\n");
+
   dma_write_register(S2MM_DMACR, DMACR_RESET);
 
   if (timeout>0){
     while (timeout && (dma_read_register(S2MM_DMACR) & DMACR_RESET)){ usleep(1); timeout--; }
 
     if (! timeout) {
-      printf("ERROR:  timeout wating on RESET to clear.\r\n");
+      printf("ERROR:  timeout waiting on RESET to clear.\r\n");
     } else if (VERBOSE) {
-      printf("INFO:  DMA reset complete.  (timeout=%d) \r\n", timeout);
+      printf("INFO:  RX DMA reset complete.  (timeout=%d) \r\n", timeout);
     }
   }
   return timeout;
@@ -163,7 +170,7 @@ unsigned dma_halt_tx(unsigned timeout){
       timeout--;
     }
     if (! timeout) {
-      printf("ERROR:  timeout wating on HALT state.\r\n");
+      printf("ERROR:  timeout waiting on HALT state.\r\n");
     } else if (VERBOSE) {
       printf("INFO:  DMA halt complete.  (timeout=%d) \r\n", timeout);
     }
@@ -181,7 +188,7 @@ unsigned dma_halt_rx(unsigned timeout){
       timeout--;
     }
     if (! timeout) {
-      printf("ERROR:  timeout wating on HALT state.\r\n");
+      printf("ERROR:  timeout waiting on HALT state.\r\n");
     } else if (VERBOSE) {
       printf("INFO:  DMA is halted.  (timeout=%d) \r\n", timeout);
     }
@@ -193,13 +200,32 @@ unsigned dma_run_tx(unsigned timeout){
 
   dma_write_register(MM2S_DMACR, DMACR_RUNSTOP);
 
+  return dma_wait_tx_run(timeout);
+}
+
+unsigned dma_run_rx(unsigned timeout){
+
+  dma_write_register(S2MM_DMACR, DMACR_RUNSTOP);
+
+  return dma_wait_rx_run(timeout);
+}
+
+unsigned dma_poll_tx_run(){
+  return (dma_read_register(MM2S_DMACR) & DMACR_RUNSTOP) ? 1 : 0;
+}
+
+unsigned dma_poll_rx_run(){
+  return (dma_read_register(S2MM_DMACR) & DMACR_RUNSTOP) ? 1 : 0;
+}
+
+unsigned dma_wait_tx_run(unsigned timeout){
   if (timeout > 0){
     while (timeout && (((dma_read_register(MM2S_DMACR) & DMACR_RUNSTOP)==0)||(dma_read_register(MM2S_DMASR) & DMASR_HALTED))){
       usleep(1);
       timeout--;
     }
     if (! timeout) {
-      printf("ERROR:  timeout wating on RUN state.\r\n");
+      printf("ERROR:  timeout waiting on RUN state.\r\n");
     } else if (VERBOSE) {
       printf("INFO:  DMA is running.  (timeout=%d) \r\n", timeout);
     }
@@ -207,10 +233,7 @@ unsigned dma_run_tx(unsigned timeout){
   return timeout;
 }
 
-unsigned dma_run_rx(unsigned timeout){
-
-  dma_write_register(S2MM_DMACR, DMACR_RUNSTOP);
-
+unsigned dma_wait_rx_run(unsigned timeout){
   if (timeout > 0){
     while (timeout && (((dma_read_register(S2MM_DMACR) & DMACR_RUNSTOP)==0)||(dma_read_register(S2MM_DMASR) & DMASR_HALTED))){
       usleep(1);
@@ -218,13 +241,16 @@ unsigned dma_run_rx(unsigned timeout){
     }
 
     if (! timeout) {
-      printf("ERROR:  timeout wating on RUN state.\r\n");
+      printf("ERROR:  timeout waiting on RUN state.\r\n");
     } else if (VERBOSE){
       printf("INFO:  DMA is running.  (timeout=%d) \r\n", timeout);
     }
   }
   return timeout;
 }
+
+
+
 
 unsigned dma_poll_tx_halt(){
   return (dma_read_register(MM2S_DMASR) & DMASR_HALTED) ? 1 : 0;
@@ -325,7 +351,7 @@ unsigned dma_wait_rx_ioc(unsigned timeout){
       timeout--;
     }
     if (! timeout) {
-      printf("ERROR:  timeout wating for RX IOC\r\n");
+      printf("ERROR:  timeout waiting for RX IOC\r\n");
     } else if (VERBOSE) {
       printf("INFO:  DMA RX IOC flag was raised  (timeout=%d) \r\n", timeout);
     }
@@ -382,6 +408,10 @@ unsigned dma_wait_rx_idle(unsigned timeout){
   }
   return timeout;
 }
+
+
+
+
 
 //
 // Buffer Descriptor Utilities:
@@ -733,4 +763,3 @@ void dma_tx_batch(){
 void dma_rx_batch(){
   dma_write_rx_taildesc(G_BATCH_RX_TAIL);
 }
-

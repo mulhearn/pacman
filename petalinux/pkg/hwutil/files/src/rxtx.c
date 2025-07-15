@@ -17,7 +17,8 @@ static unsigned G_TX_COUNTER = 0;
 #define TX_BD_BASEADDR       0x20000000
 #define RX_BD_BASEADDR       0x21000000
 #define TX_BUF_BYTES 0x150  // 40 uarts x 64 bits => 20 128 bit word plus 1 128 bit header => 21*4*4 = 336 bytes
-#define RX_BUF_BYTES 0x400  // More than enough for now...
+//#define RX_BUF_BYTES 0x400  // Enough for single cycles, max (40 uarts + header + 3 T/S/HB) * 16 bytes = 0x2c bytes
+#define RX_BUF_BYTES 0x4000  // Each 10 cycle is max 0x470, enough for 140 cycles (0x8C)
 
 #define TX_BUF_WORDS TX_BUF_BYTES/4
 
@@ -27,32 +28,39 @@ void init_rxtx(void){
   init_dma_buffer(DMA_BUFFER_BASEADDR, DMA_BUFFER_SIZE);
 }
 
-void init_rxtx_descriptor_ring_mode(int ring_size){
-  dma_reset_tx(DMA_TIMEOUT);
-  dma_reset_rx(DMA_TIMEOUT);
-
+void init_tx_descriptor_ring_mode(int ring_size){
   printf("INFO:  initializing TX BD ring:\r\n");
   dma_init_bd_ring(TX_BD_BASEADDR, ring_size, TX_BUF_BYTES, DMA_BD_CONTROL_SOF | DMA_BD_CONTROL_EOF, DMA_BD_STATUS_COMPLETE);
-  printf("INFO:  initializing RX BD ring:\r\n");
-  dma_init_bd_ring(RX_BD_BASEADDR, ring_size, RX_BUF_BYTES, 0, 0);
 
   dma_write_tx_curdesc(TX_BD_BASEADDR);
   dma_write_tx_taildesc(TX_BD_BASEADDR);
-  dma_write_rx_curdesc(dma_get_next_bd_addr(RX_BD_BASEADDR));
-  dma_write_rx_taildesc(RX_BD_BASEADDR);
-
-
   dma_init_batch_tx_tail(TX_BD_BASEADDR);
-  dma_init_batch_rx_tail(RX_BD_BASEADDR);
 
   dma_run_tx(DMA_TIMEOUT);
-  dma_run_rx(DMA_TIMEOUT);
-
-  dma_write_rx_taildesc(RX_BD_BASEADDR);
 
   // send initial empty TX
   dma_clear_bd_status(TX_BD_BASEADDR);
   dma_write_tx_taildesc(TX_BD_BASEADDR);
+}
+
+void init_rx_descriptor_ring_mode(int ring_size){
+  printf("INFO:  initializing RX BD ring:\r\n");
+  dma_init_bd_ring(RX_BD_BASEADDR, ring_size, RX_BUF_BYTES, 0, 0);
+
+  dma_write_rx_curdesc(dma_get_next_bd_addr(RX_BD_BASEADDR));
+  dma_write_rx_taildesc(RX_BD_BASEADDR);
+  dma_init_batch_rx_tail(RX_BD_BASEADDR);
+
+  dma_run_rx(DMA_TIMEOUT);
+
+  dma_write_rx_taildesc(RX_BD_BASEADDR);
+}
+
+void init_rxtx_descriptor_ring_mode(int ring_size){
+  dma_reset_tx(DMA_TIMEOUT);
+  dma_reset_rx(DMA_TIMEOUT);
+  init_tx_descriptor_ring_mode(ring_size);
+  init_rx_descriptor_ring_mode(ring_size);
 }
 
 void show_rxtx_bds(void){

@@ -1,6 +1,10 @@
 #ifndef __RXTX_H_
 #define __RXTX_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // RX/TX REGISTERS:
 
 #define SCOPE_TX       0x0000
@@ -34,7 +38,10 @@
 #define C_ADDR_TX_STARTS    0x30
 #define C_ADDR_TX_NCHAN     0x40
 
+// pacman-server hooks:
 void init_rxtx(void);
+void init_tx_descriptor_ring_mode(int ring_size);
+void init_rx_descriptor_ring_mode(int ring_size);
 
 // menu hooks:
 void read_tx_status(void);
@@ -66,5 +73,9 @@ void batch_rx(void);
 
 void benchmark_tx(void);
 void benchmark_rxtx_loopback(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // __RXTX_H_

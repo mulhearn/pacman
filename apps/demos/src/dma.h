@@ -3,6 +3,10 @@
 
 #include "hw_access.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // DMA driver for AXI DMA (See PG021, as of June 24, 2025)
 //
 // All defines start with either DMA, MM2S, or S2MM and attempt to remain as close as possible to PG021.
@@ -127,6 +131,13 @@ unsigned dma_halt_rx  (unsigned timeout);
 unsigned dma_run_tx   (unsigned timeout);
 unsigned dma_run_rx   (unsigned timeout);
 
+// poll for RUN state of TX/RX
+unsigned dma_poll_tx_run (void);
+unsigned dma_poll_rx_run (void);
+// wait for RUN state (waits <timeout> unless timeout=0)
+unsigned dma_wait_tx_run (unsigned timeout);
+unsigned dma_wait_rx_run (unsigned timeout);
+
 // poll for HALT:
 unsigned dma_poll_tx_halt();
 unsigned dma_poll_rx_halt();
@@ -164,6 +175,8 @@ unsigned dma_poll_rx_idle (void);
 // wait for IDLE state (waits <timeout> unless timeout=0)
 unsigned dma_wait_tx_idle (unsigned timeout);
 unsigned dma_wait_rx_idle (unsigned timeout);
+
+
 
 // Buffer Descriptor (BD) utitilies:
 
@@ -238,5 +251,9 @@ void dma_add_rx_bd(hw_addr_t bd_addr);
 
 void dma_tx_batch();
 void dma_rx_batch();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // __DMA_H_
