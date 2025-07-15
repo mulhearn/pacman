@@ -17,7 +17,8 @@ static unsigned G_TX_COUNTER = 0;
 #define TX_BD_BASEADDR       0x20000000
 #define RX_BD_BASEADDR       0x21000000
 #define TX_BUF_BYTES 0x150  // 40 uarts x 64 bits => 20 128 bit word plus 1 128 bit header => 21*4*4 = 336 bytes
-#define RX_BUF_BYTES 0x400  // More than enough for now...
+//#define RX_BUF_BYTES 0x400  // Enough for single cycles, max (40 uarts + header + 3 T/S/HB) * 16 bytes = 0x2c bytes
+#define RX_BUF_BYTES 0x4000  // Each 10 cycle is max 0x470, enough for 140 cycles (0x8C)
 
 #define TX_BUF_WORDS TX_BUF_BYTES/4
 

@@ -98,7 +98,7 @@ unsigned hw_timer_elapsed_us();
 #ifdef __cplusplus
 }
 #endif
-  
+
 #endif // __HW_ACCESS_H__
 
 

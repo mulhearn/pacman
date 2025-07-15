@@ -65,7 +65,7 @@ int pacman_init(int verbose){
     //printf("INFO:  Setting number of cycles per DMA package to 0x1FFF.\n");
   }
   //G_PACMAN_AXIL[0x7FA4>>2] = 0x71FFF;
-  G_PACMAN_AXIL[0x7FA4>>2] = 0x70000;
+  G_PACMAN_AXIL[0x7FA4>>2] = 0x7008C;
 
   //if (verbose){
   //  printf("INFO:  Limiting TX bandwidth.\n");
@@ -110,7 +110,7 @@ int pacman_init_rx(int verbose, int skip_reset){
   }
 
   printf("INFO:  Initializing RX descriptor ring.\r\n");
-  init_rx_descriptor_ring_mode(128);
+  init_rx_descriptor_ring_mode(512);
   return EXIT_SUCCESS;
 }
 
@@ -140,7 +140,7 @@ int pacman_poll_rx(){
     dma_add_rx_bd(nxta);
   }
   if (batch_count > 0){
-    printf("INFO:  returning %d RX buffers \r\n", batch_count);
+    //printf("INFO:  returning %d RX buffers \r\n", batch_count);
     dma_rx_batch();
   }
   return EXIT_SUCCESS;
@@ -156,7 +156,7 @@ int pacman_poll_tx(){
 
   while((batch_count < batch_size) && dma_next_available_tx_bd(&nxta)){
     if (tx_buffer_out(output)==1){
-      tx_buffer_print_output(output);
+      //tx_buffer_print_output(output);
       hw_ptr_t tx_buf = dma_get_buffer(nxta);
       for (int i=0; i<84*4; i++)
 	tx_buf[i] = output[i];

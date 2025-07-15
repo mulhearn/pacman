@@ -75,7 +75,7 @@ int main(int argc, char* argv[]){
       words = rx_buffer_count();
     }
     if (words > 0){
-      printf("DEBUG:  words: %u timeout %u\n", words, timeout);
+      //printf("DEBUG:  words: %u timeout %u\n", words, timeout);
     }
     if ((words==0) || (!msg_ready)){
       continue;
@@ -110,7 +110,8 @@ int main(int argc, char* argv[]){
     last_sent_msg = std::chrono::high_resolution_clock::now().time_since_epoch();
     zmq_msg_close(pub_msg);
 
-    printf("INFO:  message of %u words sent.  Total sent message:  %d\n", words, sent_msgs);
+    if ((sent_msgs < 10) || ((sent_msgs % 100) == 0))
+      printf("INFO:  message of %u words sent.  Total sent message:  %d\n", words, sent_msgs);
   }
   return 0;
 }

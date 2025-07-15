@@ -15,14 +15,14 @@ static volatile uint32_t * G_AXIL  = NULL;
 
 void init_axil_driver(){
   clear_axil_driver_status();
-  
+
   printf("INFO:  Opening /dev/mem.\n");
   int dh = open("/dev/mem", O_RDWR|O_SYNC);
   if (dh < 0) {
     printf("ERROR:  Failed to open /dev/mem");
     return;
   }
-  
+
   printf("INFO:  Initializing PACMAN AXI-Lite interface of size %d at 0x%X\n", AXIL_REGISTERS_LEN, AXIL_REGISTERS_BASEADDR);
   G_AXIL = (uint32_t*) mmap(NULL, AXIL_REGISTERS_LEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, AXIL_REGISTERS_BASEADDR);
   if (G_AXIL == MAP_FAILED) {
@@ -31,7 +31,7 @@ void init_axil_driver(){
     return;
   }
   close(dh);
-  
+
   unsigned fwmajor = G_AXIL[0XFF10>>2];
   unsigned fwminor = G_AXIL[0XFF14>>2];
   unsigned fwbuild = G_AXIL[0XFF18>>2];
@@ -143,7 +143,7 @@ void stop_hw_timer(){
   clock_gettime(CLOCK_MONOTONIC, &stop);
 }
 
-unsigned hw_timer_elapsed_us(){  
+unsigned hw_timer_elapsed_us(){
   long seconds        = stop.tv_sec  - start.tv_sec;
   long nanoseconds    = stop.tv_nsec - start.tv_nsec;
   unsigned elapsed_us = seconds * 1000000 + nanoseconds / 1000;

@@ -12,10 +12,10 @@ static void * ctx = NULL;
 static void * req = NULL;
 
 // BUFFER SIZE:  8 + N * 16
-//#define MAX_BUFFER_SIZE 648
+#define MAX_BUFFER_SIZE 648
 //#define MAX_BUFFER_SIZE 2568
 //#define MAX_BUFFER_SIZE 10248
-#define MAX_BUFFER_SIZE 20488
+//#define MAX_BUFFER_SIZE 20488
 uint32_t tx_buffer[MAX_BUFFER_SIZE/4];
 
 static volatile bool msg_done = true;
@@ -28,6 +28,7 @@ int main(int argc, char* argv[]){
 
   // empirically determined:
   struct timeval delay = {1, 0};
+  //struct timeval tau   = {0, 80};
   struct timeval tau   = {0, 132};
   //struct timeval tau   = {0, 264};
   //struct timeval tau   = {0, 2000};
@@ -61,18 +62,7 @@ int main(int argc, char* argv[]){
   int tx_count   = 0;
   int err_words  = 0;
   int tot_words  = 0;
-  int N = 10000;
-
-  //printf("DEBUG: preparing a message with %d requests.\n", nreq);
-  unsigned nreq = (MAX_BUFFER_SIZE-8)/16;
-  tx_buffer[0]=0x3F;
-  tx_buffer[1]=((nreq)&0xFFFF)<<16;
-  for (int i=0; i<nreq; i++){
-    tx_buffer[2+4*i+0]=0x0044 + (((i%40)+1)<<8);
-    tx_buffer[2+4*i+1]=0x00;
-    tx_buffer[2+4*i+2]=rand();
-    tx_buffer[2+4*i+3]=rand();
-  }
+  int N = 1000;
 
   printf("INFO: benchmarking %d TX/RX\n", N);
   while(tx_count < N){
@@ -87,10 +77,15 @@ int main(int argc, char* argv[]){
     timeradd(&cur, &tau, &target);
 
     //printf("DEBUG: preparing a message with %d requests.\n", nreq);
+    unsigned nreq = (MAX_BUFFER_SIZE-8)/16;
     tx_buffer[0]=0x3F;
     tx_buffer[1]=((nreq)&0xFFFF)<<16;
     for (int i=0; i<nreq; i++){
-      tx_buffer[2+4*i+0]=0x0044 + (((i%40)+1)<<8);
+      //tx_buffer[2+4*i+0]=0x0044 + (((i%40)+1)<<8);
+      // use broadcast channel:
+      //tx_buffer[2+4*i+0]=0x0044 + (64<<8);
+      // use broadcast and replay channel:
+      tx_buffer[2+4*i+0]=0x0044 + (63<<8);
       tx_buffer[2+4*i+1]=0x00;
       tx_buffer[2+4*i+2]=rand();
       tx_buffer[2+4*i+3]=rand();
@@ -114,7 +109,9 @@ int main(int argc, char* argv[]){
   gettimeofday(&end, NULL);
   elapsed_time = 1000.0*(end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000.0;
   printf("INFO: tx_count: %d\n", tx_count);
-  uint64_t data    = tx_count * (MAX_BUFFER_SIZE-8);
+  // uint64_t data    = tx_count * (MAX_BUFFER_SIZE-8);
+  // broadcasting:
+  uint64_t data    = 40 * tx_count * (MAX_BUFFER_SIZE-8);
   uint64_t packets = data / 16;
   double mbps = 8*data*1000/(elapsed_time*1024*1024); // Mega *bits* per second
   double ppms = packets/elapsed_time;
