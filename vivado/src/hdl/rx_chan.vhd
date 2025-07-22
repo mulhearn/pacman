@@ -90,9 +90,7 @@ begin
       lost   <= '0';
       mode := 0;
     elsif (rising_edge(clk)) then
-      DATA_O <= (others => '0');
       lost   <= '0';
-      valid  <= '0';
       mode := to_integer(unsigned(CONFIG_I(13 downto 12)));
       if (mode = 1) then
         if (update = '1') then
@@ -109,6 +107,8 @@ begin
         elsif (ready='1') then
           valid <= '0';
         end if;
+      else
+        DATA_O <= (others => '0');
       end if;
     end if;
   end process;
