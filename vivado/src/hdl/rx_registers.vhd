@@ -22,7 +22,7 @@ entity rx_registers is
 
     LOOK_I              : in  uart_rx_data_array_t;
     STATUS_I            : in  uart_reg_array_t;
-    CONFIG_O            : out uart_reg_array_t := (others => (others => '0'));
+    CONFIG_O            : out uart_reg_array_t;
     HEARTBEAT_CYCLES_O  : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     SYNC_CYCLES_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     GSTATUS_I           : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -48,7 +48,7 @@ architecture behavioral of rx_registers is
   signal wack     : std_logic := '0';
 
   -- output registers:
-  signal config           : uart_reg_array_t := (others => std_logic_vector(to_unsigned(C_DEFAULT_CONFIG_RX, C_RB_DATA_WIDTH)));
+  signal config           : uart_reg_array_t := (others => (others => '0'));
   signal heartbeat_cycles : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal sync_cycle       : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal gconfig          : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
@@ -202,12 +202,11 @@ begin
   variable reg     : integer range 0 to 16#FF#;
   begin
     if (rst = '1') then
+      wack  <= '0';
       config            <= (others => std_logic_vector(to_unsigned(C_DEFAULT_CONFIG_RX, C_RB_DATA_WIDTH)));
+      gconfig           <= std_logic_vector(to_unsigned(C_DEFAULT_GCONFIG_RX, C_RB_DATA_WIDTH));
       heartbeat_cycles  <= std_logic_vector(to_unsigned(C_DEFAULT_HEARTBEAT_CYCLES, C_RB_DATA_WIDTH));
       sync_cycle        <= std_logic_vector(to_unsigned(C_DEFAULT_SYNC_CYCLES, C_RB_DATA_WIDTH));
-      gconfig           <= (others => '0');
-
-      wack  <= '0';
       zero_counters <= '0';
     else
       if (rising_edge(clk)) then

@@ -723,8 +723,8 @@ proc create_root_design { parentCell } {
   connect_bd_intf_net -intf_net rx_unit_0_M_AXIS [get_bd_intf_pins rx_unit_0/M_AXIS] [get_bd_intf_pins axis_data_fifo_0/S_AXIS]
 
   # Create port connections
-  connect_bd_net -net ADC_D_I_0_1 [get_bd_ports ADC_D_I_0] [get_bd_pins global_unit_0/ADC_D_I] [get_bd_pins adc_unit_0/ADC_DATA_I]
-  connect_bd_net -net ADC_OF_I_0_1 [get_bd_ports ADC_OF_I_0] [get_bd_pins global_unit_0/ADC_OF_I] [get_bd_pins adc_unit_0/ADC_DOF_I]
+  connect_bd_net -net ADC_D_I_0_1 [get_bd_ports ADC_D_I_0] [get_bd_pins adc_unit_0/ADC_DATA_I]
+  connect_bd_net -net ADC_OF_I_0_1 [get_bd_ports ADC_OF_I_0] [get_bd_pins adc_unit_0/ADC_DOF_I]
   connect_bd_net -net LEMO_A_I_0_1 [get_bd_ports LEMO_A_0] [get_bd_pins timing_unit_0/LEMO_A_I]
   connect_bd_net -net LEMO_B_I_0_1 [get_bd_ports LEMO_B_0] [get_bd_pins timing_unit_0/LEMO_B_I]
   connect_bd_net -net PHY_LEDs [get_bd_pins xlconcat_0/dout] [get_bd_pins vio_0/probe_in0]
@@ -750,8 +750,8 @@ proc create_root_design { parentCell } {
   connect_bd_net -net axi_dma_0_s2mm_introut [get_bd_pins axi_dma_0/s2mm_introut] [get_bd_pins rx_unit_0/DMA_ITR_I]
   connect_bd_net -net axis_data_fifo_0_axis_rd_data_count [get_bd_pins axis_data_fifo_0/axis_rd_data_count] [get_bd_pins rx_unit_0/FIFO_RCNT_I]
   connect_bd_net -net axis_data_fifo_0_axis_wr_data_count [get_bd_pins axis_data_fifo_0/axis_wr_data_count] [get_bd_pins rx_unit_0/FIFO_WCNT_I]
-  connect_bd_net -net global_unit_0_ADC_CLK_O [get_bd_pins global_unit_0/ADC_CLK_O] [get_bd_ports ADC_CLK_O_0]
-  connect_bd_net -net global_unit_0_ADC_EN_O [get_bd_pins global_unit_0/ADC_EN_O] [get_bd_ports ADC_EN_O_0]
+  connect_bd_net -net global_unit_0_ADC_CLK_O [get_bd_pins adc_unit_0/ADC_CLK_O] [get_bd_ports ADC_CLK_O_0]
+  connect_bd_net -net global_unit_0_ADC_EN_O [get_bd_pins adc_unit_0/ADC_EN_O] [get_bd_ports ADC_EN_O_0]
   connect_bd_net -net global_unit_0_ANALOG_PWR_EN_O [get_bd_pins global_unit_0/ANALOG_PWR_EN_O] [get_bd_ports ANALOG_PWR_EN_O_0]
   connect_bd_net -net global_unit_0_LED_O [get_bd_pins global_unit_0/LED_O] [get_bd_ports LED_O_0]
   connect_bd_net -net global_unit_0_TILE_EN_O [get_bd_pins global_unit_0/TILE_EN_O] [get_bd_ports TILE_EN_O_0]

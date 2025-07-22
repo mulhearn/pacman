@@ -22,12 +22,7 @@ entity global_unit is
 
     ANALOG_PWR_EN_O      : out std_logic;
     TILE_EN_O            : out std_logic_vector(C_NUM_TILE-1 downto 0);
-    ADC_EN_O             : out std_logic;
-    LED_O                : out std_logic_vector(C_NUM_LED-1 downto 0);
-
-    ADC_CLK_O            : out std_logic;
-    ADC_OF_I             : in std_logic;
-    ADC_D_I              : in std_logic_vector(C_NUM_ADC_BITS-1 downto 0)
+    LED_O                : out std_logic_vector(C_NUM_LED-1 downto 0)
     );
 end global_unit;
 
@@ -49,11 +44,9 @@ architecture behaviour of global_unit is
 
       ANALOG_PWR_EN_O        : out std_logic;
       TILE_EN_O              : out std_logic_vector(C_NUM_TILE-1 downto 0);
-      ADC_EN_O               : out std_logic;
-
       LED_CONFIG_O           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      GLOBAL_STATUS_I        : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      ADC_LOOK_I             : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+
+      GLOBAL_STATUS_I        : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
     );
   end component;
 
@@ -71,12 +64,11 @@ architecture behaviour of global_unit is
 
   signal status         : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal led_config     : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
-  signal adc_look       : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
 begin
   gr0: global_registers port map (
     ACLK           => aclk,
     ARESETN        => aresetn,
-        S_REGBUS_RB_RUPDATE => S_REGBUS_RB_RUPDATE,
+    S_REGBUS_RB_RUPDATE => S_REGBUS_RB_RUPDATE,
     S_REGBUS_RB_RADDR   => S_REGBUS_RB_RADDR,
     S_REGBUS_RB_RDATA   => S_REGBUS_RB_RDATA,
     S_REGBUS_RB_RACK    => S_REGBUS_RB_RACK,
@@ -86,11 +78,9 @@ begin
     S_REGBUS_RB_WACK    => S_REGBUS_RB_WACK,
     ANALOG_PWR_EN_O     => ANALOG_PWR_EN_O,
     TILE_EN_O           => TILE_EN_O,
-    ADC_EN_O            => ADC_EN_O,
     GLOBAL_STATUS_I     => status,
-    LED_CONFIG_O        => led_config,
-    ADC_LOOK_I          => adc_look
-    );
+    LED_CONFIG_O        => led_config
+  );
 
   gs0: global_status port map (
     ACLK             => aclk,
@@ -99,9 +89,4 @@ begin
     GLOBAL_STATUS_O  => status,
     LED_O            => LED_O
   );
-
-  adc_look(C_NUM_ADC_BITS-1 downto 0) <= ADC_D_I;
-  adc_look(C_NUM_ADC_BITS) <= ADC_OF_I;
-  ADC_CLK_O <= ACLK;
-
 end behaviour;

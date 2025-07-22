@@ -24,7 +24,7 @@ extern "C" {
 #define C_ADDR_RX_LOST      0x2C
 #define C_ADDR_RX_NCHAN     0x50
 #define C_ADDR_RX_GSTATUS   0xA0
-#define C_ADDR_RX_GFLAGS    0xA4
+#define C_ADDR_RX_GCONFIG   0xA4
 #define C_ADDR_RX_ZERO_CNTS 0xA8
 #define C_ADDR_RX_FRCNT     0xB0
 #define C_ADDR_RX_FWCNT     0xB4
@@ -34,9 +34,11 @@ extern "C" {
 #define C_ADDR_TX_CONFIG    0x04
 #define C_ADDR_TX_LOOK_C    0x18
 #define C_ADDR_TX_LOOK_D    0x1C
-#define C_ADDR_TX_GFLAGS    0x20
-#define C_ADDR_TX_STARTS    0x30
-#define C_ADDR_TX_NCHAN     0x40
+#define C_ADDR_TX_STARTS    0x20
+#define C_ADDR_TX_NCHAN     0x50
+#define C_ADDR_TX_GSTATUS   0xA0
+#define C_ADDR_TX_ZERO_CNTS 0xA8
+
 
 // pacman-server hooks:
 void init_rxtx(void);

@@ -8,9 +8,9 @@ void read_global_status(){
   printf("hw code------------ 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_HW_CODE));
   printf("scratch a---------- 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRA));
   printf("scratch b---------- 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRB));
-  printf("\r\n");
   printf("enables------------ 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_ENABLES));
-  printf("\r\n");
+  printf("leds--------------- 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_LEDS));
+  printf("status------------- 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_STATUS));
 }
 
 void toggle_global_scratch(){

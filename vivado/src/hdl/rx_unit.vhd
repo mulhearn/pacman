@@ -105,7 +105,6 @@ architecture behaviour of rx_unit is
       ARESETN       : in  std_logic;
       CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       STATUS_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      GFLAGS_I      : in  std_logic_vector(C_RX_GFLAGS_WIDTH-1 downto 0);
       DATA_O        : out  std_logic_vector(C_RX_DATA_WIDTH-1 downto 0);
       VALID_O       : out  std_logic;
       READY_I       : in std_logic;
@@ -193,7 +192,6 @@ begin
         ARESETN       => M_AXIS_ARESETN,
         CONFIG_I      => config(i),
         STATUS_O      => status(i),
-        GFLAGS_I      => "00",
         DATA_O        => data(i),
         VALID_O       => valid(i),
         READY_I       => ready(i),

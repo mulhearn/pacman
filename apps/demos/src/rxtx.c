@@ -247,11 +247,11 @@ void toggle_rx_global_config(void){
   if (mode==0){
     unsigned config = 0x00000000;
     printf("INFO: Setting RX global config to 0x%08X \r\n", config);
-    axil_write_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_GFLAGS, config);
+    axil_write_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_GCONFIG, config);
   } else if (mode==1) {
     unsigned config = 0x00000001;
     printf("INFO: Setting RX global config to 0x%08X \r\n", config);
-    axil_write_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_GFLAGS, config);
+    axil_write_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_GCONFIG, config);
   }
 }
 
@@ -268,7 +268,7 @@ void read_rx_status(void){
     printf("%2d: ch: %2d cfg: 0x%08x status: 0x%08x s: %d b: %d u: %d l: %d\r\n",i, nchan, config, status, starts, beats, updates, lost);
   }
   printf("gstatus----------- 0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_GSTATUS));
-  printf("gflags------------ 0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_GFLAGS));
+  printf("gconfig------------ 0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_GCONFIG));
   printf("FIFO R count-------%d      \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_FRCNT));
   printf("FIFO W count-------%d      \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_FWCNT));
   printf("DMA ITR------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_DMAITR));
@@ -294,8 +294,7 @@ void read_tx_status(void){
     unsigned nchan  = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_NCHAN);
     printf("%2d:  chan: %2d config: 0x%08x status: 0x%08x starts: %d\r\n",i, nchan, config, status, starts);
   }
-  printf("gflags------------ 0x%x    \r\n", axil_read_register(SCOPE_TX+0x3F00+C_ADDR_TX_GFLAGS));
-  printf("bstatus----------- 0x%x    \r\n", axil_read_register(SCOPE_TX+0x3F00+C_ADDR_TX_STATUS));
+  printf("gstatus----------- 0x%x    \r\n", axil_read_register(SCOPE_TX+0x3F00+C_ADDR_TX_GSTATUS));
 }
 
 void read_tx_look(void){
@@ -331,7 +330,7 @@ void toggle_tx_mask(void){
 }
 
 void zero_rxtx_counts(void){
-  axil_write_register(SCOPE_TX+0x3F00+C_ADDR_TX_STARTS, 0x0);
+  axil_write_register(SCOPE_TX+0x3F00+C_ADDR_TX_ZERO_CNTS, 0x0);
   axil_write_register(SCOPE_RX+0x3F00+C_ADDR_RX_ZERO_CNTS, 0x0);
 }
 
@@ -364,8 +363,8 @@ void benchmark_tx(void){
       tx_buf[2]=0x00000000;
       tx_buf[3]=0x00000000;
 
-      //for (int i=0; i<(words-4); i++)
-      //tx_buf[i+4] = rand();
+      for (int i=0; i<(words-4); i++)
+	tx_buf[i+4] = rand();
 
       HW_FLUSH_DCACHE(tx_buf, words*4);
 
