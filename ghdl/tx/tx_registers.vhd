@@ -22,10 +22,10 @@ entity tx_registers is
 
     LOOK_I              : in uart_tx_data_array_t;
     STATUS_I            : in uart_reg_array_t;
-    BSTATUS_I    	: in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    CONFIG_O            : out uart_reg_array_t := (others => (others => '0'));
-    GFLAGS_O            : out std_logic_vector(C_TX_GFLAGS_WIDTH-1 downto 0) := (others => '0')
-  );
+    CONFIG_O            : out uart_reg_array_t;
+
+    GSTATUS_I    	: in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+    );
 end;
 
 architecture behavioral of tx_registers is
@@ -43,9 +43,7 @@ architecture behavioral of tx_registers is
   signal wack     : std_logic := '0';
 
   -- registers
-  signal config   : uart_reg_array_t := (others => std_logic_vector(to_unsigned(C_DEFAULT_CONFIG_TX, C_RB_DATA_WIDTH)));
-  signal gflags     : std_logic_vector(C_TX_GFLAGS_WIDTH-1 downto 0);
-
+  signal config   : uart_reg_array_t := (others => (others => '0'));
   signal zero_counters : std_logic := '0';
   signal starts   : uart_reg_array_t := (others => (others => '0'));
 
@@ -67,7 +65,6 @@ begin
 
   -- registers
   CONFIG_O  <= config;
-  GFLAGS_O  <= gflags;
 
   -- Handle Read Request:
   process(clk, rst)
@@ -110,12 +107,8 @@ begin
                 rack  <= '1';
               end if;
             elsif (chan = 16#3F#) then
-              if (reg=C_ADDR_TX_STATUS) then
-                rdata <= BSTATUS_I;
-                rack  <= '1';
-              elsif (reg=C_ADDR_TX_GFLAGS) then
-                rdata <= (others => '0');
-                rdata(C_TX_GFLAGS_WIDTH-1 downto 0) <= gflags;
+              if (reg=C_ADDR_TX_GSTATUS) then
+                rdata <= GSTATUS_I;
                 rack  <= '1';
               end if;
             end if;
@@ -127,12 +120,13 @@ begin
 
   -- Handle Write Request:
   process(clk, rst)
-  variable scope   : integer range 0 to 3;
-  variable chan    : integer range 0 to 16#3F#;
-  variable reg     : integer range 0 to 16#FF#;
+    variable scope   : integer range 0 to 3;
+    variable chan    : integer range 0 to 16#3F#;
+    variable reg     : integer range 0 to 16#FF#;
   begin
     if (rst = '1') then
       wack  <= '0';
+      config            <= (others => std_logic_vector(to_unsigned(C_DEFAULT_CONFIG_TX, C_RB_DATA_WIDTH)));
       zero_counters <= '0';
     else
       if (rising_edge(clk)) then
@@ -157,10 +151,7 @@ begin
             end if;
           end if;
           if ((scope=0) and (chan = 16#3F#)) then
-            if (reg=C_ADDR_TX_GFLAGS) then
-              gflags <= wdata(C_TX_GFLAGS_WIDTH-1 downto 0);
-              wack  <= '1';
-            elsif (reg=C_ADDR_TX_STARTS) then
+            if (reg=C_ADDR_TX_ZERO_CNTS) then
               zero_counters <= '1';
               wack  <= '1';
             end if;
@@ -175,7 +166,7 @@ begin
     variable istarts : uart_int_array_t := (others => 0);
   begin
     if (rst = '1') then
-       istarts := (others => 0);
+      istarts := (others => 0);
     else
       if (rising_edge(clk)) then
         for i in 0 to C_NUM_UART-1 loop

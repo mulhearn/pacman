@@ -51,15 +51,16 @@ package common is
   constant C_COUNT_MAX           : integer  := 16#10000#;
   type uart_counter_array_t is array (0 to C_NUM_UART-1) of integer range 0 to C_COUNT_MAX;
 
-  -- default TX / RX config register (full 32 bits):
+  -- default TX / RX config register (can be set per UART channel)
   constant C_DEFAULT_CONFIG_TX : integer := 16#00001602#;
   constant C_DEFAULT_CONFIG_RX : integer := 16#00001002#;
 
+  -- default TX / RX global config register (one global setting)
+  constant C_DEFAULT_GCONFIG_TX : integer := 16#00000000#;
+  constant C_DEFAULT_GCONFIG_RX : integer := 16#00000000#;
+
   constant C_DEFAULT_HEARTBEAT_CYCLES : integer := 16#3b9aca00#;
   constant C_DEFAULT_SYNC_CYCLES      : integer := 16#1#;
-
-  constant C_TX_GFLAGS_WIDTH : integer  := 2;
-  constant C_RX_GFLAGS_WIDTH : integer  := 2;
 
   constant C_BYTE            : integer  := 8;
 

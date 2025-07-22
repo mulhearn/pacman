@@ -23,13 +23,16 @@ entity global_registers is
 
     ANALOG_PWR_EN_O     : out std_logic;
     TILE_EN_O           : out std_logic_vector(C_NUM_TILE-1 downto 0);
-    ADC_EN_O            : out std_logic;
-
     LED_CONFIG_O        : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    GLOBAL_STATUS_I     : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    ADC_LOOK_I          : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+
+    GLOBAL_STATUS_I     : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
     );
 end;
+
+--
+-- global_registers:  this modules handles reading and writing the global registers
+--
+
 
 architecture behavioral of global_registers is
   signal clk      : std_logic;
@@ -70,17 +73,12 @@ begin
   -- registers
   TILE_EN_O  <= enables(C_NUM_TILE-1 downto 0);
   ANALOG_PWR_EN_O <= enables(16);
-  ADC_EN_O <= enables(20);
   LED_CONFIG_O  <= led_config;
-
-
-
 
   -- Handle Read Request:
   process(clk, rst)
     variable scope   : integer range 0 to 16#F#;
-    variable role    : integer range 0 to 16#F#;
-    variable reg     : integer range 0 to 16#FF#;
+    variable reg     : integer range 0 to 16#FFF#;
   begin
     if (rst = '1') then
       rack <= '0';
@@ -89,12 +87,20 @@ begin
       rack <= '0';
       if (rupdate='1') then
         scope := to_integer(unsigned(raddr(15 downto 12)));
-        role  := to_integer(unsigned(raddr(11 downto 8)));
-        reg   := to_integer(unsigned(raddr(7 downto 0)));
+        reg   := to_integer(unsigned(raddr(11 downto 0)));
         rdata <= x"00000000";
-        if (scope=C_SCOPE_GLOBAL) and (role=C_ROLE_GLOBAL) then
+        if (scope=C_SCOPE_GLOBAL) then
           rdata <= x"EEEEEEEE";
-          if (reg=C_ADDR_GLOBAL_SCRA) then
+          if (reg=C_ADDR_GLOBAL_STATUS) then
+            rdata <= GLOBAL_STATUS_I;
+            rack  <= '1';
+          elsif (reg=C_ADDR_GLOBAL_ENABLES) then
+            rdata <= enables;
+            rack  <= '1';
+          elsif (reg=C_ADDR_GLOBAL_LEDS) then
+            rdata <= led_config;
+            rack  <= '1';
+          elsif (reg=C_ADDR_GLOBAL_SCRA) then
             rdata <= scratch_a;
             rack  <= '1';
           elsif (reg=C_ADDR_GLOBAL_SCRB) then
@@ -112,18 +118,6 @@ begin
           elsif (reg=C_ADDR_GLOBAL_HW_CODE) then
             rdata <= std_logic_vector(to_unsigned(C_HW_CODE,rdata'length));
             rack  <= '1';
-          elsif (reg=C_ADDR_GLOBAL_ENABLES) then
-            rdata <= enables;
-            rack  <= '1';
-          elsif (reg=C_ADDR_GLOBAL_STATUS) then
-            rdata <= GLOBAL_STATUS_I;
-            rack  <= '1';
-          elsif (reg=C_ADDR_GLOBAL_LEDS) then
-            rdata <= led_config;
-            rack  <= '1';
-          elsif (reg=C_ADDR_GLOBAL_ADC_LOOK) then
-            rdata <= ADC_LOOK_I;
-            rack  <= '1';
           end if;
         end if;
       end if;
@@ -133,8 +127,7 @@ begin
   -- Handle Write Request:
   process(clk, rst)
     variable scope   : integer range 0 to 16#F#;
-    variable role    : integer range 0 to 16#F#;
-    variable reg     : integer range 0 to 16#FF#;
+    variable reg     : integer range 0 to 16#FFF#;
   begin
     if (rst = '1') then
       wack  <= '0';
@@ -146,20 +139,19 @@ begin
       wack <= '0';
       if (wupdate='1') then
         scope := to_integer(unsigned(waddr(15 downto 12)));
-        role  := to_integer(unsigned(waddr(11 downto 8)));
-        reg   := to_integer(unsigned(waddr(7 downto 0)));
-        if (scope=C_SCOPE_GLOBAL) and (role=C_ROLE_GLOBAL) then
-          if (reg=C_ADDR_GLOBAL_SCRA) then
-            scratch_a <= wdata;
-            wack  <= '1';
-          elsif (reg=C_ADDR_GLOBAL_SCRB) then
-            scratch_b <= wdata;
-            wack  <= '1';
-          elsif (reg=C_ADDR_GLOBAL_ENABLES) then
+        reg   := to_integer(unsigned(waddr(11 downto 0)));
+        if (scope=C_SCOPE_GLOBAL) then
+          if (reg=C_ADDR_GLOBAL_ENABLES) then
             enables <= wdata;
             wack  <= '1';
           elsif (reg=C_ADDR_GLOBAL_LEDS) then
             led_config <= wdata;
+            wack  <= '1';
+          elsif (reg=C_ADDR_GLOBAL_SCRA) then
+            scratch_a <= wdata;
+            wack  <= '1';
+          elsif (reg=C_ADDR_GLOBAL_SCRB) then
+            scratch_b <= wdata;
             wack  <= '1';
           end if;
         end if;

@@ -28,12 +28,7 @@ architecture behaviour of global_unit_tb is
 
       ANALOG_PWR_EN_O      : out std_logic;
       TILE_EN_O            : out std_logic_vector(C_NUM_TILE-1 downto 0);
-      ADC_EN_O             : out std_logic;
-      LED_O                : out std_logic_vector(C_NUM_LED-1 downto 0);
-
-      ADC_CLK_O            : out std_logic;
-      ADC_OF_I             : in std_logic;
-      ADC_D_I              : in std_logic_vector(C_NUM_ADC_BITS-1 downto 0)
+      LED_O                : out std_logic_vector(C_NUM_LED-1 downto 0)
       );
   end component;
 
@@ -52,7 +47,6 @@ architecture behaviour of global_unit_tb is
   signal wack     : std_logic := '0';
 
   signal analog_pwr_en  : std_logic;
-  signal adc_en         : std_logic;
   signal tile_en        : std_logic_vector(C_NUM_TILE-1 downto 0);
   signal leds           : std_logic_vector(C_NUM_LED-1 downto 0) := (others => '0');
 
@@ -71,10 +65,7 @@ begin
     S_REGBUS_RB_WACK    => wack,
     ANALOG_PWR_EN_O     => analog_pwr_en,
     TILE_EN_O           => tile_en,
-    ADC_EN_O            => adc_en,
-    LED_O => leds,
-    ADC_OF_I            => '1',
-    ADC_D_I             => x"ADC"
+    LED_O => leds
   );
 
   aresetn_process : process
@@ -101,16 +92,16 @@ begin
     rupdate <= '0';
     wait for 1 ns;
     wait for 20 ns;
-    raddr   <= x"FF00";
+    raddr   <= x"F020";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"FF04";
+    raddr   <= x"F024";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"FF00";
+    raddr   <= x"F020";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"FF04";
+    raddr   <= x"F024";
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"FF10";
@@ -123,18 +114,6 @@ begin
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"FF1C";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"FF20";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"FF30";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"FF34";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"FF40";
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"0000";
@@ -150,19 +129,19 @@ begin
     wupdate <= '0';
     wait for 1 ns;
     wait for 20 ns;
-    waddr   <= x"FF00";
+    waddr   <= x"F020";
     wdata   <= x"AAAAAAAA";
     wupdate <= '1';
     wait for 10 ns;
-    waddr   <= x"FF04";
+    waddr   <= x"F024";
     wdata   <= x"BBBBBBBB";
     wupdate <= '1';
     wait for 10 ns;
-    waddr   <= x"FF20";
+    waddr   <= x"F010";
     wdata   <= x"001103FF";
     wupdate <= '1';
     wait for 10 ns;
-    waddr   <= x"FF34";
+    waddr   <= x"F014";
     wdata   <= x"00000003";
     wupdate <= '1';
     wait for 10 ns;
@@ -211,8 +190,6 @@ begin
       write (l, analog_pwr_en);
       write (l, String'(" | te: 0x"));
       hwrite (l, "00" & tile_en);
-      write (l, String'(" | de: "));
-      write (l, adc_en);
       write (l, String'(" | leds: "));
       write (l, leds(0));
       write (l, leds(1));
@@ -222,5 +199,23 @@ begin
       writeline(output, l);
     end if;
   end process;
+
+  comment_process : process
+    variable l : line;
+  begin
+    write(l, String'("INFO:  Resetting:"));
+    writeline(output, l);
+    wait until (count=2);
+    write(l, String'("INFO:  Write Scratch A,B,Enables,and LED Config, and read them back"));
+    writeline(output, l);
+    write(l, String'("INFO:  Check that analog power enable (ae), tile enables (te), and LEDs (leds) turn on as expected"));
+    writeline(output, l);
+    wait until (count=7);
+    write(l, String'("INFO:  Check RO registers: Status, and Firmware version (Major, Minor, Build, HW)"));
+    writeline(output, l);
+    wait;
+  end process;
+
+
 
 end behaviour;

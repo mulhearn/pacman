@@ -1,4 +1,7 @@
 all: modules-a modules-e testbenches
+run-testbenches: all
+run_unit-testbench: all
+
 
 modules-a:
 	ghdl -a ../integration/common.vhd
@@ -26,10 +29,10 @@ testbenches:
 	ghdl -a -fsynopsys tb/tx_unit_tb.vhd
 	ghdl -e -fsynopsys tx_unit_tb
 
-run-units:
+run-testbenches:
 	ghdl -r -fsynopsys tx_chan_tb --stop-time=30000ns
-	ghdl -r -fsynopsys tx_registers_tb --stop-time=350ns
 	ghdl -r -fsynopsys tx_buffer_tb --stop-time=3500ns
+	ghdl -r -fsynopsys tx_registers_tb --stop-time=370ns
 
-run-demos:
+run-unit-testbench:
 	ghdl -r -fsynopsys tx_unit_tb --stop-time=20us
