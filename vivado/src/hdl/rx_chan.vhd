@@ -4,6 +4,13 @@ use ieee.numeric_std.all;
 library work;
 use work.common.all;
 
+-- rx_chan:  single UART RX channel
+--
+-- this is a wrapper for the (known to work) uart_rx which is
+-- preserved from the legacy firmware.  I plan to update the uart_rx
+-- once I have solid ASIC testing regimen, so comments are limited for
+-- this version.
+
 entity rx_chan is
   generic (
     constant CHANNEL : integer := 1;

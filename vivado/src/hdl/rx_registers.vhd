@@ -5,11 +5,26 @@ library work;
 use work.common.all;
 use work.register_map.all;
 
+--
+-- rx_registers:
+--
+-- This modules handles reading and writing the RX unit registers over
+-- the REGBUS interface.  It counts uart channel conditions
+-- (starts, beats, updates, and lost) from the UART status register
+-- bits.  It also tracks the maximum number of words in the RX FIFO.
+--
+-- See register_map.vhd for registers addresses.
+--
+-- See PACMAN TRM for register descriptions.
+--
+
 entity rx_registers is
   port (
+    -- clock and reset
     ACLK	        : in std_logic;
     ARESETN	        : in std_logic;
 
+    -- register bus (REGBUS) interface
     S_REGBUS_RB_RUPDATE : in  std_logic;
     S_REGBUS_RB_RADDR	: in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
     S_REGBUS_RB_RDATA	: out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -20,21 +35,31 @@ entity rx_registers is
     S_REGBUS_RB_WDATA	: in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     S_REGBUS_RB_WACK    : out std_logic;
 
+    -- look buffer contains the most recent RX for each UART
     LOOK_I              : in  uart_rx_data_array_t;
+    -- status register from each UART TX channel
     STATUS_I            : in  uart_reg_array_t;
+    -- configuration register for each UART TX channel
     CONFIG_O            : out uart_reg_array_t;
+    -- heartbeat cycles
     HEARTBEAT_CYCLES_O  : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+    -- sync cycles
     SYNC_CYCLES_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+    -- global (to RX) status reported by RX buffer.
     GSTATUS_I           : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+    -- global (to RX) configuration
     GCONFIG_O           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+    -- word count in the RX FIFO
     FIFO_COUNT_I        : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
   );
 end;
 
 architecture behavioral of rx_registers is
+  -- clock and reset:
   signal clk      : std_logic;
   signal rst      : std_logic;
 
+  -- REGBUS signals:
   signal rupdate  : std_logic;
   signal raddr    : std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
   signal rdata    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
@@ -51,13 +76,16 @@ architecture behavioral of rx_registers is
   signal sync_cycle       : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal gconfig          : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
 
-  -- input registers:
+  -- input data for registers:
   signal look       : uart_rx_data_array_t;
   signal status     : uart_reg_array_t;
   signal gstatus    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
   signal fifo_count : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
+  -- signal to set all counter / maximums to 0
   signal zero_counters : std_logic := '0';
+
+  -- UART condition counts and FIFO high-water mark
   signal istarts  : uart_counter_array_t := (others => 0);
   signal ibeats   : uart_counter_array_t := (others => 0);
   signal iupdates : uart_counter_array_t := (others => 0);
@@ -65,27 +93,25 @@ architecture behavioral of rx_registers is
   signal fifo_max : unsigned(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
 
 begin
-  -- Clock and reset inputs:
+  -- connect signals to inputs and outputs
   clk <= ACLK;
   rst <= not ARESETN;
-
-  --REGBUS read signals
   rupdate  <= S_REGBUS_RB_RUPDATE;
   raddr    <= S_REGBUS_RB_RADDR;
   S_REGBUS_RB_RDATA <= rdata;
   S_REGBUS_RB_RACK  <= rack;
-  --REGBUS write signals
   wupdate  <= S_REGBUS_RB_WUPDATE;
   waddr    <= S_REGBUS_RB_WADDR;
   wdata    <= S_REGBUS_RB_WDATA;
   S_REGBUS_RB_WACK <= wack;
 
-  -- registers
+  -- set output registers
   CONFIG_O           <= config;
   GCONFIG_O          <= gconfig;
   HEARTBEAT_CYCLES_O <= heartbeat_cycles;
   SYNC_CYCLES_O      <= sync_cycle;
 
+  -- register input data:
   process(clk, rst)
   begin
     if (rst='1') then
@@ -102,6 +128,17 @@ begin
   end process;
 
   -- Handle Read Request:
+  -- 1) Read request are indicated via rupdate=1 with a valid address
+  -- raddr
+  -- 2) Check that the first two bits of MSB byte (scope) of wraddr
+  -- matches this modules scope.
+  -- 3) The next six bits form the UART channel.  Their are special channels for
+  -- broadcast (write all UARTs) and global (not specific to a UART channel).
+  -- 4) Check remaining two bytes for a match with a defined
+  -- register
+  -- 5) If a match is found, on next clock cycle, set corresponding
+  -- data on rdata and rack=1
+
   process(clk, rst)
     variable scope   : integer range 0 to 3;
     variable chan    : integer range 0 to 16#3F#;
@@ -118,10 +155,11 @@ begin
           chan  := to_integer(unsigned(raddr(13 downto 8)));
           reg   := to_integer(unsigned(raddr(7 downto 0)));
           rdata <= x"00000000";
-          if (scope=1) then
+          if (scope=C_SCOPE_UART_RX) then
             rdata <= x"EEEEEEEE";
             rack  <= '0';
-            if (chan < 40) then
+            -- UART channel registers
+            if (chan < C_NUM_UART) then
               if (reg=C_ADDR_RX_STATUS) then
                 rdata <= status(chan);
                 rack  <= '1';
@@ -156,6 +194,7 @@ begin
                 rdata <= std_logic_vector(to_unsigned(ilost(chan),C_RB_DATA_WIDTH));
                 rack  <= '1';
               end if;
+            -- global (to RX) registers)
             elsif (chan = 16#3F#) then
               if (reg=C_ADDR_RX_GSTATUS) then
                 rdata <= gstatus;
@@ -184,6 +223,17 @@ begin
   end process;
 
   -- Handle Write Request:
+  -- 1) Write request are indicated via wupdate=1 with a valid address
+  -- waddr
+  -- 2) Check that the first two bits of MSB byte (scope) of wraddr
+  -- matches this modules scope.
+  -- 3) The next six bits form the UART channel.  Their are special channels for
+  -- broadcast (write all UARTs) and global (not specific to a UART channel).
+  -- 4) Check remaining two bytes for a match with a defined
+  -- register
+  -- 5) If a match is found, on next clock cycle, set corresponding
+  -- data to the value of wdata and set wack=1
+
   process(clk, rst)
   variable scope   : integer range 0 to 3;
   variable chan    : integer range 0 to 16#3F#;
@@ -204,13 +254,15 @@ begin
           scope := to_integer(unsigned(waddr(15 downto 14)));
           chan  := to_integer(unsigned(waddr(13 downto 8)));
           reg   := to_integer(unsigned(waddr(7 downto 0)));
-          if ((scope=1) and (chan < 40)) then
+          -- UART channel registers
+          if ((scope=C_SCOPE_UART_RX) and (chan < C_NUM_UART)) then
             if (reg=C_ADDR_RX_CONFIG) then
               config(chan) <= wdata;
               wack  <= '1';
             end if;
           end if;
-          if ((scope=1) and (chan = 16#3B#)) then
+          -- broadcast (write to all UART channels)
+          if ((scope=C_SCOPE_UART_RX) and (chan = 16#3B#)) then
             if (reg=C_ADDR_RX_CONFIG) then
               for i in 0 to C_NUM_UART-1 loop
                 config(i) <= wdata;
@@ -218,7 +270,8 @@ begin
               wack  <= '1';
             end if;
           end if;
-          if ((scope=1) and (chan = 16#3F#)) then
+          -- global (to RX) registers:
+          if ((scope=C_SCOPE_UART_RX) and (chan = 16#3F#)) then
             if (reg=C_ADDR_RX_GCONFIG) then
               gconfig <= wdata;
               wack  <= '1';
@@ -238,6 +291,7 @@ begin
     end if;
   end process;
 
+  -- Count RX conditions from status register, zero on reset or zero_counters signal.
   process(clk, rst)
     variable fifo_now : unsigned(31 downto 0) := x"00000000";
     variable busy   : std_logic := '0';

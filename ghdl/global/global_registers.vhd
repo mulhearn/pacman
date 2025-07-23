@@ -6,11 +6,21 @@ use work.version.all;
 use work.common.all;
 use work.register_map.all;
 
+--
+-- global_registers:  this modules handles reading and writing the global
+-- registers over the REGBUS interface.
+--
+-- see register_map.vhd for registers addresses
+-- see PACMAN TRM for register descriptions
+--
+
 entity global_registers is
   port (
+    -- clock and reset
     ACLK	        : in std_logic;
-    ARESETN	        : in std_logic;
+    ARESETN	        : in std_logic;  -- ACTIVE LOW
 
+    -- register bus (REGBUS) interface
     S_REGBUS_RB_RUPDATE : in  std_logic;
     S_REGBUS_RB_RADDR	: in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
     S_REGBUS_RB_RDATA	: out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -21,23 +31,24 @@ entity global_registers is
     S_REGBUS_RB_WDATA	: in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     S_REGBUS_RB_WACK    : out std_logic;
 
+    -- power and tile enables, set via register:
     ANALOG_PWR_EN_O     : out std_logic;
     TILE_EN_O           : out std_logic_vector(C_NUM_TILE-1 downto 0);
+
+    -- led configuration register:
     LED_CONFIG_O        : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
+    -- global status input:
     GLOBAL_STATUS_I     : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
     );
 end;
 
---
--- global_registers:  this modules handles reading and writing the global registers
---
-
-
 architecture behavioral of global_registers is
+  -- clock and reset:
   signal clk      : std_logic;
   signal rst      : std_logic;
 
+  -- REGBUS signals:
   signal rupdate  : std_logic;
   signal raddr    : std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
   signal rdata    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
@@ -55,27 +66,33 @@ architecture behavioral of global_registers is
   signal led_config      : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)   := (others => '0');
 
 begin
-  -- Clock and reset inputs:
+  -- connect signals to inputs and outputs:
   clk <= ACLK;
   rst <= not ARESETN;
-
-  --REGBUS read signals
   rupdate  <= S_REGBUS_RB_RUPDATE;
   raddr    <= S_REGBUS_RB_RADDR;
   S_REGBUS_RB_RDATA <= rdata;
   S_REGBUS_RB_RACK  <= rack;
-  --REGBUS write signals
   wupdate  <= S_REGBUS_RB_WUPDATE;
   waddr    <= S_REGBUS_RB_WADDR;
   wdata    <= S_REGBUS_RB_WDATA;
   S_REGBUS_RB_WACK	 <= wack;
 
-  -- registers
+  -- set register controlled outputs:
   TILE_EN_O  <= enables(C_NUM_TILE-1 downto 0);
   ANALOG_PWR_EN_O <= enables(16);
   LED_CONFIG_O  <= led_config;
 
   -- Handle Read Request:
+  -- 1) Read request are indicated via rupdate=1 with a valid address
+  -- raddr
+  -- 2) Check that MSB byte (scope) of rdaddr matches this modules
+  -- scope
+  -- 3) Check remaining three bytes for a match with a defined
+  -- register
+  -- 4) If a match is found, on next clock cycle, set corresponding
+  -- data on rdata and rack=1
+
   process(clk, rst)
     variable scope   : integer range 0 to 16#F#;
     variable reg     : integer range 0 to 16#FFF#;
@@ -125,6 +142,14 @@ begin
   end process;
 
   -- Handle Write Request:
+  -- 1) write request are indicated via wupdate=1 with a valid address
+  -- waddr and data wdata
+  -- 2) check that MSB byte (scope) of rdaddr matches this modules
+  -- scope
+  -- 3) check remaining three bytes for a match with a defined
+  -- register
+  -- 4) if match found, on next clock cycle, set corresponding data to
+  -- wdata and set wack=1
   process(clk, rst)
     variable scope   : integer range 0 to 16#F#;
     variable reg     : integer range 0 to 16#FFF#;

@@ -4,27 +4,71 @@ use ieee.numeric_std.all;
 library work;
 use work.common.all;
 
+-- rx_buffer: Send received (RX) data (from UARTs) out to DMA via an AXI
+-- stream using round-robin scheduling.
+--
+-- Each UART channel has a single buffer, which is marked valid upon a
+-- complete transfer from the UART receiver.
+--
+-- A turn counter runs from 0 to 63.  When the stream is running (i.e.
+-- if the receiving FIFO is not full) valid data from a UART is added
+-- to the stream only on its turn (e.g. UART 5 streams on turn 5).
+-- When streamed, the ready bit is set, so that the UART channel
+-- clears the valid bit, and its (single buffer) is ready to recieve
+-- updated data.  If new data arrives on the RX channel before the
+-- valid bit is cleared (via ready) the packet is lost, which is noted
+-- by the lost bit in the UART status.  Counters track the number of
+-- lost packets for each UART (which should be zero during normal
+-- operation).
+--
+-- The UART RX channels consume turns 0-39.  The remaining turns are used for
+-- adding additional words (e.g. heartbeat and rollover words) to the stream,
+-- and for state machine transitions.
+--
+-- Upon first seeing data after a pause, the streaming does not commence until
+-- the start of the next cycle (at turn 0).  This orders the data in the DMA
+-- packet nicely, with channel 0, when the data is synchronous (such as during
+-- loopback testing).
+--
+-- Although the data is streamed one word at a time, many words are
+-- assembled into a single DMA packet using the LAST word.  All data
+-- that arrives within a configurable number of cycles (each cycle is
+-- 64 turns) is included in the same DMA packet.  (In future, we could
+-- specify a maximum time and a maximum packet size).  In this
+-- version, the maximum time translates to a maximum possible size.
+--
+
 entity rx_buffer is
   generic(
     constant C_TURN_MAX : integer := C_RX_TURN_MAX
   );
   port (
+    -- clock and reset:
     M_AXIS_ACLK        : in std_logic;
-    M_AXIS_ARESETN     : in std_logic;
+    M_AXIS_ARESETN     : in std_logic; -- ACTIVE LOW
+
+    -- AXI stream containing RX data (out to PS via FIFO and then DMA)
     M_AXIS_TDATA       : out std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
     M_AXIS_TVALID      : out std_logic;
     M_AXIS_TREADY      : in std_logic;
     M_AXIS_TKEEP       : out std_logic_vector(C_RX_AXIS_WIDTH/8-1 downto 0);
     M_AXIS_TLAST       : out std_logic;
 
+    -- register accessible status of this module
     STATUS_O           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+    -- configuration register for this module
     CONFIG_I           : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+    -- the most recent data word sent to the stream
     LOOK_O             : out std_logic_vector(C_RX_DATA_WIDTH-1 downto 0);
 
+    -- the received data from the UART receivers
     DATA_I             : in  uart_rx_data_array_t;
+    -- one valid bit for each UART receiver
     VALID_I            : in  std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
+    -- ready bit is set as each UART channel is streamed, which clears valid:
     READY_O            : out std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
 
+    -- debugging:
     DEBUG_STATUS_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     DEBUG_DATA_O       : out std_logic_vector(C_RX_DATA_WIDTH-1 downto 0)
   );

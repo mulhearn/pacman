@@ -4,6 +4,8 @@ use ieee.numeric_std.all;
 library work;
 use work.common.all;
 
+--rollover:  presents a rollover on channel CHANNEL to the RX buffer.
+
 entity rollover is
   generic (
     constant CHANNEL   : integer := 16#53#;  -- ASCII S

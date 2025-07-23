@@ -4,21 +4,44 @@ use ieee.numeric_std.all;
 library work;
 use work.common.all;
 
+-- tx_buffer: buffers data (from DMA) to be transmitted
+--
+-- Receives data to be transmitted via AXI stream interface (from PS
+-- via DMA) Each DMA packet consists of a 128-bit header and 20
+-- 128-bit words.  The header contains a channel mask specifying which
+-- channels have data to transmit.  The 20 128-bit words contains the
+-- 40 uart payloads, each of 64 bits.  Payload from inactive UARTs is
+-- ignored.
+--
+-- The UART packet data is buffered, and once the entire DMA packet is
+-- received, a valid bit is set for each UART specified in the
+-- mask. The valid bit is cleared upon receiving a ready from the
+-- corresponding UART. The stream is not ready for more input until
+-- all UART channels have their valid bit cleared (via ready).
+--
+
 entity tx_buffer is
   port (
+    -- clock and reset
     S_AXIS_ACLK        : in std_logic;
     S_AXIS_ARESETN     : in std_logic;
 
+    -- AXI stream containing the data to be transmitted
     S_AXIS_TDATA       : in std_logic_vector(C_TX_AXIS_WIDTH-1 downto 0);
     S_AXIS_TVALID      : in std_logic;
     S_AXIS_TREADY      : out std_logic;
     S_AXIS_TKEEP       : in std_logic_vector(C_TX_AXIS_WIDTH/8-1 downto 0);
     S_AXIS_TLAST       : in std_logic;
 
+    -- status register from this module (tx_buffer)
     STATUS_O           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
+    -- the data to be transmitted:
     DATA_O             : out uart_tx_data_array_t;
+    -- one valid bit per UART, set to 1 when new data is received
     VALID_O            : out std_logic_vector(C_NUM_UART-1 downto 0);
+    -- one ready bit per UART, from TX channel
+    -- valid is cleared when UART has both valid and ready
     READY_I            : in std_logic_vector(C_NUM_UART-1 downto 0)
   );
 end;

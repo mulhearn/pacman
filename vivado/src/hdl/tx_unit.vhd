@@ -4,19 +4,31 @@ use ieee.std_logic_1164.all;
 library work;
 use work.common.all;
 
---  Defines a testbench (without any ports)
+-- tx_unit:  PACMAN transmitter (TX) features
+--
+-- register controlled configuration for TX unit
+-- register accessible status and monitoring of TX unit
+-- AXI stream input containing data to TX (from PS)
+-- TX output for each UART channel (POSI)
+
+
 entity tx_unit is
   port (
+    --clock and reset
     S_AXIS_ACLK          : in std_logic;
     S_AXIS_ARESETN       : in std_logic;
+
+    --ASIC clock (slower than ACLK)
     UCLK_I               : in  std_logic;
 
+    -- AXI Stream containing data to transmit
     S_AXIS_TDATA         : in std_logic_vector(C_TX_AXIS_WIDTH-1 downto 0);
     S_AXIS_TVALID        : in std_logic;
     S_AXIS_TREADY        : out std_logic;
     S_AXIS_TKEEP         : in std_logic_vector(C_TX_AXIS_WIDTH/8-1 downto 0);
     S_AXIS_TLAST         : in std_logic;
 
+    -- register bus (REGBUS) interface
     S_REGBUS_RB_RADDR	 : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
     S_REGBUS_RB_RDATA	 : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     S_REGBUS_RB_RUPDATE  : in  std_logic;
@@ -27,10 +39,17 @@ entity tx_unit is
     S_REGBUS_RB_WDATA	 : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     S_REGBUS_RB_WACK     : out std_logic;
 
+    -- POSI output for all registers:
     POSI_O               : out std_logic_vector(C_NUM_UART-1 downto 0);
+
+    -- Debugging:
     DEBUG_O	         : out  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
   );
 end tx_unit;
+
+-- This integration module contains submodules tx_registers,
+-- tx_buffer, and tx_chan.  There is one instance of tx_chan for each
+-- UART channel, implemented via the VHDL generate mechanism.
 
 architecture behaviour of tx_unit is
   signal data        : uart_tx_data_array_t := (others => (others => '0'));
@@ -129,6 +148,7 @@ begin
     CONFIG_O  => config
   );
 
+  -- generate C_NUM_UART instances of tx_chan and connect to appropriate signals.
   gtxchan0: for i in 0 to C_NUM_UART-1 generate
     txchan0: tx_chan
       port map(

@@ -4,16 +4,29 @@ use ieee.std_logic_1164.all;
 library work;
 use work.common.all;
 
+-- rx_unit:  PACMAN receiver (RX) features
+--
+-- register controlled configuration for RX unit
+-- register accessible status and monitoring of RX unit
+-- RX input for each UART channel (PISO)
+-- AXI stream output containing data from RX (out to PS)
+-- inputs time stamp from timing unit which is used to mark data
+-- inputs the RX FIFO word count for monitoring
+
 entity rx_unit is
   port (
+    --clock and reset
     M_AXIS_ACLK            : in std_logic;
     M_AXIS_ARESETN         : in std_logic;
+
+    -- AXI Stream containing data received
     M_AXIS_TDATA           : out std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
     M_AXIS_TVALID          : out std_logic;
     M_AXIS_TREADY          : in std_logic;
     M_AXIS_TKEEP           : out std_logic_vector(C_RX_AXIS_WIDTH/8-1 downto 0);
     M_AXIS_TLAST           : out std_logic;
 
+    --register bus (REGBUS) interface:
     S_REGBUS_RB_RADDR      : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
     S_REGBUS_RB_RDATA      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     S_REGBUS_RB_RUPDATE    : in  std_logic;
@@ -24,13 +37,23 @@ entity rx_unit is
     S_REGBUS_RB_WDATA      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     S_REGBUS_RB_WACK       : out std_logic;
 
+    -- timestamp from timing unit
     TIMESTAMP_I            : in  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
+    -- RX FIFO word count
     FIFO_COUNT_I           : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
+    -- RX input (PISO) for each UART channel:
     PISO_I                 : in  std_logic_vector(C_NUM_UART-1 downto 0);
+
+    -- TX output (POSI) from TX unit for loopback option:
     LOOPBACK_I             : in  std_logic_vector(C_NUM_UART-1 downto 0)
   );
 end rx_unit;
+
+-- This integration module contains submodules rx_registers,
+-- rx_buffer, rx_chan, heartbeat, and rollover.  There is one instance
+-- of rx_chan for each UART channel, implemented via the VHDL generate
+-- mechanism.
 
 architecture behaviour of rx_unit is
   signal data    : uart_rx_data_array_t;

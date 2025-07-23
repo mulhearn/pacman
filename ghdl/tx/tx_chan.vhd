@@ -4,6 +4,13 @@ use ieee.numeric_std.all;
 library work;
 use work.common.all;
 
+-- tx_chan:  single UART TX channel
+--
+-- this is a wrapper for the (known to work) uart_tx which is
+-- preserved from the legacy firmware.  I plan to update the uart_tx
+-- once I have solid ASIC testing regimen, so comments are limited for
+-- this version.
+
 entity tx_chan is
   port (
     ACLK          : in  std_logic;

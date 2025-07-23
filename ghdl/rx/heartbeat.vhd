@@ -4,6 +4,8 @@ use ieee.numeric_std.all;
 library work;
 use work.common.all;
 
+-- heartbeat:  presents a periodic heartbeat on channel CHANNEL to the RX buffer
+
 entity heartbeat is
   generic (
     constant CHANNEL   : integer := 16#48#;  -- ASCII H
