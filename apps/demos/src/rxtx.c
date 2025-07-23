@@ -267,11 +267,13 @@ void read_rx_status(void){
     unsigned nchan  = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_NCHAN);
     printf("%2d: ch: %2d cfg: 0x%08x status: 0x%08x s: %d b: %d u: %d l: %d\r\n",i, nchan, config, status, starts, beats, updates, lost);
   }
-  printf("gstatus----------- 0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_GSTATUS));
-  printf("gconfig------------ 0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_GCONFIG));
-  printf("FIFO R count-------%d      \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_FRCNT));
-  printf("FIFO W count-------%d      \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_FWCNT));
-  printf("DMA ITR------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_DMAITR));
+  printf("gstatus------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_GSTATUS));
+  printf("gconfig------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_GCONFIG));
+  printf("heartbeat cycles---0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_HB_CYC));
+  printf("sync cycles--------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_SYNC_CYC));
+  printf("FIFO count---------%d      \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_FCNT));
+  printf("FIFO max-----------%d      \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_FMAX));
+
 }
 
 void read_rx_look(void){

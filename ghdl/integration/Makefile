@@ -12,8 +12,7 @@ testbenches:
 	ghdl -a -fsynopsys tb/uart_loopback_tb.vhd
 	ghdl -e -fsynopsys uart_loopback_tb
 
-run-units:
+run-testbenches:
 	ghdl -r -fsynopsys uart_loopback_tb --stop-time=30000ns
 
-run-demos:
-#	ghdl -r -fsynopsys tx_unit_tb --stop-time=20us
+

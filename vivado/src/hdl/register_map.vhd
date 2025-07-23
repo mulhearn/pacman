@@ -71,10 +71,8 @@ package register_map is
   constant C_ADDR_RX_ZERO_CNTS  : integer := 16#A8#;
 
   -- FIFO counters (only via global channel 0x7F) from AXI Stream DATA FIFO
-  constant C_ADDR_RX_FRCNT      : integer := 16#B0#;
-  constant C_ADDR_RX_FWCNT      : integer := 16#B4#;
-  -- DMA Interrupt bit (S2MM)
-  constant C_ADDR_RX_DMAITR     : integer := 16#B8#;
+  constant C_ADDR_RX_FCNT       : integer := 16#B0#;
+  constant C_ADDR_RX_FMAX       : integer := 16#B4#;
 
   -- Heartbeat and Sync Config registers
   constant C_ADDR_RX_HEARTBEAT_CYCLES  : integer := 16#C0#;

@@ -33,9 +33,7 @@ architecture behaviour of rx_registers_tb is
       HEARTBEAT_CYCLES_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       SYNC_CYCLES_O          : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       GSTATUS_I              : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      FIFO_RCNT_I            : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      FIFO_WCNT_I            : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      DMA_ITR_I              : in  std_logic
+      FIFO_COUNT_I           : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
     );
   end component;
 
@@ -56,6 +54,8 @@ architecture behaviour of rx_registers_tb is
   signal config   : uart_reg_array_t;
   signal gconfig  : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
 
+  signal fifo_count  : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
+
   signal show_output : std_logic := '0';
 begin
   uut0: rx_registers port map (
@@ -74,9 +74,7 @@ begin
     CONFIG_O  => config,
     GCONFIG_O  => gconfig,
     GSTATUS_I => x"AAAABBBB",
-    FIFO_RCNT_I => x"000A0001",
-    FIFO_WCNT_I => x"000B0001",
-    DMA_ITR_I => '1'
+    FIFO_COUNT_I => fifo_count
   );
 
   aresetn_process : process
@@ -96,50 +94,60 @@ begin
     wait for 5 ns;
   end process;
 
+  fifo_count_process : process
+  begin
+    fifo_count <= x"00000000";
+    wait for 50 ns;
+    fifo_count <= x"00000100";
+    wait for 10 ns;
+    fifo_count <= x"00000010";
+    wait;
+  end process;
+
   read_process : process
   begin
     raddr   <= x"0000";
     rupdate <= '0';
     wait for 1 ns;
-    wait for 20 ns;
-    raddr   <= x"4000";
+    wait for 80 ns;
+    raddr   <= x"4C04";
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"4004";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"7FC0";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"7FC4";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"4204";
-    rupdate <= '1';
-    wait for 10 ns;
     raddr   <= x"4104";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"7FA0";
-    rupdate <= '1';
+    raddr   <= x"0000";
+    rupdate <= '0';
     wait for 10 ns;
     raddr   <= x"7FA4";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"7FB0";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"7FB4";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"7FB8";
-    rupdate <= '1';
-    wait for 10 ns;
     raddr   <= x"7FC0";
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"7FC4";
     rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"0000";
+    rupdate <= '0';
+    wait for 10 ns;
+    raddr   <= x"4C00";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"4000";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"0000";
+    rupdate <= '0';
+    wait for 10 ns;
+    raddr   <= x"7FA0";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"0000";
+    rupdate <= '0';
     wait for 10 ns;
     raddr   <= x"4010";
     rupdate <= '1';
@@ -153,18 +161,21 @@ begin
     raddr   <= x"401C";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"4C00";
+    raddr   <= x"0000";
+    rupdate <= '0';
+    wait for 10 ns;
+    raddr   <= x"7FB0";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"4C04";
+    raddr   <= x"7FB4";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"4C50";
-    rupdate <= '1';
+    raddr   <= x"0000";
+    rupdate <= '0';
     wait for 10 ns;
     raddr   <= x"4020";
     rupdate <= '1';
-    wait for 50 ns;
+    wait for 10 ns;
     raddr   <= x"4024";
     rupdate <= '1';
     wait for 10 ns;
@@ -174,9 +185,38 @@ begin
     raddr   <= x"402C";
     rupdate <= '1';
     wait for 10 ns;
+    raddr   <= x"4C20";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"4C24";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"4C28";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"4C2C";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"4020";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"4024";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"4028";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"402C";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"7FB0";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"7FB4";
+    rupdate <= '1';
+    wait for 10 ns;
     raddr   <= x"0000";
     rupdate <= '0';
-    wait for 10 ns;
     wait;
   end process;
 
@@ -186,35 +226,31 @@ begin
     wdata   <= x"00000000";
     wupdate <= '0';
     wait for 1 ns;
-    wait for 30 ns;
+    wait for 20 ns;
     waddr   <= x"7B04";
-    wdata   <= x"0BB01001";
+    wdata   <= x"00001002";
     wupdate <= '1';
     wait for 10 ns;
     waddr   <= x"4004";
-    wdata   <= x"0AA01001";
-    wupdate <= '1';
-    wait for 10 ns;
-    waddr   <= x"4104";
-    wdata   <= x"0CC01101";
+    wdata   <= x"00001001";
     wupdate <= '1';
     wait for 10 ns;
     waddr   <= x"7FA4";
-    wdata   <= x"0000FFFF";
+    wdata   <= x"0000AA55";
     wupdate <= '1';
     wait for 10 ns;
     waddr   <= x"7FC0";
-    wdata   <= x"00011000";
+    wdata   <= x"00001AAA";
     wupdate <= '1';
     wait for 10 ns;
     waddr   <= x"7FC4";
-    wdata   <= x"00000010";
+    wdata   <= x"00002BBB";
     wupdate <= '1';
     wait for 10 ns;
     waddr   <= x"0000";
     wdata   <= x"00000000";
     wupdate <= '0';
-    wait for 120 ns;
+    wait for 280 ns;
     waddr   <= x"7FA8";
     wdata   <= x"00000000";
     wupdate <= '1';
@@ -228,7 +264,7 @@ begin
   show_output_process : process
   begin
     show_output<='1';
-    wait until (count=30);
+    wait until (count=45);
     wait for 10 ns;
     show_output<='0';
     wait;
@@ -266,5 +302,57 @@ begin
       writeline(output, l);
     end if;
   end process;
+
+
+  comment_process : process
+    variable l : line;
+  begin
+    write(l, String'("INFO:  Resetting:"));
+    writeline(output, l);
+    wait until (count=2);
+    write(l, String'("INFO:  Setting RX config to 0x00001002 via broadcast, then channel 0 only to 0x00001002:"));
+    writeline(output, l);
+    wait until (count=5);
+    write(l, String'("INFO:  Setting RX global config to 0xAA55"));
+    writeline(output, l);
+    wait until (count=6);
+    write(l, String'("INFO:  Setting RX Heartbeat Cycles to 0x1AAA"));
+    writeline(output, l);
+    wait until (count=7);
+    write(l, String'("INFO:  Setting RX Sync Cycles to 0x2BBB"));
+    writeline(output, l);
+    wait until (count=9);
+    write(l, String'("INFO:  Reading back RX config for several channels:"));
+    writeline(output, l);
+    wait until (count=13);
+    write(l, String'("INFO:  Reading back RX global config, heatbeat cycles, and sync cycles."));
+    writeline(output, l);
+    wait until (count=17);
+    write(l, String'("INFO:  Reading RX status for several channels:  (Test pattern input: 0x0000ABFF)"));
+    writeline(output, l);
+    wait until (count=20);
+    write(l, String'("INFO:  Reading RX global status:  (Test pattern input: 0xAAAABBBB)"));
+    writeline(output, l);
+    wait until (count=22);
+    write(l, String'("INFO:  Reading RX look A,B,C,D for several channels:  (Test pattern, A = 0xAAAAAAAA, etc)"));
+    writeline(output, l);
+    wait until (count=27);
+    write(l, String'("INFO:  Reading RX FIFO count and maximum:"));
+    writeline(output, l);
+    wait until (count=30);
+    write(l, String'("INFO:  Reading RX counts repeatedly: (all counters increment by one each tick)"));
+    writeline(output, l);
+    wait until (count=30);
+    write(l, String'("INFO:  zero counters applied"));
+    writeline(output, l);
+    wait until (count=30);
+    write(l, String'("INFO:  FIFO maximum is lower after zero counts"));
+    writeline(output, l);
+    wait;
+  end process;
+
+
+
+
 
 end behaviour;

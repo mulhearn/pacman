@@ -32,7 +32,7 @@ testbenches:
 	ghdl -e -fsynopsys rx_unit_tb
 
 run-testbenches: all
-	ghdl -r -fsynopsys rx_registers_tb --stop-time=350ns
+	ghdl -r -fsynopsys rx_registers_tb --stop-time=450ns
 	ghdl -r -fsynopsys rx_chan_tb --stop-time=30us
 	ghdl -r -fsynopsys heartbeat_tb --stop-time=30us
 	ghdl -r -fsynopsys rollover_tb --stop-time=30us

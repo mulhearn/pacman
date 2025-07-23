@@ -27,9 +27,7 @@ entity rx_registers is
     SYNC_CYCLES_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     GSTATUS_I           : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     GCONFIG_O           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    FIFO_RCNT_I         : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    FIFO_WCNT_I         : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    DMA_ITR_I           : in  std_logic
+    FIFO_COUNT_I        : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
   );
 end;
 
@@ -57,16 +55,14 @@ architecture behavioral of rx_registers is
   signal look       : uart_rx_data_array_t;
   signal status     : uart_reg_array_t;
   signal gstatus    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-  signal fifo_rcnt  : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-  signal fifo_wcnt  : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-  signal dma_itr    : std_logic;
+  signal fifo_count : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
   signal zero_counters : std_logic := '0';
   signal istarts  : uart_counter_array_t := (others => 0);
   signal ibeats   : uart_counter_array_t := (others => 0);
   signal iupdates : uart_counter_array_t := (others => 0);
   signal ilost    : uart_counter_array_t := (others => 0);
-
+  signal fifo_max : unsigned(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
 
 begin
   -- Clock and reset inputs:
@@ -82,30 +78,26 @@ begin
   wupdate  <= S_REGBUS_RB_WUPDATE;
   waddr    <= S_REGBUS_RB_WADDR;
   wdata    <= S_REGBUS_RB_WDATA;
-  S_REGBUS_RB_WACK	 <= wack;
+  S_REGBUS_RB_WACK <= wack;
 
   -- registers
-  CONFIG_O            <= config;
-  GCONFIG_O           <= gconfig;
-  HEARTBEAT_CYCLES_O  <= heartbeat_cycles;
-  SYNC_CYCLES_O       <= sync_cycle;
+  CONFIG_O           <= config;
+  GCONFIG_O          <= gconfig;
+  HEARTBEAT_CYCLES_O <= heartbeat_cycles;
+  SYNC_CYCLES_O      <= sync_cycle;
 
   process(clk, rst)
   begin
     if (rst='1') then
-      look      <= (others => (others => '0'));
-      status    <= (others => (others => '0'));
-      gstatus   <= (others => '0');
-      fifo_rcnt <= (others => '0');
-      fifo_wcnt <= (others => '0');
-      dma_itr   <= '1';
+      look       <= (others => (others => '0'));
+      status     <= (others => (others => '0'));
+      gstatus    <= (others => '0');
+      fifo_count <= (others => '0');
     elsif (rising_edge(clk)) then
-      look      <= LOOK_I;
-      status    <= STATUS_I;
-      gstatus   <= GSTATUS_I;
-      fifo_rcnt <= FIFO_RCNT_I;
-      fifo_wcnt <= FIFO_WCNT_I;
-      dma_itr   <= DMA_ITR_I;
+      look       <= LOOK_I;
+      status     <= STATUS_I;
+      gstatus    <= GSTATUS_I;
+      fifo_count <= FIFO_COUNT_I;
     end if;
   end process;
 
@@ -171,15 +163,11 @@ begin
               elsif (reg=C_ADDR_RX_GCONFIG) then
                 rdata <= gconfig;
                 rack  <= '1';
-              elsif (reg=C_ADDR_RX_FRCNT) then
-                rdata <= fifo_rcnt;
+              elsif (reg=C_ADDR_RX_FCNT) then
+                rdata <= fifo_count;
                 rack  <= '1';
-              elsif (reg=C_ADDR_RX_FWCNT) then
-                rdata <= fifo_wcnt;
-                rack  <= '1';
-              elsif (reg=C_ADDR_RX_DMAITR) then
-                rdata <= (others => '0');
-                rdata(0) <= dma_itr;
+              elsif (reg=C_ADDR_RX_FMAX) then
+                rdata <= std_logic_vector(fifo_max);
                 rack  <= '1';
               elsif (reg=C_ADDR_RX_HEARTBEAT_CYCLES) then
                 rdata <= heartbeat_cycles;
@@ -251,6 +239,7 @@ begin
   end process;
 
   process(clk, rst)
+    variable fifo_now : unsigned(31 downto 0) := x"00000000";
     variable busy   : std_logic := '0';
     variable valid  : std_logic := '0';
     variable ready  : std_logic := '0';
@@ -264,38 +253,44 @@ begin
       ibeats   <= (others => 0);
       iupdates <= (others => 0);
       ilost    <= (others => 0);
-    else
-      if (rising_edge(clk)) then
-        for i in 0 to C_NUM_UART-1 loop
-          -- map status bits as written in rx_chan.vhd:
-          busy   := status(i)(0);
-          valid  := status(i)(1);
-          ready  := status(i)(2);
-          start  := status(i)(4);
-          update := status(i)(5);
-          lost   := status(i)(6);
-          if (zero_counters = '1') then
-            istarts  <= (others => 0);
-            ibeats   <= (others => 0);
-            iupdates <= (others => 0);
-            ilost    <= (others => 0);
-
-          else
-            if (start = '1') then
-              istarts(i) <= (istarts(i) + 1) mod C_COUNT_MAX;
-            end if;
-            if ((valid = '1') and (ready = '1')) then
-              ibeats(i) <= (ibeats(i) + 1) mod C_COUNT_MAX;
-            end if;
-            if (update = '1') then
-              iupdates(i) <= (iupdates(i) + 1) mod C_COUNT_MAX;
-            end if;
-            if (lost = '1') then
-              ilost(i) <= (ilost(i) + 1) mod C_COUNT_MAX;
-            end if;
-          end if;
-        end loop;
+      fifo_max <= (others => '0');
+    elsif (rising_edge(clk)) then
+      if (zero_counters = '1') then
+        fifo_max <= (others => '0');
+      else
+        fifo_now := unsigned(fifo_count(31 downto 0));
+        if (fifo_max < fifo_now) then
+          fifo_max <= fifo_now;
+        end if;
       end if;
+      for i in 0 to C_NUM_UART-1 loop
+        -- map status bits as written in rx_chan.vhd:
+        busy   := status(i)(0);
+        valid  := status(i)(1);
+        ready  := status(i)(2);
+        start  := status(i)(4);
+        update := status(i)(5);
+        lost   := status(i)(6);
+        if (zero_counters = '1') then
+          istarts  <= (others => 0);
+          ibeats   <= (others => 0);
+          iupdates <= (others => 0);
+          ilost    <= (others => 0);
+        else
+          if (start = '1') then
+            istarts(i) <= (istarts(i) + 1) mod C_COUNT_MAX;
+          end if;
+          if ((valid = '1') and (ready = '1')) then
+            ibeats(i) <= (ibeats(i) + 1) mod C_COUNT_MAX;
+          end if;
+          if (update = '1') then
+            iupdates(i) <= (iupdates(i) + 1) mod C_COUNT_MAX;
+          end if;
+          if (lost = '1') then
+            ilost(i) <= (ilost(i) + 1) mod C_COUNT_MAX;
+          end if;
+        end if;
+      end loop;
     end if;
   end process;
 

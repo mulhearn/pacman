@@ -26,9 +26,10 @@ extern "C" {
 #define C_ADDR_RX_GSTATUS   0xA0
 #define C_ADDR_RX_GCONFIG   0xA4
 #define C_ADDR_RX_ZERO_CNTS 0xA8
-#define C_ADDR_RX_FRCNT     0xB0
-#define C_ADDR_RX_FWCNT     0xB4
-#define C_ADDR_RX_DMAITR    0xB8
+#define C_ADDR_RX_FCNT      0xB0
+#define C_ADDR_RX_FMAX      0xB4
+#define C_ADDR_RX_HB_CYC    0xC0
+#define C_ADDR_RX_SYNC_CYC  0xC4
 
 #define C_ADDR_TX_STATUS    0x00
 #define C_ADDR_TX_CONFIG    0x04

@@ -25,9 +25,7 @@ entity rx_unit is
     S_REGBUS_RB_WACK       : out std_logic;
 
     TIMESTAMP_I            : in  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
-    FIFO_RCNT_I            : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    FIFO_WCNT_I            : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    DMA_ITR_I              : in  std_logic;
+    FIFO_COUNT_I           : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
     PISO_I                 : in  std_logic_vector(C_NUM_UART-1 downto 0);
     LOOPBACK_I             : in  std_logic_vector(C_NUM_UART-1 downto 0)
@@ -90,9 +88,7 @@ architecture behaviour of rx_unit is
       HEARTBEAT_CYCLES_O  : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       SYNC_CYCLES_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       GSTATUS_I           : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      FIFO_RCNT_I         : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      FIFO_WCNT_I         : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      DMA_ITR_I           : in  std_logic
+      FIFO_COUNT_I         : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
       );
   end component;
 
@@ -177,9 +173,7 @@ begin
     GCONFIG_O => gconfig,
     HEARTBEAT_CYCLES_O => heartbeat_cycles,
     SYNC_CYCLES_O => sync_cycles,
-    FIFO_RCNT_I => FIFO_RCNT_I,
-    FIFO_WCNT_I => FIFO_WCNT_I,
-    DMA_ITR_I   => DMA_ITR_I
+    FIFO_COUNT_I => FIFO_COUNT_I
   );
 
   grxchan0: for i in 0 to C_NUM_UART-1 generate
