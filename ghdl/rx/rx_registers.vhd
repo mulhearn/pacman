@@ -169,10 +169,10 @@ begin
               elsif (reg=C_ADDR_RX_FMAX) then
                 rdata <= std_logic_vector(fifo_max);
                 rack  <= '1';
-              elsif (reg=C_ADDR_RX_HEARTBEAT_CYCLES) then
+              elsif (reg=C_ADDR_RX_HB_CYC) then
                 rdata <= heartbeat_cycles;
                 rack  <= '1';
-              elsif (reg=C_ADDR_RX_SYNC_CYCLES) then
+              elsif (reg=C_ADDR_RX_SYNC_CYC) then
                 rdata <= sync_cycle;
                 rack  <= '1';
               end if;
@@ -225,10 +225,10 @@ begin
             elsif (reg=C_ADDR_RX_ZERO_CNTS) then
               zero_counters <= '1';
               wack  <= '1';
-            elsif (reg=C_ADDR_RX_HEARTBEAT_CYCLES) then
+            elsif (reg=C_ADDR_RX_HB_CYC) then
               heartbeat_cycles <= wdata;
               wack  <= '1';
-            elsif (reg=C_ADDR_RX_SYNC_CYCLES) then
+            elsif (reg=C_ADDR_RX_SYNC_CYC) then
               sync_cycle <= wdata;
               wack  <= '1';
             end if;
