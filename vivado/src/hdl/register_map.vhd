@@ -75,11 +75,8 @@ package register_map is
   constant C_ADDR_RX_FMAX       : integer := 16#B4#;
 
   -- Heartbeat and Sync Config registers
-  constant C_ADDR_RX_HEARTBEAT_CYCLES  : integer := 16#C0#;
-  constant C_ADDR_RX_SYNC_CYCLES       : integer := 16#C4#;
-
-
-
+  constant C_ADDR_RX_HB_CYC     : integer := 16#C0#;
+  constant C_ADDR_RX_SYNC_CYC   : integer := 16#C4#;
 
 
 
