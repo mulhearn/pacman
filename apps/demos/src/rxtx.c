@@ -14,6 +14,9 @@ static unsigned G_TX_COUNTER = 0;
 #define DMA_BUFFER_BASEADDR  0x20000000
 #define DMA_BUFFER_SIZE      0x10000000  // 256 MB
 
+
+
+
 #define TX_BD_BASEADDR       0x20000000
 #define RX_BD_BASEADDR       0x21000000
 #define TX_BUF_BYTES 0x150  // 40 uarts x 64 bits => 20 128 bit word plus 1 128 bit header => 21*4*4 = 336 bytes
@@ -22,6 +25,8 @@ static unsigned G_TX_COUNTER = 0;
 
 #define TX_BUF_WORDS TX_BUF_BYTES/4
 
+#define TX_BATCH_NEXTDESC_ADDR       0x20100000
+#define RX_BATCH_NEXTDESC_ADDR       0x20100004
 
 void init_rxtx(void){
   init_dma_driver();
@@ -34,7 +39,9 @@ void init_tx_descriptor_ring_mode(int ring_size){
 
   dma_write_tx_curdesc(TX_BD_BASEADDR);
   dma_write_tx_taildesc(TX_BD_BASEADDR);
-  dma_init_batch_tx_tail(TX_BD_BASEADDR);
+
+  dma_init_batch_tx_taildesc(TX_BATCH_NEXTDESC_ADDR);
+  dma_write_batch_tx_taildesc(TX_BD_BASEADDR);
 
   dma_run_tx(DMA_TIMEOUT);
 
@@ -49,7 +56,8 @@ void init_rx_descriptor_ring_mode(int ring_size){
 
   dma_write_rx_curdesc(dma_get_next_bd_addr(RX_BD_BASEADDR));
   dma_write_rx_taildesc(RX_BD_BASEADDR);
-  dma_init_batch_rx_tail(RX_BD_BASEADDR);
+  dma_init_batch_rx_taildesc(RX_BATCH_NEXTDESC_ADDR);
+  dma_write_batch_rx_taildesc(RX_BD_BASEADDR);
 
   dma_run_rx(DMA_TIMEOUT);
 
@@ -104,7 +112,7 @@ void single_tx(void){
 
   hw_addr_t nxta = dma_get_next_bd_addr(dma_read_tx_taildesc());
   // keep batch tail synced even when doing single buffers:
-  dma_init_batch_tx_tail(nxta);
+  dma_write_batch_tx_taildesc(nxta);
 
   hw_ptr_t tx_buf = dma_get_buffer(nxta);
   unsigned words = TX_BUF_WORDS;
@@ -134,7 +142,7 @@ void single_rx(void){
   if (dma_read_bd_status(nxta) & DMA_BD_STATUS_COMPLETE){
     printf("INFO:  RX success.\r\n");
     // keep batch tail synced even when doing single buffers:
-    dma_init_batch_rx_tail(nxta);
+    dma_write_batch_rx_taildesc(nxta);
     dma_clear_bd_status(nxta);
     dma_write_rx_taildesc(nxta);
   } else {
