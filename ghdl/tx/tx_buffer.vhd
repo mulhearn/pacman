@@ -19,6 +19,10 @@ use work.common.all;
 -- corresponding UART. The stream is not ready for more input until
 -- all UART channels have their valid bit cleared (via ready).
 --
+-- This module contains the AXI stream reader module, which handles the
+-- incoming AXI stream (with UART channels serial) and outputs the data in
+-- parallel format.
+--
 
 entity tx_buffer is
   port (
@@ -66,24 +70,34 @@ architecture behavioral of tx_buffer is
     );
   end component;
 
+  -- clock and reset
   signal clk       : std_logic;
   signal rst       : std_logic;
 
+  -- AXI stream valid-ready handshake:
+  -- pass through to stream reader and added to the status register
   signal tvalid    : std_logic;
   signal tready    : std_logic;
 
+  -- Parallel data and valid ready handshake with the stream reader
   signal pdata     : std_logic_vector(C_TX_AXIS_WIDTH*C_TX_AXIS_BEATS-1 downto 0);
   signal pvalid    : std_logic;
   signal pready    : std_logic;
 
+  -- status register
   signal status    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
+  -- UART channel mask extrated from parallel data:
   signal mask      : std_logic_vector(C_NUM_UART-1 downto 0);
+
+  -- per UART channel valid for the valid/ready handshake with each TX channel:
   signal ovalid    : std_logic_vector(C_NUM_UART-1 downto 0);
 
+  -- state of the TX buffer is either:
+  -- waiting on an AXI stream to finish, or
+  -- waiting on a TX to finish.
   type state_type is (WAIT_STREAM, WAIT_TX);
   signal state : state_type := WAIT_STREAM;
-
 
 begin
   ar0: axis_read port map (
@@ -171,4 +185,3 @@ begin
     end if;
   end process;
 end;
-
