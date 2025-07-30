@@ -12,14 +12,14 @@ modules-e:
 	ghdl -e global_status
 	ghdl -e global_unit
 testbenches:
-	ghdl -a -fsynopsys tb/global_registers_tb.vhd
+	ghdl -a -fsynopsys tb/global_registers_tb.vhd 
 	ghdl -e -fsynopsys global_registers_tb
 	ghdl -a -fsynopsys tb/global_status_tb.vhd
 	ghdl -e -fsynopsys global_status_tb
 	ghdl -a -fsynopsys tb/global_unit_tb.vhd
 	ghdl -e -fsynopsys global_unit_tb
 run-testbenches: all
-	ghdl -r -fsynopsys global_registers_tb --stop-time=150ns
+	ghdl -r -fsynopsys global_registers_tb --stop-time=180ns --vcd=../diagrams/global_registers_tb.vcd 
 	ghdl -r -fsynopsys global_status_tb --stop-time=150ns
 run-unit-testbench: all
 	ghdl -r -fsynopsys global_unit_tb --stop-time=150ns

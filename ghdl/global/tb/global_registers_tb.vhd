@@ -93,7 +93,7 @@ begin
   begin
     raddr   <= x"0000";
     rupdate <= '0';
-    wait for 1 ns;
+    wait for 10 ps;
     wait for 20 ns;
     raddr   <= x"F020";
     rupdate <= '1';
@@ -101,9 +101,15 @@ begin
     raddr   <= x"F024";
     rupdate <= '1';
     wait for 10 ns;
+    raddr   <= x"0000";
+    rupdate <= '0';
+    wait for 20 ns;
     raddr   <= x"F020";
     rupdate <= '1';
     wait for 10 ns;
+    raddr   <= x"0000";
+    rupdate <= '0';
+    wait for 20 ns;
     raddr   <= x"F024";
     rupdate <= '1';
     wait for 10 ns;
@@ -113,8 +119,14 @@ begin
     raddr   <= x"F014";
     rupdate <= '1';
     wait for 10 ns;
+    raddr   <= x"0000";
+    rupdate <= '0';
+    wait for 10 ns;
     raddr   <= x"F000";
     rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"0000";
+    rupdate <= '0';    
     wait for 10 ns;
     raddr   <= x"FF10";
     rupdate <= '1';
@@ -136,15 +148,20 @@ begin
 
   write_process : process
   begin
+    wait for 10 ps;
     waddr   <= x"0000";
     wdata   <= x"00000000";
     wupdate <= '0';
-    wait for 1 ns;
+    wait for 0 ns;
     wait for 20 ns;
     waddr   <= x"F020";
     wdata   <= x"AAAAAAAA";
     wupdate <= '1';
     wait for 10 ns;
+    waddr   <= x"0000";
+    wdata   <= x"00000000";
+    wupdate <= '0';
+    wait for 20 ns;
     waddr   <= x"F024";
     wdata   <= x"BBBBBBBB";
     wupdate <= '1';
@@ -167,7 +184,7 @@ begin
   show_output_process : process
   begin
     show_output<='1';
-    wait until (count=15);
+    wait until (count=18);
     wait for 10 ns;
     show_output<='0';
     wait;
@@ -219,12 +236,15 @@ begin
     write(l, String'("INFO:    Resetting:"));
     writeline(output, l);
     wait until (count=3);
+    wait for 1 ns;
     write(l, String'("INFO:    Reading and Writing Scratch A,B,Enables, and LED Config:"));
     writeline(output, l);
-    wait until (count=9);
+    wait until (count=12);
+    wait for 1 ns;
     write(l, String'("INFO:    Reading Status, with status input set to test pattern 0x0000ABCD"));
     writeline(output, l);
-    wait until (count=10);
+    wait until (count=14);
+    wait for 1 ns;
     write(l, String'("INFO:    Reading Firmware Version: (Major, Minor, Build, HW)"));
     writeline(output, l);
     wait;
