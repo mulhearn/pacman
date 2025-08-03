@@ -14,7 +14,7 @@ use work.common.all;
 entity rx_chan is
   generic (
     constant CHANNEL : integer := 1;
-    constant HEADER  : integer := 16#44#
+    constant HEADER  : integer := C_TYPE_DATA
   );
   port (
     ACLK          : in  std_logic;
@@ -116,6 +116,7 @@ begin
         end if;
       else
         DATA_O <= (others => '0');
+        valid  <= '0';
       end if;
     end if;
   end process;

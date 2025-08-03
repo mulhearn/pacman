@@ -2,15 +2,24 @@
 #include "global.h"
 
 void read_global_status(){
-  printf("fw major----------- %d   \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_FW_MAJOR));
-  printf("fw minor----------- %d   \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_FW_MINOR));
-  printf("fw build----------- 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_FW_BUILD));
-  printf("hw code------------ 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_HW_CODE));
-  printf("scratch a---------- 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRA));
-  printf("scratch b---------- 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRB));
-  printf("enables------------ 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_ENABLES));
-  printf("leds--------------- 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_LEDS));
-  printf("status------------- 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_STATUS));
+  printf("firmware major----------- %d   \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_FIRMWARE_MAJOR));
+  printf("firmware minor----------- %d   \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_FIRMWARE_MINOR));
+  printf("firmware letter---------- 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_FIRMWARE_LETTER));
+  printf("hardware major----------- %d   \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_HARDWARE_MAJOR));
+  printf("hardware minor----------- %d   \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_HARDWARE_MINOR));
+  printf("hardware letter---------- 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_HARDWARE_LETTER));
+  printf("scratch a---------------- 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRATCH_A));
+  printf("scratch b---------------- 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRATCH_B));
+  printf("enables------------------ 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_ENABLES));
+  printf("leds--------------------- 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_LEDS));
+  printf("status------------------- 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_STATUS));
+  printf("synthesis date----------- %d   \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SYNTHESIS_DATE));
+  printf("vivado version----------- %d.%d \r\n",
+	 axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_VIVADO_MAJOR),
+	 axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_VIVADO_MINOR));
+  printf("git hash----------------- %d %d \r\n",
+	 axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_GIT_HASH_UPPER),
+	 axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_GIT_HASH_LOWER));
 }
 
 void toggle_global_scratch(){
@@ -31,8 +40,8 @@ void toggle_global_scratch(){
       scrb = 0x0;
   }
   printf("INFO: setting scratch a to 0x%08x and scratch b to 0x%08x \r\n", scra, scrb);
-  axil_write_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRA, scra);
-  axil_write_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRB, scrb);
+  axil_write_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRATCH_A, scra);
+  axil_write_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRATCH_B, scrb);
 }
 
 void toggle_global_enables(){
@@ -42,8 +51,3 @@ void toggle_global_enables(){
   printf("INFO: setting enables to 0x%08x \r\n", enables[mode]);
   axil_write_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_ENABLES, enables[mode]);
 }
-
-
-
-
-

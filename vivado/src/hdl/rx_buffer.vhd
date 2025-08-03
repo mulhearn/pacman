@@ -40,7 +40,8 @@ use work.common.all;
 
 entity rx_buffer is
   generic(
-    constant C_TURN_MAX : integer := C_RX_TURN_MAX
+    constant TURN_MAX    : integer := C_RX_TURN_MAX;
+    constant EOP : integer := C_TYPE_EOP
   );
   port (
     -- clock and reset:
@@ -73,7 +74,7 @@ entity rx_buffer is
     DEBUG_DATA_O       : out std_logic_vector(C_RX_DATA_WIDTH-1 downto 0)
   );
 begin
-  assert(C_TURN_MAX >= C_RX_NUM_CHAN) severity failure;
+  assert(TURN_MAX >= C_RX_NUM_CHAN) severity failure;
 end;
 
 
@@ -117,7 +118,7 @@ architecture behavioral of rx_buffer is
 
   signal status    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
 
-  signal turn      : integer range 0 to C_TURN_MAX-1 := 0;
+  signal turn      : integer range 0 to TURN_MAX-1 := 0;
 
   type state_t is (IDLE, STREAM, SEND_LAST);
   signal state : state_t := IDLE;
@@ -161,11 +162,9 @@ begin
     if (rst='1') then
       turn <= 0;
     elsif (rising_edge(clk)) then
-      turn <= (turn + 1) mod C_TURN_MAX;
+      turn <= (turn + 1) mod TURN_MAX;
     end if;
   end process;
-
-
 
   -- STATE MACHINE
   process(clk,rst)
@@ -217,6 +216,7 @@ begin
         if ((turn=50) and (busy = '0')) then
           data  <= (others=>'0');
           data(95 downto 64)  <= std_logic_vector(to_unsigned(sent, 32));
+          data(7 downto 0)  <= std_logic_vector(to_unsigned(EOP, C_BYTE));
           wen   <= '1';
           last <= '1';
           valid_seen := '0';

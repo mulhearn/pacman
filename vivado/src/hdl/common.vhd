@@ -38,7 +38,6 @@ package common is
   constant C_RX_TURN_MAX       : integer  := 64;
   constant C_RX_BEAT_MAX       : integer  := 32;
 
-
   --arrays of std_logic_vectors with array length the number of tiles:
   type ATC_array              is array (0 to C_NUM_TILE-1) of std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
@@ -52,16 +51,20 @@ package common is
   type uart_counter_array_t is array (0 to C_NUM_UART-1) of integer range 0 to C_COUNT_MAX;
 
   -- default TX / RX config register (can be set per UART channel)
-  constant C_DEFAULT_CONFIG_TX : integer := 16#00001602#;
-  constant C_DEFAULT_CONFIG_RX : integer := 16#00001002#;
+  constant C_DEFAULT_TX_UART_CONFIG : integer := 16#00001602#;
+  constant C_DEFAULT_RX_UART_CONFIG : integer := 16#00001002#;
 
   -- default TX / RX global config register (one global setting)
-  constant C_DEFAULT_GCONFIG_TX : integer := 16#00000000#;
-  constant C_DEFAULT_GCONFIG_RX : integer := 16#00000000#;
+  constant C_DEFAULT_TX_BUFFER_CONFIG : integer := 16#00000000#;
+  constant C_DEFAULT_RX_BUFFER_CONFIG : integer := 16#00000000#;
 
-  constant C_DEFAULT_HEARTBEAT_CYCLES : integer := 16#3b9aca00#;
-  constant C_DEFAULT_SYNC_CYCLES      : integer := 16#1#;
+  constant C_DEFAULT_HEARTBEAT_CONFIG : integer := 16#3b9aca00#;
+  constant C_DEFAULT_ROLLOVER_CONFIG  : integer := 16#1#;
 
   constant C_BYTE            : integer  := 8;
+
+  constant C_TYPE_DATA       : integer  := 16#44#; -- ASCII D
+  constant C_TYPE_EOP        : integer  := 16#45#; -- end of packet, ASCII E
+
 
 end package common;

@@ -35,10 +35,6 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
   create_fileset -srcset sources_1
 }
 
-# Example IP generation but not needed in current design
-# Create the txfifo IP:
-#source $origin_dir/tcl/txfifo.tcl
-
 # Create the txfifo IP:
 source $origin_dir/tcl/regbus.tcl
 
@@ -58,7 +54,14 @@ set files {}
 foreach file [glob src/hdl/*.vhd src/hdl/demos/*.vhd] {lappend files [file normalize $file]}
 puts "HDL files:  $files"
 add_files -norecurse -fileset sources_1 $files
+
+source $origin_dir/tcl/version_info.tcl
+add_files -fileset sources_1 gen/hdl/version_info_pkg.vhd
+
 #update_compile_order -fileset sources_1
+
+
+
 
 # Set 'sources_1' fileset properties
 set obj [get_filesets sources_1]
