@@ -27,7 +27,7 @@ tdata_t, tdata_va, tdata_vb, tdata_lt, tdata_lv = td.get_time_series_bus(vcd, "t
 ovalid_t, ovalid_va, ovalid_vb, ovalid_lt, ovalid_lv = td.get_time_series_bus(vcd, "tx_buffer_tb.ovalid[39:0]", TSTART, TFINISH, 1)
 oready_t, oready_va, oready_vb, oready_lt, oready_lv = td.get_time_series_bus(vcd, "tx_buffer_tb.oready[39:0]", TSTART, TFINISH, 1)
 
-plt.figure(figsize=(12,8))
+plt.figure(figsize=(10,8))
 plt.plot(aclk_t, aclk_v+18, "k-")
 plt.plot(tvalid_t, tvalid_v+16, "k-")
 plt.plot(tlast_t,  tlast_v+14,   "k-")
