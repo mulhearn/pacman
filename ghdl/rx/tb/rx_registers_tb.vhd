@@ -13,27 +13,27 @@ end rx_registers_tb;
 architecture behaviour of rx_registers_tb is
   component rx_registers is
     port (
-      ACLK	        : in std_logic;
-      ARESETN	        : in std_logic;
+      ACLK	           : in std_logic;
+      ARESETN	           : in std_logic;
 
-      S_REGBUS_RB_RADDR	     : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
-      S_REGBUS_RB_RDATA	     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      S_REGBUS_RB_RUPDATE    : in  std_logic;
-      S_REGBUS_RB_RACK       : out std_logic;
+      S_REGBUS_RB_RADDR	   : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
+      S_REGBUS_RB_RDATA	   : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      S_REGBUS_RB_RUPDATE  : in  std_logic;
+      S_REGBUS_RB_RACK     : out std_logic;
 
-      S_REGBUS_RB_WUPDATE    : in  std_logic;
-      S_REGBUS_RB_WADDR	     : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
-      S_REGBUS_RB_WDATA	     : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      S_REGBUS_RB_WACK       : out std_logic;
+      S_REGBUS_RB_WUPDATE  : in  std_logic;
+      S_REGBUS_RB_WADDR	   : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
+      S_REGBUS_RB_WDATA	   : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      S_REGBUS_RB_WACK     : out std_logic;
 
-      LOOK_I                 : in uart_rx_data_array_t;
-      STATUS_I               : in uart_reg_array_t;
-      CONFIG_O               : out uart_reg_array_t;
-      GCONFIG_O              : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      HEARTBEAT_CYCLES_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      SYNC_CYCLES_O          : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      GSTATUS_I              : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      FIFO_COUNT_I           : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+      UART_LOOK_I          : in uart_rx_data_array_t;
+      UART_STATUS_I        : in uart_reg_array_t;
+      UART_CONFIG_O        : out uart_reg_array_t;
+      BUFFER_CONFIG_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      HEARTBEAT_CONFIG_O   : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      ROLLOVER_CONFIG_O    : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      BUFFER_STATUS_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      FIFO_COUNT_I         : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
     );
   end component;
 
@@ -59,8 +59,8 @@ architecture behaviour of rx_registers_tb is
   signal show_output : std_logic := '0';
 begin
   uut0: rx_registers port map (
-    ACLK           => aclk,
-    ARESETN        => aresetn,
+    ACLK                => aclk,
+    ARESETN             => aresetn,
     S_REGBUS_RB_RUPDATE => rupdate,
     S_REGBUS_RB_RADDR   => raddr,
     S_REGBUS_RB_RDATA   => rdata,
@@ -69,12 +69,12 @@ begin
     S_REGBUS_RB_WADDR   => waddr,
     S_REGBUS_RB_WDATA   => wdata,
     S_REGBUS_RB_WACK    => wack,
-    LOOK_I    => (others => x"DDDDDDDDCCCCCCCCBBBBBBBBAAAAAAAA"),
-    STATUS_I  => (others => x"0000ABFF"),
-    CONFIG_O  => config,
-    GCONFIG_O  => gconfig,
-    GSTATUS_I => x"AAAABBBB",
-    FIFO_COUNT_I => fifo_count
+    UART_LOOK_I         => (others => x"DDDDDDDDCCCCCCCCBBBBBBBBAAAAAAAA"),
+    UART_STATUS_I       => (others => x"0000ABFF"),
+    UART_CONFIG_O       => config,
+    BUFFER_CONFIG_O     => gconfig,
+    BUFFER_STATUS_I     => x"AAAABBBB",
+    FIFO_COUNT_I        => fifo_count
   );
 
   aresetn_process : process

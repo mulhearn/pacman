@@ -35,13 +35,13 @@ entity tx_registers is
     S_REGBUS_RB_WACK    : out std_logic;
 
     -- look buffer contains the most recent TX for each UART
-    LOOK_I              : in uart_tx_data_array_t;
+    UART_LOOK_I              : in uart_tx_data_array_t;
     -- status register from each UART TX channel
-    STATUS_I            : in uart_reg_array_t;
+    UART_STATUS_I            : in uart_reg_array_t;
     -- configuration register for each UART TX channel
-    CONFIG_O            : out uart_reg_array_t;
+    UART_CONFIG_O            : out uart_reg_array_t;
     -- global status reported from the TX buffer
-    GSTATUS_I    	: in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+    BUFFER_STATUS_I    	: in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
     );
 end;
 
@@ -72,6 +72,9 @@ architecture behavioral of tx_registers is
   signal zero_counters : std_logic := '0';
   -- count of TX starts:
   signal starts   : uart_reg_array_t := (others => (others => '0'));
+  -- count of TX starts:
+  signal beats    : uart_reg_array_t := (others => (others => '0'));
+
 
 begin
   -- connect signals to inputs and outputs:
@@ -95,14 +98,14 @@ begin
       status     <= (others => (others => '0'));
       gstatus    <= (others => '0');
     elsif (rising_edge(clk)) then
-      look       <= LOOK_I;
-      status     <= STATUS_I;
-      gstatus    <= GSTATUS_I;
+      look       <= UART_LOOK_I;
+      status     <= UART_STATUS_I;
+      gstatus    <= BUFFER_STATUS_I;
     end if;
   end process;
 
   -- set output registers:
-  CONFIG_O  <= config;
+  UART_CONFIG_O  <= config;
 
   -- Handle Read Request:
   -- 1) Read request are indicated via rupdate=1 with a valid address
@@ -131,33 +134,36 @@ begin
           chan  := to_integer(unsigned(raddr(13 downto 8)));
           reg   := to_integer(unsigned(raddr(7 downto 0)));
           rdata <= x"00000000";
-          if (scope=C_SCOPE_UART_TX) then
+          if (scope=C_SCOPE_UPPER_TX) then
             rdata <= x"EEEEEEEE";
             rack  <= '0';
             -- UART channel registers:
             if (chan < C_NUM_UART) then
-              if (reg=C_ADDR_TX_STATUS) then
+              if (reg=C_ADDR_TX_UART_STATUS) then
                 rdata <= status(chan);
                 rack  <= '1';
-              elsif (reg=C_ADDR_TX_CONFIG) then
+              elsif (reg=C_ADDR_TX_UART_CONFIG) then
                 rdata <= config(chan);
                 rack  <= '1';
-              elsif (reg=C_ADDR_TX_LOOK_C) then
+              elsif (reg=C_ADDR_TX_UART_LOOK_C) then
                 rdata <= look(chan)(31 downto 0);
                 rack  <= '1';
-              elsif (reg=C_ADDR_TX_LOOK_D) then
+              elsif (reg=C_ADDR_TX_UART_LOOK_D) then
                 rdata <= look(chan)(63 downto 32);
                 rack  <= '1';
-              elsif (reg=C_ADDR_TX_NCHAN) then
+              elsif (reg=C_ADDR_TX_UART_CHAN) then
                 rdata <= std_logic_vector(to_unsigned(chan, rdata'length));
                 rack  <= '1';
-              elsif (reg=C_ADDR_TX_STARTS) then
+              elsif (reg=C_ADDR_TX_UART_STARTS) then
                 rdata <= starts(chan);
+                rack  <= '1';
+              elsif (reg=C_ADDR_TX_UART_BEATS) then
+                rdata <= beats(chan);
                 rack  <= '1';
               end if;
             -- global (to TX) registers:
             elsif (chan = 16#3F#) then
-              if (reg=C_ADDR_TX_GSTATUS) then
+              if (reg=C_ADDR_TX_BUFFER_STATUS) then
                 rdata <= gstatus;
                 rack  <= '1';
               end if;
@@ -187,7 +193,7 @@ begin
   begin
     if (rst = '1') then
       wack  <= '0';
-      config            <= (others => std_logic_vector(to_unsigned(C_DEFAULT_CONFIG_TX, C_RB_DATA_WIDTH)));
+      config            <= (others => std_logic_vector(to_unsigned(C_DEFAULT_TX_UART_CONFIG, C_RB_DATA_WIDTH)));
       zero_counters <= '0';
     else
       if (rising_edge(clk)) then
@@ -198,15 +204,15 @@ begin
           chan  := to_integer(unsigned(waddr(13 downto 8)));
           reg   := to_integer(unsigned(waddr(7 downto 0)));
           -- UART channel registers:
-          if ((scope=C_SCOPE_UART_TX) and (chan < C_NUM_UART)) then
-            if (reg=C_ADDR_TX_CONFIG) then
+          if ((scope=C_SCOPE_UPPER_TX) and (chan < C_NUM_UART)) then
+            if (reg=C_ADDR_TX_UART_CONFIG) then
               config(chan) <= wdata;
               wack  <= '1';
             end if;
           end if;
           -- broadcast: write to all uart channels:
           if ((scope=0) and (chan = 16#3B#)) then
-            if (reg=C_ADDR_TX_CONFIG) then
+            if (reg=C_ADDR_TX_UART_CONFIG) then
               for i in 0 to C_NUM_UART-1 loop
                 config(i) <= wdata;
               end loop;
@@ -229,23 +235,30 @@ begin
   process(clk, rst)
     type uart_int_array_t is array (0 to C_NUM_UART-1) of integer range 0 to 16#FFFFFF#;
     variable istarts : uart_int_array_t := (others => 0);
+    variable ibeats  : uart_int_array_t := (others => 0);
   begin
     if (rst = '1') then
       istarts := (others => 0);
+      ibeats := (others => 0);
     else
       if (rising_edge(clk)) then
         for i in 0 to C_NUM_UART-1 loop
           if (zero_counters = '1') then
             istarts(i) := 0;
-          elsif (status(i)(3) = '1') then
-            istarts(i) := (istarts(i) + 1) mod 16#FFFFFF#;
+            ibeats(i) := 0;
+          else
+            if (status(i)(3) = '1') then
+              istarts(i) := (istarts(i) + 1) mod 16#FFFFFF#;
+            end if;
+            if ((status(i)(1) = '1') and (status(i)(2) = '1')) then
+              ibeats(i) := (ibeats(i) + 1) mod 16#FFFFFF#;
+            end if;
           end if;
           starts(i) <= std_logic_vector(to_unsigned(istarts(i),starts(i)'length));
+          beats(i) <= std_logic_vector(to_unsigned(ibeats(i),beats(i)'length));
         end loop;
       end if;
     end if;
   end process;
-
-
 end;
 

@@ -4,6 +4,7 @@ modules-a:
 	ghdl -a ../integration/version.vhd
 	ghdl -a ../integration/common.vhd
 	ghdl -a ../integration/register_map.vhd
+	ghdl -a ../integration/gen/version_info_pkg.vhd
 	ghdl -a global_registers.vhd
 	ghdl -a global_status.vhd
 	ghdl -a global_unit.vhd
@@ -19,7 +20,7 @@ testbenches:
 	ghdl -a -fsynopsys tb/global_unit_tb.vhd
 	ghdl -e -fsynopsys global_unit_tb
 run-testbenches: all
-	ghdl -r -fsynopsys global_registers_tb --stop-time=180ns --vcd=../diagrams/global_registers_tb.vcd 
+	ghdl -r -fsynopsys global_registers_tb --stop-time=220ns --vcd=../diagrams/global_registers_tb.vcd 
 	ghdl -r -fsynopsys global_status_tb --stop-time=150ns
 run-unit-testbench: all
 	ghdl -r -fsynopsys global_unit_tb --stop-time=150ns

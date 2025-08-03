@@ -26,11 +26,11 @@ architecture behaviour of tx_registers_tb is
       S_REGBUS_RB_WDATA	     : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_WACK       : out std_logic;
 
-      LOOK_I                 : in uart_tx_data_array_t;
-      STATUS_I               : in uart_reg_array_t;
-      CONFIG_O               : out uart_reg_array_t;
+      UART_LOOK_I                 : in uart_tx_data_array_t;
+      UART_STATUS_I               : in uart_reg_array_t;
+      UART_CONFIG_O               : out uart_reg_array_t;
 
-      GSTATUS_I    	     : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+      BUFFER_STATUS_I    	  : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
     );
   end component;
 
@@ -62,10 +62,10 @@ begin
     S_REGBUS_RB_WADDR   => waddr,
     S_REGBUS_RB_WDATA   => wdata,
     S_REGBUS_RB_WACK    => wack,
-    LOOK_I  => (others => x"DDDDDDDDCCCCCCCC"),
-    STATUS_I  => (others => x"1234ABCD"),
-    GSTATUS_I  => x"AABBCCDD",
-    CONFIG_O  => config
+    UART_LOOK_I  => (others => x"DDDDDDDDCCCCCCCC"),
+    UART_STATUS_I  => (others => x"1234ABCD"),
+    BUFFER_STATUS_I  => x"AABBCCDD",
+    UART_CONFIG_O  => config
   );
 
   aresetn_process : process

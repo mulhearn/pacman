@@ -3,6 +3,7 @@ all: modules-a modules-e testbenches
 modules-a:
 	ghdl -a common.vhd
 	ghdl -a register_map.vhd
+	ghdl -a gen/version_info_pkg.vhd
 	ghdl -a ../tx/uart_tx.vhd
 	ghdl -a ../rx/uart_rx.vhd
 modules-e:

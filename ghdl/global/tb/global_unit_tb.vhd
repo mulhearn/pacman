@@ -104,6 +104,9 @@ begin
     raddr   <= x"F024";
     rupdate <= '1';
     wait for 10 ns;
+    raddr   <= x"0000";
+    rupdate <= '0';
+    wait for 10 ns;
     raddr   <= x"FF10";
     rupdate <= '1';
     wait for 10 ns;
@@ -111,9 +114,6 @@ begin
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"FF18";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"FF1C";
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"0000";
@@ -210,8 +210,8 @@ begin
     writeline(output, l);
     write(l, String'("INFO:  Check that analog power enable (ae), tile enables (te), and LEDs (leds) turn on as expected"));
     writeline(output, l);
-    wait until (count=7);
-    write(l, String'("INFO:  Check RO registers: Status, and Firmware version (Major, Minor, Build, HW)"));
+    wait until (count=8);
+    write(l, String'("INFO:  Check RO registers: Status, and Firmware version (Major, Minor, Build)"));
     writeline(output, l);
     wait;
   end process;

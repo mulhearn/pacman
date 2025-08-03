@@ -5,6 +5,7 @@ library work;
 use work.version.all;
 use work.common.all;
 use work.register_map.all;
+use work.version_info_pkg.all;
 
 --
 -- global_registers:  this modules handles reading and writing the global
@@ -117,23 +118,44 @@ begin
           elsif (reg=C_ADDR_GLOBAL_LEDS) then
             rdata <= led_config;
             rack  <= '1';
-          elsif (reg=C_ADDR_GLOBAL_SCRA) then
+          elsif (reg=C_ADDR_GLOBAL_SCRATCH_A) then
             rdata <= scratch_a;
             rack  <= '1';
-          elsif (reg=C_ADDR_GLOBAL_SCRB) then
+          elsif (reg=C_ADDR_GLOBAL_SCRATCH_B) then
             rdata <= scratch_b;
             rack  <= '1';
-          elsif (reg=C_ADDR_GLOBAL_FW_MAJOR) then
-            rdata <= std_logic_vector(to_unsigned(C_FW_MAJOR,rdata'length));
+          elsif (reg=C_ADDR_GLOBAL_FIRMWARE_MAJOR) then
+            rdata <= std_logic_vector(to_unsigned(C_FIRMWARE_MAJOR,rdata'length));
             rack  <= '1';
-          elsif (reg=C_ADDR_GLOBAL_FW_MINOR) then
-            rdata <= std_logic_vector(to_unsigned(C_FW_MINOR,rdata'length));
+          elsif (reg=C_ADDR_GLOBAL_FIRMWARE_MINOR) then
+            rdata <= std_logic_vector(to_unsigned(C_FIRMWARE_MINOR,rdata'length));
             rack  <= '1';
-          elsif (reg=C_ADDR_GLOBAL_FW_BUILD) then
-            rdata <= std_logic_vector(to_unsigned(C_FW_BUILD,rdata'length));
+          elsif (reg=C_ADDR_GLOBAL_FIRMWARE_LETTER) then
+            rdata <= std_logic_vector(to_unsigned(C_FIRMWARE_LETTER,rdata'length));
             rack  <= '1';
-          elsif (reg=C_ADDR_GLOBAL_HW_CODE) then
-            rdata <= std_logic_vector(to_unsigned(C_HW_CODE,rdata'length));
+          elsif (reg=C_ADDR_GLOBAL_HARDWARE_MAJOR) then
+            rdata <= std_logic_vector(to_unsigned(C_HARDWARE_MAJOR,rdata'length));
+            rack  <= '1';
+          elsif (reg=C_ADDR_GLOBAL_HARDWARE_MINOR) then
+            rdata <= std_logic_vector(to_unsigned(C_HARDWARE_MINOR,rdata'length));
+            rack  <= '1';
+          elsif (reg=C_ADDR_GLOBAL_HARDWARE_LETTER) then
+            rdata <= std_logic_vector(to_unsigned(C_HARDWARE_LETTER,rdata'length));
+            rack  <= '1';
+          elsif (reg=C_ADDR_GLOBAL_SYNTHESIS_DATE) then
+            rdata <= std_logic_vector(to_unsigned(C_SYNTHESIS_DATE,rdata'length));
+            rack  <= '1';
+          elsif (reg=C_ADDR_GLOBAL_GIT_HASH_UPPER) then
+            rdata <= std_logic_vector(to_unsigned(C_GIT_HASH_UPPER,rdata'length));
+            rack  <= '1';
+          elsif (reg=C_ADDR_GLOBAL_GIT_HASH_LOWER) then
+            rdata <= std_logic_vector(to_unsigned(C_GIT_HASH_LOWER,rdata'length));
+            rack  <= '1';
+          elsif (reg=C_ADDR_GLOBAL_VIVADO_MAJOR) then
+            rdata <= std_logic_vector(to_unsigned(C_VIVADO_MAJOR,rdata'length));
+            rack  <= '1';
+          elsif (reg=C_ADDR_GLOBAL_VIVADO_MINOR) then
+            rdata <= std_logic_vector(to_unsigned(C_VIVADO_MINOR,rdata'length));
             rack  <= '1';
           end if;
         end if;
@@ -172,10 +194,10 @@ begin
           elsif (reg=C_ADDR_GLOBAL_LEDS) then
             led_config <= wdata;
             wack  <= '1';
-          elsif (reg=C_ADDR_GLOBAL_SCRA) then
+          elsif (reg=C_ADDR_GLOBAL_SCRATCH_A) then
             scratch_a <= wdata;
             wack  <= '1';
-          elsif (reg=C_ADDR_GLOBAL_SCRB) then
+          elsif (reg=C_ADDR_GLOBAL_SCRATCH_B) then
             scratch_b <= wdata;
             wack  <= '1';
           end if;

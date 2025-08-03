@@ -126,7 +126,7 @@ begin
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"0000";
-    rupdate <= '0';    
+    rupdate <= '0';
     wait for 10 ns;
     raddr   <= x"FF10";
     rupdate <= '1';
@@ -137,7 +137,13 @@ begin
     raddr   <= x"FF18";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"FF1C";
+    raddr   <= x"FF20";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"FF24";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"FF28";
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"0000";
@@ -184,7 +190,7 @@ begin
   show_output_process : process
   begin
     show_output<='1';
-    wait until (count=18);
+    wait until (count=22);
     wait for 10 ns;
     show_output<='0';
     wait;
@@ -239,13 +245,13 @@ begin
     wait for 1 ns;
     write(l, String'("INFO:    Reading and Writing Scratch A,B,Enables, and LED Config:"));
     writeline(output, l);
-    wait until (count=12);
+    wait until (count=14);
     wait for 1 ns;
     write(l, String'("INFO:    Reading Status, with status input set to test pattern 0x0000ABCD"));
     writeline(output, l);
-    wait until (count=14);
+    wait until (count=16);
     wait for 1 ns;
-    write(l, String'("INFO:    Reading Firmware Version: (Major, Minor, Build, HW)"));
+    write(l, String'("INFO:    Reading Firmware and Hardware Versions: (Major, Minor, Build)"));
     writeline(output, l);
     wait;
   end process;

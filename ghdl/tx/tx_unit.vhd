@@ -93,10 +93,10 @@ architecture behaviour of tx_unit is
       S_REGBUS_RB_WDATA	     : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_WACK       : out std_logic;
 
-      LOOK_I                 : in uart_tx_data_array_t;
-      STATUS_I               : in uart_reg_array_t;
-      GSTATUS_I    	     : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      CONFIG_O               : out uart_reg_array_t
+      UART_LOOK_I            : in uart_tx_data_array_t;
+      UART_STATUS_I          : in uart_reg_array_t;
+      BUFFER_STATUS_I        : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      UART_CONFIG_O          : out uart_reg_array_t
       );
   end component;
 
@@ -142,10 +142,10 @@ begin
     S_REGBUS_RB_WADDR   => S_REGBUS_RB_WADDR,
     S_REGBUS_RB_WDATA   => S_REGBUS_RB_WDATA,
     S_REGBUS_RB_WACK    => S_REGBUS_RB_WACK,
-    LOOK_I  => data,
-    STATUS_I  => status,
-    GSTATUS_I => gstatus,
-    CONFIG_O  => config
+    UART_LOOK_I  => data,
+    UART_STATUS_I  => status,
+    BUFFER_STATUS_I => gstatus,
+    UART_CONFIG_O  => config
   );
 
   -- generate C_NUM_UART instances of tx_chan and connect to appropriate signals.
