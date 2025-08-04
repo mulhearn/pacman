@@ -1,7 +1,48 @@
 #include "hw_access.h"
 #include "global.h"
+#include <stdint.h>
+#include <time.h>
+
+void get_synthesis_date_string(char * buffer, size_t buffer_size){
+  hw_val_t synth_date = axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SYNTHESIS_DATE);
+  time_t raw_time = (time_t) synth_date;
+  struct tm *utc_time = gmtime(&raw_time);
+
+  if (buffer_size > 0) {
+    if (utc_time) {
+      strftime(buffer, buffer_size, "%Y-%m-%d %H:%M:%S UTC", utc_time);
+    } else {
+      buffer[0] = '\0';  // Set empty string on failure
+    }
+  }
+}
+
+void get_git_hash_string(char * buffer, size_t buffer_size){
+  hw_val_t hash[2];
+  hash[0] = axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_GIT_HASH_UPPER);
+  hash[1] = axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_GIT_HASH_LOWER);
+
+  if (buffer_size >= 8) {  // 7 chars + null terminator
+    for (int i = 0; i < 7; ++i) {
+      int word_index = i / 4;
+      int byte_shift = 24 - 8 * (i % 4);
+      buffer[i] = (char)((hash[word_index] >> byte_shift) & 0xFF);
+    }
+    buffer[7] = '\0';
+  } else if (buffer_size > 0) {
+    buffer[0] = '\0';
+  }
+}
+
+
 
 void read_global_status(){
+  char synthesis_date_str[32];
+  char git_hash_str[32];
+
+  get_synthesis_date_string(synthesis_date_str, sizeof(synthesis_date_str));
+  get_git_hash_string(git_hash_str, sizeof(git_hash_str));
+
   printf("firmware major----------- %d   \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_FIRMWARE_MAJOR));
   printf("firmware minor----------- %d   \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_FIRMWARE_MINOR));
   printf("firmware letter---------- 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_FIRMWARE_LETTER));
@@ -13,13 +54,11 @@ void read_global_status(){
   printf("enables------------------ 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_ENABLES));
   printf("leds--------------------- 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_LEDS));
   printf("status------------------- 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_STATUS));
-  printf("synthesis date----------- %d   \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SYNTHESIS_DATE));
+  printf("synthesis date----------- %s   \r\n", synthesis_date_str);
+  printf("git hash----------------- %s   \r\n", git_hash_str);
   printf("vivado version----------- %d.%d \r\n",
 	 axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_VIVADO_MAJOR),
 	 axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_VIVADO_MINOR));
-  printf("git hash----------------- %d %d \r\n",
-	 axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_GIT_HASH_UPPER),
-	 axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_GIT_HASH_LOWER));
 }
 
 void toggle_global_scratch(){

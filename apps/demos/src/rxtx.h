@@ -36,7 +36,8 @@ extern "C" {
 #define C_ADDR_TX_UART_LOOK_C   0x18
 #define C_ADDR_TX_UART_LOOK_D   0x1C
 #define C_ADDR_TX_UART_STARTS   0x20
-#define C_ADDR_TX_UART_NCHAN    0x50
+#define C_ADDR_TX_UART_BEATS    0x24
+#define C_ADDR_TX_UART_CHAN     0x50
 #define C_ADDR_TX_BUFFER_STATUS 0xA0
 #define C_ADDR_TX_ZERO_CNTS     0xA8
 

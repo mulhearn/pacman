@@ -22,6 +22,9 @@
 #define C_ADDR_GLOBAL_VIVADO_MAJOR    0xF50
 #define C_ADDR_GLOBAL_VIVADO_MINOR    0xF54
 
+void get_synthesis_date_string(char * buffer, size_t buffer_size);
+void get_git_hash_string(char * buffer, size_t buffer_size);
+
 void read_global_status();
 void toggle_global_scratch();
 void toggle_global_enables();

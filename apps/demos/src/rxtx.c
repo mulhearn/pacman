@@ -300,8 +300,9 @@ void read_tx_status(void){
     unsigned status = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_UART_STATUS);
     unsigned config = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_UART_CONFIG);
     unsigned starts = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_UART_STARTS);
-    unsigned nchan  = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_UART_NCHAN);
-    printf("%2d:  chan: %2d config: 0x%08x status: 0x%08x starts: %d\r\n",i, nchan, config, status, starts);
+    unsigned beats = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_UART_BEATS);
+    unsigned nchan  = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_UART_CHAN);
+    printf("%2d:  chan: %2d config: 0x%08x status: 0x%08x starts: %d beats: %d\r\n",i, nchan, config, status, starts, beats);
   }
   printf("rx buffer status----------- 0x%x    \r\n", axil_read_register(SCOPE_TX+0x3F00+C_ADDR_TX_BUFFER_STATUS));
 }
