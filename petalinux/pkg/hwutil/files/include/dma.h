@@ -240,8 +240,15 @@ void dma_show_transferred_ring (hw_addr_t bd_addr, int ncol, int max_words);
 
 // Batch TX/RX support:
 
-void dma_init_batch_tx_tail(hw_addr_t bd_addr);
-void dma_init_batch_rx_tail(hw_addr_t bd_addr);
+// Note: this sets the HW address where the tail HW address will be stored (pointer to pointer)
+void dma_init_batch_tx_taildesc(hw_addr_t addr);
+void dma_init_batch_rx_taildesc(hw_addr_t addr);
+
+void dma_write_batch_tx_taildesc(hw_addr_t bd_addr);
+void dma_write_batch_rx_taildesc(hw_addr_t bd_addr);
+
+hw_addr_t dma_read_batch_tx_taildesc();
+hw_addr_t dma_read_batch_rx_taildesc();
 
 unsigned dma_next_available_tx_bd(hw_addr_t * bd_addr);
 unsigned dma_next_available_rx_bd(hw_addr_t * bd_addr);

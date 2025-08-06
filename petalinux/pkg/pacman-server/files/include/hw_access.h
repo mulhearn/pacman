@@ -11,7 +11,7 @@ extern "C" {
 
 //
 // Platform-dependent (Linux or Bare-Metal) access to the hardware.
-// *** This is the header for Linux applications ***
+// *** This is the header for bare-metal applications ***
 //
 // This interface is implemented separately for Bare-Metal and Linux
 // application.  Code written to this interface should compile and run
@@ -93,7 +93,6 @@ hw_ptr_t dma_ptr(hw_addr_t addr);
 void start_hw_timer();
 void stop_hw_timer();
 unsigned hw_timer_elapsed_us();
-
 
 #ifdef __cplusplus
 }

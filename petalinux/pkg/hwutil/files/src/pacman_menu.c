@@ -30,20 +30,16 @@ void blink_leds(){
 // *** GLOBAL UNIT ***
 
 void read_global_registers(){
-  printf("fw major----------- %d   \n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_FW_MAJOR));
-  printf("fw minor----------- %d   \n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_FW_MINOR));
-  printf("fw build----------- 0x%x \n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_FW_BUILD));
-  printf("hw code------------ 0x%x \n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_HW_CODE));
-  printf("scratch a---------- 0x%x \n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRA));
-  printf("scratch b---------- 0x%x \n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRB));
+  printf("fw major----------- %d   \n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_FIRMWARE_MAJOR));
+  printf("fw minor----------- %d   \n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_FIRMWARE_MINOR));
+  printf("scratch a---------- 0x%x \n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRATCH_A));
+  printf("scratch b---------- 0x%x \n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRATCH_B));
   printf("\n");
   printf("enables------------ 0x%x \n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_ENABLES));
   printf("\n");
-  unsigned adc = axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_ADC_LOOK);
-  printf("adc look (deprecated) -- 0x%08x \n", adc);
 }
 
-void toggle_global_enables(){
+void toggle_global_enables_obsolete(){
   unsigned enables[] = {0x00000000, 0x00010000, 0x00010001,  0x000103FF, 0x001103FF};
   static int mode = 0;
   mode = (mode + 1) % 5;
@@ -51,7 +47,7 @@ void toggle_global_enables(){
   axil_write_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_ENABLES, enables[mode]);
 }
 
-void toggle_global_scratch(){
+void toggle_global_scratch_obsolete(){
   unsigned scra, scrb;
   static int mode = 0;
   mode = (mode + 1) % 3;
@@ -69,8 +65,8 @@ void toggle_global_scratch(){
       scrb = 0x0;
   }
   printf("INFO: setting scratch a to 0x%08x and scratch b to 0x%08x \n", scra, scrb);
-  axil_write_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRA, scra);
-  axil_write_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRB, scrb);
+  axil_write_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRATCH_A, scra);
+  axil_write_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRATCH_B, scrb);
 }
 
 // *** POWER UNIT ***

@@ -700,34 +700,59 @@ void dma_show_transferred_ring(hw_addr_t bd_addr, int ncol, int max_words){
   } while (cur_addr != bd_addr);
 }
 
+
+// show the current and tail BD HW addresses for TX/RX:
+void dma_show_tx_current_tail_addrs(){
+  printf("INFO:  TX current 0x%08X tail 0x%08X batch tail 0x%08X \r\n", dma_read_tx_curdesc(), dma_read_tx_taildesc(), dma_read_batch_tx_taildesc());
+}
+
+void dma_show_rx_current_tail_addrs(){
+  printf("INFO:  RX current 0x%08X tail 0x%08X batch tail 0x%08X \r\n", dma_read_rx_curdesc(), dma_read_rx_taildesc(), dma_read_batch_rx_taildesc());
+}
+
 //
 // Batch TX / RX:
 //
 
-static hw_addr_t G_BATCH_TX_TAIL = 0;
-static hw_addr_t G_BATCH_RX_TAIL = 0;
+static hw_addr_t G_BATCH_TX_TAILDESC_ADDR = 0;
+static hw_addr_t G_BATCH_RX_TAILDESC_ADDR = 0;
 
-// show the current and tail BD HW addresses for TX/RX:
-void dma_show_tx_current_tail_addrs(){
-  printf("INFO:  TX current 0x%08X tail 0x%08X batch tail 0x%08X \r\n", dma_read_tx_curdesc(), dma_read_tx_taildesc(), G_BATCH_TX_TAIL);
+void dma_init_batch_tx_taildesc(hw_addr_t addr){
+  printf("INFO:  setting address of TX batch tail field to 0x%08X \r\n", addr);
+  G_BATCH_TX_TAILDESC_ADDR = addr;
 }
 
-void dma_show_rx_current_tail_addrs(){
-  printf("INFO:  RX current 0x%08X tail 0x%08X batch tail 0x%08X \r\n", dma_read_rx_curdesc(), dma_read_rx_taildesc(), G_BATCH_RX_TAIL);
+void dma_init_batch_rx_taildesc(hw_addr_t addr){
+  printf("INFO:  setting address of RX batch tail field to 0x%08X \r\n", addr);
+  G_BATCH_RX_TAILDESC_ADDR = addr;
 }
 
-void dma_init_batch_tx_tail(hw_addr_t bd_addr){
-  printf("INFO:  setting TX batch tail to 0x%08X \r\n", bd_addr);
-  G_BATCH_TX_TAIL = bd_addr;
+void dma_write_batch_tx_taildesc(hw_addr_t bd_addr){
+  hw_ptr_t taildesc = dma_ptr(G_BATCH_TX_TAILDESC_ADDR);
+  *taildesc = (hw_val_t) bd_addr;
+  HW_FLUSH_DCACHE(taildesc, 4);
 }
 
-void dma_init_batch_rx_tail(hw_addr_t bd_addr){
-  printf("INFO:  setting RX batch tail to 0x%08X \r\n", bd_addr);
-  G_BATCH_RX_TAIL = bd_addr;
+void dma_write_batch_rx_taildesc(hw_addr_t bd_addr){
+  hw_ptr_t taildesc = dma_ptr(G_BATCH_RX_TAILDESC_ADDR);
+  *taildesc = (hw_val_t) bd_addr;
+  HW_FLUSH_DCACHE(taildesc, 4);
+}
+
+hw_addr_t dma_read_batch_tx_taildesc(){
+  hw_ptr_t taildesc = dma_ptr(G_BATCH_TX_TAILDESC_ADDR);
+  HW_INVALIDATE_DCACHE(taildesc, 4);
+  return *taildesc;
+}
+
+hw_addr_t dma_read_batch_rx_taildesc(){
+  hw_ptr_t taildesc = dma_ptr(G_BATCH_RX_TAILDESC_ADDR);
+  HW_INVALIDATE_DCACHE(taildesc, 4);
+  return *taildesc;
 }
 
 unsigned dma_next_available_tx_bd(hw_addr_t * bd_addr){
-  hw_addr_t nxta = dma_get_next_bd_addr(G_BATCH_TX_TAIL);
+  hw_addr_t nxta = dma_get_next_bd_addr(dma_read_batch_tx_taildesc());
   if (nxta == dma_read_tx_curdesc())
     return 0;
   if (! dma_poll_bd_complete(nxta))
@@ -737,7 +762,7 @@ unsigned dma_next_available_tx_bd(hw_addr_t * bd_addr){
 }
 
 unsigned dma_next_available_rx_bd(hw_addr_t * bd_addr){
-  hw_addr_t nxta = dma_get_next_bd_addr(G_BATCH_RX_TAIL);
+  hw_addr_t nxta = dma_get_next_bd_addr(dma_read_batch_rx_taildesc());
   if (nxta == dma_read_rx_curdesc())
     return 0;
   if (! dma_poll_bd_complete(nxta))
@@ -748,18 +773,18 @@ unsigned dma_next_available_rx_bd(hw_addr_t * bd_addr){
 
 void dma_add_tx_bd(hw_addr_t bd_addr){
   dma_clear_bd_status(bd_addr);
-  G_BATCH_TX_TAIL = bd_addr;
+  dma_write_batch_tx_taildesc(bd_addr);
 }
 
 void dma_add_rx_bd(hw_addr_t bd_addr){
   dma_clear_bd_status(bd_addr);
-  G_BATCH_RX_TAIL = bd_addr;
+  dma_write_batch_rx_taildesc(bd_addr);
 }
 
 void dma_tx_batch(){
-  dma_write_tx_taildesc(G_BATCH_TX_TAIL);
+  dma_write_tx_taildesc(dma_read_batch_tx_taildesc());
 }
 
 void dma_rx_batch(){
-  dma_write_rx_taildesc(G_BATCH_RX_TAIL);
+  dma_write_rx_taildesc(dma_read_batch_rx_taildesc());
 }
