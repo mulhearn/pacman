@@ -1,5 +1,5 @@
-#ifndef i2c_hh
-#define i2c_hh
+#ifndef __IIC_H__
+#define __IIC_H__
 
 //#include <linux/types.h>
 //#include <cstdint>
@@ -30,4 +30,4 @@ uint32_t i2c_mon_iddd(uint32_t chan);
 void i2c_set_muxa(uint32_t val);
 void i2c_set_muxb(uint32_t val);
 
-#endif
+#endif // __IIC_H__
