@@ -31,7 +31,7 @@ architecture behaviour of heartbeat_tb is
   signal aresetn   : std_logic;
   signal uclk      : std_logic;
   signal status    : std_logic_vector(31  downto 0);
-  signal data      : std_logic_vector(127 DOWNTO 0);
+  signal data      : std_logic_vector(255 DOWNTO 0);
   signal rx        : std_logic := '1';
 
   signal timestamp : std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0) := (others => '0');

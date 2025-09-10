@@ -27,12 +27,12 @@ package common is
   -- DMA stream data widths:
   constant C_TX_AXIS_WIDTH     : integer    := 128;
   constant C_TX_AXIS_BEATS     : integer    := 21;
-  constant C_RX_AXIS_WIDTH     : integer    := 128;
+  constant C_RX_AXIS_WIDTH     : integer    := 256;
 
   constant C_UART_DATA_WIDTH   : integer  := 64;
   constant C_TX_DATA_WIDTH     : integer  := C_UART_DATA_WIDTH;
   constant C_TX_NUM_CHAN       : integer  := C_NUM_UART;
-  constant C_RX_DATA_WIDTH     : integer  := 2*C_UART_DATA_WIDTH;
+  constant C_RX_DATA_WIDTH     : integer  := 4*C_UART_DATA_WIDTH;
   constant C_RX_EXTRA_CHAN     : integer  := 4;
   constant C_RX_NUM_CHAN       : integer  := C_NUM_UART + C_RX_EXTRA_CHAN;
   constant C_RX_TURN_MAX       : integer  := 64;

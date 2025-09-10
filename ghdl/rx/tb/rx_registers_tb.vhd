@@ -69,7 +69,7 @@ begin
     S_REGBUS_RB_WADDR   => waddr,
     S_REGBUS_RB_WDATA   => wdata,
     S_REGBUS_RB_WACK    => wack,
-    UART_LOOK_I         => (others => x"DDDDDDDDCCCCCCCCBBBBBBBBAAAAAAAA"),
+    UART_LOOK_I         => (others => x"00000000000000000000000000000000DDDDDDDDCCCCCCCCBBBBBBBBAAAAAAAA"),
     UART_STATUS_I       => (others => x"0000ABFF"),
     UART_CONFIG_O       => config,
     BUFFER_CONFIG_O     => gconfig,

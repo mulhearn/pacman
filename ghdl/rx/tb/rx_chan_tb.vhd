@@ -33,7 +33,7 @@ architecture behaviour of rx_chan_tb is
   signal aresetn   : std_logic;
   signal uclk      : std_logic;
   signal status    : std_logic_vector(31  downto 0);
-  signal data      : std_logic_vector(127 DOWNTO 0);
+  signal data      : std_logic_vector(255 DOWNTO 0);
   signal rx        : std_logic := '1';
 
   signal valid     : std_logic;

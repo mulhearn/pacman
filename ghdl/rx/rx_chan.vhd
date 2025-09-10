@@ -102,7 +102,8 @@ begin
       if (mode = 1) then
         if (update = '1') then
           DATA_O <= (others => '0');
-          DATA_O(C_RX_DATA_WIDTH-1 downto C_RX_DATA_WIDTH-C_UART_DATA_WIDTH) <= data;
+          DATA_O(191 downto 128) <= TIMESTAMP_I;
+          DATA_O(127 downto 64) <= data;
           DATA_O(47 downto 16) <= TIMESTAMP_I(31 downto 0);
           DATA_O(15 downto 8) <= std_logic_vector(to_unsigned(CHANNEL, C_BYTE));
           DATA_O(7 downto 0)  <= std_logic_vector(to_unsigned(HEADER, C_BYTE));
