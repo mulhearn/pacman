@@ -9,7 +9,8 @@
 #include "xtime_l.h"
 #include "xaxidma.h"
 
-#include "axil.h"
+#include "hw_access.h"
+#include "global.h"
 #include "gpiops.h"
 #include "timing.h"
 #include "adc.h"
@@ -39,7 +40,7 @@ void toggle_adc_circular_buffer(){
     config = 0x10000013;
   }
   xil_printf("setting ADC config to %x \r\n", config);
-  Xil_Out32(ADDR_AXIL_REGS+0xD110, config);
+  Xil_Out32(AXIL_REGISTERS_BASEADDR+0xD110, config);
 }
 
 
@@ -53,14 +54,14 @@ void toggle_adc_trigger(){
     config = 0x10000013;
   }
   xil_printf("setting ADC config to %x \r\n", config);
-  Xil_Out32(ADDR_AXIL_REGS+0xD110, config);
+  Xil_Out32(AXIL_REGISTERS_BASEADDR+0xD110, config);
 
   if (mode == 1){
     usleep(100000);
     config = 0x10000033;
   }
   xil_printf("setting ADC config to %x \r\n", config);
-  Xil_Out32(ADDR_AXIL_REGS+0xD110, config);
+  Xil_Out32(AXIL_REGISTERS_BASEADDR+0xD110, config);
 
 }
 
@@ -84,7 +85,7 @@ void toggle_adc_patterns(){
     return;
   }
   xil_printf("setting ADC config to %x \r\n", config);
-  Xil_Out32(ADDR_AXIL_REGS+0xD110, config);
+  Xil_Out32(AXIL_REGISTERS_BASEADDR+0xD110, config);
 }
 
 
@@ -96,14 +97,14 @@ void write_bram(){
 
 void read_bram(){
   unsigned size = 1024;
-  unsigned status = Xil_In32(ADDR_AXIL_REGS+0xD100);
-  unsigned ladr = (status & 0xFFFF);
+  unsigned status = Xil_In32(AXIL_REGISTERS_BASEADDR+0xD100);
+  unsigned laddr = (status & 0xFFFF);
   xil_printf("BRAM status     -- 0x%x  \r\n", status);
-  xil_printf("BRAM ladr       -- 0x%x  \r\n", ladr);
+  xil_printf("BRAM laddr       -- 0x%x  \r\n", laddr);
   xil_printf("BRAM size       -- 0x%x  \r\n", size);
 
   for (int i=0; i<size; i++){
-    unsigned offset = 4*((ladr/4 + 1 + i) % size);
+    unsigned offset = 4*((laddr/4 + 1 + i) % size);
     xil_printf("0x%x, ", Xil_In32(XPAR_BRAM_0_BASEADDR+offset));
     if ((i+1)%10==0)
       xil_printf("\r\n");
@@ -113,7 +114,7 @@ void read_bram(){
 
 
 void set_adc_mode_to_run(){
-  Xil_Out32(ADDR_AXIL_REGS+0xD118, 0x2);
+  Xil_Out32(AXIL_REGISTERS_BASEADDR+0xD118, 0x2);
 }
 
 void adc_menu(){

@@ -1,324 +1,121 @@
-#include <stdio.h>
 #include <stdlib.h>
-#include "xparameters.h"
-#include "xtime_l.h"
-#include "xil_io.h"
-#include "xaxidma.h"
-#include "xstatus.h"
-#include "xil_printf.h"
-#include "sleep.h"
 
-#include "axil.h"
+#include "hw_access.h"
+#include "dma.h"
+#include "global.h"
 #include "rxtx.h"
 
-u32 tx_mask_b = 0xFF;
-u32 tx_mask_a = 0xFFFFFFFF;
+hw_val_t tx_mask_b = 0xFF;
+hw_val_t tx_mask_a = 0xFFFFFFFF;
 
-void rxtx_menu(){
-  xil_printf("RX/TX Menu: \r\n");
+static unsigned G_TX_COUNTER = 0;
 
-  while(1){
-    xil_printf("choose an option:\r\n");
-    xil_printf("(0) exit RX/TX Menu \r\n");
-    xil_printf("(1) read tx status (2) read tx look (3) single tx (4) toggle tx mask (5) toggle tx config \r\n");
-    xil_printf("(6) read rx status (7) read rx look (8) single rx (9) toggle rx config \r\n");
-    xil_printf("(a) zero counts  (b) benchmark RX/TX loopback (c) benchmark TX \r\n");
-    xil_printf("(d) read DMA status (e) DMA reset \r\n");
+// this is reserved in system-user.dtsi and located within the HP AXI interface for DMA (0x00000000 - 0x3FFFFFFF):
+#define DMA_BUFFER_BASEADDR  0x20000000
+#define DMA_BUFFER_SIZE      0x10000000  // 256 MB
 
-    unsigned char c=inbyte();
-    xil_printf("pressed:  %c\n\r", c);
-    switch(c){
-    case '0':
-      return;
-    case '1':
-      read_tx_status();
-      break;
-    case '2':
-      read_tx_look();
-      break;
-    case '3':
-      single_tx();
-      break;
-    case '4':
-      toggle_tx_mask();
-      break;
-    case '5':
-      toggle_tx_config();
-      break;
-    case '6':
-      read_rx_status();
-      break;
-    case '7':
-      read_rx_look();
-      break;
-    case '8':
-      single_rx();
-      break;
-    case '9':
-      toggle_rx_config();
-      break;
-    case 'a':
-      zero_counts();
-      break;
-    case 'b':
-      benchmark_dma_loopback();
-      break;
-    case 'c':
-      benchmark_dma_write();
-      break;
-    case 'd':
-      dma_status();
-      break;
-    case 'e':
-      reset_dma();
-      break;
-    default:
-      xil_printf("invalid selection...\n\r");
-    }
-  }
+
+
+
+#define TX_BD_BASEADDR       0x20000000
+#define RX_BD_BASEADDR       0x21000000
+#define TX_BUF_BYTES 0x150  // 40 uarts x 64 bits => 20 128 bit word plus 1 128 bit header => 21*4*4 = 336 bytes
+//#define RX_BUF_BYTES 0x400  // Enough for single cycles, max (40 uarts + header + 3 T/S/HB) * 16 bytes = 0x2c bytes
+#define RX_BUF_BYTES 0x4000  // Each 10 cycle is max 0x470, enough for 140 cycles (0x8C)
+
+#define TX_BUF_WORDS TX_BUF_BYTES/4
+
+#define TX_BATCH_NEXTDESC_ADDR       0x20100000
+#define RX_BATCH_NEXTDESC_ADDR       0x20100004
+
+void init_rxtx(void){
+  init_dma_driver();
+  init_dma_buffer(DMA_BUFFER_BASEADDR, DMA_BUFFER_SIZE);
 }
 
-void toggle_tx_config(){
-  static int mode = 0;
-  mode = (mode + 1) % 3;
-  if (mode==0){
-    unsigned config = 0x00001602;
-    xil_printf("INFO: No Delay.  Broadcasting tx config write 0x%08x \r\n", config);
-    Xil_Out32(ADDR_AXIL_REGS+SCOPE_TX+UART_BROADCAST+C_ADDR_TX_CONFIG, config);
-  } else if (mode==1) {
-    unsigned config = 0x05281602;
-    xil_printf("INFO: Half Speed.  Broadcasting tx config write 0x%08x \r\n", config);
-    Xil_Out32(ADDR_AXIL_REGS+SCOPE_TX+UART_BROADCAST+C_ADDR_TX_CONFIG, config);
-  } else if (mode==2) {
-    unsigned config = 0x00001601;
-    xil_printf("INFO: Double speed.  Broadcasting tx config write 0x%08x \r\n", config);
-    Xil_Out32(ADDR_AXIL_REGS+SCOPE_TX+UART_BROADCAST+C_ADDR_TX_CONFIG, config);
-  }
+void init_tx_descriptor_ring_mode(int ring_size){
+  printf("INFO:  initializing TX BD ring:\r\n");
+  dma_init_bd_ring(TX_BD_BASEADDR, ring_size, TX_BUF_BYTES, DMA_BD_CONTROL_SOF | DMA_BD_CONTROL_EOF, DMA_BD_STATUS_COMPLETE);
+
+  dma_write_tx_curdesc(TX_BD_BASEADDR);
+  dma_write_tx_taildesc(TX_BD_BASEADDR);
+
+  dma_init_batch_tx_taildesc(TX_BATCH_NEXTDESC_ADDR);
+  dma_write_batch_tx_taildesc(TX_BD_BASEADDR);
+
+  dma_run_tx(DMA_TIMEOUT);
+
+  // send initial empty TX
+  dma_clear_bd_status(TX_BD_BASEADDR);
+  dma_write_tx_taildesc(TX_BD_BASEADDR);
 }
 
-void toggle_rx_config(){
-  static int mode = 0;
-  mode = (mode + 1) % 4;
-  if (mode==0){
-    unsigned config = 0x00001002;
-    xil_printf("INFO: No internal loopback.  Broadcasting rx config write 0x%08x \r\n", config);
-    Xil_Out32(ADDR_AXIL_REGS+SCOPE_RX+UART_BROADCAST+C_ADDR_RX_CONFIG, config);
-  } else if (mode==1) {
-    unsigned config = 0x00011002;
-    xil_printf("INFO: Full internal loopback.  Broadcasting rx configs write 0x%08x \r\n", config);
-    Xil_Out32(ADDR_AXIL_REGS+SCOPE_RX+UART_BROADCAST+C_ADDR_RX_CONFIG, config);
-  } else if (mode==2) {
-    unsigned config = 0x00011001;
-    xil_printf("INFO: Full internal loopback at full speed.  Broadcasting rx configs write 0x%08x \r\n", config);
-    Xil_Out32(ADDR_AXIL_REGS+SCOPE_RX+UART_BROADCAST+C_ADDR_RX_CONFIG, config);
-  } else if (mode==3) {
-    unsigned config;
-    config = 0x00011002;
-    xil_printf("INFO: Tiles 2-10 use internal loopback.  Broadcasting rx configs t 0x%08x \r\n", config);
-    Xil_Out32(ADDR_AXIL_REGS+SCOPE_RX+UART_BROADCAST+C_ADDR_RX_CONFIG, config);
-    config = 0x00001002;
-    xil_printf("INFO: Tile 1 does not use internal loopback.  Setting Tile 1 rx config 0x%08x \r\n", config);
-    Xil_Out32(ADDR_AXIL_REGS+SCOPE_RX+(0<<8)+C_ADDR_RX_CONFIG, config);
-    Xil_Out32(ADDR_AXIL_REGS+SCOPE_RX+(1<<8)+C_ADDR_RX_CONFIG, config);
-    Xil_Out32(ADDR_AXIL_REGS+SCOPE_RX+(2<<8)+C_ADDR_RX_CONFIG, config);
-    Xil_Out32(ADDR_AXIL_REGS+SCOPE_RX+(3<<8)+C_ADDR_RX_CONFIG, config);
-  }
+void init_rx_descriptor_ring_mode(int ring_size){
+  printf("INFO:  initializing RX BD ring:\r\n");
+  dma_init_bd_ring(RX_BD_BASEADDR, ring_size, RX_BUF_BYTES, 0, 0);
+
+  dma_write_rx_curdesc(dma_get_next_bd_addr(RX_BD_BASEADDR));
+  dma_write_rx_taildesc(RX_BD_BASEADDR);
+  dma_init_batch_rx_taildesc(RX_BATCH_NEXTDESC_ADDR);
+  dma_write_batch_rx_taildesc(RX_BD_BASEADDR);
+
+  dma_run_rx(DMA_TIMEOUT);
+
+  dma_write_rx_taildesc(RX_BD_BASEADDR);
 }
 
-void read_rx_status(){
-  for (int i=0; i<40; i++){
-    unsigned cshift = (i<<8);
-    unsigned status = Xil_In32(ADDR_AXIL_REGS+SCOPE_RX+cshift+C_ADDR_RX_STATUS);
-    unsigned config = Xil_In32(ADDR_AXIL_REGS+SCOPE_RX+cshift+C_ADDR_RX_CONFIG);
-    unsigned starts  = Xil_In32(ADDR_AXIL_REGS+SCOPE_RX+cshift+C_ADDR_RX_STARTS);
-    unsigned beats   = Xil_In32(ADDR_AXIL_REGS+SCOPE_RX+cshift+C_ADDR_RX_BEATS);
-    unsigned updates = Xil_In32(ADDR_AXIL_REGS+SCOPE_RX+cshift+C_ADDR_RX_UPDATES);
-    unsigned lost    = Xil_In32(ADDR_AXIL_REGS+SCOPE_RX+cshift+C_ADDR_RX_LOST);
-    unsigned nchan  = Xil_In32(ADDR_AXIL_REGS+SCOPE_RX+cshift+C_ADDR_RX_NCHAN);
-    xil_printf("%2d: ch: %2d cfg: 0x%08x status: 0x%08x s: %d b: %d u: %d l: %d\r\n",i, nchan, config, status, starts, beats, updates, lost);
-  }
-  xil_printf("gstatus----------- 0x%x    \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_RX+0x3F00+C_ADDR_RX_GSTATUS));
-  xil_printf("gflags------------ 0x%x    \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_RX+0x3F00+C_ADDR_RX_GFLAGS));
-  xil_printf("FIFO R count-------%d      \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_RX+0x3F00+C_ADDR_RX_FRCNT));
-  xil_printf("FIFO W count-------%d      \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_RX+0x3F00+C_ADDR_RX_FWCNT));
-  xil_printf("DMA ITR------------0x%x    \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_RX+0x3F00+C_ADDR_RX_DMAITR));
+void init_rxtx_descriptor_ring_mode(int ring_size){
+  dma_reset_tx(DMA_TIMEOUT);
+  dma_reset_rx(DMA_TIMEOUT);
+  init_tx_descriptor_ring_mode(ring_size);
+  init_rx_descriptor_ring_mode(ring_size);
 }
 
-void read_rx_look(){
-  for (int i=0; i<40; i++){
-    unsigned cshift = (i<<8);
-    unsigned a = Xil_In32(ADDR_AXIL_REGS+SCOPE_RX+cshift+C_ADDR_RX_LOOK_A);
-    unsigned b = Xil_In32(ADDR_AXIL_REGS+SCOPE_RX+cshift+C_ADDR_RX_LOOK_B);
-    unsigned c = Xil_In32(ADDR_AXIL_REGS+SCOPE_RX+cshift+C_ADDR_RX_LOOK_C);
-    unsigned d = Xil_In32(ADDR_AXIL_REGS+SCOPE_RX+cshift+C_ADDR_RX_LOOK_D);
-    xil_printf("Channel %2d Look:  0x%08x %08x %08x %08x\r\n", i, d, c, b, a);
-  }
+void show_rxtx_bds(void){
+  printf("INFO:  TX BD:\r\n");
+  dma_show_bd_ring(TX_BD_BASEADDR);
+  printf("INFO:  RX BD:\r\n");
+  dma_show_bd_ring(RX_BD_BASEADDR);
 }
 
-void read_tx_status(){
-  for (int i=0; i<40; i++){
-    unsigned cshift = (i<<8);
-    unsigned status = Xil_In32(ADDR_AXIL_REGS+SCOPE_TX+cshift+C_ADDR_TX_STATUS);
-    unsigned config = Xil_In32(ADDR_AXIL_REGS+SCOPE_TX+cshift+C_ADDR_TX_CONFIG);
-    unsigned starts = Xil_In32(ADDR_AXIL_REGS+SCOPE_TX+cshift+C_ADDR_TX_STARTS);
-    unsigned nchan  = Xil_In32(ADDR_AXIL_REGS+SCOPE_TX+cshift+C_ADDR_TX_NCHAN);
-    xil_printf("%2d:  chan: %2d config: 0x%08x status: 0x%08x starts: %d\r\n",i, nchan, config, status, starts);
-  }
-  xil_printf("gflags------------ 0x%x    \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_TX+0x3F00+C_ADDR_TX_GFLAGS));
-  xil_printf("bstatus----------- 0x%x    \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_TX+0x3F00+C_ADDR_TX_STATUS));
+void show_rxtx_head_tail(void){
+  dma_show_tx_current_tail_addrs();
+  dma_show_rx_current_tail_addrs();
 }
 
-void read_tx_look(){
-  for (int i=0; i<40; i++){
-    unsigned cshift = (i<<8);
-    unsigned d = Xil_In32(ADDR_AXIL_REGS+SCOPE_TX+cshift+C_ADDR_TX_LOOK_D);
-    unsigned c = Xil_In32(ADDR_AXIL_REGS+SCOPE_TX+cshift+C_ADDR_TX_LOOK_C);
-    xil_printf("Channel %2d Look:  0x%08x %08x\r\n", i, d, c);
-  }
+void clear_rxtx_ioc(void){
+  printf("INFO:  clearing DMA TX IOC flag.\r\n");
+  dma_clear_tx_ioc();
+  printf("INFO:  clearing DMA RX IOC flag\r\n");
+  dma_clear_rx_ioc();
 }
 
-void toggle_tx_mask(){
-  static int mode = 0;
-  mode = (mode + 1) % 3;
-  switch(mode){
-    case 1:
-      tx_mask_b = 0x0;
-      tx_mask_a = 0xFFFFFFFF;
-      break;
-    case 2:
-      tx_mask_b = 0x0;
-      tx_mask_a = 0x1;
-      break;
-    default:
-      tx_mask_b = 0xFF;
-      tx_mask_a = 0xFFFFFFFF;
-  }
-  xil_printf("RX mask:  0x%08x %08x \r\n", tx_mask_b, tx_mask_a);
+void show_tx_buffer(void){
+  printf("INFO:  TX Buffer:\r\n");
+  dma_show_buffer_ring(TX_BD_BASEADDR, 4, 1000);
 }
 
-void zero_counts(){
-  Xil_Out32(ADDR_AXIL_REGS+SCOPE_TX+0x3F00+C_ADDR_TX_STARTS, 0x0);
-  Xil_Out32(ADDR_AXIL_REGS+SCOPE_RX+0x3F00+C_ADDR_RX_ZERO_CNTS, 0x0);
+void show_rx_buffer(void){
+  printf("INFO:  RX Buffer:\r\n");
+  dma_show_buffer_ring(RX_BD_BASEADDR, 4, 1000);
 }
 
-void dma_status(){
-  unsigned cr, sr;
-  cr = Xil_In32(XPAR_AXI_DMA_0_BASEADDR+0x30);
-  sr = Xil_In32(XPAR_AXI_DMA_0_BASEADDR+0x34);
-  xil_printf("DMA control register (S2MM) - 0x%x \r\n", cr);
-  xil_printf("DMA status register  (S2MM) - 0x%x \r\n", sr);
-
-  xil_printf("Control Bits: \r\n");
-  xil_printf("RS (Run/Stop)-----%d\r\n", ((cr&0x00000001)!=0));
-  xil_printf("Always One--------%d\r\n", ((cr&0x00000002)!=0));
-  xil_printf("Reset-------------%d\r\n", ((cr&0x00000004)!=0));
-  xil_printf("Keyhole-----------%d\r\n", ((cr&0x00000008)!=0));
-  xil_printf("Cycle BD Enable---%d\r\n", ((cr&0x00000010)!=0));
-  xil_printf("Always Zero-------%d\r\n", ((cr&0x00000FE0)!=0));
-  xil_printf("Itr En (Comp)-----%d\r\n", ((cr&0x00001000)!=0));
-  xil_printf("Itr En (Delay)----%d\r\n", ((cr&0x00002000)!=0));
-  xil_printf("Itr En (Error)----%d\r\n", ((cr&0x00004000)!=0));
-  xil_printf("Always Zero-------%d\r\n", ((cr&0x00008000)!=0));
-  xil_printf("IRQ Threshold-----%d\r\n", ((cr&0x00FF0000)>>16));
-  xil_printf("IRQ Delay---------%d\r\n", ((cr&0xFF000000)>>24));
-  xil_printf("Status Bits: \r\n");
-  xil_printf("Halted------------%d\r\n", ((sr&0x00000001)!=0));
-  xil_printf("Idle--------------%d\r\n", ((sr&0x00000002)!=0));
-  xil_printf("Always Zero-------%d\r\n", ((sr&0x00000004)!=0));
-  xil_printf("SGIncld-----------%d\r\n", ((sr&0x00000008)!=0));
-  xil_printf("DMAIntErr---------%d\r\n", ((sr&0x00000010)!=0));
-  xil_printf("DMASecErr---------%d\r\n", ((sr&0x00000020)!=0));
-  xil_printf("DMADecErr---------%d\r\n", ((sr&0x00000040)!=0));
-  xil_printf("Always Zero-------%d\r\n", ((sr&0x00000080)!=0));
-  xil_printf("SGIntErr----------%d\r\n", ((sr&0x00000100)!=0));
-  xil_printf("SGSecErr----------%d\r\n", ((sr&0x00000200)!=0));
-  xil_printf("SGDecErr----------%d\r\n", ((sr&0x00000400)!=0));
-  xil_printf("Always Zero-------%d\r\n", ((sr&0x00000800)!=0));
-  xil_printf("Itr (IOC)---------%d\r\n", ((sr&0x00000100)!=0));
-  xil_printf("Itr (Delay)-------%d\r\n", ((sr&0x00000200)!=0));
-  xil_printf("Itr (Error)-------%d\r\n", ((sr&0x00000400)!=0));
-  xil_printf("Always Zero-------%d\r\n", ((sr&0x00000800)!=0));
-  xil_printf("Stat Irq Thresh---%d\r\n", ((cr&0x00FF0000)>>16));
-  xil_printf("Stay Irq Delay----%d\r\n", ((cr&0xFF000000)>>24));
-
-  cr = Xil_In32(XPAR_AXI_DMA_0_BASEADDR+0x00);
-  sr = Xil_In32(XPAR_AXI_DMA_0_BASEADDR+0x04);
-  xil_printf("DMA control register (MM2S) - 0x%x \r\n", cr);
-  xil_printf("DMA status register  (MM2S) - 0x%x \r\n", sr);
-
-  xil_printf("Control Bits: \r\n");
-  xil_printf("RS (Run/Stop)-----%d\r\n", ((cr&0x00000001)!=0));
-  xil_printf("Always One--------%d\r\n", ((cr&0x00000002)!=0));
-  xil_printf("Reset-------------%d\r\n", ((cr&0x00000004)!=0));
-  xil_printf("Keyhole-----------%d\r\n", ((cr&0x00000008)!=0));
-  xil_printf("Cycle BD Enable---%d\r\n", ((cr&0x00000010)!=0));
-  xil_printf("Always Zero-------%d\r\n", ((cr&0x00000FE0)!=0));
-  xil_printf("Itr En (Comp)-----%d\r\n", ((cr&0x00001000)!=0));
-  xil_printf("Itr En (Delay)----%d\r\n", ((cr&0x00002000)!=0));
-  xil_printf("Itr En (Error)----%d\r\n", ((cr&0x00004000)!=0));
-  xil_printf("Always Zero-------%d\r\n", ((cr&0x00008000)!=0));
-  xil_printf("IRQ Threshold-----%d\r\n", ((cr&0x00FF0000)>>16));
-  xil_printf("IRQ Delay---------%d\r\n", ((cr&0xFF000000)>>24));
-  xil_printf("Status Bits: \r\n");
-  xil_printf("Halted------------%d\r\n", ((sr&0x00000001)!=0));
-  xil_printf("Idle--------------%d\r\n", ((sr&0x00000002)!=0));
-  xil_printf("Always Zero-------%d\r\n", ((sr&0x00000004)!=0));
-  xil_printf("SGIncld-----------%d\r\n", ((sr&0x00000008)!=0));
-  xil_printf("DMAIntErr---------%d\r\n", ((sr&0x00000010)!=0));
-  xil_printf("DMASecErr---------%d\r\n", ((sr&0x00000020)!=0));
-  xil_printf("DMADecErr---------%d\r\n", ((sr&0x00000040)!=0));
-  xil_printf("Always Zero-------%d\r\n", ((sr&0x00000080)!=0));
-  xil_printf("SGIntErr----------%d\r\n", ((sr&0x00000100)!=0));
-  xil_printf("SGSecErr----------%d\r\n", ((sr&0x00000200)!=0));
-  xil_printf("SGDecErr----------%d\r\n", ((sr&0x00000400)!=0));
-  xil_printf("Always Zero-------%d\r\n", ((sr&0x00000800)!=0));
-  xil_printf("Itr (IOC)---------%d\r\n", ((sr&0x00000100)!=0));
-  xil_printf("Itr (Delay)-------%d\r\n", ((sr&0x00000200)!=0));
-  xil_printf("Itr (Error)-------%d\r\n", ((sr&0x00000400)!=0));
-  xil_printf("Always Zero-------%d\r\n", ((sr&0x00000800)!=0));
-  xil_printf("Stat Irq Thresh---%d\r\n", ((cr&0x00FF0000)>>16));
-  xil_printf("Stay Irq Delay----%d\r\n", ((cr&0xFF000000)>>24));
+void show_rx_transferred(void){
+  printf("INFO:  RX Buffer:\r\n");
+  dma_show_transferred_ring(RX_BD_BASEADDR, 4, 1000);
 }
 
-void reset_dma(){
-  // Using XPAR_AXI_DMA_0_BASEADDR  defined in xparameters.h
-
-  xil_printf("INFO:  Sending DMA reset \r\n");
-  Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x00, 0x04);
-  Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x30, 0x04);
-
-  unsigned timeout = 10;
-  while(timeout){
-    unsigned cw = Xil_In32(XPAR_AXI_DMA_0_BASEADDR+0x00);
-    unsigned cr = Xil_In32(XPAR_AXI_DMA_0_BASEADDR+0x30);
-
-    if (((cw&0x4)==0) && ((cr&0x4)==0))
-      break;
-    xil_printf("INFO: ...waiting on reset... \r\n");
-    timeout--;
-  }
-  if (! timeout) {
-    xil_printf("*** ERROR:  failed to reset... *** \r\n");
-    return;
-  } else {
-    xil_printf("INFO:  DMA reset complete.  \r\n");
-  }
-}
-
-void single_tx(){
+void single_tx(void){
   // TX buffer is a 128 bit header plus 40 uarts allocated 64 bits each.
   // This is a total of 84 32-bit words (4 header words, 80 uart words)
   // The resulting AXI stream is 128 bits times 21 beats.
 
-  static int count = 0;
-  unsigned tx_base = 0x1100000;
-  u32 *tx_buf = (u32 *)tx_base;
-  unsigned words = 84;
+  hw_addr_t nxta = dma_get_next_bd_addr(dma_read_tx_taildesc());
+  // keep batch tail synced even when doing single buffers:
+  dma_write_batch_tx_taildesc(nxta);
 
-  xil_printf("*** Sending run*** \r\n");
-  Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x00, 0x01);
-
-  dma_status();
+  hw_ptr_t tx_buf = dma_get_buffer(nxta);
+  unsigned words = TX_BUF_WORDS;
 
   tx_buf[0]= tx_mask_a;
   tx_buf[1]= tx_mask_b;
@@ -326,335 +123,549 @@ void single_tx(){
   tx_buf[3]=0x00000000;
 
   for (int i=0; i<(words-4); i++)
-    tx_buf[i+4] = 0xB000F000 + i + (count<<16);
+    tx_buf[i+4] = 0xB000F000 + i + (G_TX_COUNTER<<16);
+  G_TX_COUNTER++;
 
-  Xil_DCacheFlushRange((UINTPTR)tx_buf, words*4);
+  HW_FLUSH_DCACHE(tx_buf, words*4);
+  dma_clear_tx_ioc();
+  dma_clear_bd_status(nxta);
+  dma_write_tx_taildesc(nxta);
 
-  xil_printf("*** Sending write *** \r\n");
-  xil_printf(" count = %d \r\n", count);
-  count++;
-
-  Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x18, (u32) tx_buf);
-  Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x28, words*4);
-
-  unsigned timeout = 10000;
-  unsigned start = 1;
-  while(timeout){
-    unsigned sr = Xil_In32(XPAR_AXI_DMA_0_BASEADDR+0x04);
-    if ((sr&0x2)!=0)
-      break;
-    if (start){
-      xil_printf("*** waiting for idle *** \r\n");
-      start = 0;
-    }
-    usleep(1000);
-    timeout--;
+  if (dma_wait_tx_ioc(DMA_TIMEOUT) > 0){
+    printf("INFO: single TX yielded TX IOC flag high (SUCCESS)\r\n");
   }
-  if (! timeout) {
-    xil_printf("*** ERROR:  failed to reach idle before timeout! *** \r\n");
+}
+
+void single_rx(void){
+  hw_addr_t nxta = dma_get_next_bd_addr(dma_read_rx_taildesc());
+
+  if (dma_read_bd_status(nxta) & DMA_BD_STATUS_COMPLETE){
+    printf("INFO:  RX success.\r\n");
+    // keep batch tail synced even when doing single buffers:
+    dma_write_batch_rx_taildesc(nxta);
+    dma_clear_bd_status(nxta);
+    dma_write_rx_taildesc(nxta);
+  } else {
+    printf("INFO:  nothing RXed.\r\n");
+  }
+}
+
+void batch_tx(void){
+  unsigned words = TX_BUF_WORDS;
+  unsigned count = 0;
+  hw_addr_t nxta;
+
+  while((count < 10) && (dma_next_available_tx_bd(&nxta))){
+    printf("INFO:  working on buffer %d at HW addr 0x%08X \r\n", count, nxta);
+    hw_ptr_t tx_buf = dma_get_buffer(nxta);
+
+    tx_buf[0]= tx_mask_a;
+    tx_buf[1]= tx_mask_b;
+    tx_buf[2]=0x00000000;
+    tx_buf[3]=0x00000000;
+
+    for (int i=0; i<(words-4); i++)
+      tx_buf[i+4] = 0xB000F000 + i + (G_TX_COUNTER<<16);
+    HW_FLUSH_DCACHE(tx_buf, words*4);
+
+    dma_add_tx_bd(nxta);
+    count++;
+    G_TX_COUNTER++;
+  }
+
+  dma_clear_tx_ioc();
+  printf("INFO:  sending batch of %d TX buffers \r\n", count);
+  dma_tx_batch();
+
+  // NOTE: the IOC fires on the first complete transfer, so this only confirms one buffer was sent
+  if (dma_wait_tx_ioc(DMA_TIMEOUT) > 0){
+    printf("INFO:  batch TX yielded TX IOC flag high (SUCCESS)\r\n");
+  }
+}
+
+void batch_rx(void){
+  unsigned count = 0;
+  hw_addr_t nxta;
+
+  while((count < 10) && dma_next_available_rx_bd(&nxta)){
+    // do work on buffer ...
+    count++;
+    dma_add_rx_bd(nxta);
+  }
+
+  printf("INFO:  sending batch of %d RX buffers \r\n", count);
+  dma_rx_batch();
+}
+
+
+void benchmark_dma_tx();
+void benchmark_dma_rxtx_loopback();
+
+
+void toggle_tx_config(void){
+  static int mode = 0;
+  mode = (mode + 1) % 3;
+  if (mode==0){
+    unsigned config = 0x00001602;
+    printf("INFO: No Delay.  Broadcasting tx config write 0x%08x \r\n", config);
+    axil_write_register(SCOPE_TX+UART_BROADCAST+C_ADDR_TX_UART_CONFIG, config);
+  } else if (mode==1) {
+    unsigned config = 0x05281602;
+    printf("INFO: Half Speed.  Broadcasting tx config write 0x%08x \r\n", config);
+    axil_write_register(SCOPE_TX+UART_BROADCAST+C_ADDR_TX_UART_CONFIG, config);
+  } else if (mode==2) {
+    unsigned config = 0x00001601;
+    printf("INFO: Double speed.  Broadcasting tx config write 0x%08x \r\n", config);
+    axil_write_register(SCOPE_TX+UART_BROADCAST+C_ADDR_TX_UART_CONFIG, config);
+  }
+}
+
+void toggle_rx_config(void){
+  static int mode = 0;
+  mode = (mode + 1) % 4;
+  if (mode==0){
+    unsigned config = 0x00001002;
+    printf("INFO: No internal loopback.  Broadcasting rx config write 0x%08x \r\n", config);
+    axil_write_register(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_UART_CONFIG, config);
+  } else if (mode==1) {
+    unsigned config = 0x00011002;
+    printf("INFO: Full internal loopback.  Broadcasting rx configs write 0x%08x \r\n", config);
+    axil_write_register(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_UART_CONFIG, config);
+  } else if (mode==2) {
+    unsigned config = 0x00011001;
+    printf("INFO: Full internal loopback at full speed.  Broadcasting rx configs write 0x%08x \r\n", config);
+    axil_write_register(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_UART_CONFIG, config);
+  } else if (mode==3) {
+    unsigned config;
+    config = 0x00011002;
+    printf("INFO: Tiles 2-10 use internal loopback.  Broadcasting rx configs t 0x%08x \r\n", config);
+    axil_write_register(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_UART_CONFIG, config);
+    config = 0x00001002;
+    printf("INFO: Tile 1 does not use internal loopback.  Setting Tile 1 rx config 0x%08x \r\n", config);
+    axil_write_register(SCOPE_RX+(0<<8)+C_ADDR_RX_UART_CONFIG, config);
+    axil_write_register(SCOPE_RX+(1<<8)+C_ADDR_RX_UART_CONFIG, config);
+    axil_write_register(SCOPE_RX+(2<<8)+C_ADDR_RX_UART_CONFIG, config);
+    axil_write_register(SCOPE_RX+(3<<8)+C_ADDR_RX_UART_CONFIG, config);
+  }
+}
+
+void toggle_rx_global_config(void){
+  static int mode = 0;
+  mode = (mode + 1) % 2;
+  if (mode==0){
+    unsigned config = 0x00000000;
+    printf("INFO: Setting RX global config to 0x%08X \r\n", config);
+    axil_write_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_BUFFER_CONFIG, config);
+  } else if (mode==1) {
+    unsigned config = 0x00000001;
+    printf("INFO: Setting RX global config to 0x%08X \r\n", config);
+    axil_write_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_BUFFER_CONFIG, config);
+  }
+}
+
+void read_rx_status(void){
+  for (int i=0; i<40; i++){
+    unsigned cshift = (i<<8);
+    unsigned status = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_UART_STATUS);
+    unsigned config = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_UART_CONFIG);
+    unsigned starts  = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_UART_STARTS);
+    unsigned beats   = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_UART_BEATS);
+    unsigned updates = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_UART_UPDATES);
+    unsigned lost    = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_UART_LOST);
+    unsigned nchan  = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_UART_CHAN);
+    printf("%2d: ch: %2d cfg: 0x%08x status: 0x%08x s: %d b: %d u: %d l: %d\r\n",i, nchan, config, status, starts, beats, updates, lost);
+  }
+  printf("rx buffer status------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_BUFFER_STATUS));
+  printf("rx buffer config------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_BUFFER_CONFIG));
+  printf("heartbeat config------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_HEARTBEAT_CONFIG));
+  printf("sync config-----------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_ROLLOVER_CONFIG));
+  printf("FIFO count------------------%d      \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_FIFO_CNT));
+  printf("FIFO max--------------------%d      \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_FIFO_MAX));
+}
+
+void read_rx_look(void){
+  for (int i=0; i<40; i++){
+    unsigned cshift = (i<<8);
+    unsigned a = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_UART_LOOK_A);
+    unsigned b = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_UART_LOOK_B);
+    unsigned c = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_UART_LOOK_C);
+    unsigned d = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_UART_LOOK_D);
+    printf("Channel %2d Look:  0x%08x %08x %08x %08x\r\n", i, d, c, b, a);
+  }
+}
+
+void read_tx_status(void){
+  for (int i=0; i<40; i++){
+    unsigned cshift = (i<<8);
+    unsigned status = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_UART_STATUS);
+    unsigned config = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_UART_CONFIG);
+    unsigned starts = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_UART_STARTS);
+    unsigned beats = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_UART_BEATS);
+    unsigned nchan  = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_UART_CHAN);
+    printf("%2d:  chan: %2d config: 0x%08x status: 0x%08x starts: %d beats: %d\r\n",i, nchan, config, status, starts, beats);
+  }
+  printf("rx buffer status----------- 0x%x    \r\n", axil_read_register(SCOPE_TX+0x3F00+C_ADDR_TX_BUFFER_STATUS));
+}
+
+void read_tx_look(void){
+  for (int i=0; i<40; i++){
+    unsigned cshift = (i<<8);
+    unsigned d = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_UART_LOOK_D);
+    unsigned c = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_UART_LOOK_C);
+    printf("Channel %2d Look:  0x%08x %08x\r\n", i, d, c);
+  }
+}
+
+void toggle_tx_mask(void){
+  static int mode = 0;
+  mode = (mode + 1) % 4;
+  switch(mode){
+  case 1:
+    tx_mask_b = 0x0;
+    tx_mask_a = 0x0;
+    break;
+  case 2:
+    tx_mask_b = 0x0;
+    tx_mask_a = 0x1;
+    break;
+  case 3:
+    tx_mask_b = 0x0;
+    tx_mask_a = 0xFFFFFFFF;
+    break;
+  default:
+    tx_mask_b = 0xFF;
+    tx_mask_a = 0xFFFFFFFF;
+  }
+  printf("RX mask:  0x%08x %08x \r\n", tx_mask_b, tx_mask_a);
+}
+
+void zero_rxtx_counts(void){
+  axil_write_register(SCOPE_TX+0x3F00+C_ADDR_TX_ZERO_CNTS, 0x0);
+  axil_write_register(SCOPE_RX+0x3F00+C_ADDR_RX_ZERO_CNTS, 0x0);
+}
+
+
+//
+// Benchmarks:
+//
+
+void benchmark_tx(void){
+  // assuming 40 uarts
+  const unsigned packets    = 10000; // DMA packets to send
+  const unsigned uarts      = 40;
+  const unsigned batch_size = 100;
+  const unsigned words      = TX_BUF_WORDS; // words in TX buffer (= 1 DMA packet)
+
+  unsigned tx_sent = 0;
+
+  init_rxtx_descriptor_ring_mode(128);
+
+  start_hw_timer();
+  while (tx_sent < packets) {
+    unsigned batch_count = 0;
+    hw_addr_t nxta = 0;
+    while((batch_count < batch_size) && (dma_next_available_tx_bd(&nxta))){
+      //printf("INFO:  working on buffer %d at HW addr 0x%08X \r\n", batch_count, nxta);
+      hw_ptr_t tx_buf = dma_get_buffer(nxta);
+
+      tx_buf[0]= tx_mask_a;
+      tx_buf[1]= tx_mask_b;
+      tx_buf[2]=0x00000000;
+      tx_buf[3]=0x00000000;
+
+      for (int i=0; i<(words-4); i++)
+	tx_buf[i+4] = rand();
+
+      HW_FLUSH_DCACHE(tx_buf, words*4);
+
+      dma_add_tx_bd(nxta);
+      batch_count++;
+    }
+    if (batch_count > 0){
+      tx_sent += batch_count;
+      dma_tx_batch();
+    }
+  }
+  dma_wait_tx_idle(100000);
+  stop_hw_timer();
+
+  unsigned elapsed_us = hw_timer_elapsed_us();
+
+  printf("INFO:  elapsed microseconds:    %d (0x%x)\r\n", elapsed_us, elapsed_us);
+  printf("INFO:  tx payloads per packet:  %d\r\n", uarts);
+  printf("INFO:  packets:                 %d\r\n", packets);
+
+  if (elapsed_us == 0)
+    return;
+
+  unsigned a = 1000 * uarts * packets / elapsed_us;
+  unsigned m = uarts*10000/66;
+  unsigned p = uarts*10000/67;
+
+  printf("INFO:  achieved throughput:     %d tx uart packets per ms\r\n", a);
+  printf("INFO:  maximum tx rate:         %d tx uart packets (64-bit+2 @ 10 MHz) per ms\r\n", m);
+  printf("INFO:  practical max:           %d tx uart packets (64-bit+3 @ 10 MHz) per ms\r\n", p);
+}
+
+void benchmark_rxtx_loopback(void){
+
+  const unsigned tx_packets  = 10000; // DMA packets to send
+  const unsigned uarts       = 40;    // *** assuming all 40 uarts enabled ***
+  const unsigned uart_bytes  = 16;    // 128-bits per uart channel
+  const unsigned batch_size  = 100;
+  const unsigned words       = TX_BUF_WORDS; // words in TX buffer (= 1 DMA packet)
+  const unsigned rx_expected = uarts * uart_bytes * tx_packets;
+  const unsigned rx_trailer_bytes = 16; // Each DMA RX packet has a 128-bit trailer
+
+  const unsigned timeout = 10000;
+  unsigned rx_timeout = timeout;
+  unsigned tx_timeout = timeout;
+  unsigned tx_sent  = 0;
+  unsigned rx_rcvd  = 0;
+  unsigned rx_bytes = 0;
+
+  init_rxtx_descriptor_ring_mode(128);
+
+  start_hw_timer();
+  while (tx_timeout && rx_timeout && (rx_bytes < rx_expected)){
+    if (tx_sent < tx_packets) {
+      tx_timeout--;
+      unsigned batch_count = 0;
+      hw_addr_t nxta = 0;
+      while((batch_count < batch_size) && (dma_next_available_tx_bd(&nxta))){
+	//printf("INFO:  working on buffer %d at HW addr 0x%08X \r\n", batch_count, nxta);
+	hw_ptr_t tx_buf = dma_get_buffer(nxta);
+
+	tx_buf[0]= tx_mask_a;
+	tx_buf[1]= tx_mask_b;
+	tx_buf[2]=0x00000000;
+	tx_buf[3]=0x00000000;
+
+	//for (int i=0; i<(words-4); i++)
+	//tx_buf[i+4] = rand();
+
+	HW_FLUSH_DCACHE(tx_buf, words*4);
+
+	dma_add_tx_bd(nxta);
+	batch_count++;
+      }
+      if (batch_count > 0){
+	tx_timeout = timeout;
+	tx_sent += batch_count;
+	dma_tx_batch();
+      }
+    }
+    {
+      rx_timeout--;
+      unsigned batch_count = 0;
+      hw_addr_t nxta = 0;
+      while((batch_count < batch_size) && (dma_next_available_rx_bd(&nxta))){
+	unsigned xbytes = dma_poll_bd_transferred(nxta);
+	if (xbytes > rx_trailer_bytes){
+	  rx_bytes += xbytes - rx_trailer_bytes;
+	} else {
+	  printf("ERROR: invalid RX packet of size %d bytes found \r\n", xbytes);
+	  return;
+	}
+	batch_count++;
+	dma_add_rx_bd(nxta);
+      }
+      if (batch_count > 0){
+	rx_timeout = timeout;
+	rx_rcvd += batch_count;
+	dma_rx_batch();
+      }
+    }
+  }
+  stop_hw_timer();
+
+  printf("INFO:  tx_sent: %d rx_rcvd: %d rx_bytes %d expected: %d \r\n", tx_sent, rx_rcvd, rx_bytes, rx_expected);
+
+  if ((tx_timeout==0) || (rx_timeout==0)){
+    printf("ERROR: a timeout occurred during RX/TX benchmark \r\n");
+    printf("INFO:  rx_timeout:  %d tx_timeout: %d \r\n", rx_timeout, tx_timeout);
     return;
   }
 
-  dma_status();
+  unsigned elapsed_us = hw_timer_elapsed_us();
 
-}
+  printf("INFO:  elapsed microseconds:    %d (0x%x)\r\n", elapsed_us, elapsed_us);
+  printf("INFO:  tx payloads per packet:  %d\r\n", uarts);
+  printf("INFO:  packets:                 %d\r\n", tx_packets);
 
-void single_rx(){
-  // RX buffer is 32 beats of 128 bit each.
-
-  unsigned rx_base = 0x1300000;
-  u32 *rx_buf = (u32 *)rx_base;
-  unsigned max_words = 0x0400; // enough for > 20 read cycles of all 40 uarts
-  unsigned bytes = 0x4; // bytes per word
-
-  //xil_printf("*** Sending run*** \r\n");
-  Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x30, 0x01);
-
-  for (int i=0; i<max_words; i++)
-    rx_buf[i] = 0;
-
-  Xil_DCacheFlushRange((UINTPTR)rx_buf, max_words*bytes);
-
-  xil_printf("*** Sending read *** \r\n");
-  Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x48, (u32) rx_buf);
-  Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x58, max_words*bytes);
-
-  unsigned timeout = 10000;
-  unsigned start = 1;
-  while(timeout){
-    unsigned sr = Xil_In32(XPAR_AXI_DMA_0_BASEADDR+0x34);
-    if ((sr&0x2)!=0)
-      break;
-    if (start){
-      xil_printf("*** waiting for idle *** \r\n");
-      start = 0;
-    }
-    usleep(1);
-    timeout--;
-  }
-
-  Xil_DCacheInvalidateRange((UINTPTR) rx_buf, max_words*bytes);
-
-  for (int i=0; i<max_words/4; i++){
-    unsigned d = rx_buf[4*i+3];
-    unsigned c = rx_buf[4*i+2];
-    unsigned b = rx_buf[4*i+1];
-    unsigned a = rx_buf[4*i+0];
-    xil_printf("%d 0x%08x %08x %08x %08x\r\n", i, d, c, b, a);
-    if (a==0) {
-      if (c == i) {
-	xil_printf("Valid packet of size %d\r\n", i);
-      } else {
-	xil_printf("*** Error Invalid Packet Detected ***\r\n", i);
-      }
-      break;
-    }
-  }
-  if (! timeout) {
-    xil_printf("*** TIMEOUT ERROR *** \r\n");
-  }
-}
-
-void benchmark_dma_loopback(){
-  unsigned timeout;
-  unsigned tx_base = 0x1100000;
-  unsigned rx_base = 0x2100000;
-  u32 *tx_buf = (u32 *) tx_base;
-  u32 *rx_buf = (u32 *) rx_base;
-
-  const unsigned bytes = 4;         // bytes per word (32-bit words)
-  const unsigned tx_words = 84;     // words in each packet (4 header + 2 words per 40 uarts)
-  const unsigned tx_packets = 10000; // tx_packets to write
-  const unsigned rx_words = 164;
-
-  XTime start_time;
-  XTime stop_time;
-
-  reset_dma();
-
-  xil_printf("INFO:  Sending run to DMA TX and RX \r\n");
-  Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x00, 0x01); // TX
-  Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x30, 0x01); // RX
-
-  for (int ipacket = 0; ipacket < tx_packets; ipacket++){
-    //unsigned lastbit = rand();
-    unsigned tx_pstart = ipacket*tx_words;
-    tx_buf[tx_pstart+0]=0xFFFFFFFF;
-    tx_buf[tx_pstart+1]=0x000000FF;
-    tx_buf[tx_pstart+2]=0x00000000;
-    tx_buf[tx_pstart+3]=0x00000000;
-    for (int ichan=0; ichan<40; ichan++){
-      //if ((i%30)==0)
-      //lastbit = rand();
-      //tx_buf[tx_pstart+4+i]=(rand()<<1) | (lastbit&1);
-      //lastbit = lastbit>>1;
-      tx_buf[tx_pstart+4+2*ichan]  =rand();
-      tx_buf[tx_pstart+4+2*ichan+1]=rand();
-    }
-  }
-
-  for (int iword=0; iword<rx_words*tx_packets; iword++)
-    rx_buf[iword] = 0;
-
-  Xil_DCacheFlushRange((UINTPTR)tx_buf, tx_words*bytes*tx_packets);
-  Xil_DCacheFlushRange((UINTPTR)rx_buf, rx_words*bytes*tx_packets);
-
-  unsigned packets_sent   = 0;
-  unsigned packets_rcvd   = 0;
-  timeout = 100000;
-  XTime_GetTime(&start_time);
-  while ((timeout>0) && (packets_rcvd < tx_packets)){
-    unsigned fifocnt = Xil_In32(ADDR_AXIL_REGS+SCOPE_RX+0x3F00+C_ADDR_RX_FRCNT);
-    unsigned gstatus = Xil_In32(ADDR_AXIL_REGS+SCOPE_TX+0x3F00+C_ADDR_TX_STATUS);
-    unsigned sr = Xil_In32(XPAR_AXI_DMA_0_BASEADDR+0x04);
-
-    if ( (packets_sent < tx_packets) && (fifocnt<100) && (gstatus == 0x1) && (((sr&0x2)!=0) || (packets_sent==0)) ) {
-      Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x18, ((u32) &tx_buf[packets_sent*tx_words]) );
-      Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x28, tx_words*bytes);
-      packets_sent++;
-    }
-
-    if (fifocnt>=24) {
-      unsigned sr = Xil_In32(XPAR_AXI_DMA_0_BASEADDR+0x34);
-      if (((sr&0x2)!=0) || (packets_rcvd==0)){
-	Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x48, ((u32) &rx_buf[packets_rcvd*rx_words]));
-	Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x58, rx_words*bytes);
-	packets_rcvd += 1;
-      }
-    }
-    timeout--;
-  }
-
-  // no cheating!  wait on receipt of final package before stopping timer.
-  timeout = 1000;
-  while(timeout){
-    unsigned sr = Xil_In32(XPAR_AXI_DMA_0_BASEADDR+0x34);
-    if ((sr&0x2)!=0)
-      break;
-    usleep(1);
-    timeout--;
-  }
-  XTime_GetTime(&stop_time);
-
-  xil_printf("INFO: packets sent:     %d \r\n", packets_sent);
-  xil_printf("INFO: packets received: %d \r\n", packets_rcvd);
-  xil_printf("INFO: validating packages received (outside timing loop)...\r\n", packets_rcvd);
-  Xil_DCacheInvalidateRange((UINTPTR) rx_buf, rx_words*tx_packets*bytes);
-  unsigned valid_payloads = 0;
-
-  for (int ipacket = 0; ipacket < packets_rcvd; ipacket++){
-    unsigned rx_pstart = ipacket*rx_words;
-    unsigned tx_pstart = ipacket*tx_words+4;
-    unsigned rx_a, rx_b, rx_c, rx_d, tx_c, tx_d;
-
-    //xil_printf("DEBUG:  ipacket:  %d\r\n", ipacket);
-
-    int valid = 1;
-    for (int i=0; i<41; i++){
-      rx_d = rx_buf[rx_pstart + 4*i+3];
-      rx_c = rx_buf[rx_pstart + 4*i+2];
-      rx_b = rx_buf[rx_pstart + 4*i+1];
-      rx_a = rx_buf[rx_pstart + 4*i+0];
-
-      if (i<40){
-	tx_d = tx_buf[tx_pstart + 2*i+1];
-	tx_c = tx_buf[tx_pstart + 2*i+0];
-      } else {
-	tx_d = 0;
-	tx_c = 0;
-      }
-
-      if ((rx_a&0xFF) == 0x44){
-	int status = 1;
-	status &= ((rx_a&0x00FF) == 0x44);
-	status &= (((rx_a&0xFF00)>>8) == (i+1));
-	status &= (rx_c == tx_c);
-	status &= (rx_d == tx_d);
-	if (status==0){
-	  xil_printf("DISCREPANCY FOUND:  %d tx: 0x%08x %08x rx: %08x %08x %08x %08x\r\n", i, tx_d, tx_c, rx_d, rx_c, rx_b, rx_a );
-	  valid=0;
-	}
-      } else if (rx_a == 0) {
-	int status = 1;
-	status &= (rx_c == i);
-	if (status==0){
-	  xil_printf("DISCREPANCY FOUND:  %d rx: %08x %08x %08x %08x\r\n", i, rx_d, rx_c, rx_b, rx_a );
-	  valid=0;
-	}
-	if (valid==1) {
-	  valid_payloads += rx_c;
-	}
-      } else {
-	xil_printf("DISCREPANCY FOUND:  %d rx: %08x %08x %08x %08x\r\n", i, rx_d, rx_c, rx_b, rx_a );
-	valid=0;
-      }
-    }
-    //if (valid=0) break;
-  }
-
-
-  xil_printf("INFO: valid payloads:   %d\r\n", valid_payloads);
-
-  if (!timeout){
-    xil_printf("*** ERROR:  failed to complete packet loopack before timeout *** \r\n");
-    xil_printf("*** (This error message delayed so contents could be viewed) *** \r\n");
+  if (elapsed_us == 0)
     return;
-  }
 
-  u32 delta = (u32) (stop_time - start_time);
-  unsigned payloads = 40;
-  xil_printf("RESULTS: elapsed timer counts:      %d (0x%x)\r\n", delta, delta);
-  xil_printf("RESULTS: counts per second:         %d\r\n", COUNTS_PER_SECOND);
-  xil_printf("RESULTS: tx payloads per packet:    %d\r\n", payloads);
-  xil_printf("RESULTS: tx_packets:                   %d\r\n", tx_packets);
+  unsigned a = 1000 * uarts * tx_packets / elapsed_us;
+  unsigned m = uarts*10000/66;
+  unsigned p = uarts*10000/67;
 
-  unsigned r = (unsigned) (((float) COUNTS_PER_SECOND) * payloads * tx_packets / delta / 1000);
-  unsigned m = 40.0*10000/66;
-  unsigned p = 40.0*10000/67;
-
-  xil_printf("RESULTS: achieved throughput:  %d tx payloads per ms\r\n", r);
-  xil_printf("RESULTS: maximum tx rate:      %d tx payloads (64-bit+2 @ 10 MHz) per ms\r\n", m);
-  xil_printf("RESULTS: practical max:        %d tx payloads (64-bit+3 @ 10 MHz) per ms\r\n", p);
-}
+  printf("INFO:  achieved throughput:     %d tx uart packets per ms\r\n", a);
+  printf("INFO:  maximum tx rate:         %d tx uart packets (64-bit+2 @ 10 MHz) per ms\r\n", m);
+  printf("INFO:  practical max:           %d tx uart packets (64-bit+3 @ 10 MHz) per ms\r\n", p);
 
 
-void benchmark_dma_write(){
-  unsigned timeout;
-  unsigned tx_base = 0x1100000;
-  u32 *tx_buf = (u32 *)tx_base;
-  const unsigned bytes = 4;      // bytes per word (32-bit words)
-  const unsigned words = 84;     // words in each packet (4 header + 2 words per 40 uarts)
-  const unsigned packets = 10000; // packets to write
-  XTime start_time;
-  XTime stop_time;
+  /*
 
-  reset_dma();
-  dma_status();
+  // DISCLAIMER:  assumes 40 (larpix) packets per DMA TX packet
 
-  xil_printf("*** Sending run*** \r\n");
-  Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x00, 0x01);
+  const unsigned uarts            = 40;
+  const unsigned uart_bytes       = 16;           // 128-bits per uart channel
+  const unsigned tx_packets       = 10000;        // DMA TX packets to send
+  const unsigned rx_trailer_bytes = 16;           // Each DMA RX packet has a 128-bit trailer
+  const unsigned rx_expected = uarts * uart_bytes * tx_packets;
 
-  XTime_GetTime(&start_time);
 
-  tx_buf[0]=0xFFFFFFFF;
-  tx_buf[1]=0x000000FF;
+  // prepare the TX buffer with a random payload:
+  hw_ptr_t tx_buf = dma_get_buffer(TX_BD_BASEADDR);
+  tx_buf[0]= tx_mask_a;
+  tx_buf[1]= tx_mask_b;
   tx_buf[2]=0x00000000;
   tx_buf[3]=0x00000000;
 
-  for (int iword=0; iword<(words-4); iword++)
-    tx_buf[iword+4] = 1;
+  const unsigned words = TX_BUF_WORDS; // words in TX buffer (= 1 DMA packet)
+  for (int i=0; i<(words-4); i++)
+    tx_buf[i+4] = rand();
 
-  Xil_DCacheFlushRange((UINTPTR)tx_buf, words*bytes);
+  HW_FLUSH_DCACHE(tx_buf, words*4);
 
-  for (int i=0;i<packets; i++){
+  // get pointer to the RX buffer descriptor
+  hw_ptr_t rx_bd = dma_ptr(RX_BD_BASEADDR);
 
-    timeout = 10000;
-    while(timeout){
-      unsigned bstatus = Xil_In32(ADDR_AXIL_REGS+SCOPE_TX+0x3F00+C_ADDR_TX_STATUS);
-      if (bstatus == 0x1)
-	break;
-      //xil_printf("*** waiting for ready *** \r\n");
-      //usleep(1);
-      timeout--;
+  // Inititalize and run TX:
+  dma_halt_tx(10*DMA_TIMEOUT);
+  dma_clear_bd_status_ring(TX_BD_BASEADDR);
+  dma_clear_tx_ioc();
+  dma_write_register(MM2S_CURDESC, TX_BD_BASEADDR);
+  dma_run_tx(DMA_TIMEOUT);
+
+  // Inititalize and run RX:
+  dma_halt_rx(10*DMA_TIMEOUT);
+  dma_clear_bd_status_ring(RX_BD_BASEADDR);
+  dma_clear_rx_ioc();
+  dma_write_register(S2MM_CURDESC, RX_BD_BASEADDR);
+  dma_run_rx(DMA_TIMEOUT);
+
+  // Loop until done or a timeout occurs:
+  unsigned timeout = 100;
+  unsigned rx_timeout = timeout;
+  unsigned tx_timeout = timeout;
+  unsigned tx_sent = 0;
+  unsigned rx_rcvd  = 0;
+  unsigned rx_bytes = 0;
+
+  start_hw_timer();
+
+  // start first TX:
+  dma_write_register(MM2S_TAILDESC, TX_BD_BASEADDR);
+  // start first RX:
+  dma_write_register(S2MM_TAILDESC, RX_BD_BASEADDR);
+
+  while (tx_timeout && rx_timeout && (rx_bytes < rx_expected)){
+    if (dma_poll_tx_ioc()){
+      tx_sent++;
+      tx_timeout = timeout;
+      dma_clear_bd_status(TX_BD_BASEADDR);
+      dma_clear_tx_ioc();
+      if (tx_sent < tx_packets)
+	dma_write_register(MM2S_TAILDESC, TX_BD_BASEADDR);
     }
-
-    Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x18, ((u32) &tx_buf[0]) );
-    Xil_Out32(XPAR_AXI_DMA_0_BASEADDR+0x28, words*bytes);
-
-    timeout = 10000;
-    while(timeout){
-      unsigned sr = Xil_In32(XPAR_AXI_DMA_0_BASEADDR+0x04);
-      if ((sr&0x2)!=0)
-	break;
-      //xil_printf("*** waiting for idle *** \r\n");
-      //usleep(1);
-      timeout--;
+    if (dma_poll_rx_ioc()){
+      rx_rcvd++;
+      unsigned bytes = rx_bd[DMA_BD_STATUS]&DMA_BD_STATUS_TRANSFERRED;
+      if (bytes > rx_trailer_bytes)
+	rx_bytes += bytes - rx_trailer_bytes;
+      rx_timeout = timeout;
+      dma_clear_bd_status(RX_BD_BASEADDR);
+      dma_clear_rx_ioc();
+      // TODO: add condition here that rx_bytes < rx_expected before:
+      dma_write_register(S2MM_TAILDESC, RX_BD_BASEADDR);
     }
-    if (! timeout) {
-      xil_printf("*** ERROR:  failed to reach idle before timeout! *** \r\n");
-      return;
-    }
-
+    rx_timeout--;
+    if (tx_sent < tx_packets)
+      tx_timeout--;
+    usleep(1);
   }
-  XTime_GetTime(&stop_time);
+  stop_hw_timer();
 
-  Xil_DCacheInvalidateRange((UINTPTR) tx_buf, words*bytes);
+  unsigned elapsed_us = hw_timer_elapsed_us();
+  printf("INFO:  elapsed microseconds:        %d (0x%x)\r\n", elapsed_us, elapsed_us);
+  printf("INFO:  uart payloads per tx packet: %d\r\n", uarts);
+  printf("INFO:  tx packets:                  %d\r\n", tx_packets);
 
-  reset_dma();
+  if (elapsed_us == 0)
+    return;
 
-  u32 delta = (u32) (stop_time - start_time);
-  unsigned payloads = 40;
-  xil_printf("elapsed timer counts:      %d (0x%x)\r\n", delta, delta);
-  xil_printf("counts per second:         %d\r\n", COUNTS_PER_SECOND);
-  xil_printf("tx payloads per packet:    %d\r\n", payloads);
-  xil_printf("packets:                   %d\r\n", packets);
-
-  unsigned r = (unsigned) (((float) COUNTS_PER_SECOND) * payloads * packets / delta / 1000);
+  unsigned a = 1000 * uarts * tx_packets / elapsed_us;
   unsigned m = 40.0*10000/66;
   unsigned p = 40.0*10000/67;
 
-  xil_printf("achieved throughput:  %d tx payloads per ms\r\n", r);
-  xil_printf("maximum tx rate:      %d tx payloads (64-bit+2 @ 10 MHz) per ms\r\n", m);
-  xil_printf("practical max:        %d tx payloads (64-bit+3 @ 10 MHz) per ms\r\n", p);
+  printf("INFO:  achieved throughput:     %d uart packets per ms\r\n", a);
+  printf("INFO:  maximum tx rate:         %d uart packets (64-bit+2 @ 10 MHz) per ms\r\n", m);
+  printf("INFO:  practical max:           %d uart packets (64-bit+3 @ 10 MHz) per ms\r\n", p);
 
+  */
+}
+
+
+void benchmark_tx_single(void){
+  /*
+  const unsigned words = TX_BUF_WORDS; // words in TX buffer (= 1 DMA packet)
+  const unsigned packets = 10000;        // DMA packets to send
+
+  hw_ptr_t tx_buf = dma_get_buffer(TX_BD_BASEADDR);
+  tx_buf[0]= tx_mask_a;
+  tx_buf[1]= tx_mask_b;
+  tx_buf[2]=0x00000000;
+  tx_buf[3]=0x00000000;
+
+  for (int i=0; i<(words-4); i++)
+    tx_buf[i+4] = rand();
+
+  HW_FLUSH_DCACHE(tx_buf, words*4);
+
+  dma_halt_tx(DMA_TIMEOUT);
+  dma_clear_bd_status(TX_BD_BASEADDR);
+
+  dma_clear_tx_ioc();
+
+  dma_write_register(MM2S_CURDESC, TX_BD_BASEADDR);
+
+  dma_run_tx(DMA_TIMEOUT);
+
+  start_hw_timer();
+  unsigned timeout = 0;
+  for (int i=0;i<packets; i++){
+    dma_clear_bd_status(TX_BD_BASEADDR);
+    dma_clear_tx_ioc();
+    //usleep(1);
+    dma_write_register(MM2S_TAILDESC, TX_BD_BASEADDR);
+    timeout = dma_wait_tx_ioc(DMA_TIMEOUT);
+    if (timeout==0){
+      printf("ERROR: timeout waiting on IOC flag at packet %d \r\n", i);
+      return;
+    } else if (timeout < 5){
+      printf("INFO: timeout %d \r\n", timeout);
+    }
+  }
+  stop_hw_timer();
+
+  unsigned elapsed_us = hw_timer_elapsed_us();
+  unsigned uarts = 40;
+
+  printf("INFO:  elapsed microseconds:    %d (0x%x)\r\n", elapsed_us, elapsed_us);
+  printf("INFO:  tx payloads per packet:  %d\r\n", uarts);
+  printf("INFO:  packets:                 %d\r\n", packets);
+
+  if (elapsed_us == 0)
+    return;
+
+  unsigned a = 1000 * uarts * packets / elapsed_us;
+  unsigned m = uarts*10000/66;
+  unsigned p = uarts*10000/67;
+
+  printf("INFO:  achieved throughput:     %d tx uart packets per ms\r\n", a);
+  printf("INFO:  maximum tx rate:         %d tx uart packets (64-bit+2 @ 10 MHz) per ms\r\n", m);
+  printf("INFO:  practical max:           %d tx uart packets (64-bit+3 @ 10 MHz) per ms\r\n", p);
+  */
 }
