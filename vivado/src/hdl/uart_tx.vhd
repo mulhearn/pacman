@@ -1,5 +1,8 @@
 -- general purpose UART
 
+-- This UART implementation is preserved from the legacy firmware, as
+-- it is known to work with the ASICs.
+
 LIBRARY IEEE;
 USE IEEE.std_logic_1164.ALL;
 USE IEEE.numeric_std.ALL;

@@ -4,6 +4,8 @@ use ieee.numeric_std.all;
 library work;
 use work.common.all;
 
+--rollover:  presents a rollover on channel CHANNEL to the RX buffer.
+
 entity rollover is
   generic (
     constant CHANNEL   : integer := 16#53#;  -- ASCII S
@@ -13,7 +15,7 @@ entity rollover is
     ACLK          : in  std_logic;
     ARESETN       : in  std_logic;
     EN_I          : in  std_logic;
-    CYCLES_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+    CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     DATA_O        : out  std_logic_vector(C_RX_DATA_WIDTH-1 downto 0);
     VALID_O       : out  std_logic;
     READY_I       : in std_logic;
@@ -48,7 +50,7 @@ begin
         valid <= '0';
       end if;
 
-      if (not (unsigned(TIMESTAMP_I) = unsigned(CYCLES_I))) then
+      if (not (unsigned(TIMESTAMP_I) = unsigned(CONFIG_I))) then
         sent := '0';
       elsif ((EN_I='1') and (sent='0')) then
         if ((valid='0') or ((valid='1') and (ready='1'))) then
