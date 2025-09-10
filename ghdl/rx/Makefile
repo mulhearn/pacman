@@ -23,9 +23,11 @@ testbenches:
 	ghdl -a -fsynopsys tb/rx_registers_tb.vhd
 	ghdl -e -fsynopsys rx_registers_tb
 	ghdl -a -fsynopsys tb/rx_chan_tb.vhd
-	ghdl -a -fsynopsys tb/heartbeat_tb.vhd
-	ghdl -a -fsynopsys tb/rollover_tb.vhd
 	ghdl -e -fsynopsys rx_chan_tb
+	ghdl -a -fsynopsys tb/heartbeat_tb.vhd
+	ghdl -e -fsynopsys heartbeat_tb
+	ghdl -a -fsynopsys tb/rollover_tb.vhd
+	ghdl -e -fsynopsys rollover_tb
 	ghdl -a -fsynopsys tb/rx_buffer_tb.vhd
 	ghdl -e -fsynopsys rx_buffer_tb
 	ghdl -a -fsynopsys tb/rx_unit_tb.vhd

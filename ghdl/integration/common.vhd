@@ -18,7 +18,7 @@ package common is
   constant BRAM_DATA_WIDTH       : integer  := 32;
 
 
-  constant C_TIMESTAMP_WIDTH   : integer  := 32;
+  constant C_TIMESTAMP_WIDTH   : integer  := 64;
 
   -- register bus data is 32 bits, address 16 bits.
   constant C_RB_DATA_WIDTH       : integer  := 32;

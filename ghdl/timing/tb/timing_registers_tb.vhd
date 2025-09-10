@@ -36,7 +36,7 @@ architecture behaviour of timing_registers_tb is
     ATC_POLARITY           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
     STATUS_I               : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    TIMESTAMP_I            : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+    TIMESTAMP_I            : in  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
     --count of input in fast domain
     LEMO_A_COUNT           : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     LEMO_B_COUNT           : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -105,7 +105,7 @@ begin
     ATC_CONFIG_TS       => atc_ts_cfg,
     ATC_POLARITY        => polarity_cfg,
     STATUS_I            => x"ABCDEF12",
-    TIMESTAMP_I         => x"0000A435",
+    TIMESTAMP_I         => x"000000000000A435",
     LEMO_A_COUNT        => lemo_a_c,
     LEMO_B_COUNT        => lemo_b_c,
     LEMO_A_COUNT_S      =>  x"0000B435",

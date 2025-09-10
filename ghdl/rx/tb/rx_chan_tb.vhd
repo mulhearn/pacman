@@ -22,7 +22,7 @@ architecture behaviour of rx_chan_tb is
       READY_I       : in  std_logic;
       RX_I          : in  std_logic;
       LOOPBACK_I    : in  std_logic;
-      TIMESTAMP_I   : in  std_logic_vector(31 downto 0);
+      TIMESTAMP_I   : in  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
       DEBUG_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
     );
   end component;
@@ -51,7 +51,7 @@ begin
     READY_I     => ready,
     RX_I        => '1',
     LOOPBACK_I  => rx,
-    TIMESTAMP_I => x"12345678",
+    TIMESTAMP_I => x"0000000012345678",
     DEBUG_O     => status
     --STATUS_O     => status
   );

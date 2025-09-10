@@ -26,7 +26,7 @@ entity rx_chan is
     READY_I       : in std_logic;
     RX_I          : in std_logic;
     LOOPBACK_I    : in std_logic;
-    TIMESTAMP_I   : in  std_logic_vector(31 downto 0);
+    TIMESTAMP_I   : in  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
     DEBUG_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
   );
 end;
@@ -103,7 +103,7 @@ begin
         if (update = '1') then
           DATA_O <= (others => '0');
           DATA_O(C_RX_DATA_WIDTH-1 downto C_RX_DATA_WIDTH-C_UART_DATA_WIDTH) <= data;
-          DATA_O(47 downto 16) <= TIMESTAMP_I;
+          DATA_O(47 downto 16) <= TIMESTAMP_I(31 downto 0);
           DATA_O(15 downto 8) <= std_logic_vector(to_unsigned(CHANNEL, C_BYTE));
           DATA_O(7 downto 0)  <= std_logic_vector(to_unsigned(HEADER, C_BYTE));
           if ((valid = '1') and (ready='0')) then

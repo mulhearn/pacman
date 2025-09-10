@@ -129,7 +129,7 @@ architecture behaviour of rx_unit is
       READY_I       : in std_logic;
       RX_I          : in std_logic;
       LOOPBACK_I    : in std_logic;
-      TIMESTAMP_I   : in  std_logic_vector(31 downto 0);
+      TIMESTAMP_I   : in  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
       DEBUG_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
       );
   end component;
@@ -143,7 +143,7 @@ architecture behaviour of rx_unit is
       DATA_O        : out std_logic_vector(C_RX_DATA_WIDTH-1 downto 0);
       VALID_O       : out std_logic;
       READY_I       : in  std_logic;
-      TIMESTAMP_I   : in  std_logic_vector(31 downto 0);
+      TIMESTAMP_I   : in  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
       DEBUG_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
     );
   end component;
@@ -157,7 +157,7 @@ architecture behaviour of rx_unit is
       DATA_O        : out std_logic_vector(C_RX_DATA_WIDTH-1 downto 0);
       VALID_O       : out std_logic;
       READY_I       : in  std_logic;
-      TIMESTAMP_I   : in  std_logic_vector(31 downto 0);
+      TIMESTAMP_I   : in  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
       DEBUG_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
     );
   end component;

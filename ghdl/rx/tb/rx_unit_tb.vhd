@@ -31,7 +31,7 @@ architecture behaviour of rx_unit_tb is
       S_REGBUS_RB_WDATA      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_WACK       : out std_logic;
 
-      TIMESTAMP_I            : in  std_logic_vector(31 downto 0);
+      TIMESTAMP_I            : in  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
       FIFO_COUNT_I           : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
       PISO_I                 : in  std_logic_vector(C_NUM_UART-1 downto 0);
@@ -39,7 +39,7 @@ architecture behaviour of rx_unit_tb is
       );
   end component;
 
-  signal timestamp : std_logic_vector(31 downto 0);
+  signal timestamp : std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
   signal count    : integer := 0;
   signal aclk     : std_logic;
   signal aresetn  : std_logic;
@@ -102,9 +102,9 @@ begin
 
   timestamp_process : process
   begin
-    timestamp <= x"00000000";
+    timestamp <= x"0000000000000000";
     wait until count=1100;
-    timestamp <= x"00000ABC";
+    timestamp <= x"0000000000000ABC";
     wait;
   end process;
 

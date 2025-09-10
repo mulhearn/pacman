@@ -20,7 +20,7 @@ architecture behaviour of rollover_tb is
       DATA_O        : out std_logic_vector(C_RX_DATA_WIDTH-1 downto 0);
       VALID_O       : out std_logic;
       READY_I       : in  std_logic;
-      TIMESTAMP_I   : in  std_logic_vector(31 downto 0);
+      TIMESTAMP_I   : in  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
       DEBUG_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
     );
   end component;
@@ -34,7 +34,7 @@ architecture behaviour of rollover_tb is
   signal data      : std_logic_vector(127 DOWNTO 0);
   signal rx        : std_logic := '1';
 
-  signal timestamp : std_logic_vector(31 downto 0) := (others => '0');
+  signal timestamp : std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0) := (others => '0');
   signal valid     : std_logic;
   signal ready     : std_logic;
 

@@ -15,15 +15,15 @@ architecture behaviour of timing_unit_tb is
     port (
     ACLK                 : in std_logic; -- fast clock
     ARESETN              : in std_logic;
-    UCLK                 : in std_logic; -- slow clock
+    UCLK_I               : in std_logic; -- slow clock
 
 
     --lemo signal
-    LEMO_A                : in std_logic;
-    LEMO_B                : in std_logic;
+    LEMO_A_I              : in std_logic;
+    LEMO_B_I              : in std_logic;
 
-    S_REGBUS_RB_RADDR	    : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
-    S_REGBUS_RB_RDATA	    : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+    S_REGBUS_RB_RADDR	  : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
+    S_REGBUS_RB_RDATA	  : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     S_REGBUS_RB_RUPDATE   : in  std_logic;
     S_REGBUS_RB_RACK      : out std_logic;
 
@@ -36,7 +36,7 @@ architecture behaviour of timing_unit_tb is
     GLB_CLK_O             : out std_logic;
     G_O                   : out std_logic_vector(C_NUM_TILE-1 downto 0);
     H_O                   : out std_logic_vector(C_NUM_TILE-1 downto 0);
-    TS_SYNC               : out std_logic;
+    TS_SYNC_O             : out std_logic;
     DEBUG                 : out std_logic_vector(7 downto 0)
     );
   end component;
@@ -70,7 +70,7 @@ begin
   uut0: timing_unit port map (
     ACLK                => aclk,
     ARESETN             => aresetn,
-    UCLK                => uclk,
+    UCLK_I              => uclk,
     S_REGBUS_RB_RUPDATE => rupdate,
     S_REGBUS_RB_RADDR   => raddr,
     S_REGBUS_RB_RDATA   => rdata,
@@ -83,9 +83,9 @@ begin
     GLB_CLK_O           => glb_clk,
     G_O                 => atc_g ,
     H_O                 => atc_h,
-    TS_SYNC             => ts_sy,
-    LEMO_A              => lemo_a,
-    LEMO_B              => lemo_b,
+    TS_SYNC_O           => ts_sy,
+    LEMO_A_I            => lemo_a,
+    LEMO_B_I            => lemo_b,
     DEBUG               => debug
   );
 
@@ -252,7 +252,7 @@ begin
       write (l, String'(" wk:"));
       write (l, wack);
       write (l, String'(" | ts: "));
-      write (l, timestamp);
+      write (l, timestamp(15 downto 0));
       write (l, String'(" | G_O: "));
       write (l, atc_g);
 
