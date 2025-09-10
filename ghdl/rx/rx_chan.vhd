@@ -4,17 +4,23 @@ use ieee.numeric_std.all;
 library work;
 use work.common.all;
 
+-- rx_chan:  single UART RX channel
+--
+-- this is a wrapper for the (known to work) uart_rx which is
+-- preserved from the legacy firmware.  I plan to update the uart_rx
+-- once I have solid ASIC testing regimen, so comments are limited for
+-- this version.
+
 entity rx_chan is
   generic (
     constant CHANNEL : integer := 1;
-    constant HEADER  : integer := 16#44#
+    constant HEADER  : integer := C_TYPE_DATA
   );
   port (
     ACLK          : in  std_logic;
     ARESETN       : in  std_logic;
     CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     STATUS_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    GFLAGS_I      : in  std_logic_vector(C_RX_GFLAGS_WIDTH-1 downto 0);
     DATA_O        : out  std_logic_vector(C_RX_DATA_WIDTH-1 downto 0);
     VALID_O       : out  std_logic;
     READY_I       : in std_logic;
@@ -57,8 +63,6 @@ architecture behavioral of rx_chan is
 
   signal start      : std_logic:='0';
   signal lost       : std_logic:='0';
-
-  signal mode       : integer range 0 to 3;
 begin
   urx: uart_rx port map (
     CLK => clk,
@@ -77,8 +81,6 @@ begin
   VALID_O <= valid;
   ready <= READY_I;
 
-  mode <= to_integer(unsigned(CONFIG_I(13 downto 12)));
-
   with CONFIG_I(17 downto 16) select
     rx <= RX_I when "00",
     LOOPBACK_I when "01",
@@ -86,13 +88,17 @@ begin
     '1' when others;
 
   process(clk,rst)
+    variable mode : integer range 0 to 3 := 0;
+
   begin
     if (rst='1') then
       DATA_O <= (others => '0');
       valid  <= '0';
       lost   <= '0';
+      mode := 0;
     elsif (rising_edge(clk)) then
       lost   <= '0';
+      mode := to_integer(unsigned(CONFIG_I(13 downto 12)));
       if (mode = 1) then
         if (update = '1') then
           DATA_O <= (others => '0');
@@ -110,6 +116,7 @@ begin
         end if;
       else
         DATA_O <= (others => '0');
+        valid  <= '0';
       end if;
     end if;
   end process;

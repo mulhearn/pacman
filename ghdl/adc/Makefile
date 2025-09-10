@@ -1,4 +1,4 @@
-all: modules-a modules-e testbenches run-units
+all: modules-a modules-e testbenches
 
 modules-a:
 	echo "*** modules analysis ***"
@@ -27,7 +27,7 @@ testbenches:
 	ghdl -e -fsynopsys adc_daq_tb
 	ghdl -e -fsynopsys adc_unit_tb
 
-run-units:
+run-testbenches:
 	echo "*** running ***"
 	ghdl -r -fsynopsys adc_reg_tb --stop-time=1ms
 	ghdl -r -fsynopsys adc_daq_tb --stop-time=1ms

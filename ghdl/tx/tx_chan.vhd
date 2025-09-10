@@ -4,6 +4,13 @@ use ieee.numeric_std.all;
 library work;
 use work.common.all;
 
+-- tx_chan:  single UART TX channel
+--
+-- this is a wrapper for the (known to work) uart_tx which is
+-- preserved from the legacy firmware.  I plan to update the uart_tx
+-- once I have solid ASIC testing regimen, so comments are limited for
+-- this version.
+
 entity tx_chan is
   port (
     ACLK          : in  std_logic;
@@ -11,7 +18,6 @@ entity tx_chan is
     UCLK_I        : in  std_logic;
     CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     STATUS_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    GFLAGS_I      : in  std_logic_vector(C_TX_GFLAGS_WIDTH-1 downto 0);
     DATA_I        : in  std_logic_vector(C_TX_DATA_WIDTH-1 downto 0);
     VALID_I       : in  std_logic;
     READY_O       : out std_logic;
@@ -41,29 +47,27 @@ architecture behavioral of tx_chan is
   signal clk         : std_logic;
   signal rst         : std_logic;
 
+  signal config      : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal status      : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal status_z    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
 
   signal valid       : std_logic;
-  signal ready       : std_logic;
+  signal ready       : std_logic := '0';
   signal busy        : std_logic;
   signal busy_z      : std_logic;
   signal start       : std_logic;
 
-  signal tx          : std_logic;
+  signal tx          : std_logic := '0';
 
   -- STATES:
-  signal txoff       : std_logic;  -- valid=0 into all TXs
-  signal hrdy        : std_logic;  -- ready=1 from all TXs
-  signal mode        : integer range 0 to 3;
   signal rested      : std_logic;
 
 begin
   uart0: uart_tx port map(
     CLK=>clk,
     RST=>rst,
-    CLKOUT_RATIO=>CONFIG_I(7 downto 0),
-    CLKOUT_PHASE=>CONFIG_I(11 downto 8),
+    CLKOUT_RATIO=>config(7 downto 0),
+    CLKOUT_PHASE=>config(11 downto 8),
     MCLK=>UCLK_I,
     TX=>tx,
     DATA=>DATA_I,
@@ -74,14 +78,11 @@ begin
   clk <= ACLK;
   rst   <= not ARESETN;
 
+  config <= CONFIG_I;
+
   STATUS_O <= status_z;
   READY_O  <= ready;
   TX_O     <= tx;
-
-  txoff    <= GFLAGS_I(0);
-  hrdy     <= GFLAGS_I(1);
-
-  mode <= to_integer(unsigned(CONFIG_I(13 downto 12)));
 
   process(clk,rst)
     variable delay  : integer range 0 to 16#FFFF# := 0;
@@ -94,7 +95,7 @@ begin
       valid  <= '0';
     else
       if (rising_edge(clk)) then
-        delay := to_integer(unsigned(CONFIG_I(31 downto 16)));
+        delay := to_integer(unsigned(config(31 downto 16)));
         if (busy='1') then
           rests := 0;
         elsif (rests < delay) then
@@ -117,13 +118,16 @@ begin
   end process;
 
   process(clk,rst)
+    variable mode   : integer range 0 to 3 := 0;
   begin
     if (rst='1') then
+      mode   := 0;
       ready <= '0';
       busy_z <= '0';
     elsif (rising_edge(clk)) then
+      mode  := to_integer(unsigned(config(13 downto 12)));
       busy_z <= busy;
-      if ((hrdy='1') or (mode=0)) then
+      if (mode=0) then
         ready <= '1';
       elsif (mode=1) then
         if (valid='1' and busy='1' and busy_z='0') then
@@ -131,16 +135,11 @@ begin
         else
           ready <= '0';
         end if;
-      elsif (mode=2) then
+      else
         ready <= '0';
       end if;
     end if;
   end process;
-
-
-
-
-
 
   -- provide non-delayed status for convenient debugging
   DEBUG_O  <= status;
@@ -173,10 +172,5 @@ begin
       end if;
     end if;
   end process;
-
-
-
-
-
 
 end;

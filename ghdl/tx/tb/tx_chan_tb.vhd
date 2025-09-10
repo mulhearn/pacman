@@ -18,7 +18,6 @@ architecture behaviour of tx_chan_tb is
       UCLK_I        : in  std_logic;
       CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       STATUS_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      GFLAGS_I       : in  std_logic_vector(C_TX_GFLAGS_WIDTH-1 downto 0);
       DATA_I        : in  std_logic_vector(C_TX_DATA_WIDTH-1 downto 0);
       VALID_I       : in  std_logic;
       READY_O       : out std_logic;
@@ -31,9 +30,8 @@ architecture behaviour of tx_chan_tb is
   signal aclk      : std_logic;
   signal uclk      : std_logic;
   signal aresetn   : std_logic;
-  signal config    : std_logic_vector(31  downto 0)  := x"00001601";
+  signal config    : std_logic_vector(31  downto 0);
   signal status    : std_logic_vector(31  downto 0);
-  signal gflags     : std_logic_vector(C_TX_GFLAGS_WIDTH-1  downto 0);
   signal valid     : std_logic := '0';
   signal ready     : std_logic;
   signal tx        : std_logic;
@@ -46,7 +44,6 @@ begin
       UCLK_I   => uclk,
       CONFIG_I => config,
       DEBUG_O => status,  -- DEBUG_O is non-delayed status.
-      GFLAGS_I => gflags,
       DATA_I   => data,
       VALID_I  => valid,
       READY_O  => ready,
@@ -80,10 +77,8 @@ begin
 
   config_process : process
   begin
-    gflags <= "00";
     config <= x"00001601";
-    --config <= x"00000601";
-    --config <= x"00002601";
+    --config <= x"000A1601";
     wait;
   end process;
 
@@ -94,7 +89,7 @@ begin
     valid <= '0';
     wait for 1 ns;
     wait for 20 ns;
-    data  <= x"5555555555555555";
+    data  <= x"00FF00FF00FF00FF";
     valid <= '1';
     wait until ((rising_edge(aclk)) and (ready='1'));
     wait for 1 ns;
@@ -102,13 +97,12 @@ begin
     valid <= '0';
     wait for 40 ns;
     valid <= '1';
-    data  <= x"3333333333333333";
+    data  <= x"AAAAAAAAAAAAAAAA";
     wait until ((rising_edge(aclk)) and (ready='1'));
     wait for 1 ns;
     data  <= (others => '0');
     valid <= '0';
-    wait for 40 ns;
-    --wait;
+    wait;
   end process;
 
   output_process : process
@@ -118,54 +112,37 @@ begin
 
     if (count < 30) then
       wait for 10 ns;
-    elsif (count < 670) then
+    elsif (count < 680) then
       wait for 100 ns;
-    elsif (count < 720) then
-      wait for 10 ns;
-    elsif (count < 1350) then
+    elsif (count < 1500) then
       wait for 100 ns;
-    elsif (count < 1410) then
-      wait for 10 ns;
     else
       wait;
     end if;
-    --wait for 100 ns;
-    --wait for 1000 ns;
 
     write (l, String'("c: "));
     write (l, count, left, 4);
-    --write  (l, String'(" aclk: "));
-    --write  (l, aclk);
     write  (l, String'(" uclk: "));
     write  (l, uclk);
-    --write  (l, String'(" | cnf: 0x"));
-    --hwrite (l, config(15 downto 0));
-    --write  (l, String'(" mode: 0x"));
-    --hwrite (l, (config(15 downto 12)));
-    --write  (l, String'(" sta: 0x"));
-    --hwrite (l, status(15 downto 0));
-    write  (l, String'(" vr: "));
+    write  (l, String'("| valid: "));
     write  (l, valid);
+    write  (l, String'(" ready: "));
     write  (l, ready);
-
-    write  (l, String'(" b: "));
+    write  (l, String'(" busy: "));
     write  (l, status(0));
-
-    write  (l, String'(" vt: "));
-    write  (l, status(8));
-
+    write  (l, String'(" start: "));
+    write  (l, status(3));
     write  (l, String'(" rested: "));
     write  (l, status(9));
-
     write  (l, String'(" | tx: "));
     write  (l, tx);
 
     if (status(3) = '1') then
-      write (l, String'(" --- "));
+      write (l, String'(" (START) "));
     end if;
 
     if ((valid = '1') and (ready = '1')) then
-      write (l, String'(" *** "));
+      write (l, String'(" (BEAT) "));
     end if;
 
 
@@ -174,5 +151,63 @@ begin
     end if;
     writeline(output, l);
   end process;
+
+  comment_process : process
+    variable l : line;
+  begin
+    write(l, String'("INFO:  Resetting:"));
+    writeline(output, l);
+    wait until (count=3);
+    write(l, String'("INFO:  Config is 0x"));
+    hwrite(l, config);
+    writeline(output, l);
+    wait until (count=21);
+    write(l, String'("INFO:  Start bit (TX goes low):"));
+    writeline(output, l);
+    wait until (count=30);
+    write(l, String'("INFO:  only displaying every 10 clock cycles (10 MHz):"));
+    writeline(output, l);
+    wait until (count=40);
+    write(l, String'("INFO:  begin transmitting payload 0xFF (8 ones):"));
+    writeline(output, l);
+    wait until (count=120);
+    write(l, String'("INFO:  payload continues 0x00 (8 zero):"));
+    writeline(output, l);
+    wait until (count=200);
+    write(l, String'("INFO:  payload continues 0xFF (8 ones):"));
+    writeline(output, l);
+    wait until (count=280);
+    write(l, String'("INFO:  payload continues 0x00 (8 zeros):"));
+    writeline(output, l);
+    wait until (count=360);
+    write(l, String'("INFO:  payload continues 0xFF (8 ones):"));
+    writeline(output, l);
+    wait until (count=440);
+    write(l, String'("INFO:  payload continues 0x00 (8 zero):"));
+    writeline(output, l);
+    wait until (count=520);
+    write(l, String'("INFO:  payload continues 0xFF (8 ones):"));
+    writeline(output, l);
+    wait until (count=600);
+    write(l, String'("INFO:  payload continues 0x00 (8 zeros):"));
+    writeline(output, l);
+    wait until (count=680);
+    write(l, String'("INFO:  stop bit:"));
+    writeline(output, l);
+    wait until (count=690);
+    write(l, String'("INFO:  this extra bit is unecessary, but we are keeping legacy UART firmware for now:"));
+    writeline(output, l);
+    wait until (count=700);
+    write(l, String'("INFO:  start bit:"));
+    writeline(output, l);
+    wait until (count=710);
+    write(l, String'("INFO:  payload (0xAAAAAAAAAAAAAAAA) alternates between 0 and 1 for 64 bits:"));
+    writeline(output, l);
+    wait until (count=1350);
+    write(l, String'("INFO:  stop bit:"));
+    writeline(output, l);
+    wait;
+  end process;
+
 
 end behaviour;
