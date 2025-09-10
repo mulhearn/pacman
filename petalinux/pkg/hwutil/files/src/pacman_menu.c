@@ -29,15 +29,6 @@ void blink_leds(){
 
 // *** GLOBAL UNIT ***
 
-void read_global_registers(){
-  printf("fw major----------- %d   \n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_FIRMWARE_MAJOR));
-  printf("fw minor----------- %d   \n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_FIRMWARE_MINOR));
-  printf("scratch a---------- 0x%x \n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRATCH_A));
-  printf("scratch b---------- 0x%x \n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRATCH_B));
-  printf("\n");
-  printf("enables------------ 0x%x \n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_ENABLES));
-  printf("\n");
-}
 
 void toggle_global_enables_obsolete(){
   unsigned enables[] = {0x00000000, 0x00010000, 0x00010001,  0x000103FF, 0x001103FF};
@@ -723,7 +714,7 @@ void main_menu(){
       blink_leds();
       break;
     case 2:
-      read_global_registers();
+      read_global_status();
       break;
     case 3:
       toggle_global_scratch();
