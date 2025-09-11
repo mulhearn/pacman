@@ -580,10 +580,10 @@ proc create_root_design { parentCell } {
   set_property -dict [list \
     CONFIG.c_include_s2mm {1} \
     CONFIG.c_include_sg {1} \
-    CONFIG.c_m_axi_s2mm_data_width {128} \
+    CONFIG.c_m_axi_s2mm_data_width {256} \
     CONFIG.c_m_axis_mm2s_tdata_width {128} \
     CONFIG.c_mm2s_burst_size {256} \
-    CONFIG.c_s_axis_s2mm_tdata_width {128} \
+    CONFIG.c_s_axis_s2mm_tdata_width {256} \
     CONFIG.c_sg_include_stscntrl_strm {0} \
     CONFIG.c_sg_length_width {20} \
   ] $axi_dma_0
@@ -630,7 +630,7 @@ proc create_root_design { parentCell } {
   # Create instance: axis_data_fifo_0, and set properties
   set axis_data_fifo_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_data_fifo:2.0 axis_data_fifo_0 ]
   set_property -dict [list \
-    CONFIG.FIFO_DEPTH {16384} \
+    CONFIG.FIFO_DEPTH {16} \
     CONFIG.FIFO_MEMORY_TYPE {auto} \
     CONFIG.FIFO_MODE {1} \
     CONFIG.HAS_RD_DATA_COUNT {1} \
@@ -638,7 +638,7 @@ proc create_root_design { parentCell } {
     CONFIG.HAS_TLAST {1} \
     CONFIG.HAS_TSTRB {0} \
     CONFIG.HAS_WR_DATA_COUNT {0} \
-    CONFIG.TDATA_NUM_BYTES {16} \
+    CONFIG.TDATA_NUM_BYTES {32} \
     CONFIG.TDEST_WIDTH {0} \
     CONFIG.TID_WIDTH {0} \
     CONFIG.TUSER_WIDTH {0} \

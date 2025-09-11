@@ -30,7 +30,7 @@ entity timing_registers is
     ATC_POLARITY           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
     STATUS_I               : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    TIMESTAMP_I            : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+    TIMESTAMP_I            : in  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
     --count of input in fast domain
     LEMO_A_COUNT           : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     LEMO_B_COUNT           : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -142,7 +142,7 @@ begin
             rdata <= STATUS_I;
             rack  <= '1';
           elsif (reg= C_ADDR_TIMING_STAMP) then
-            rdata <= TIMESTAMP_I;
+            rdata <= TIMESTAMP_I(31 downto 0);
             rack  <= '1';
           end if;
         elsif (scope=C_SCOPE_TIMING) and (role= C_TIMING_COUNTER ) then
