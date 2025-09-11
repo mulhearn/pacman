@@ -77,7 +77,7 @@ architecture behavioral of rx_registers is
   signal bconfig          : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
 
   -- input data for registers:
-  signal ulook       : uart_rx_data_array_t;
+  signal ulook       : uart_rx_data_array_t := (others => (others => '0'));
   signal ustatus     : uart_reg_array_t;
   signal bstatus    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
   signal fifo_count : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -112,15 +112,16 @@ begin
   ROLLOVER_CONFIG_O      <= rollover_config;
 
   -- register input data:
+  -- disabling look register for now to free up registers
   process(clk, rst)
   begin
     if (rst='1') then
-      ulook       <= (others => (others => '0'));
+      --ulook       <= (others => (others => '0'));
       ustatus     <= (others => (others => '0'));
       bstatus    <= (others => '0');
       fifo_count <= (others => '0');
     elsif (rising_edge(clk)) then
-      ulook       <= UART_LOOK_I;
+      --ulook       <= UART_LOOK_I;
       ustatus     <= UART_STATUS_I;
       bstatus    <= BUFFER_STATUS_I;
       fifo_count <= FIFO_COUNT_I;

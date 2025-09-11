@@ -62,7 +62,7 @@ architecture behavioral of tx_registers is
   signal wack     : std_logic := '0';
 
   -- input data for registers:
-  signal look       : uart_tx_data_array_t;
+  signal look       : uart_tx_data_array_t := (others => (others => '0'));
   signal status     : uart_reg_array_t;
   signal gstatus    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
@@ -89,16 +89,16 @@ begin
   wdata    <= S_REGBUS_RB_WDATA;
   S_REGBUS_RB_WACK	 <= wack;
 
-
   -- register input data:
+  -- disabling look register for now to free up registers...
   process(clk, rst)
   begin
     if (rst='1') then
-      look       <= (others => (others => '0'));
+      --look       <= (others => (others => '0'));
       status     <= (others => (others => '0'));
       gstatus    <= (others => '0');
     elsif (rising_edge(clk)) then
-      look       <= UART_LOOK_I;
+      --look       <= UART_LOOK_I;
       status     <= UART_STATUS_I;
       gstatus    <= BUFFER_STATUS_I;
     end if;
