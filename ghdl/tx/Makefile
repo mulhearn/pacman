@@ -30,8 +30,9 @@ testbenches:
 
 run-testbenches:
 	ghdl -r -fsynopsys tx_chan_tb --stop-time=30000ns
-	ghdl -r -fsynopsys tx_buffer_tb --stop-time=350ns --vcd=../diagrams/tx_buffer_tb.vcd
 	ghdl -r -fsynopsys tx_registers_tb --stop-time=370ns
+	ghdl -r -fsynopsys tx_buffer_tb --stop-time=350ns --vcd=../diagrams/tx_buffer_tb.vcd
+
 
 run-unit-testbench:
 	ghdl -r -fsynopsys tx_unit_tb --stop-time=20us

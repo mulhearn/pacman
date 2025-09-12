@@ -16,12 +16,15 @@ entity rx_chan is
     constant CHANNEL : integer := 1;
     constant HEADER  : integer := C_TYPE_DATA
   );
+
   port (
     ACLK          : in  std_logic;
     ARESETN       : in  std_logic;
     CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     STATUS_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    DATA_O        : out  std_logic_vector(C_RX_DATA_WIDTH-1 downto 0);
+    HEADER_O      : out  std_logic_vector(C_RX_HEADER_WIDTH-1 downto 0);
+    DATA_O        : out  std_logic_vector(C_UART_DATA_WIDTH-1 downto 0);
+    TIMESTAMP_O   : out  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
     VALID_O       : out  std_logic;
     READY_I       : in std_logic;
     RX_I          : in std_logic;
@@ -51,7 +54,7 @@ architecture behavioral of rx_chan is
   signal status     : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal status_z   : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
 
-  signal data      : std_logic_vector(C_UART_DATA_WIDTH-1 downto 0);
+  signal data       : std_logic_vector(C_UART_DATA_WIDTH-1 downto 0);
   signal valid      : std_logic;
   signal ready      : std_logic;
 
@@ -81,6 +84,9 @@ begin
   VALID_O <= valid;
   ready <= READY_I;
 
+  HEADER_O(15 downto 8) <= std_logic_vector(to_unsigned(CHANNEL, C_BYTE));
+  HEADER_O(7 downto 0)  <= std_logic_vector(to_unsigned(HEADER, C_BYTE));
+  
   with CONFIG_I(17 downto 16) select
     rx <= RX_I when "00",
     LOOPBACK_I when "01",
@@ -93,6 +99,7 @@ begin
   begin
     if (rst='1') then
       DATA_O <= (others => '0');
+      TIMESTAMP_O <= (others => '0');
       valid  <= '0';
       lost   <= '0';
       mode := 0;
@@ -101,12 +108,8 @@ begin
       mode := to_integer(unsigned(CONFIG_I(13 downto 12)));
       if (mode = 1) then
         if (update = '1') then
-          DATA_O <= (others => '0');
-          DATA_O(191 downto 128) <= TIMESTAMP_I;
-          DATA_O(127 downto 64) <= data;
-          DATA_O(47 downto 16) <= TIMESTAMP_I(31 downto 0);
-          DATA_O(15 downto 8) <= std_logic_vector(to_unsigned(CHANNEL, C_BYTE));
-          DATA_O(7 downto 0)  <= std_logic_vector(to_unsigned(HEADER, C_BYTE));
+          DATA_O <= data;
+          TIMESTAMP_O <= TIMESTAMP_I;
           if ((valid = '1') and (ready='0')) then
             lost <= '1';
           else
@@ -114,9 +117,12 @@ begin
           end if;
         elsif (ready='1') then
           valid <= '0';
+          -- we hold DATA_O and TIMESTAMP_O until valid data replaces it, so
+          -- that most recent RX is available in the LOOK register
         end if;
       else
         DATA_O <= (others => '0');
+        TIMESTAMP_O <= (others => '0');
         valid  <= '0';
       end if;
     end if;
@@ -161,4 +167,3 @@ begin
     end if;
   end process;
 end;
-

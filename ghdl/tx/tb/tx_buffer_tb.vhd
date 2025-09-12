@@ -24,7 +24,7 @@ architecture behaviour of tx_buffer_tb is
 
       STATUS_O           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
-      DATA_O             : out uart_tx_data_array_t;
+      DATA_O             : out uart_data_array_t;
       VALID_O            : out std_logic_vector(C_NUM_UART-1 downto 0);
       READY_I            : in std_logic_vector(C_NUM_UART-1 downto 0)
     );
@@ -39,7 +39,7 @@ architecture behaviour of tx_buffer_tb is
   signal tready   : std_logic;
   signal tlast    : std_logic := '0';
 
-  signal odata    : uart_tx_data_array_t;
+  signal odata    : uart_data_array_t;
   signal ovalid   : std_logic_vector(C_NUM_UART-1 downto 0);
   signal oready   : std_logic_vector(C_NUM_UART-1 downto 0);
 begin

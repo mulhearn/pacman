@@ -17,7 +17,9 @@ architecture behaviour of rx_chan_tb is
       ARESETN       : in  std_logic;
       CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       STATUS_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      DATA_O        : out std_logic_vector(C_RX_DATA_WIDTH-1 downto 0);
+      HEADER_O      : out  std_logic_vector(C_RX_HEADER_WIDTH-1 downto 0);
+      DATA_O        : out  std_logic_vector(C_UART_DATA_WIDTH-1 downto 0);
+      TIMESTAMP_O   : out  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
       VALID_O       : out std_logic;
       READY_I       : in  std_logic;
       RX_I          : in  std_logic;
@@ -29,12 +31,14 @@ architecture behaviour of rx_chan_tb is
 
   signal count      : integer := 0;
   signal tstep_ns   : integer := 10;
-  signal aclk      : std_logic;
-  signal aresetn   : std_logic;
-  signal uclk      : std_logic;
-  signal status    : std_logic_vector(31  downto 0);
-  signal data      : std_logic_vector(255 DOWNTO 0);
-  signal rx        : std_logic := '1';
+  signal aclk       : std_logic;
+  signal aresetn    : std_logic;
+  signal uclk       : std_logic;
+  signal status     : std_logic_vector(C_RB_DATA_WIDTH-1  downto 0);
+  signal header     : std_logic_vector(C_RX_HEADER_WIDTH-1 DOWNTO 0);
+  signal data       : std_logic_vector(C_UART_DATA_WIDTH-1 DOWNTO 0);
+  signal tstamp     : std_logic_vector(C_UART_DATA_WIDTH-1 DOWNTO 0);
+  signal rx         : std_logic := '1';
 
   signal valid     : std_logic;
   signal ready     : std_logic;
@@ -46,7 +50,9 @@ begin
     ACLK        => aclk,
     ARESETN     => aresetn,
     CONFIG_I    => x"00011001",
+    HEADER_O    => header,
     DATA_O      => data,
+    TIMESTAMP_O => tstamp,    
     VALID_O     => valid,
     READY_I     => ready,
     RX_I        => '1',
@@ -167,8 +173,12 @@ begin
       write (l, update);
       write  (l, String'(" l: "));
       write (l, lost);
+      write  (l, String'(" | h: 0x"));
+      hwrite (l, header);
       write  (l, String'(" | d: 0x"));
       hwrite (l, data);
+      --write  (l, String'(" | ts: 0x"));
+      --hwrite (l, tstamp);
       write  (l, String'(" | rx: "));
       write  (l, rx);
       write  (l, String'(" | sel: "));

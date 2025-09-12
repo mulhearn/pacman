@@ -26,7 +26,7 @@ architecture behaviour of rx_registers_tb is
       S_REGBUS_RB_WDATA	   : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_WACK     : out std_logic;
 
-      UART_LOOK_I          : in uart_rx_data_array_t;
+      UART_LOOK_I          : in rx_data_array_t;
       UART_STATUS_I        : in uart_reg_array_t;
       UART_CONFIG_O        : out uart_reg_array_t;
       BUFFER_CONFIG_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -69,7 +69,7 @@ begin
     S_REGBUS_RB_WADDR   => waddr,
     S_REGBUS_RB_WDATA   => wdata,
     S_REGBUS_RB_WACK    => wack,
-    UART_LOOK_I         => (others => x"00000000000000000000000000000000DDDDDDDDCCCCCCCCBBBBBBBBAAAAAAAA"),
+    UART_LOOK_I         => (others => x"BBBBBBBBAAAAAAAA"),
     UART_STATUS_I       => (others => x"0000ABFF"),
     UART_CONFIG_O       => config,
     BUFFER_CONFIG_O     => gconfig,
@@ -155,10 +155,10 @@ begin
     raddr   <= x"4014";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"4018";
+    raddr   <= x"4110";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"401C";
+    raddr   <= x"4114";
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"0000";

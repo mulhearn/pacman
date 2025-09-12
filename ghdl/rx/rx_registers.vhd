@@ -36,7 +36,7 @@ entity rx_registers is
     S_REGBUS_RB_WACK    : out std_logic;
 
     -- look buffer contains the most recent RX for each UART
-    UART_LOOK_I         : in  uart_rx_data_array_t;
+    UART_LOOK_I         : in  rx_data_array_t;
     -- status register from each UART TX channel
     UART_STATUS_I       : in  uart_reg_array_t;
     -- configuration register for each UART TX channel
@@ -77,7 +77,7 @@ architecture behavioral of rx_registers is
   signal bconfig          : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
 
   -- input data for registers:
-  signal ulook       : uart_rx_data_array_t;
+  signal ulook       : rx_data_array_t := (others => (others => '0'));
   signal ustatus     : uart_reg_array_t;
   signal bstatus    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
   signal fifo_count : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -171,12 +171,6 @@ begin
                 rack  <= '1';
               elsif (reg=C_ADDR_RX_UART_LOOK_B) then
                 rdata <= ulook(chan)(63 downto 32);
-                rack  <= '1';
-              elsif (reg=C_ADDR_RX_UART_LOOK_C) then
-                rdata <= ulook(chan)(95 downto 64);
-                rack  <= '1';
-              elsif (reg=C_ADDR_RX_UART_LOOK_D) then
-                rdata <= ulook(chan)(127 downto 96);
                 rack  <= '1';
               elsif (reg=C_ADDR_RX_UART_CHAN) then
                 rdata <= std_logic_vector(to_unsigned(chan, rdata'length));

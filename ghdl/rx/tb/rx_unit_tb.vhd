@@ -102,9 +102,9 @@ begin
 
   timestamp_process : process
   begin
-    timestamp <= x"0000000000000000";
+    timestamp <= x"00000000000ABC10";
     wait until count=1100;
-    timestamp <= x"0000000000000ABC";
+    timestamp <= x"00000000000ABCD0";
     wait;
   end process;
 
@@ -162,12 +162,6 @@ begin
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"4014";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"4018";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"401C";
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"4020";
@@ -314,8 +308,7 @@ begin
     end if;
   end process;
 
-  piso(39 downto 32) <= (others => '0');
-  piso(31 downto 0)  <= (others => rx);
+  piso(39 downto 0)  <= (others => rx);
 
   rx_process : process
     variable i      : integer := 0;

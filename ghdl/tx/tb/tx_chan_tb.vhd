@@ -18,7 +18,7 @@ architecture behaviour of tx_chan_tb is
       UCLK_I        : in  std_logic;
       CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       STATUS_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      DATA_I        : in  std_logic_vector(C_TX_DATA_WIDTH-1 downto 0);
+      DATA_I        : in  std_logic_vector(C_UART_DATA_WIDTH-1 downto 0);
       VALID_I       : in  std_logic;
       READY_O       : out std_logic;
       TX_O          : out std_logic;
@@ -36,7 +36,7 @@ architecture behaviour of tx_chan_tb is
   signal ready     : std_logic;
   signal tx        : std_logic;
 
-  signal data      : std_logic_vector(C_TX_DATA_WIDTH-1 downto 0);
+  signal data      : std_logic_vector(C_UART_DATA_WIDTH-1 downto 0);
 begin
   uut: tx_chan port map (
       ACLK     => aclk,

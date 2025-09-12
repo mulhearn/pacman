@@ -25,10 +25,10 @@ use work.common.all;
 -- adding additional words (e.g. heartbeat and rollover words) to the stream,
 -- and for state machine transitions.
 --
--- Upon first seeing data after a pause, the streaming does not commence until
--- the start of the next cycle (at turn 0).  This orders the data in the DMA
--- packet nicely, with channel 0, when the data is synchronous (such as during
--- loopback testing).
+-- Upon first seeing data after a pause, the streaming does not
+-- commence until the start of the next cycle (at turn 0).  This
+-- orders the data in the DMA packet nicely, starting with channel 0,
+-- when the data is synchronous (such as during loopback testing).
 --
 -- Although the data is streamed one word at a time, many words are
 -- assembled into a single DMA packet using the LAST word.  All data
@@ -60,22 +60,26 @@ entity rx_buffer is
     -- configuration register for this module
     CONFIG_I           : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     -- the most recent data word sent to the stream
-    LOOK_O             : out std_logic_vector(C_RX_DATA_WIDTH-1 downto 0);
+    LOOK_O             : out std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
 
-    -- the received data from the UART receivers
-    DATA_I             : in  uart_rx_data_array_t;
-    -- one valid bit for each UART receiver
+    -- the received data from the UART receivers and extra channels
+    HEADER_I           : in  rx_header_array_t;
+    DATA_I             : in  rx_data_array_t;
+    TIMESTAMP_I        : in  rx_timestamp_array_t;
+    -- one valid bit for each UART receiver and extra channel
     VALID_I            : in  std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
-    -- ready bit is set as each UART channel is streamed, which clears valid:
+    -- ready bit is set as each channel is streamed, which clears valid:
     READY_O            : out std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
 
     -- debugging:
     DEBUG_STATUS_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    DEBUG_DATA_O       : out std_logic_vector(C_RX_DATA_WIDTH-1 downto 0)
+    DEBUG_DATA_O       : out std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0)
   );
 begin
   assert(TURN_MAX >= C_RX_NUM_CHAN) severity failure;
 end;
+
+
 
 
 architecture behavioral of rx_buffer is
@@ -199,7 +203,9 @@ begin
       if (state = STREAM) then
         if ((turn < C_RX_NUM_CHAN) and (busy = '0')) then
           if (VALID_I(turn) = '1') then
-            data <= DATA_I(turn);
+            data(255 downto 192) <= TIMESTAMP_I(turn);
+            data(127 downto 64)  <= DATA_I(turn);
+            data(C_RX_HEADER_WIDTH-1 downto 0) <= HEADER_I(turn);             
             wen  <= '1';
             ready(turn) <= '1';
             sent := (sent + 1) mod C_COUNT_MAX;
@@ -251,7 +257,7 @@ begin
       LOOK_O <= (others => '0');
     elsif (rising_edge(clk)) then
       STATUS_O <= status;
-      if (wen='1') then
+      if ((wen='1') and (last='0')) then
         LOOK_O <= data;
       end if;
     end if;

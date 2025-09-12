@@ -36,8 +36,8 @@ package register_map is
   constant C_ADDR_TX_UART_STATUS    : integer := 16#00#; -- Read Only
   constant C_ADDR_TX_UART_CONFIG    : integer := 16#04#; -- Read Only
   -- 64-bit RX register as two 32-bit words (LSB) A B C D (MSB)
-  constant C_ADDR_TX_UART_LOOK_C    : integer := 16#18#; -- Read Only
-  constant C_ADDR_TX_UART_LOOK_D    : integer := 16#1C#; -- Read Only
+  constant C_ADDR_TX_UART_LOOK_A    : integer := 16#10#; -- Read Only
+  constant C_ADDR_TX_UART_LOOK_B    : integer := 16#14#; -- Read Only
   -- Counters: (Zero by writing ZERO_CNTS register on global channel 0x7F)
   constant C_ADDR_TX_UART_STARTS    : integer := 16#20#;
   constant C_ADDR_TX_UART_BEATS     : integer := 16#24#; -- count valid='1' & ready='1'
@@ -53,13 +53,11 @@ package register_map is
   -- Registers with SCOPE=UART_RX
   --
 
-  constant C_ADDR_RX_UART_STATUS    : integer := 16#00#;
-  constant C_ADDR_RX_UART_CONFIG    : integer := 16#04#;
+  constant C_ADDR_RX_UART_STATUS    : integer := 16#00#; -- Read Only
+  constant C_ADDR_RX_UART_CONFIG    : integer := 16#04#; -- Read Only
   -- 128-bit RX register as four 32-bit words (LSB) A B C D (MSB)
-  constant C_ADDR_RX_UART_LOOK_A    : integer := 16#10#;
-  constant C_ADDR_RX_UART_LOOK_B    : integer := 16#14#;
-  constant C_ADDR_RX_UART_LOOK_C    : integer := 16#18#;
-  constant C_ADDR_RX_UART_LOOK_D    : integer := 16#1C#;
+  constant C_ADDR_RX_UART_LOOK_A    : integer := 16#10#; -- Read Only
+  constant C_ADDR_RX_UART_LOOK_B    : integer := 16#14#; -- Read Only
 
   -- Counters: (Zero by writing ZERO_CNTS register on global channel 0x7F)
   constant C_ADDR_RX_UART_STARTS    : integer := 16#20#; -- count busy '0'->'1'

@@ -26,7 +26,7 @@ architecture behaviour of tx_registers_tb is
       S_REGBUS_RB_WDATA	     : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_WACK       : out std_logic;
 
-      UART_LOOK_I                 : in uart_tx_data_array_t;
+      UART_LOOK_I                 : in uart_data_array_t;
       UART_STATUS_I               : in uart_reg_array_t;
       UART_CONFIG_O               : out uart_reg_array_t;
 
@@ -103,16 +103,16 @@ begin
     raddr   <= x"0000";
     rupdate <= '0';
     wait for 10 ns;
-    raddr   <= x"0018";
+    raddr   <= x"0010";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"001C";
+    raddr   <= x"0014";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"0C18";
+    raddr   <= x"0C10";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"0C1C";
+    raddr   <= x"0C14";
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"0000";
