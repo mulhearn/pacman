@@ -205,7 +205,7 @@ begin
           if (VALID_I(turn) = '1') then
             data(255 downto 192) <= TIMESTAMP_I(turn);
             data(127 downto 64)  <= DATA_I(turn);
-            data(C_RX_HEADER_WIDTH-1 downto 0) <= HEADER_I(turn);             
+            data(C_RX_HEADER_WIDTH-1 downto 0) <= HEADER_I(turn);
             wen  <= '1';
             ready(turn) <= '1';
             sent := (sent + 1) mod C_COUNT_MAX;

@@ -24,7 +24,7 @@ package common is
   constant C_UART_DATA_WIDTH   : integer    := 64;
   constant C_TIMESTAMP_WIDTH   : integer    := 64;
   constant C_RX_HEADER_WIDTH   : integer    := 16;
-  
+
   constant C_RX_TURN_MAX       : integer  := 64;
   constant C_RX_EXTRA_CHAN     : integer  := 4;
   constant C_RX_NUM_CHAN       : integer  := C_NUM_UART + C_RX_EXTRA_CHAN;

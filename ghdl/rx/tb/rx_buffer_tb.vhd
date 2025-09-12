@@ -46,7 +46,7 @@ architecture behaviour of rx_buffer_tb is
   signal header    : rx_header_array_t;
   signal data      : rx_data_array_t;
   signal timestamp : rx_timestamp_array_t;
-  
+
   signal uvalid   : std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
   signal uready   : std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
 
@@ -61,7 +61,7 @@ architecture behaviour of rx_buffer_tb is
   signal ulast    : std_logic := '0';
   signal tlk      : std_logic_vector(7 downto 0) := (others => '0');
   signal twt      : std_logic_vector(7 downto 0) := (others => '0');
-  
+
   signal status      : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
   signal look        : std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
   signal show_output : std_logic := '0';

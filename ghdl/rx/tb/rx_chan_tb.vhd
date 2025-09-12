@@ -52,7 +52,7 @@ begin
     CONFIG_I    => x"00011001",
     HEADER_O    => header,
     DATA_O      => data,
-    TIMESTAMP_O => tstamp,    
+    TIMESTAMP_O => tstamp,
     VALID_O     => valid,
     READY_I     => ready,
     RX_I        => '1',

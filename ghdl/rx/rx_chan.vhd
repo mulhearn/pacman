@@ -86,7 +86,7 @@ begin
 
   HEADER_O(15 downto 8) <= std_logic_vector(to_unsigned(CHANNEL, C_BYTE));
   HEADER_O(7 downto 0)  <= std_logic_vector(to_unsigned(HEADER, C_BYTE));
-  
+
   with CONFIG_I(17 downto 16) select
     rx <= RX_I when "00",
     LOOPBACK_I when "01",

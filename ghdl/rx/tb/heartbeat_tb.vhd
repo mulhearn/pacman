@@ -48,7 +48,7 @@ begin
     EN_I        => '1',
     CONFIG_I    => x"00000008",
     HEADER_O    => header,
-    TIMESTAMP_O => tstamp,    
+    TIMESTAMP_O => tstamp,
     VALID_O     => valid,
     READY_I     => ready,
     TIMESTAMP_I => tstamp_in

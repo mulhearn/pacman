@@ -43,7 +43,7 @@ begin
 
   HEADER_O(15 downto 8) <= std_logic_vector(to_unsigned(CHANNEL, C_BYTE));
   HEADER_O(7 downto 0)  <= std_logic_vector(to_unsigned(HEADER, C_BYTE));
-  
+
   process(clk,rst)
   begin
     if (rst='1') then
