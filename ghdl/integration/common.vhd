@@ -19,7 +19,7 @@ package common is
   -- DMA stream data widths:
   constant C_TX_AXIS_WIDTH     : integer    := 128;
   constant C_TX_AXIS_BEATS     : integer    := 21;
-  constant C_RX_AXIS_WIDTH     : integer    := 256;
+  constant C_RX_AXIS_WIDTH     : integer    := 128;
 
   constant C_UART_DATA_WIDTH   : integer    := 64;
   constant C_TIMESTAMP_WIDTH   : integer    := 64;

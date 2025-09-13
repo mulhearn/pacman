@@ -203,7 +203,7 @@ begin
       if (state = STREAM) then
         if ((turn < C_RX_NUM_CHAN) and (busy = '0')) then
           if (VALID_I(turn) = '1') then
-            data(255 downto 192) <= TIMESTAMP_I(turn);
+            --data(255 downto 192) <= TIMESTAMP_I(turn);
             data(127 downto 64)  <= DATA_I(turn);
             data(C_RX_HEADER_WIDTH-1 downto 0) <= HEADER_I(turn);
             wen  <= '1';
