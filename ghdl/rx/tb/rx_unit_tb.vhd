@@ -253,8 +253,6 @@ begin
     end if;
   end process;
 
-
-
   axis_process : process
   begin
     tready <= '1';

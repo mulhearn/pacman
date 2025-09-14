@@ -40,7 +40,8 @@ use work.common.all;
 
 entity rx_buffer is
   generic(
-    constant TURN_MAX    : integer := C_RX_TURN_MAX;
+    constant TURN_MAX       : integer := C_RX_TURN_MAX;
+    constant WORDS_PER_TURN : integer := C_RX_WORDS_PER_TURN;
     constant EOP : integer := C_TYPE_EOP
   );
   port (
@@ -123,6 +124,7 @@ architecture behavioral of rx_buffer is
   signal status    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
 
   signal turn      : integer range 0 to TURN_MAX-1 := 0;
+  signal word      : integer range 0 to WORDS_PER_TURN-1 := 0;
 
   type state_t is (IDLE, STREAM, SEND_LAST);
   signal state : state_t := IDLE;
@@ -161,12 +163,20 @@ begin
   -- transfer to the stream writer.  Turns 0-39 are used for the
   -- UARTs.  The remaining turns are used for state transitions and sending
   -- last according to the finite state machine.
+  -- The turn counter advances only after cycling through WORDS_PER_TURN words,
+  -- and the neither counter advances while the stream is busy.
   process(clk,rst)
   begin
     if (rst='1') then
+      word <= 0;
       turn <= 0;
     elsif (rising_edge(clk)) then
-      turn <= (turn + 1) mod TURN_MAX;
+      if (busy='0') then
+        word <= (word + 1) mod WORDS_PER_TURN;
+        if (word = WORDS_PER_TURN-1) then
+          turn <= (turn + 1) mod TURN_MAX;
+        end if;
+      end if;
     end if;
   end process;
 
@@ -203,12 +213,17 @@ begin
       if (state = STREAM) then
         if ((turn < C_RX_NUM_CHAN) and (busy = '0')) then
           if (VALID_I(turn) = '1') then
-            --data(255 downto 192) <= TIMESTAMP_I(turn);
-            data(127 downto 64)  <= DATA_I(turn);
-            data(C_RX_HEADER_WIDTH-1 downto 0) <= HEADER_I(turn);
             wen  <= '1';
-            ready(turn) <= '1';
-            sent := (sent + 1) mod C_COUNT_MAX;
+            if (word = 0) then
+              data <= (others => '0');
+              data(127 downto 64)  <= DATA_I(turn);
+              data(C_RX_HEADER_WIDTH-1 downto 0) <= HEADER_I(turn);
+            else
+              data <= (others => '0');
+              data(127 downto 64)  <= TIMESTAMP_I(turn);
+              ready(turn) <= '1';
+              sent := (sent + 1) mod C_COUNT_MAX;
+            end if;
           end if;
         end if;
         if (turn=44) then
@@ -220,15 +235,19 @@ begin
       end if;
       if (state = SEND_LAST) then
         if ((turn=50) and (busy = '0')) then
-          data  <= (others=>'0');
-          data(95 downto 64)  <= std_logic_vector(to_unsigned(sent, 32));
-          data(7 downto 0)  <= std_logic_vector(to_unsigned(EOP, C_BYTE));
+          if (word = 0) then
+            data  <= (others=>'0');
+            data(95 downto 64)  <= std_logic_vector(to_unsigned(sent, 32));
+            data(7 downto 0)  <= std_logic_vector(to_unsigned(EOP, C_BYTE));
+          else
+            data  <= (others=>'0');
+            last <= '1';
+            valid_seen := '0';
+            sent := 0;
+            cycles := 0;
+            state <= IDLE;
+          end if;
           wen   <= '1';
-          last <= '1';
-          valid_seen := '0';
-          sent := 0;
-          cycles := 0;
-          state <= IDLE;
         end if;
       end if;
     end if;
@@ -254,12 +273,20 @@ begin
   begin
     if (rst='1') then
       STATUS_O <= (others => '0');
-      LOOK_O <= (others => '0');
     elsif (rising_edge(clk)) then
       STATUS_O <= status;
-      if ((wen='1') and (last='0')) then
-        LOOK_O <= data;
-      end if;
     end if;
   end process;
+
+  process(clk,rst)
+  begin
+    if (rst='1') then
+      STATUS_O <= (others => '0');
+    elsif (rising_edge(clk)) then
+      STATUS_O <= status;
+    end if;
+  end process;
+
+  LOOK_O <= (others => '0');
+
 end;
