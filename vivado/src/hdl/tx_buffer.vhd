@@ -41,7 +41,7 @@ entity tx_buffer is
     STATUS_O           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
     -- the data to be transmitted:
-    DATA_O             : out uart_tx_data_array_t;
+    DATA_O             : out uart_data_array_t;
     -- one valid bit per UART, set to 1 when new data is received
     VALID_O            : out std_logic_vector(C_NUM_UART-1 downto 0);
     -- one ready bit per UART, from TX channel
@@ -125,7 +125,7 @@ begin
     elsif (rising_edge(clk)) then
       mask <= pdata(C_NUM_UART-1 downto 0);
       for i in 0 to C_NUM_UART-1 loop
-        DATA_O(i) <= pdata(C_TX_DATA_WIDTH*(i+3)-1 downto C_TX_DATA_WIDTH*(i+2));
+        DATA_O(i) <= pdata(C_UART_DATA_WIDTH*(i+3)-1 downto C_UART_DATA_WIDTH*(i+2));
       end loop;
     end if;
   end process;

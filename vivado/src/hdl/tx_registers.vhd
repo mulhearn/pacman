@@ -35,7 +35,7 @@ entity tx_registers is
     S_REGBUS_RB_WACK    : out std_logic;
 
     -- look buffer contains the most recent TX for each UART
-    UART_LOOK_I              : in uart_tx_data_array_t;
+    UART_LOOK_I              : in uart_data_array_t;
     -- status register from each UART TX channel
     UART_STATUS_I            : in uart_reg_array_t;
     -- configuration register for each UART TX channel
@@ -62,7 +62,7 @@ architecture behavioral of tx_registers is
   signal wack     : std_logic := '0';
 
   -- input data for registers:
-  signal look       : uart_tx_data_array_t := (others => (others => '0'));
+  signal look       : uart_data_array_t := (others => (others => '0'));
   signal status     : uart_reg_array_t;
   signal gstatus    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
@@ -90,15 +90,14 @@ begin
   S_REGBUS_RB_WACK	 <= wack;
 
   -- register input data:
-  -- disabling look register for now to free up registers...
   process(clk, rst)
   begin
     if (rst='1') then
-      --look       <= (others => (others => '0'));
+      look       <= (others => (others => '0'));
       status     <= (others => (others => '0'));
       gstatus    <= (others => '0');
     elsif (rising_edge(clk)) then
-      --look       <= UART_LOOK_I;
+      look       <= UART_LOOK_I;
       status     <= UART_STATUS_I;
       gstatus    <= BUFFER_STATUS_I;
     end if;
@@ -145,10 +144,10 @@ begin
               elsif (reg=C_ADDR_TX_UART_CONFIG) then
                 rdata <= config(chan);
                 rack  <= '1';
-              elsif (reg=C_ADDR_TX_UART_LOOK_C) then
+              elsif (reg=C_ADDR_TX_UART_LOOK_A) then
                 rdata <= look(chan)(31 downto 0);
                 rack  <= '1';
-              elsif (reg=C_ADDR_TX_UART_LOOK_D) then
+              elsif (reg=C_ADDR_TX_UART_LOOK_B) then
                 rdata <= look(chan)(63 downto 32);
                 rack  <= '1';
               elsif (reg=C_ADDR_TX_UART_CHAN) then

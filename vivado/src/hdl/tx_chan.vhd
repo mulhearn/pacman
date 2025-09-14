@@ -18,7 +18,7 @@ entity tx_chan is
     UCLK_I        : in  std_logic;
     CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     STATUS_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    DATA_I        : in  std_logic_vector(C_TX_DATA_WIDTH-1 downto 0);
+    DATA_I        : in  std_logic_vector(C_UART_DATA_WIDTH-1 downto 0);
     VALID_I       : in  std_logic;
     READY_O       : out std_logic;
     TX_O          : out std_logic;

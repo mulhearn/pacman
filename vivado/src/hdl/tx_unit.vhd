@@ -52,7 +52,7 @@ end tx_unit;
 -- UART channel, implemented via the VHDL generate mechanism.
 
 architecture behaviour of tx_unit is
-  signal data        : uart_tx_data_array_t := (others => (others => '0'));
+  signal data        : uart_data_array_t := (others => (others => '0'));
   signal valid       : std_logic_vector(C_NUM_UART-1 downto 0) := (others => '0');
   signal ready       : std_logic_vector(C_NUM_UART-1 downto 0) := (others => '0');
   signal status      : uart_reg_array_t := (others => (others => '0'));
@@ -72,7 +72,7 @@ architecture behaviour of tx_unit is
 
       STATUS_O           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
-      DATA_O             : out uart_tx_data_array_t;
+      DATA_O             : out uart_data_array_t;
       VALID_O            : out std_logic_vector(C_NUM_UART-1 downto 0);
       READY_I            : in std_logic_vector(C_NUM_UART-1 downto 0)
       );
@@ -93,7 +93,7 @@ architecture behaviour of tx_unit is
       S_REGBUS_RB_WDATA	     : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_WACK       : out std_logic;
 
-      UART_LOOK_I            : in uart_tx_data_array_t;
+      UART_LOOK_I            : in uart_data_array_t;
       UART_STATUS_I          : in uart_reg_array_t;
       BUFFER_STATUS_I        : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       UART_CONFIG_O          : out uart_reg_array_t
@@ -107,7 +107,7 @@ architecture behaviour of tx_unit is
       UCLK_I        : in  std_logic;
       CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       STATUS_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      DATA_I        : in  std_logic_vector(C_TX_DATA_WIDTH-1 downto 0);
+      DATA_I        : in  std_logic_vector(C_UART_DATA_WIDTH-1 downto 0);
       VALID_I       : in  std_logic;
       READY_O       : out std_logic;
       TX_O          : out std_logic;
