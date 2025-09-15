@@ -16,8 +16,6 @@ extern "C" {
 #define C_ADDR_RX_UART_CONFIG       0x04
 #define C_ADDR_RX_UART_LOOK_A       0x10
 #define C_ADDR_RX_UART_LOOK_B       0x14
-#define C_ADDR_RX_UART_LOOK_C       0x18
-#define C_ADDR_RX_UART_LOOK_D       0x1C
 #define C_ADDR_RX_UART_STARTS       0x20
 #define C_ADDR_RX_UART_BEATS        0x24
 #define C_ADDR_RX_UART_UPDATES      0x28
@@ -33,8 +31,8 @@ extern "C" {
 
 #define C_ADDR_TX_UART_STATUS   0x00
 #define C_ADDR_TX_UART_CONFIG   0x04
-#define C_ADDR_TX_UART_LOOK_C   0x18
-#define C_ADDR_TX_UART_LOOK_D   0x1C
+#define C_ADDR_TX_UART_LOOK_A   0x10
+#define C_ADDR_TX_UART_LOOK_B   0x14
 #define C_ADDR_TX_UART_STARTS   0x20
 #define C_ADDR_TX_UART_BEATS    0x24
 #define C_ADDR_TX_UART_CHAN     0x50
