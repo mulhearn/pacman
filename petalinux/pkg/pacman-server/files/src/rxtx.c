@@ -92,17 +92,17 @@ void clear_rxtx_ioc(void){
 
 void show_tx_buffer(void){
   printf("INFO:  TX Buffer:\r\n");
-  dma_show_buffer_ring(TX_BD_BASEADDR, 4, 1000);
+  dma_show_buffer_ring(TX_BD_BASEADDR, 8, 1000);
 }
 
 void show_rx_buffer(void){
   printf("INFO:  RX Buffer:\r\n");
-  dma_show_buffer_ring(RX_BD_BASEADDR, 4, 1000);
+  dma_show_buffer_ring(RX_BD_BASEADDR, 8, 1000);
 }
 
 void show_rx_transferred(void){
   printf("INFO:  RX Buffer:\r\n");
-  dma_show_transferred_ring(RX_BD_BASEADDR, 4, 1000);
+  dma_show_transferred_ring(RX_BD_BASEADDR, 8, 1000);
 }
 
 void single_tx(void){
@@ -288,9 +288,7 @@ void read_rx_look(void){
     unsigned cshift = (i<<8);
     unsigned a = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_UART_LOOK_A);
     unsigned b = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_UART_LOOK_B);
-    unsigned c = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_UART_LOOK_C);
-    unsigned d = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_UART_LOOK_D);
-    printf("Channel %2d Look:  0x%08x %08x %08x %08x\r\n", i, d, c, b, a);
+    printf("Channel %2d Look:  0x%08x %08x \r\n", i, b, a);
   }
 }
 
@@ -310,9 +308,9 @@ void read_tx_status(void){
 void read_tx_look(void){
   for (int i=0; i<40; i++){
     unsigned cshift = (i<<8);
-    unsigned d = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_UART_LOOK_D);
-    unsigned c = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_UART_LOOK_C);
-    printf("Channel %2d Look:  0x%08x %08x\r\n", i, d, c);
+    unsigned a = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_UART_LOOK_A);
+    unsigned b = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_UART_LOOK_B);
+    printf("Channel %2d Look:  0x%08x %08x\r\n", i, b, a);
   }
 }
 
@@ -411,11 +409,11 @@ void benchmark_rxtx_loopback(void){
 
   const unsigned tx_packets  = 10000; // DMA packets to send
   const unsigned uarts       = 40;    // *** assuming all 40 uarts enabled ***
-  const unsigned uart_bytes  = 16;    // 128-bits per uart channel
+  const unsigned uart_bytes  = 32;    // 128-bits per uart channel
   const unsigned batch_size  = 100;
   const unsigned words       = TX_BUF_WORDS; // words in TX buffer (= 1 DMA packet)
   const unsigned rx_expected = uarts * uart_bytes * tx_packets;
-  const unsigned rx_trailer_bytes = 16; // Each DMA RX packet has a 128-bit trailer
+  const unsigned rx_trailer_bytes = 32; // Each DMA RX packet has a two 128-bit word trailer
 
   const unsigned timeout = 10000;
   unsigned rx_timeout = timeout;
@@ -432,7 +430,7 @@ void benchmark_rxtx_loopback(void){
       tx_timeout--;
       unsigned batch_count = 0;
       hw_addr_t nxta = 0;
-      while((batch_count < batch_size) && (dma_next_available_tx_bd(&nxta))){
+      while((batch_count < batch_size) && (batch_count < (tx_packets-tx_sent)) && (dma_next_available_tx_bd(&nxta))){
 	//printf("INFO:  working on buffer %d at HW addr 0x%08X \r\n", batch_count, nxta);
 	hw_ptr_t tx_buf = dma_get_buffer(nxta);
 
@@ -442,7 +440,7 @@ void benchmark_rxtx_loopback(void){
 	tx_buf[3]=0x00000000;
 
 	//for (int i=0; i<(words-4); i++)
-	//tx_buf[i+4] = rand();
+	//  tx_buf[i+4] = rand();
 
 	HW_FLUSH_DCACHE(tx_buf, words*4);
 
@@ -505,167 +503,5 @@ void benchmark_rxtx_loopback(void){
   printf("INFO:  practical max:           %d tx uart packets (64-bit+3 @ 10 MHz) per ms\r\n", p);
 
 
-  /*
-
-  // DISCLAIMER:  assumes 40 (larpix) packets per DMA TX packet
-
-  const unsigned uarts            = 40;
-  const unsigned uart_bytes       = 16;           // 128-bits per uart channel
-  const unsigned tx_packets       = 10000;        // DMA TX packets to send
-  const unsigned rx_trailer_bytes = 16;           // Each DMA RX packet has a 128-bit trailer
-  const unsigned rx_expected = uarts * uart_bytes * tx_packets;
-
-
-  // prepare the TX buffer with a random payload:
-  hw_ptr_t tx_buf = dma_get_buffer(TX_BD_BASEADDR);
-  tx_buf[0]= tx_mask_a;
-  tx_buf[1]= tx_mask_b;
-  tx_buf[2]=0x00000000;
-  tx_buf[3]=0x00000000;
-
-  const unsigned words = TX_BUF_WORDS; // words in TX buffer (= 1 DMA packet)
-  for (int i=0; i<(words-4); i++)
-    tx_buf[i+4] = rand();
-
-  HW_FLUSH_DCACHE(tx_buf, words*4);
-
-  // get pointer to the RX buffer descriptor
-  hw_ptr_t rx_bd = dma_ptr(RX_BD_BASEADDR);
-
-  // Inititalize and run TX:
-  dma_halt_tx(10*DMA_TIMEOUT);
-  dma_clear_bd_status_ring(TX_BD_BASEADDR);
-  dma_clear_tx_ioc();
-  dma_write_register(MM2S_CURDESC, TX_BD_BASEADDR);
-  dma_run_tx(DMA_TIMEOUT);
-
-  // Inititalize and run RX:
-  dma_halt_rx(10*DMA_TIMEOUT);
-  dma_clear_bd_status_ring(RX_BD_BASEADDR);
-  dma_clear_rx_ioc();
-  dma_write_register(S2MM_CURDESC, RX_BD_BASEADDR);
-  dma_run_rx(DMA_TIMEOUT);
-
-  // Loop until done or a timeout occurs:
-  unsigned timeout = 100;
-  unsigned rx_timeout = timeout;
-  unsigned tx_timeout = timeout;
-  unsigned tx_sent = 0;
-  unsigned rx_rcvd  = 0;
-  unsigned rx_bytes = 0;
-
-  start_hw_timer();
-
-  // start first TX:
-  dma_write_register(MM2S_TAILDESC, TX_BD_BASEADDR);
-  // start first RX:
-  dma_write_register(S2MM_TAILDESC, RX_BD_BASEADDR);
-
-  while (tx_timeout && rx_timeout && (rx_bytes < rx_expected)){
-    if (dma_poll_tx_ioc()){
-      tx_sent++;
-      tx_timeout = timeout;
-      dma_clear_bd_status(TX_BD_BASEADDR);
-      dma_clear_tx_ioc();
-      if (tx_sent < tx_packets)
-	dma_write_register(MM2S_TAILDESC, TX_BD_BASEADDR);
-    }
-    if (dma_poll_rx_ioc()){
-      rx_rcvd++;
-      unsigned bytes = rx_bd[DMA_BD_STATUS]&DMA_BD_STATUS_TRANSFERRED;
-      if (bytes > rx_trailer_bytes)
-	rx_bytes += bytes - rx_trailer_bytes;
-      rx_timeout = timeout;
-      dma_clear_bd_status(RX_BD_BASEADDR);
-      dma_clear_rx_ioc();
-      // TODO: add condition here that rx_bytes < rx_expected before:
-      dma_write_register(S2MM_TAILDESC, RX_BD_BASEADDR);
-    }
-    rx_timeout--;
-    if (tx_sent < tx_packets)
-      tx_timeout--;
-    usleep(1);
-  }
-  stop_hw_timer();
-
-  unsigned elapsed_us = hw_timer_elapsed_us();
-  printf("INFO:  elapsed microseconds:        %d (0x%x)\r\n", elapsed_us, elapsed_us);
-  printf("INFO:  uart payloads per tx packet: %d\r\n", uarts);
-  printf("INFO:  tx packets:                  %d\r\n", tx_packets);
-
-  if (elapsed_us == 0)
-    return;
-
-  unsigned a = 1000 * uarts * tx_packets / elapsed_us;
-  unsigned m = 40.0*10000/66;
-  unsigned p = 40.0*10000/67;
-
-  printf("INFO:  achieved throughput:     %d uart packets per ms\r\n", a);
-  printf("INFO:  maximum tx rate:         %d uart packets (64-bit+2 @ 10 MHz) per ms\r\n", m);
-  printf("INFO:  practical max:           %d uart packets (64-bit+3 @ 10 MHz) per ms\r\n", p);
-
-  */
 }
 
-
-void benchmark_tx_single(void){
-  /*
-  const unsigned words = TX_BUF_WORDS; // words in TX buffer (= 1 DMA packet)
-  const unsigned packets = 10000;        // DMA packets to send
-
-  hw_ptr_t tx_buf = dma_get_buffer(TX_BD_BASEADDR);
-  tx_buf[0]= tx_mask_a;
-  tx_buf[1]= tx_mask_b;
-  tx_buf[2]=0x00000000;
-  tx_buf[3]=0x00000000;
-
-  for (int i=0; i<(words-4); i++)
-    tx_buf[i+4] = rand();
-
-  HW_FLUSH_DCACHE(tx_buf, words*4);
-
-  dma_halt_tx(DMA_TIMEOUT);
-  dma_clear_bd_status(TX_BD_BASEADDR);
-
-  dma_clear_tx_ioc();
-
-  dma_write_register(MM2S_CURDESC, TX_BD_BASEADDR);
-
-  dma_run_tx(DMA_TIMEOUT);
-
-  start_hw_timer();
-  unsigned timeout = 0;
-  for (int i=0;i<packets; i++){
-    dma_clear_bd_status(TX_BD_BASEADDR);
-    dma_clear_tx_ioc();
-    //usleep(1);
-    dma_write_register(MM2S_TAILDESC, TX_BD_BASEADDR);
-    timeout = dma_wait_tx_ioc(DMA_TIMEOUT);
-    if (timeout==0){
-      printf("ERROR: timeout waiting on IOC flag at packet %d \r\n", i);
-      return;
-    } else if (timeout < 5){
-      printf("INFO: timeout %d \r\n", timeout);
-    }
-  }
-  stop_hw_timer();
-
-  unsigned elapsed_us = hw_timer_elapsed_us();
-  unsigned uarts = 40;
-
-  printf("INFO:  elapsed microseconds:    %d (0x%x)\r\n", elapsed_us, elapsed_us);
-  printf("INFO:  tx payloads per packet:  %d\r\n", uarts);
-  printf("INFO:  packets:                 %d\r\n", packets);
-
-  if (elapsed_us == 0)
-    return;
-
-  unsigned a = 1000 * uarts * packets / elapsed_us;
-  unsigned m = uarts*10000/66;
-  unsigned p = uarts*10000/67;
-
-  printf("INFO:  achieved throughput:     %d tx uart packets per ms\r\n", a);
-  printf("INFO:  maximum tx rate:         %d tx uart packets (64-bit+2 @ 10 MHz) per ms\r\n", m);
-  printf("INFO:  practical max:           %d tx uart packets (64-bit+3 @ 10 MHz) per ms\r\n", p);
-  */
-}
