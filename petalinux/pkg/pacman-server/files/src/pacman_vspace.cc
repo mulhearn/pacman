@@ -22,16 +22,16 @@ int pacman_vspace_write(uint32_t addr, uint32_t value){
   unsigned tmp = 0;
   switch(addr){
   case 0x0010:
-    tmp = pacman_read(0xFF20);
+    tmp = pacman_read(0xF010);
     tmp &= 0xFFFF0000;
     tmp |= (value & 0x03FF);
-    return pacman_write(0xFF20, tmp);
+    return pacman_write(0xF010, tmp);
   case 0x0014:
-    tmp = pacman_read(0xFF20);
+    tmp = pacman_read(0xF010);
     tmp &= 0xFFF0FFFF;
     if (value&0x1)
       tmp |= 0x00010000;
-    return pacman_write(0xFF20, tmp);
+    return pacman_write(0xF010, tmp);
   case 0x0018:
     // ignoring... already configured correctly.
     return EXIT_SUCCESS;
@@ -41,7 +41,8 @@ int pacman_vspace_write(uint32_t addr, uint32_t value){
   case 0x1010:
     // this is a request to send a sync pulse:
     if ((value&0x4)!=0){
-      return pacman_write(0xFE24, 0x00FF03FF);
+      // use Poke C register (mapped to SYNC pulse in config)
+      return pacman_write(0xE010, 0x0);
     }
     return EXIT_SUCCESS;
   case 0x1014:
@@ -88,11 +89,11 @@ uint32_t pacman_vspace_read(uint32_t addr, int * status){
   case 0x000C:
     return pacman_read(0xFF1C, status);
   case 0x0010:
-    tmp = pacman_read(0xFF20, status);
+    tmp = pacman_read(0xF010, status);
     tmp &= 0x000003FF;
     return tmp;
   case 0x0014:
-    tmp = pacman_read(0xFF20);
+    tmp = pacman_read(0xF010);
     return ((tmp & 0x00010000) != 0);
   case 0x1000:
     return 0;
@@ -107,5 +108,3 @@ uint32_t pacman_vspace_read(uint32_t addr, int * status){
     *status = EXIT_FAILURE;
   return 0;
 }
-
-

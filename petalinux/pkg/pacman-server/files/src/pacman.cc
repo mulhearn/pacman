@@ -33,14 +33,13 @@ int pacman_init(int verbose){
   int dh = open("/dev/mem", O_RDWR|O_SYNC);
   G_PACMAN_AXIL = (uint32_t*)mmap(NULL, PACMAN_AXIL_LEN, PROT_READ|PROT_WRITE, MAP_SHARED, dh, PACMAN_AXIL_ADDR);
 
+
   unsigned fwmajor = G_PACMAN_AXIL[0XFF10>>2];
   unsigned fwminor = G_PACMAN_AXIL[0XFF14>>2];
-  unsigned fwbuild = G_PACMAN_AXIL[0XFF18>>2];
-  unsigned hwcode  = G_PACMAN_AXIL[0XFF1C>>2];
 
   if (verbose){
     printf("INFO:  Running pacman-server version %d.%d\n", PACMAN_SERVER_MAJOR_VERSION, PACMAN_SERVER_MINOR_VERSION);
-    printf("INFO:  Running pacman firmware version %d.%d (Build: 0x%x  HW Code:  0x%x)\n", fwmajor, fwminor, fwbuild, hwcode);
+    printf("INFO:  Running pacman firmware version %d.%d\n", fwmajor, fwminor);
   }
 
   // I2C
@@ -62,21 +61,39 @@ int pacman_init(int verbose){
   // DEFAULT parameters
   if (verbose){
     printf("INFO:  Enabling Trigger, Sync, and Heartbeat words in the RX unit.\n");
-    //printf("INFO:  Setting number of cycles per DMA package to 0x1FFF.\n");
+    printf("INFO:  Setting number of cycles per DMA package to 140 (0x8C) as appropriate for DMA buffer length.\n");
   }
-  //G_PACMAN_AXIL[0x7FA4>>2] = 0x71FFF;
   G_PACMAN_AXIL[0x7FA4>>2] = 0x7008C;
 
-  //if (verbose){
-  //  printf("INFO:  Limiting TX bandwidth.\n");
-  //}
-  //G_PACMAN_AXIL[0x3B04>>2] = 0x05281602;
-  G_PACMAN_AXIL[0x3B04>>2] = 0x00001602;
+  if (verbose){
+    printf("INFO:  Limiting TX bandwidth to 1/2 of nominal UART rate (1/4 maximum) \n");
+  }
+  G_PACMAN_AXIL[0x3B04>>2] = 0x05281602;
+
 
   if (verbose){
-    printf("INFO:  Setting TS polarity to active low (will become default soon)\n");
+    printf("INFO:  Setting timing input signal polarity to active high\n");
   }
-  G_PACMAN_AXIL[0xE444>>2] = 0x10;
+  G_PACMAN_AXIL[0xE440>>2] = 0x00000000;
+
+  if (verbose){
+    printf("INFO:  Setting TS polarity to active low so that timestamp increments\n");
+  }
+  G_PACMAN_AXIL[0xE444>>2] = 0x00000010;
+
+  if (verbose){
+    printf("INFO:  Setting ative low RESET length to 255, triggered by register POKE_C \n");
+  }
+  G_PACMAN_AXIL[0xE450>>2] = 0xFF14;
+  G_PACMAN_AXIL[0xE454>>2] = 0xFF14;
+  G_PACMAN_AXIL[0xE458>>2] = 0xFF14;
+  G_PACMAN_AXIL[0xE45C>>2] = 0xFF14;
+  G_PACMAN_AXIL[0xE460>>2] = 0xFF14;
+  G_PACMAN_AXIL[0xE464>>2] = 0xFF14;
+  G_PACMAN_AXIL[0xE468>>2] = 0xFF14;
+  G_PACMAN_AXIL[0xE46C>>2] = 0xFF14;
+  G_PACMAN_AXIL[0xE470>>2] = 0xFF14;
+  G_PACMAN_AXIL[0xE474>>2] = 0xFF14;
 
   // duplicate (harmless) effort here while merging new driver code into PACMAN server.
   init_axil_driver();
