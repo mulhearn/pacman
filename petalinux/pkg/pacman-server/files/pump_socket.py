@@ -20,5 +20,5 @@ socket.bind ("tcp://*:%s" % port)
 
 while(1):
     print("DEBUG:  update")
-    socket.send(struct.pack("<LLLLL",0xA,0xB,0xC,0xD,0xE))    
+    socket.send(struct.pack("<LLLLL",0xA,0xB,0xC,0xD,0xE))
     time.sleep(2)
