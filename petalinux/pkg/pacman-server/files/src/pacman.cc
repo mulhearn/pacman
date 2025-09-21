@@ -115,11 +115,11 @@ int pacman_init_rx(int verbose, int skip_reset){
 }
 
 int pacman_poll_rx(){
-  const unsigned rx_trailer_bytes = 16; // Each DMA RX packet has a 128-bit trailer
+  const unsigned rx_trailer_bytes = 32; // current firmware, each DMA RX packet has a 2x128-bit trailer
   const unsigned batch_size = 100;
   unsigned batch_count = 0;
   hw_addr_t nxta;
-  uint32_t rx_data[4];
+  uint32_t rx_data[6];
 
   while((batch_count < batch_size) && dma_next_available_rx_bd(&nxta)){
     // several checks are possible here: xbytes size makes sense, trailer matches, etc...
@@ -127,12 +127,18 @@ int pacman_poll_rx(){
     unsigned xbytes = dma_poll_bd_transferred(nxta);
     hw_ptr_t rx_buf = dma_get_buffer(nxta);
     if (xbytes > rx_trailer_bytes) {
-      unsigned full_words = (xbytes - rx_trailer_bytes) / 16;
+      unsigned full_words = (xbytes - rx_trailer_bytes) / 32;
       for (int i=0; i<full_words; i++){
-	rx_data[3] = rx_buf[4*i+3];
-	rx_data[2] = rx_buf[4*i+2];
-	rx_data[1] = rx_buf[4*i+1];
-	rx_data[0] = rx_buf[4*i+0];
+	// firmware is not yet consistent with message format, so fix here for now:
+	rx_data[0] = rx_buf[8*i+0];
+	rx_data[1] = 0;
+	rx_data[2] = rx_buf[8*i+6];
+	rx_data[3] = rx_buf[8*i+7];
+	rx_data[4] = rx_buf[8*i+2];
+	rx_data[5] = rx_buf[8*i+3];
+	uint8_t wt   = rx_data[0]&0xFF;
+	uint8_t chan = (rx_data[0]>>8)&0xFF;
+	rx_data[0] = wt + (chan<<16);
 	rx_buffer_in(rx_data);
       }
     }
