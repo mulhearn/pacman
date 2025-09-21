@@ -40,10 +40,10 @@ WORD_TYPE_ERR   = b'E'
 
 WORD_TYPE_TABLE = {
     'PING':  WORD_TYPE_PING,
-    'READ':  WORD_TYPE_READ,    
+    'READ':  WORD_TYPE_READ,
     'WRITE': WORD_TYPE_WRITE,
     'DATA':  WORD_TYPE_DATA,
-    'SYNC':  WORD_TYPE_SYNC,    
+    'SYNC':  WORD_TYPE_SYNC,
     'TRIG':  WORD_TYPE_TRIG,
     'ERR':   WORD_TYPE_ERR
 }
@@ -56,7 +56,7 @@ WORD_TYPE_TABLE_INV = {v:k for k,v in WORD_TYPE_TABLE.items()}
 
 # PING:   0xWW000000 00000000 00000000 00000000 00000000 00000000
 #    W=word type
-# READ:   0xWWPP0000 00000000 AAAAAAAA RRRRRRRR 00000000 00000000 
+# READ:   0xWWPP0000 00000000 AAAAAAAA RRRRRRRR 00000000 00000000
 #    W=word type, P=PACMAN id, A=address, R=value, S=Status
 # WRITE:  0xWWPP0000 00000000 AAAAAAAA RRRRRRRR 00000000 00000000
 #    W=word type, P=PACMAN id, A=address, R=value, S=Status
@@ -75,9 +75,9 @@ WORD_STRUCT_TABLE = {
     'READ':  struct.Struct('<cB6xII8x'),   # word_type, pacman, address, value
     'WRITE': struct.Struct('<cB6xII8x'),   # word_type, pacman, address, value
     'DATA':  struct.Struct('<cBH4xQQ'),    # word_type, pacman, uart_channel, timestamp, payload
-    'SYNC':  struct.Struct('<cBBB4xQI4x'), # word_type, pacman, sync_type, clock_source, timestamp, status  
+    'SYNC':  struct.Struct('<cBBB4xQI4x'), # word_type, pacman, sync_type, clock_source, timestamp, status
     'TRIG':  struct.Struct('<cBBB4xQ8x'),  # word_type, pacman, trigger_type, trigger_source, timestamp
-    'ERR':   struct.Struct('<cB6xQI4x')    # word_type, pacman, timestamp, error code
+    'ERR':   struct.Struct('<cB6xQI4x')    # word_type, pacman, timestamp, error_code
 }
 
 WORD_FIELD_TABLE = {
@@ -97,7 +97,7 @@ WORD_FIELD_TABLE = {
 # HEADER: 0xMMBBVVVV NNNNNNNN TTTTTTTT TTTTTTTT 00000000 00000000
 #    M=messsage type, B=minor version, V=major version, N=number of words, T=timestamp
 
-HEADER_STRUCT = struct.Struct('<cBHIQ8x') # message_type, 
+HEADER_STRUCT = struct.Struct('<cBHIQ8x') # message_type,
 HEADER_FIELDS = ("msg_type", "minor_version", "major_version", "n_words", "timestamp")
 HEADER_LEN = HEADER_STRUCT.size
 
@@ -130,7 +130,7 @@ def unpack_word(word_bytes):
 
 def parse_word(word):
     return dict(zip(WORD_FIELD_TABLE[word[0]], word))
-    
+
 # -----------------------------
 # Message functions
 # -----------------------------
@@ -140,6 +140,7 @@ def pack_msg(msg_type, msg_words, timestamp):
     body_bytes = b''.join([pack_word(*w) for w in msg_words])
     return header_bytes + body_bytes
 
+
 def unpack_msg(msg_bytes):
     header = unpack_header(msg_bytes[:HEADER_LEN])
     words = []
@@ -147,43 +148,137 @@ def unpack_msg(msg_bytes):
         words.append(unpack_word(msg_bytes[i:i+WORD_LEN]))
     return header, words
 
+def check_byte(name, value):
+    if not (0 <= value <= 0xFF):
+        print(f"ERROR: {name}={value} out of range for 1 byte (0-255)")
+        raise ValueError(f"{name}={value} out of range for 1 byte (0-255)")
+
+def check_uint32(name, value):
+    if not (0 <= value <= 0xFFFFFFFF):
+        print(f"ERROR: {name}={value} out of range for 32-bit unsigned int (0-0xFFFFFFFF)")
+        raise ValueError(f"{name}={value} out of range for 32-bit unsigned int (0-0xFFFFFFFF)")
+
+def check_uint64(name, value):
+    if not (0 <= value <= 0xFFFFFFFFFFFFFFFF):
+        print(f"ERROR: {name}={value} out of range for 64-bit unsigned int (0-0xFFFFFFFFFFFFFFFF)")
+        raise ValueError(f"{name}={value} out of range for 64-bit unsigned int (0-0xFFFFFFFFFFFFFFFF)")
+
 def content_ping():
     return ('PING',)
 
 def content_read(*, addr, value=0, pacman=0):
-    return ('READ',  pacman, addr, value)
+    check_byte("pacman", pacman)
+    check_uint32("addr", addr)
+    check_uint32("value", value)
+    return ('READ', pacman, addr, value)
 
 def content_write(*, addr, value, pacman=0):
+    check_byte("pacman", pacman)
+    check_uint32("addr", addr)
+    check_uint32("value", value)
     return ('WRITE', pacman, addr, value)
 
 def content_data(*, channel, timestamp, payload, pacman=0):
+    check_byte("pacman", pacman)
+    check_byte("channel", channel)
+    check_uint64("timestamp", timestamp)
+    check_uint64("payload", payload)
     return ('DATA', pacman, channel, timestamp, payload)
 
 def content_sync(*, sync_type, timestamp, pacman=0, clock_source=0, status=0):
+    check_byte("pacman", pacman)
+    check_byte("sync_type", sync_type)
+    check_byte("clock_source", clock_source)
+    check_byte("status", status)
+    check_uint64("timestamp", timestamp)
     return ('SYNC', pacman, sync_type, clock_source, timestamp, status)
 
 def content_trig(*, trig_type, timestamp, pacman=0, trig_source=0):
+    check_byte("pacman", pacman)
+    check_byte("trig_type", trig_type)
+    check_byte("trig_source", trig_source)
+    check_uint64("timestamp", timestamp)
     return ('TRIG', pacman, trig_type, trig_source, timestamp)
 
-def content_err(*, error,  pacman=0, timestamp=0):
-    return ('ERR', pacman, timestamp, error)
-
+def content_err(*, error_code, pacman=0, timestamp=0):
+    check_byte("pacman", pacman)
+    check_uint32("error_code", error_code)
+    check_uint64("timestamp", timestamp)
+    return ('ERR', pacman, timestamp, error_code)
 
 def print_header(header):
     parsed = parse_header(header)
-    print("msg_type: {msg_type} version: {major_version}.{minor_version} n_words: {n_words} timestamp: {timestamp}".format(**parsed))    
+    print("msg_type: {msg_type} version: {major_version}.{minor_version} n_words: {n_words} timestamp: {timestamp}".format(**parsed))
     return
 
 def print_word(word):
     format_strings = {
         "PING": "PING",
-        "READ":  "word_type:  READ:  pacman: {pacman:04d} addr: 0x{addr:08x} value=0x{value:08x} ({value})",
-        "WRITE": "word_type:  WRITE: pacman: {pacman:04d} addr: 0x{addr:08x} value=0x{value:08x} ({value})",
-        "DATA":  "word_type:  DATA:  pacman: {pacman:04d} chan={chan:04d} payload=0x{payload:08X} timestamp={timestamp}",
-        "SYNC":  "word_type:  SYNC:  pacman: {pacman:04d} sync_type: {sync_type} timestamp={timestamp}",
-        "TRIG":  "word_type:  TRIG:  pacman: {pacman:04d} trig_type: {trig_type} timestamp={timestamp}",
-        "ERR":   "word_type:  ERR:   pacman: {pacman:04d} error=0x{error_code:08X} timestamp={timestamp}",
-    }    
+        "READ":  "word_type:  READ:  pacman: {pacman:04d} addr: 0x{addr:08X} value: 0x{value:08X} ({value})",
+        "WRITE": "word_type:  WRITE: pacman: {pacman:04d} addr: 0x{addr:08X} value: 0x{value:08X} ({value})",
+        "DATA":  "word_type:  DATA:  pacman: {pacman:04d} chan: {chan:04d} payload: 0x{payload:08X} timestamp: {timestamp}",
+        "SYNC":  "word_type:  SYNC:  pacman: {pacman:04d} sync_type: {sync_type:c} clk_src: {clk_src} timestamp: {timestamp} status: 0x{status:08x}",
+        "TRIG":  "word_type:  TRIG:  pacman: {pacman:04d} trig_type: {trig_type} trig_src: {trig_src} timestamp={timestamp}",
+        "ERR":   "word_type:  ERR:   pacman: {pacman:04d} error_code=0x{error_code:08X} timestamp={timestamp}",
+    }
     fmt = format_strings.get(word[0], "unknown")
     parsed = parse_word(word)
     print(fmt.format(**parsed))
+
+def check_msg(msg_bytes):
+    """
+    Validate a PACMAN message.
+
+    Returns True if the message is structurally valid, False otherwise.
+    Prints debug info and raw hex dumps on errors.
+    Always enforces firmware version match.
+    """
+    try:
+        # --- check header length ---
+        if len(msg_bytes) < HEADER_LEN:
+            raise ValueError(f"message too short: {len(msg_bytes)} bytes, expected at least {HEADER_LEN}")
+
+        # --- raw msg_type check ---
+        raw_type = bytes([msg_bytes[0]])
+        if raw_type not in MSG_TYPE_TABLE_INV:
+            raise ValueError(f"unknown msg_type byte: {raw_type.hex()}")
+
+        # --- unpack header ---
+        header = unpack_header(msg_bytes[:HEADER_LEN])
+        parsed = parse_header(header)
+
+        n_words = parsed["n_words"]
+        expected_len = HEADER_LEN + n_words * WORD_LEN
+        if len(msg_bytes) != expected_len:
+            raise ValueError(f"length mismatch: expected {expected_len}, got {len(msg_bytes)}")
+
+        # --- version check (always enforced) ---
+        if (parsed["major_version"], parsed["minor_version"]) != (MSG_MAJOR_VERSION, MSG_MINOR_VERSION):
+            raise ValueError(
+                f"version mismatch: expected {MSG_MAJOR_VERSION}.{MSG_MINOR_VERSION}, "
+                f"got {parsed['major_version']}.{parsed['minor_version']}"
+            )
+
+    except (struct.error, ValueError, KeyError) as e:
+        print(f"ERROR: HEADER: {e}")
+        print(f"ERROR: raw header bytes:  0x{msg_bytes[:HEADER_LEN].hex()}")
+        return False
+
+    # --- unpack and print words ---
+    for i in range(HEADER_LEN, len(msg_bytes), WORD_LEN):
+        chunk = msg_bytes[i:i+WORD_LEN]
+        try:
+            # check word type first
+            raw_word_type = chunk[0:1]
+            if raw_word_type not in WORD_TYPE_TABLE_INV:
+                raise ValueError(f"Unknown word_type byte: {raw_word_type.hex()}")
+
+            word = unpack_word(chunk)
+
+        except (struct.error, ValueError, KeyError) as e:
+            print(f"ERROR: WORD:  at word {(i - HEADER_LEN)//WORD_LEN} {e}")
+            print(f"ERROR: raw word bytes: 0x{chunk.hex()}")
+            return False
+
+    # All checks passed
+    return True

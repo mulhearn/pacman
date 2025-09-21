@@ -9,6 +9,7 @@
 #include <cassert>
 
 #include "pacman.hh"
+#include "pacman_vspace.hh"
 #include "tx_buffer.hh"
 #include "rx_buffer.hh"
 
@@ -19,7 +20,8 @@ static void * pub = NULL;
 static void * sub = NULL;
 
 #define MAX_PACKETS 10000
-#define BYTES_PER_PACKET 16
+#define BYTES_PER_PACKET 24
+#define WORDS_PER_PACKET 6    // 32 bytes / 4 bytes per 32-bit word
 
 static uint32_t buffer[MAX_PACKETS*BYTES_PER_PACKET/4];
 static volatile bool msg_done = true;
@@ -104,19 +106,19 @@ int pacman_poll_rx(){
       return EXIT_SUCCESS;
     }
 
-    if (size % 16) {
+    if (size % BYTES_PER_PACKET) {
       printf("ERROR:  received message of size %d\n", size);
       return EXIT_FAILURE;
     }
 
 
-    int count = size / 16;
-    //printf("DEBUG:  received %d words in buffer of size %d \n", count, size);
+    int count = size / BYTES_PER_PACKET;
+    printf("DEBUG:  received %d words in buffer of size %d \n", count, size);
     memcpy(buffer,zmq_msg_data(&msg), size);
     zmq_msg_close(&msg);
 
     for (int i=0; i<count; i++){
-      rx_buffer_in(&buffer[4*i]);
+      rx_buffer_in(&buffer[WORDS_PER_PACKET*i]);
     }
 
 
@@ -128,6 +130,7 @@ int pacman_poll_rx(){
 int pacman_poll_tx(){
   uint32_t src[TX_BUFFER_BYTES/4];
   int count = 0;
+  uint8_t pacman_id = pacman_vspace_get_pacman_id();
 
   while (tx_buffer_out(src)){
     //printf("DEBUG:  Filling loopback buffer...\n");
@@ -139,10 +142,12 @@ int pacman_poll_tx(){
 	  msg_done = false;
 	}
 	//printf("DEBUG:  count: %d chan: %3d tx_data: 0x%08x %08x\n", count, i, src[4+2*i+1], src[4+2*i+0]);
-	buffer[4*count + 0]=0x0044+((i+1)<<8);
-	buffer[4*count + 1]=0;
-	buffer[4*count + 2]=src[4+2*i+0];
-	buffer[4*count + 3]=src[4+2*i+1];
+	buffer[6*count + 0]=0x0044+((i+1)<<16)+(pacman_id<<8);
+	buffer[6*count + 1]=0;
+	buffer[6*count + 2]=0;
+	buffer[6*count + 3]=0;
+	buffer[6*count + 4]=src[4+2*i+0];
+	buffer[6*count + 5]=src[4+2*i+1];
 	count++;
 	if (count == MAX_PACKETS){
 	  // send message:
@@ -158,12 +163,6 @@ int pacman_poll_tx(){
     count = 0;
   }
 
-  //printf("DEBUG:  sending message with count %d\n", count);
-  //zmq_msg_t msg;
-  //zmq_msg_init_data(&msg, buffer, 16*count, clear_msg, NULL);
-  //zmq_msg_send(&msg, pub, 0);
-  //zmq_msg_close(&msg);
-  //printf("DEBUG:  done sending message\n");
   return EXIT_SUCCESS;
 }
 

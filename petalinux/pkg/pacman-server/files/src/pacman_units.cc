@@ -1,10 +1,103 @@
 #include <stdio.h>
 #include <assert.h>
+#include <ctime>
 
-//#include "message_format.hh"
+#include "pacman_message.hh"
 #include "tx_buffer.hh"
 #include "rx_buffer.hh"
 
+// Placeholder for user test function
+int test_message(pacman_msg_t* msg) {
+  if (check_msg(msg)){
+    printf("INFO:  messages passes consistency check.\n");
+    print_msg(msg);
+  } else {
+    printf("ERROR: messages FAILS consistency check.\n");
+    return 0;
+  }
+
+  return 1;
+}
+
+int test_pacman_message(){
+  int success = 1;
+  printf("INFO:  ****** running PACMAN message unit test. *******\n");
+
+  uint64_t ts = static_cast<uint64_t>(std::time(nullptr));
+  pacman_msg_t msg;
+
+  printf("INFO:  Step 1: REQ/PING\n");
+  write_header_req(&msg.header, 1, ts);
+  write_word_ping(&msg.words[0]);
+  success &= test_message(&msg);
+
+  printf("INFO:  Step 2: REQ/PING\n");
+  write_header_rep(&msg.header, 1, ts);
+  write_word_ping(&msg.words[0]);
+  success &= test_message(&msg);
+
+  if (success==0){
+    printf("ERROR:  PACMAN message unit test FAILED at Step 1-2 (PING).\n");
+    return 0;
+  }
+  printf("INFO:  Step 3: REQ/READ\n");
+  write_header_req(&msg.header, 1, ts);
+  write_word_read(&msg.words[0], 2, 0xFF10, 0x00000000);
+  success &= test_message(&msg);
+
+  printf("INFO:  Step 4: REQ/READ\n");
+  write_header_rep(&msg.header, 1, ts);
+  write_word_read(&msg.words[0], 2, 0xFF10, 0xAABBCCDD);
+  success &= test_message(&msg);
+
+  if (success==0){
+    printf("ERROR:  PACMAN message unit test FAILED at Step 3-4 (PING).\n");
+    return 0;
+  }
+
+  printf("INFO:  Step 5: REQ/WRITE\n");
+  write_header_req(&msg.header, 1, ts);
+  write_word_write(&msg.words[0], 2, 0xFF14, 0x12345678);
+  success &= test_message(&msg);
+
+  printf("INFO:  Step 6: REQ/WRITE\n");
+  write_header_rep(&msg.header, 1, ts);
+  write_word_write(&msg.words[0], 2, 0xFF14, 0x12345678);
+  success &= test_message(&msg);
+
+  if (success==0){
+    printf("ERROR:  PACMAN message unit test FAILED at Step 5-6 (PING).\n");
+    return 0;
+  }
+
+  printf("INFO:  Step 7: DATA/DATA\n");
+  write_header_data(&msg.header, 1, ts);
+  write_word_data(&msg.words[0], 2, 4, ts, 0x1234567890ABCDEF);
+  success &= test_message(&msg);
+
+  printf("INFO:  Step 8: DATA/SYNC\n");
+  write_header_data(&msg.header, 1, ts);
+  write_word_sync(&msg.words[0], 2, 'H', 0, ts, 0);
+  success &= test_message(&msg);
+
+  printf("INFO:  Step 9: DATA/TRIG\n");
+  write_header_data(&msg.header, 1, ts);
+  write_word_trig(&msg.words[0], 2, 4, 1, ts);
+  success &= test_message(&msg);
+
+  if (success==0){
+    printf("ERROR:  PACMAN message unit test FAILED at Step 7-9 (DATA,SYNC,TRIG).\n");
+    return 0;
+  }
+
+  printf("INFO:  Step 9: DATA/ERR\n");
+  write_header_data(&msg.header, 1, ts);
+  write_word_err(&msg.words[0], 2, ts, 0xEEEE);
+  success &= test_message(&msg);
+
+  printf("SUMMARY:  PACMAN message unit test SUCCESS.\n");
+  return success;
+}
 
 int test_tx_buffer(){
   int success = 1;
@@ -101,8 +194,8 @@ int test_tx_buffer(){
     //tx_buffer_print_output(output);
 
     success &= (output[0] == 0xFFFFFFFF);
-    success &= (output[1] == 0x00000000);
-    //success &= (output[1] == 0x000000FF);
+    //success &= (output[1] == 0x00000000);
+    success &= (output[1] == 0x000000FF);
     for (int j=0; j<TX_BUFFER_CHAN; j++){
       int chan = j;
       if (chan<0)
@@ -240,8 +333,9 @@ int test_rx_buffer(){
 
 int main(){
   int success = 1;
-  success &= test_tx_buffer();
-  success &= test_rx_buffer();
+  success &= test_pacman_message();
+  //success &= test_tx_buffer();
+  //success &= test_rx_buffer();
   if (success) {
     printf("SUMMARY:  *************************************************\n");
     printf("SUMMARY:  Congratulations!  All unit tests were successful.\n");

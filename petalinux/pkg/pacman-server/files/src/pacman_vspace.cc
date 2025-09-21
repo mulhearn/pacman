@@ -9,6 +9,14 @@
 
 #define PACMAN_SERVER_I2C_START     0x00024000
 
+// virtual registers:
+static uint32_t pacman_id = 0;
+static uint32_t scratch_a = 0;
+static uint32_t scratch_b = 0;
+
+uint8_t pacman_vspace_get_pacman_id(){ return 0xFF&pacman_id; }
+
+
 int pacman_vspace_write(uint32_t addr, uint32_t value){
   if (addr >= PACMAN_AXIL_ADDR){
     unsigned off = addr - PACMAN_AXIL_ADDR;
@@ -56,6 +64,15 @@ int pacman_vspace_write(uint32_t addr, uint32_t value){
   case 0x2014:
     // ignoring...
     return EXIT_SUCCESS;
+  case 0x4000:
+    pacman_id = value;
+    return EXIT_SUCCESS;
+  case 0x4010:
+    scratch_a = value;
+    return EXIT_SUCCESS;
+  case 0x4014:
+    scratch_b = value;
+    return EXIT_SUCCESS;
   }
 
   // assume pass through if we didn't catch it earlier:
@@ -95,9 +112,15 @@ uint32_t pacman_vspace_read(uint32_t addr, int * status){
     tmp = pacman_read(0xFF20);
     return ((tmp & 0x00010000) != 0);
   case 0x1000:
-    return 0;
+    return 0x0;
   case 0x1010:
-    return 0;
+    return 0x0;
+  case 0x4000:
+    return pacman_id;
+  case 0x4010:
+    return scratch_a;
+  case 0x4014:
+    return scratch_b;
   }
 
   // assume pass through if we didn't catch it earlier:
