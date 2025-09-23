@@ -149,6 +149,9 @@ void record_iv_curves(){
 
 // *** TIMING UNIT ***
 
+
+
+
 void read_timing_registers(){
   printf("TIMING REGISTERS:\n");
   printf("timing status-------------0x%x \n", axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_STATUS));
@@ -585,9 +588,9 @@ void rxtx_menu(){
 void timing_menu(){
   while(1){
     printf("TIMING MENU:  choose an option:\n");
-    printf("(0) main menu (1) read timing registers (2) read counts \n");
-    printf("(3) toggle input polarity (4) toggle ts sync config (5) toggle G config (6) toggle H config\n");
-    printf("(7) toggle counts (8) poke C (9) poke D\n");
+    printf("(0) main menu (1) read timing registers (2) toggle counter state (3) read counts \n");
+    printf("(4) toggle input polarity (5) toggle ts sync config (6) toggle G config (7) toggle H config\n");
+    printf("(8) toggle counts (9) poke C (10) poke D\n");
     int input;
     scanf("%d", &input);
     printf("INFO: selected %d\n", input);
@@ -599,27 +602,30 @@ void timing_menu(){
       read_timing_registers();
       break;
     case 2:
-      read_timing_counts();
-      break;
-    case 3:
-      toggle_timing_input_polarity();
-      break;
-    case 4:
-      toggle_timing_ts_sync_config();
-      break;
-    case 5:
-      toggle_timing_g_config();
-      break;
-    case 6:
-      toggle_timing_h_config();
-      break;
-    case 7:
       toggle_timing_counts();
       break;
+    case 3:
+      read_timing_counts();
+      break;
+    case 4:
+      toggle_timing_input_polarity();
+      break;
+    case 5:
+      toggle_timing_ts_sync_config();
+      break;
+    case 6:
+      toggle_timing_g_config();
+      break;
+    case 7:
+      toggle_timing_h_config();
+      break;
     case 8:
-      poke_timing_input_c();
+      toggle_timing_counts();
       break;
     case 9:
+      poke_timing_input_c();
+      break;
+    case 10:
       poke_timing_input_d();
       break;
     default:

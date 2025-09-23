@@ -14,14 +14,20 @@ static unsigned G_TX_COUNTER = 0;
 #define DMA_BUFFER_BASEADDR  0x20000000
 #define DMA_BUFFER_SIZE      0x10000000  // 256 MB
 
-
-
-
 #define TX_BD_BASEADDR       0x20000000
 #define RX_BD_BASEADDR       0x21000000
-#define TX_BUF_BYTES 0x150  // 40 uarts x 64 bits => 20 128 bit word plus 1 128 bit header => 21*4*4 = 336 bytes
-//#define RX_BUF_BYTES 0x400  // Enough for single cycles, max (40 uarts + header + 3 T/S/HB) * 16 bytes = 0x2c bytes
-#define RX_BUF_BYTES 0x4000  // Each 10 cycle is max 0x470, enough for 140 cycles (0x8C)
+
+// 40 uarts x 64 bits => 20 128 bit word plus 1 128 bit header => 21*4*4 = 336 bytes (0x150)
+#define TX_BUF_BYTES 0x150
+
+//#define RX_BUF_BYTES 0x400  // Enough for single cycles, max (40 uarts + header + 3 T/S/HB) * 16 bytes = 0x2c0 bytes
+// Each uart rx takes 10 cycles, so for 10 cycles, the maximum buffer size is:
+//    (40 + 1 + 10*3)*16 = 0x470 (1136) bytes
+// So the buffer size below is enough for more than 140 cycles (0x8C) which you should see in settings
+// Note:  when switching to 64 bit timestamps, we'll have 5 turn cycles per transmission, and so this becomes:
+//    (2*40 + 10*3)*32 = 3552 (0xde0)
+// and the buffer size below is enough for 46 (0x2e)  (about 1/4 of 0x8C)
+#define RX_BUF_BYTES 0x4000
 
 #define TX_BUF_WORDS TX_BUF_BYTES/4
 
