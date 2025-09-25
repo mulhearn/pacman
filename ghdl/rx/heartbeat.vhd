@@ -7,16 +7,11 @@ use work.common.all;
 -- heartbeat:  presents a periodic heartbeat on channel CHANNEL to the RX buffer
 
 entity heartbeat is
-  generic (
-    constant CHANNEL   : integer := 16#48#;  -- ASCII H
-    constant HEADER    : integer := 16#53#   -- ASCII S
-  );
   port (
     ACLK          : in  std_logic;
     ARESETN       : in  std_logic;
     EN_I          : in  std_logic;
     CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    HEADER_O      : out  std_logic_vector(C_RX_HEADER_WIDTH-1 downto 0);
     TIMESTAMP_O   : out  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
     VALID_O       : out std_logic;
     READY_I       : in  std_logic;
@@ -40,9 +35,6 @@ begin
 
   VALID_O <= valid;
   ready <= READY_I;
-
-  HEADER_O(15 downto 8) <= std_logic_vector(to_unsigned(CHANNEL, C_BYTE));
-  HEADER_O(7 downto 0)  <= std_logic_vector(to_unsigned(HEADER, C_BYTE));
 
   process(clk,rst)
   begin

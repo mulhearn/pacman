@@ -56,17 +56,24 @@ end rx_unit;
 -- mechanism.
 
 architecture behaviour of rx_unit is
-  signal header           : rx_header_array_t;
-  signal data             : rx_data_array_t;
+  signal bheader           : rx_header_array_t := (others => (others => '0'));
+  signal bdata             : rx_data_array_t;
+  signal udata            : uart_data_array_t;
   signal timestamp        : rx_timestamp_array_t;
   signal valid            : std_logic_vector(C_RX_NUM_CHAN-1 downto 0) := (others => '0');
   signal ready            : std_logic_vector(C_RX_NUM_CHAN-1 downto 0) := (others => '0');
   signal ustatus          : uart_reg_array_t;
   signal uconfig          : uart_reg_array_t := (others => (others => '0'));
+  signal uchan            : uart_reg_array_t := (others => (others => '0'));
+  signal uheader          : uart_reg_array_t := (others => (others => '0'));
   signal bconfig          : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+  signal benables         : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
   signal bstatus          : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
   signal heartbeat_config : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
   signal rollover_config  : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+  signal pacman           : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+  signal wlut             : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+  signal eop_header       : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
   component rx_buffer is
     port (
@@ -86,6 +93,7 @@ architecture behaviour of rx_unit is
       TIMESTAMP_I        : in  rx_timestamp_array_t;
       VALID_I            : in  std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
       READY_O            : out std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
+      EOP_HEADER_I       : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       DEBUG_STATUS_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       DEBUG_DATA_O       : out std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0)
       );
@@ -93,79 +101,93 @@ architecture behaviour of rx_unit is
 
   component rx_registers is
     port (
-      ACLK	           : in std_logic;
-      ARESETN	           : in std_logic;
+      ACLK     : in std_logic;
+      ARESETN  : in std_logic;
 
-      S_REGBUS_RB_RADDR	   : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
-      S_REGBUS_RB_RDATA	   : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      S_REGBUS_RB_RUPDATE  : in  std_logic;
-      S_REGBUS_RB_RACK     : out std_logic;
+      S_REGBUS_RB_RADDR	  : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
+      S_REGBUS_RB_RDATA	  : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      S_REGBUS_RB_RUPDATE : in  std_logic;
+      S_REGBUS_RB_RACK    : out std_logic;
 
-      S_REGBUS_RB_WUPDATE  : in  std_logic;
-      S_REGBUS_RB_WADDR	   : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
-      S_REGBUS_RB_WDATA	   : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      S_REGBUS_RB_WACK     : out std_logic;
+      S_REGBUS_RB_WUPDATE : in  std_logic;
+      S_REGBUS_RB_WADDR	  : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
+      S_REGBUS_RB_WDATA	  : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      S_REGBUS_RB_WACK    : out std_logic;
 
-      UART_LOOK_I          : in rx_data_array_t;
-      UART_STATUS_I        : in uart_reg_array_t;
-      UART_CONFIG_O        : out uart_reg_array_t;
-      BUFFER_CONFIG_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      HEARTBEAT_CONFIG_O   : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      ROLLOVER_CONFIG_O    : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      BUFFER_STATUS_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      FIFO_COUNT_I         : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+      UART_LOOK_I   : in  uart_data_array_t;
+      UART_STATUS_I : in  uart_reg_array_t;
+      UART_CONFIG_O : out uart_reg_array_t;
+      UART_CHAN_O   : out uart_reg_array_t;
+
+      BUFFER_STATUS_I    : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      FIFO_COUNT_I       : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      BUFFER_CONFIG_O    : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      BUFFER_ENABLES_O   : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      PACMAN_O           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      HEARTBEAT_CONFIG_O : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      ROLLOVER_CONFIG_O  : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      WORD_TYPE_LUT_O    : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      HEARTBEAT_HEADER_O : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      ROLLOVER_HEADER_O  : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      EOP_HEADER_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
       );
   end component;
 
   component rx_chan is
-    generic (
-      constant CHANNEL : integer := 1;
-      constant HEADER  : integer := C_TYPE_DATA
-      );
     port (
-      ACLK          : in  std_logic;
-      ARESETN       : in  std_logic;
-      CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      STATUS_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      HEADER_O      : out  std_logic_vector(C_RX_HEADER_WIDTH-1 downto 0);
-      DATA_O        : out  std_logic_vector(C_UART_DATA_WIDTH-1 downto 0);
-      TIMESTAMP_O   : out  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
-      VALID_O       : out std_logic;
-      READY_I       : in  std_logic;
-      RX_I          : in  std_logic;
-      LOOPBACK_I    : in  std_logic;
-      TIMESTAMP_I   : in  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
-      DEBUG_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+      ACLK        : in  std_logic;
+      ARESETN     : in  std_logic;
+      CONFIG_I    : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      STATUS_O    : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      DATA_O      : out  std_logic_vector(C_UART_DATA_WIDTH-1 downto 0);
+      TIMESTAMP_O : out  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
+      VALID_O     : out std_logic;
+      READY_I     : in  std_logic;
+      RX_I        : in  std_logic;
+      LOOPBACK_I  : in  std_logic;
+      TIMESTAMP_I : in  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
+      DEBUG_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
       );
+  end component;
+
+  component rx_header is
+        port (
+      ACLK        : in std_logic;
+      ARESETN     : in std_logic;
+      PACMAN_I    : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      LUT_I       : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      CHAN_I      : in uart_reg_array_t;
+      DATA_I      : in uart_data_array_t;
+      HEADER_O    : out uart_reg_array_t;
+      DEBUG_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+    );
   end component;
 
   component heartbeat is
     port (
-      ACLK          : in  std_logic;
-      ARESETN       : in  std_logic;
-      EN_I          : in  std_logic;
-      CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      HEADER_O      : out  std_logic_vector(C_RX_HEADER_WIDTH-1 downto 0);
-      TIMESTAMP_O   : out  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
-      VALID_O       : out std_logic;
-      READY_I       : in  std_logic;
-      TIMESTAMP_I   : in  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
-      DEBUG_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+      ACLK        : in  std_logic;
+      ARESETN     : in  std_logic;
+      EN_I        : in  std_logic;
+      CONFIG_I    : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      TIMESTAMP_O : out  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
+      VALID_O     : out std_logic;
+      READY_I     : in  std_logic;
+      TIMESTAMP_I : in  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
+      DEBUG_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
       );
   end component;
 
   component rollover is
     port (
-      ACLK          : in  std_logic;
-      ARESETN       : in  std_logic;
-      EN_I          : in  std_logic;
-      CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      HEADER_O      : out  std_logic_vector(C_RX_HEADER_WIDTH-1 downto 0);
-      TIMESTAMP_O   : out  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
-      VALID_O       : out std_logic;
-      READY_I       : in  std_logic;
-      TIMESTAMP_I   : in  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
-      DEBUG_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+      ACLK        : in  std_logic;
+      ARESETN     : in  std_logic;
+      EN_I        : in  std_logic;
+      CONFIG_I    : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      TIMESTAMP_O : out  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
+      VALID_O     : out std_logic;
+      READY_I     : in  std_logic;
+      TIMESTAMP_I : in  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
+      DEBUG_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
       );
   end component;
 
@@ -179,12 +201,13 @@ begin
     M_AXIS_TKEEP    => M_AXIS_TKEEP,
     M_AXIS_TLAST    => M_AXIS_TLAST,
     CONFIG_I        => bconfig,
-    HEADER_I        => header,
-    DATA_I          => data,
+    HEADER_I        => bheader,
+    DATA_I          => bdata,
     TIMESTAMP_I     => timestamp,
     STATUS_O        => bstatus,
     VALID_I         => valid,
-    READY_O         => ready
+    READY_O         => ready,
+    EOP_HEADER_I    => eop_header
     );
 
   reg0: rx_registers port map (
@@ -198,28 +221,31 @@ begin
     S_REGBUS_RB_WADDR   => S_REGBUS_RB_WADDR,
     S_REGBUS_RB_WDATA   => S_REGBUS_RB_WDATA,
     S_REGBUS_RB_WACK    => S_REGBUS_RB_WACK,
-    UART_LOOK_I         => data,
+    UART_LOOK_I         => udata,
     UART_STATUS_I       => ustatus,
-    BUFFER_STATUS_I     => bstatus,
     UART_CONFIG_O       => uconfig,
+    UART_CHAN_O         => uchan,
+    BUFFER_STATUS_I     => bstatus,
+    FIFO_COUNT_I        => FIFO_COUNT_I,
     BUFFER_CONFIG_O     => bconfig,
+    BUFFER_ENABLES_O    => benables,
+    PACMAN_O            => pacman,
     HEARTBEAT_CONFIG_O  => heartbeat_config,
     ROLLOVER_CONFIG_O   => rollover_config,
-    FIFO_COUNT_I        => FIFO_COUNT_I
-    );
+    WORD_TYPE_LUT_O     => wlut,
+    HEARTBEAT_HEADER_O  => bheader(40),
+    ROLLOVER_HEADER_O   => bheader(41),
+    EOP_HEADER_O        => eop_header
+  );
 
   grxchan0: for i in 0 to C_NUM_UART-1 generate
     rxchan0: rx_chan
-      generic map(
-        CHANNEL=>(i+1)
-        )
       port map(
         ACLK          => M_AXIS_ACLK,
         ARESETN       => M_AXIS_ARESETN,
         CONFIG_I      => uconfig(i),
         STATUS_O      => ustatus(i),
-        HEADER_O      => header(i),
-        DATA_O        => data(i),
+        DATA_O        => udata(i),
         TIMESTAMP_O   => timestamp(i),
         VALID_O       => valid(i),
         READY_I       => ready(i),
@@ -229,12 +255,21 @@ begin
         );
   end generate grxchan0;
 
+  h0: rx_header port map (
+    ACLK        => M_AXIS_ACLK,
+    ARESETN     => M_AXIS_ARESETN,
+    CHAN_I      => uchan,
+    LUT_I       => wlut,
+    PACMAN_I    => pacman,
+    DATA_I      => udata,
+    HEADER_O    => uheader
+  );
+
   hb0: heartbeat port map (
     ACLK          => M_AXIS_ACLK,
     ARESETN       => M_AXIS_ARESETN,
-    EN_I          => bconfig(16),
+    EN_I          => benables(0),
     CONFIG_I      => heartbeat_config,
-    HEADER_O      => header(40),
     TIMESTAMP_O   => timestamp(40),
     VALID_O       => valid(40),
     READY_I       => ready(40),
@@ -244,14 +279,20 @@ begin
   ro0: rollover port map (
     ACLK          => M_AXIS_ACLK,
     ARESETN       => M_AXIS_ARESETN,
-    EN_I          => bconfig(17),
+    EN_I          => benables(1),
     CONFIG_I      => rollover_config,
-    HEADER_O      => header(41),
     TIMESTAMP_O   => timestamp(41),
     VALID_O       => valid(41),
     READY_I       => ready(41),
     TIMESTAMP_I   => TIMESTAMP_I
     );
 
-
+  gheader0: for i in 0 to C_NUM_UART-1 generate
+    bheader(i) <= uheader(i);
+    bdata(i)   <= udata(i);
+  end generate gheader0;
+  bdata(40) <= (others => '0');
+  bdata(41) <= (others => '0');
+  --bheader(40) <= x"00004053";
+ -- bheader(41) <= x"00004153";
 end behaviour;

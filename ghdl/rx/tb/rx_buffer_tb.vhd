@@ -29,6 +29,7 @@ architecture behaviour of rx_buffer_tb is
       TIMESTAMP_I        : in  rx_timestamp_array_t;
       VALID_I            : in  std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
       READY_O            : out std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
+      EOP_HEADER_I       : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       DEBUG_STATUS_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       DEBUG_DATA_O       : out std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0)
     );
@@ -57,11 +58,7 @@ architecture behaviour of rx_buffer_tb is
   signal ura      : std_logic := '0';
   signal urb      : std_logic := '0';
   signal urc      : std_logic := '0';
-  signal ulk      : std_logic_vector(7 downto 0) := (others => '0');
   signal ulast    : std_logic := '0';
-  signal tlk      : std_logic_vector(7 downto 0) := (others => '0');
-  signal twt      : std_logic_vector(7 downto 0) := (others => '0');
-
   signal status      : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
   signal look        : std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
   signal show_output : std_logic := '0';
@@ -74,9 +71,6 @@ begin
   urb <= uready(1);
   urc <= uready(2);
   ulast <= status(6);
-  ulk <= look(71 downto 64);
-  tlk <= tdata(71 downto 64);
-  twt <= tdata(7  downto 0);
 
   uut: rx_buffer port map (
     M_AXIS_ACLK     => aclk,
@@ -91,6 +85,7 @@ begin
     TIMESTAMP_I     => timestamp,
     VALID_I         => uvalid,
     READY_O         => uready,
+    EOP_HEADER_I    => x"1100004C",
     DEBUG_STATUS_O  => status, -- (non-delayed version for easy debugging)
     DEBUG_DATA_O    => look   -- (non-delayed version for easy debugging)
   );
@@ -144,9 +139,9 @@ begin
   data_process : process
   begin
     data <= (others => (others => '0'));
-    header(0)  <= x"0144";
-    header(1)  <= x"0244";
-    header(2)  <= x"0344";
+    header(0)  <= x"00000144";
+    header(1)  <= x"00000244";
+    header(2)  <= x"00000344";
     data(0)(15 downto 0) <= x"AAAA";
     data(1)(15 downto 0) <= x"BBBB";
     data(2)(15 downto 0) <= x"CCCC";
@@ -167,19 +162,28 @@ end process;
 
 output_process : process
     variable l : line;
-    variable turn : integer;
-
+    variable turn  : integer;
+    variable word  : integer;
+    variable wtype : integer := 0;
   begin
     wait for 10 ns;
 
     turn := to_integer(unsigned(status(13 downto 8)));
+    word := to_integer(unsigned(status(15 downto 14)));
+
+    if (status(1 downto 0) = "00") then
+      wtype := 0;
+    elsif (word=2) then
+      wtype := to_integer(unsigned(tdata(7 downto 0)));
+    end if;
 
     if (show_output='1') then
       write (l, String'("c: "));
       write (l, count, left, 4);
       write (l, String'("t: "));
       write (l, turn, left, 3);
-
+      write (l, String'("w: "));
+      write (l, word, left, 3);
       if (status(1 downto 0) = "00") then
         write (l, String'(" IDLE "));
       elsif (status(1 downto 0) = "01") then
@@ -205,68 +209,17 @@ output_process : process
 
       write (l, String'(" ul: "));
       write (l, ulast);
-
-      write (l, String'(" ulk: "));
-      hwrite (l, ulk);
-
-
-
       write (l, String'(" | tv: "));
       write (l, tvalid);
       write (l, String'(" tr: "));
       write (l, tready);
       write (l, String'(" tl: "));
       write (l, tlast);
-      write (l, String'(" tlk: "));
-      hwrite (l, tlk);
-      write (l, String'(" twt: "));
-      hwrite (l, twt);
+      write (l, String'(" tdata: "));
+      hwrite (l, tdata);
       write (l, String'(" ("));
-      write(L, character'val(to_integer(unsigned(twt))));
+      write(L, character'val(wtype));
       write (l, String'(")"));
-
-
-
-
-
-
-
-
-
-      --write (l, String'("| uv: 0x"));
-      --hwrite (l, uvalid);
-      --write (l, String'(" ur: 0x"));
-      --hwrite (l, uready);
-      --write (l, String'(" look: 0x"));
-      --hwrite (l, look(79 downto 64));
-
-      --write (l, String'("| tdata: 0x"));
-      --hwrite (l, tdata(79 downto 64));
-      --write (l, String'(".."));
-      --write (l, String'(" v: "));
-      --write (l, tvalid);
-      --write (l, status(2));
-      --write (l, String'(" r: "));
-      --write (l, tready);
-      --write (l, status(3));
-      --write (l, String'(" l: "));
-      --write (l, tlast);
-      --write (l, String'(" busy: "));
-      --write (l, status(4));
-      --write (l, beat, left, 3);
-      --write (l, String'(" w: "));
-      --write (l, status(5));
-      --write (l, String'(" l: "));
-      --write (l, status(6));
-
-      --write (l, String'("| data 0x 0:"));
-      --hwrite (l, data(0)(7 downto 0));
-      --write (l, String'(" 1:"));
-      --hwrite (l, data(1)(7 downto 0));
-      --write (l, String'(" 2:"));
-      --hwrite (l, data(2)(7 downto 0));
-      --write (l, String'(" 3:"));
-      --hwrite (l, data(3)(7 downto 0));
 
       if (aresetn = '0') then
         write (l, String'(" (RESET)"));

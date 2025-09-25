@@ -17,7 +17,6 @@ architecture behaviour of rollover_tb is
       ARESETN       : in  std_logic;
       EN_I          : in  std_logic;
       CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      HEADER_O      : out  std_logic_vector(C_RX_HEADER_WIDTH-1 downto 0);
       TIMESTAMP_O   : out  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
       VALID_O       : out std_logic;
       READY_I       : in  std_logic;
@@ -31,7 +30,6 @@ architecture behaviour of rollover_tb is
   signal aclk      : std_logic;
   signal aresetn   : std_logic;
   signal uclk      : std_logic;
-  signal header     : std_logic_vector(C_RX_HEADER_WIDTH-1 DOWNTO 0);
   signal tstamp     : std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
   signal tstamp_in  : std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0) := (others => '0');
   signal valid     : std_logic;
@@ -54,7 +52,6 @@ begin
     ARESETN     => aresetn,
     EN_I        => '1',
     CONFIG_I    => x"00000003",
-    HEADER_O    => header,
     TIMESTAMP_O => tstamp,
     VALID_O     => valid,
     READY_I     => ready,
@@ -114,8 +111,6 @@ begin
       write (l, valid);
       write  (l, String'(" r: "));
       write (l, ready);
-      write  (l, String'(" | h: 0x"));
-      hwrite (l, header);
       write  (l, String'(" | ts: 0x"));
       hwrite (l, tstamp);
       if (aresetn = '0') then

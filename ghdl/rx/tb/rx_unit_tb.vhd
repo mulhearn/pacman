@@ -102,9 +102,13 @@ begin
 
   timestamp_process : process
   begin
-    timestamp <= x"00000000000ABC10";
-    wait until count=1100;
-    timestamp <= x"00000000000ABCD0";
+    timestamp <= x"0000000000000123";
+    -- this is just in the nick of time:
+    --wait until count=973;
+    -- this causes rollover to go valid in middle of word count,
+    -- testing protection for mid-word arrival of valid signal:
+    wait until count=975;
+    timestamp <= x"0000000000000ABC";
     wait;
   end process;
 
@@ -201,12 +205,23 @@ begin
     wupdate <= '1';
     wait for 10 ns;
     waddr   <= x"7FA4";
-    --wdata   <= x"00030001";
-    wdata   <= x"00000000";
+    wdata   <= x"00000001";
     wupdate <= '1';
     wait for 10 ns;
     waddr   <= x"7FA8";
+    wdata   <= x"00000003";
+    wupdate <= '1';
+    wait for 10 ns;
+    waddr   <= x"7FB8";
     wdata   <= x"00000000";
+    wupdate <= '1';
+    wait for 10 ns;
+    waddr   <= x"7FAC";
+    wdata <= x"000000AB";
+    wupdate <= '1';
+    wait for 10 ns;
+    waddr   <= x"7FAC";
+    wdata <= x"000000AB";
     wupdate <= '1';
     wait for 10 ns;
     waddr   <= x"7FC0";
@@ -215,6 +230,10 @@ begin
     wait for 10 ns;
     waddr   <= x"7FC4";
     wdata   <= x"00000ABC";
+    wupdate <= '1';
+    wait for 10 ns;
+    waddr   <= x"7FC8";
+    wdata <= x"43434445";
     wupdate <= '1';
     wait for 10 ns;
     waddr   <= x"0000";
@@ -284,7 +303,6 @@ begin
         --write (l, aclk);
         write (l, String'("|| tdata: 0x"));
         hwrite (l, tdata);
-        write (l, String'("..."));
         write (l, String'(" tval: "));
         write (l, tvalid);
         write (l, String'(" trdy: "));

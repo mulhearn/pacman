@@ -150,9 +150,6 @@ begin
               elsif (reg=C_ADDR_TX_UART_LOOK_B) then
                 rdata <= look(chan)(63 downto 32);
                 rack  <= '1';
-              elsif (reg=C_ADDR_TX_UART_CHAN) then
-                rdata <= std_logic_vector(to_unsigned(chan, rdata'length));
-                rack  <= '1';
               elsif (reg=C_ADDR_TX_UART_STARTS) then
                 rdata <= starts(chan);
                 rack  <= '1';

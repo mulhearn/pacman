@@ -7,16 +7,11 @@ use work.common.all;
 --rollover:  presents a rollover on channel CHANNEL to the RX buffer.
 
 entity rollover is
-  generic (
-    constant CHANNEL   : integer := 16#53#;  -- ASCII S
-    constant HEADER    : integer := 16#53#   -- ASCII S
-  );
   port (
     ACLK          : in  std_logic;
     ARESETN       : in  std_logic;
     EN_I          : in  std_logic;
     CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    HEADER_O      : out  std_logic_vector(C_RX_HEADER_WIDTH-1 downto 0);
     TIMESTAMP_O   : out  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
     VALID_O       : out  std_logic;
     READY_I       : in std_logic;
@@ -39,9 +34,6 @@ begin
   VALID_O <= valid;
   ready <= READY_I;
 
-  HEADER_O(15 downto 8) <= std_logic_vector(to_unsigned(CHANNEL, C_BYTE));
-  HEADER_O(7 downto 0)  <= std_logic_vector(to_unsigned(HEADER, C_BYTE));
-
   process(clk,rst)
     variable sent  : std_logic := '0';
   begin
@@ -54,7 +46,7 @@ begin
         valid <= '0';
         TIMESTAMP_O <= (others => '0');
       end if;
-      if (not (unsigned(TIMESTAMP_I) = unsigned(CONFIG_I))) then
+      if (not (to_integer(unsigned(TIMESTAMP_I)) = to_integer(unsigned(CONFIG_I)))) then
         sent := '0';
       elsif ((EN_I='1') and (sent='0')) then
         if ((valid='0') or ((valid='1') and (ready='1'))) then

@@ -175,7 +175,7 @@ begin
     wdata   <= x"00000000";
     wupdate <= '0';
     wait for 130 ns;
-    waddr   <= x"3FA8";
+    waddr   <= x"3FB8";
     wdata   <= x"00000000";
     wupdate <= '1';
     wait for 10 ns;

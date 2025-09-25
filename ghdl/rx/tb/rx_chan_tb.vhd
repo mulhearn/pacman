@@ -17,7 +17,6 @@ architecture behaviour of rx_chan_tb is
       ARESETN       : in  std_logic;
       CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       STATUS_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      HEADER_O      : out  std_logic_vector(C_RX_HEADER_WIDTH-1 downto 0);
       DATA_O        : out  std_logic_vector(C_UART_DATA_WIDTH-1 downto 0);
       TIMESTAMP_O   : out  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
       VALID_O       : out std_logic;
@@ -50,7 +49,6 @@ begin
     ACLK        => aclk,
     ARESETN     => aresetn,
     CONFIG_I    => x"00011001",
-    HEADER_O    => header,
     DATA_O      => data,
     TIMESTAMP_O => tstamp,
     VALID_O     => valid,
@@ -173,8 +171,6 @@ begin
       write (l, update);
       write  (l, String'(" l: "));
       write (l, lost);
-      write  (l, String'(" | h: 0x"));
-      hwrite (l, header);
       write  (l, String'(" | d: 0x"));
       hwrite (l, data);
       --write  (l, String'(" | ts: 0x"));

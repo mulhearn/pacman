@@ -11,18 +11,14 @@ use work.common.all;
 -- once I have solid ASIC testing regimen, so comments are limited for
 -- this version.
 
+
 entity rx_chan is
-  generic (
-    constant CHANNEL : integer := 1;
-    constant HEADER  : integer := C_TYPE_DATA
-  );
 
   port (
     ACLK          : in  std_logic;
     ARESETN       : in  std_logic;
     CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     STATUS_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    HEADER_O      : out  std_logic_vector(C_RX_HEADER_WIDTH-1 downto 0);
     DATA_O        : out  std_logic_vector(C_UART_DATA_WIDTH-1 downto 0);
     TIMESTAMP_O   : out  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
     VALID_O       : out  std_logic;
@@ -60,9 +56,9 @@ architecture behavioral of rx_chan is
 
   signal rx         : std_logic:='0';
 
-  signal update    : std_logic;
-  signal busy      : std_logic;
-  signal busy_z    : std_logic;
+  signal update     : std_logic;
+  signal busy       : std_logic;
+  signal busy_z     : std_logic;
 
   signal start      : std_logic:='0';
   signal lost       : std_logic:='0';
@@ -83,9 +79,6 @@ begin
 
   VALID_O <= valid;
   ready <= READY_I;
-
-  HEADER_O(15 downto 8) <= std_logic_vector(to_unsigned(CHANNEL, C_BYTE));
-  HEADER_O(7 downto 0)  <= std_logic_vector(to_unsigned(HEADER, C_BYTE));
 
   with CONFIG_I(17 downto 16) select
     rx <= RX_I when "00",
