@@ -24,9 +24,11 @@ static unsigned G_TX_COUNTER = 0;
 // Each uart rx takes 10 cycles, so for 10 cycles, the maximum buffer size is:
 //    (40 + 1 + 10*3)*16 = 0x470 (1136) bytes
 // So the buffer size below is enough for more than 140 cycles (0x8C) which you should see in settings
-// Note:  when switching to 64 bit timestamps, we'll have 5 turn cycles per transmission, and so this becomes:
-//    (2*40 + 10*3)*32 = 3552 (0xde0)
-// and the buffer size below is enough for 46 (0x2e)  (about 1/4 of 0x8C)
+// Note:  when switching to 64 bit timestamps, we'll have 3.3 turn cycles per transmission (10/3), and so this becomes:
+//    (3.3*40 + 1 + 10*3)*32 = 3912 (0xf48)
+// and the buffer size below is enough for 42 (0x2a)  cycles (about 1/4 of 0x8C)
+// More directly, that is large enough for 682 words (0x2aa)
+
 #define RX_BUF_BYTES 0x4000
 
 #define TX_BUF_WORDS TX_BUF_BYTES/4
