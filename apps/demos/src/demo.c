@@ -149,7 +149,7 @@ void rxtx_menu(){
       break;
     case '2':
       read_rx_status();
-      break;      
+      break;
     case '3':
       read_tx_look();
       break;

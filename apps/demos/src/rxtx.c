@@ -261,7 +261,7 @@ void toggle_rx_buffer_config(void){
   static int mode = 0;
   mode = (mode + 1) % 4;
 
-  unsigned config[] = {0x00000000, 0x00000001, 0x00000010, 0x00010000, 0x00100000};  
+  unsigned config[] = {0x00000000, 0x00000001, 0x00000010, 0x00010000, 0x00100000};
   printf("INFO: Setting RX buffer config to 0x%08X \r\n", config[mode]);
   axil_write_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_BUFFER_CONFIG, config[mode]);
 }
@@ -293,7 +293,7 @@ void read_rx_status(void){
   printf("rx buffer enables-----------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_BUFFER_ENABLES));
   printf("rx pacman id----------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_PACMAN));
   printf("FIFO count------------------%d      \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_FIFO_CNT));
-  printf("FIFO max--------------------%d      \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_FIFO_MAX));  
+  printf("FIFO max--------------------%d      \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_FIFO_MAX));
   printf("heartbeat config------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_HEARTBEAT_CONFIG));
   printf("sync config-----------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_ROLLOVER_CONFIG));
   printf("word_type_lut---------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_WORD_TYPE_LUT));
