@@ -37,12 +37,17 @@ use work.common.all;
 -- specify a maximum time and a maximum packet size).  In this
 -- version, the maximum time translates to a maximum possible size.
 --
+-- CONFIG_I:   0xMMMMTTTT
+-- DEFAULT:    0x00000001
+-- where: TTTT is a timeout in cycles for writing a complete packet
+--        MMMM is max words for writing a complete packet at the end of a cycle
+--        In both cases, a zero is no timeout / no maximum
+
 
 entity rx_buffer is
   generic(
     constant TURN_MAX       : integer := C_RX_TURN_MAX;
-    constant WORDS_PER_TURN : integer := C_RX_WORDS_PER_TURN;
-    constant EOP : integer := C_TYPE_EOP
+    constant WORDS_PER_TURN : integer := C_RX_WORDS_PER_TURN
   );
   port (
     -- clock and reset:
@@ -71,6 +76,9 @@ entity rx_buffer is
     VALID_I            : in  std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
     -- ready bit is set as each channel is streamed, which clears valid:
     READY_O            : out std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
+
+    -- header to mark the end of packet:
+    EOP_HEADER_I       : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
     -- debugging:
     DEBUG_STATUS_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -128,8 +136,6 @@ architecture behavioral of rx_buffer is
 
   type state_t is (IDLE, STREAM, SEND_LAST);
   signal state : state_t := IDLE;
-
-
 begin
 
   -- stream writer component:
@@ -171,7 +177,10 @@ begin
       word <= 0;
       turn <= 0;
     elsif (rising_edge(clk)) then
-      if (busy='0') then
+      if (state = IDLE) then
+        word <= 0;
+        turn <= (turn + 1) mod TURN_MAX;
+      elsif (busy='0') then
         word <= (word + 1) mod WORDS_PER_TURN;
         if (word = WORDS_PER_TURN-1) then
           turn <= (turn + 1) mod TURN_MAX;
@@ -183,8 +192,11 @@ begin
   -- STATE MACHINE
   process(clk,rst)
     variable valid_seen : std_logic := '0';
+    variable started : std_logic := '0';
     variable cycles : integer range 0 to C_COUNT_MAX := 0;
     variable sent   : integer range 0 to C_COUNT_MAX := 0;
+    variable timeout_cyles : integer;
+    variable max_sent      : integer;
   begin
     if (rst='1') then
       state <= IDLE;
@@ -196,6 +208,9 @@ begin
       wen   <= '0';
       last  <= '0';
     elsif (rising_edge(clk)) then
+      timeout_cyles := to_integer(unsigned(CONFIG_I(15 downto 0)));
+      max_sent      := to_integer(unsigned(CONFIG_I(31 downto 16)));
+
       ready <= (others => '0');
       data <= (others => '0');
       wen  <= '0';
@@ -211,23 +226,30 @@ begin
         end if;
       end if;
       if (state = STREAM) then
+        data <= (others => '0');
+        wen  <= '0';
         if ((turn < C_RX_NUM_CHAN) and (busy = '0')) then
           if (VALID_I(turn) = '1') then
-            wen  <= '1';
             if (word = 0) then
-              data <= (others => '0');
-              data(127 downto 64)  <= DATA_I(turn);
-              data(C_RX_HEADER_WIDTH-1 downto 0) <= HEADER_I(turn);
-            else
-              data <= (others => '0');
-              data(127 downto 64)  <= TIMESTAMP_I(turn);
+              wen  <= '1';
+              data(31 downto 0) <= HEADER_I(turn);
+              started := '1';
+            elsif (word = 1) and (started = '1') then
+              wen  <= '1';
+              data <= DATA_I(turn);
+            elsif (word = 2) and (started = '1') then
+              wen  <= '1';
+              data <= TIMESTAMP_I(turn);
               ready(turn) <= '1';
               sent := (sent + 1) mod C_COUNT_MAX;
+              started := '0';
             end if;
           end if;
         end if;
         if (turn=44) then
-          if (cycles >= to_integer(unsigned(CONFIG_I(15 downto 0)))) then
+          if (((timeout_cyles > 0) and (cycles >= timeout_cyles)) or
+              ((max_sent > 0) and (sent >= max_sent)))
+          then
             state <= SEND_LAST;
           end if;
           cycles := (cycles + 1) mod C_COUNT_MAX;
@@ -235,10 +257,11 @@ begin
       end if;
       if (state = SEND_LAST) then
         if ((turn=50) and (busy = '0')) then
+          data  <= (others=>'0');
           if (word = 0) then
-            data  <= (others=>'0');
-            data(95 downto 64)  <= std_logic_vector(to_unsigned(sent, 32));
-            data(7 downto 0)  <= std_logic_vector(to_unsigned(EOP, C_BYTE));
+            data(31 downto 0)  <= EOP_HEADER_I;
+          elsif (word = 1) then
+            data(31 downto 0)  <= std_logic_vector(to_unsigned(sent, 32));
           else
             data  <= (others=>'0');
             last <= '1';
@@ -265,6 +288,7 @@ begin
   status(6) <= last;
   status(7) <= '1';
   status(13 downto 8) <= std_logic_vector(to_unsigned(turn, 6));
+  status(15 downto 14) <= std_logic_vector(to_unsigned(word, 2));
 
   DEBUG_DATA_O   <= data;
   DEBUG_STATUS_O <= status;
