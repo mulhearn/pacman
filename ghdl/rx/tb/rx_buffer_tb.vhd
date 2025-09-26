@@ -79,7 +79,7 @@ begin
     M_AXIS_TVALID   => tvalid,
     M_AXIS_TREADY   => tready,
     M_AXIS_TLAST    => tlast,
-    CONFIG_I        => x"00000000",
+    CONFIG_I        => x"00000001",
     HEADER_I        => header,
     DATA_I          => data,
     TIMESTAMP_I     => timestamp,

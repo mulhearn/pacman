@@ -236,10 +236,10 @@ begin
               started := '1';
             elsif (word = 1) and (started = '1') then
               wen  <= '1';
-              data <= DATA_I(turn);
+              data <= TIMESTAMP_I(turn);
             elsif (word = 2) and (started = '1') then
               wen  <= '1';
-              data <= TIMESTAMP_I(turn);
+              data <= DATA_I(turn);
               ready(turn) <= '1';
               sent := (sent + 1) mod C_COUNT_MAX;
               started := '0';
