@@ -233,6 +233,15 @@ begin
     raddr   <= x"7FB4";
     rupdate <= '1';
     wait for 10 ns;
+    raddr   <= x"7FD0";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"7FD4";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"7FDC";
+    rupdate <= '1';
+    wait for 10 ns;
     raddr   <= x"0000";
     rupdate <= '0';
     wait;
@@ -290,7 +299,7 @@ begin
   show_output_process : process
   begin
     show_output<='1';
-    wait until (count=48);
+    wait until (count=52);
     wait for 10 ns;
     show_output<='0';
     wait;
@@ -380,6 +389,10 @@ begin
     wait until (count=47);
     write(l, String'("INFO:  FIFO maximum is lower after zero counts"));
     writeline(output, l);
+    wait until (count=48);
+    write(l, String'("INFO:  read headers"));
+    writeline(output, l);
+
     wait;
   end process;
 

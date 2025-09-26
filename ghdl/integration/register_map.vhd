@@ -91,7 +91,7 @@ package register_map is
   constant C_ADDR_RX_HEARTBEAT_HEADER : integer := 16#D0#;
   constant C_ADDR_RX_ROLLOVER_HEADER  : integer := 16#D4#;
   constant C_ADDR_RX_TRIG_HEADER      : integer := 16#D8#; -- not yet implemented
-  constant C_ADDR_RX_EOP_HEADER       : integer := 16#DA#;
+  constant C_ADDR_RX_EOP_HEADER       : integer := 16#DC#;
 
   -- Registers with SCOPE=TIMING ROLE(2 bits)=CFG, COUNTER, REGULAR
   constant C_TIMING_REGULAR : integer := 16#0#;
