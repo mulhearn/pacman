@@ -14,20 +14,27 @@ extern "C" {
 
 #define C_ADDR_RX_UART_STATUS       0x00
 #define C_ADDR_RX_UART_CONFIG       0x04
+#define C_ADDR_RX_UART_CHAN         0x08
 #define C_ADDR_RX_UART_LOOK_A       0x10
 #define C_ADDR_RX_UART_LOOK_B       0x14
 #define C_ADDR_RX_UART_STARTS       0x20
 #define C_ADDR_RX_UART_BEATS        0x24
 #define C_ADDR_RX_UART_UPDATES      0x28
 #define C_ADDR_RX_UART_LOST         0x2C
-#define C_ADDR_RX_UART_CHAN         0x50
 #define C_ADDR_RX_BUFFER_STATUS     0xA0
 #define C_ADDR_RX_BUFFER_CONFIG     0xA4
-#define C_ADDR_RX_ZERO_CNTS         0xA8
+#define C_ADDR_RX_BUFFER_ENABLES    0xA8
+#define C_ADDR_RX_PACMAN            0xAC
 #define C_ADDR_RX_FIFO_CNT          0xB0
 #define C_ADDR_RX_FIFO_MAX          0xB4
+#define C_ADDR_RX_ZERO_CNTS         0xB8
 #define C_ADDR_RX_HEARTBEAT_CONFIG  0xC0
 #define C_ADDR_RX_ROLLOVER_CONFIG   0xC4
+#define C_ADDR_RX_WORD_TYPE_LUT     0xC8
+#define C_ADDR_RX_HEARTBEAT_HEADER  0xD0
+#define C_ADDR_RX_ROLLOVER_HEADER   0xD4
+#define C_ADDR_RX_TRIG_HEADER       0xD8
+#define C_ADDR_RX_EOP_HEADER        0xDC
 
 #define C_ADDR_TX_UART_STATUS   0x00
 #define C_ADDR_TX_UART_CONFIG   0x04
@@ -37,8 +44,7 @@ extern "C" {
 #define C_ADDR_TX_UART_BEATS    0x24
 #define C_ADDR_TX_UART_CHAN     0x50
 #define C_ADDR_TX_BUFFER_STATUS 0xA0
-#define C_ADDR_TX_ZERO_CNTS     0xA8
-
+#define C_ADDR_TX_ZERO_CNTS     0xB8
 
 // pacman-server hooks:
 void init_rxtx(void);
@@ -54,7 +60,8 @@ void toggle_tx_mask(void);
 void read_rx_status(void);
 void read_rx_look(void);
 void toggle_rx_config(void);
-void toggle_rx_global_config(void);
+void toggle_rx_buffer_config(void);
+void toggle_rx_buffer_enables(void);
 void zero_rxtx_counts(void);
 
 void init_rxtx_descriptor_ring_mode(int ring_size);

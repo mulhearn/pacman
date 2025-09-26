@@ -478,16 +478,18 @@ void power_menu(){
 void rxtx_menu(){
   while(1){
     printf("RXTX MENU:  choose an option:\n");
+    printf("choose an option:\r\n");
     printf("(0) exit RX/TX Menu \r\n");
-    printf("(1) read tx status (2) read tx look (3) toggle tx mask (4) toggle tx config \r\n");
-    printf("(5) read rx status (6) read rx look (7) toggle rx config (8) toggle rx global config \r\n");
-    printf("(9) zero counts \r\n");
-    printf("(10) init descriptor ring mode (11) show BDs (12) show head/tail (13) clear IOC flags \r\n");
-    printf("(14) single TX (15) single RX (16) batch TX (17) batch RX \r\n");
-    printf("(20) show TX buffer (21) show RX buffer (22) show RX transferred \r\n");
+    printf("(1) read tx status (2) read rx status (3) read tx look (4) read rx look\r\n");
+    printf("(5) toggle tx UART configs (6) toggle rx UART configs (7) zero counts\r\n");
+    printf("(8) toggle rx buffer config (9) toggle rx enables (10) toggle tx mask \r\n");
     printf("...\r\n");
-    printf("(30) reset TX DMA (31) TX DMA status (32) reset RX DMA (33) RX DMA status (34) long DMA status \r\n");
-    printf("(40) benchmark TX (41) benchmark RX/TX loopback \r\n");
+    printf("(20) init descriptor ring mode (21) show BDs (22) show head/tail (23) clear IOC flags \r\n");
+    printf("(24) single TX (25) single RX (26) batch TX (27) batch RX \r\n");
+    printf("(28) show TX buffer (29) show RX buffer (30) show RX transferred \r\n");
+    printf("...\r\n");
+    printf("(40) reset TX DMA (41) TX DMA status (42) reset RX DMA (43) RX DMA status (44) long DMA status \r\n");
+    printf("(45) benchmark TX (46) benchmark RX/TX loopback \r\n");
 
     int input;
     scanf("%d", &input);
@@ -500,84 +502,86 @@ void rxtx_menu(){
       read_tx_status();
       break;
     case 2:
-      read_tx_look();
-      break;
-    case 3:
-      toggle_tx_mask();
-      break;
-    case 4:
-      toggle_tx_config();
-      break;
-    case 5:
       read_rx_status();
       break;
-    case 6:
+    case 3:
+      read_tx_look();
+      break;
+    case 4:
       read_rx_look();
       break;
-    case 7:
+    case 5:
+      toggle_tx_config();
+      break;
+    case 6:
       toggle_rx_config();
       break;
-    case 8:
-      toggle_rx_global_config();
-      break;
-    case 9:
+    case 7:
       zero_rxtx_counts();
       break;
+    case 8:
+      toggle_rx_buffer_config();
+      break;
+    case 9:
+      toggle_rx_buffer_enables();
+      break;
     case 10:
-      init_rxtx_descriptor_ring_mode(8);
-      break;
-    case 11:
-      show_rxtx_bds();
-      break;
-    case 12:
-      show_rxtx_head_tail();
-      break;
-    case 13:
-      clear_rxtx_ioc();
-      break;
-    case 14:
-      single_tx();
-      break;
-    case 15:
-      single_rx();
-      break;
-    case 16:
-      batch_tx();
-      break;
-    case 17:
-      batch_rx();
+      toggle_tx_mask();
       break;
     case 20:
-      show_tx_buffer();
+      init_rxtx_descriptor_ring_mode(8);
       break;
     case 21:
-      show_rx_buffer();
+      show_rxtx_bds();
       break;
     case 22:
-      show_rx_transferred();
+      show_rxtx_head_tail();
+      break;
+    case 23:
+      clear_rxtx_ioc();
+      break;
+    case 24:
+      single_tx();
+      break;
+    case 25:
+      single_rx();
+      break;
+    case 26:
+      batch_tx();
+      break;
+    case 27:
+      batch_rx();
+      break;
+    case 28:
+      show_tx_buffer();
+      break;
+    case 29:
+      show_rx_buffer();
       break;
     case 30:
-      dma_reset_tx(DMA_TIMEOUT);
-      break;
-    case 31:
-      dma_show_tx_status();
-      break;
-    case 32:
-      dma_reset_rx(DMA_TIMEOUT);
-      break;
-    case 33:
-      dma_show_rx_status();
-      break;
-    case 34:
-      dma_show_long_status();
+      show_rx_transferred();
       break;
     case 40:
-      benchmark_tx();
+      dma_reset_tx(DMA_TIMEOUT);
       break;
     case 41:
+      dma_show_tx_status();
+      break;
+    case 42:
+      dma_reset_rx(DMA_TIMEOUT);
+      break;
+    case 43:
+      dma_show_rx_status();
+      break;
+    case 44:
+      dma_show_long_status();
+      break;
+    case 45:
+      benchmark_tx();
+      break;
+    case 46:
       benchmark_rxtx_loopback();
       break;
-
     default:
       printf("invalid selection...\n\r");
     }
