@@ -24,9 +24,11 @@ static unsigned G_TX_COUNTER = 0;
 // Each uart rx takes 10 cycles, so for 10 cycles, the maximum buffer size is:
 //    (40 + 1 + 10*3)*16 = 0x470 (1136) bytes
 // So the buffer size below is enough for more than 140 cycles (0x8C) which you should see in settings
-// Note:  when switching to 64 bit timestamps, we'll have 5 turn cycles per transmission, and so this becomes:
-//    (2*40 + 10*3)*32 = 3552 (0xde0)
-// and the buffer size below is enough for 46 (0x2e)  (about 1/4 of 0x8C)
+// Note:  when switching to 64 bit timestamps, we'll have 3.3 turn cycles per transmission (10/3), and so this becomes:
+//    (3.3*40 + 1 + 10*3)*32 = 3912 (0xf48)
+// and the buffer size below is enough for 42 (0x2a)  cycles (about 1/4 of 0x8C)
+// More directly, that is large enough for 682 words (0x2aa)
+
 #define RX_BUF_BYTES 0x4000
 
 #define TX_BUF_WORDS TX_BUF_BYTES/4
@@ -98,17 +100,17 @@ void clear_rxtx_ioc(void){
 
 void show_tx_buffer(void){
   printf("INFO:  TX Buffer:\r\n");
-  dma_show_buffer_ring(TX_BD_BASEADDR, 8, 1000);
+  dma_show_buffer_ring(TX_BD_BASEADDR, 6, 1000);
 }
 
 void show_rx_buffer(void){
   printf("INFO:  RX Buffer:\r\n");
-  dma_show_buffer_ring(RX_BD_BASEADDR, 8, 1000);
+  dma_show_buffer_ring(RX_BD_BASEADDR, 6, 1000);
 }
 
 void show_rx_transferred(void){
   printf("INFO:  RX Buffer:\r\n");
-  dma_show_transferred_ring(RX_BD_BASEADDR, 8, 1000);
+  dma_show_transferred_ring(RX_BD_BASEADDR, 6, 1000);
 }
 
 void single_tx(void){
@@ -255,38 +257,51 @@ void toggle_rx_config(void){
   }
 }
 
-void toggle_rx_global_config(void){
+void toggle_rx_buffer_config(void){
   static int mode = 0;
-  mode = (mode + 1) % 2;
-  if (mode==0){
-    unsigned config = 0x00000000;
-    printf("INFO: Setting RX global config to 0x%08X \r\n", config);
-    axil_write_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_BUFFER_CONFIG, config);
-  } else if (mode==1) {
-    unsigned config = 0x00000001;
-    printf("INFO: Setting RX global config to 0x%08X \r\n", config);
-    axil_write_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_BUFFER_CONFIG, config);
-  }
+  mode = (mode + 1) % 4;
+
+  unsigned config[] = {0x00000000, 0x00000001, 0x00000010, 0x00010000, 0x00100000};
+  printf("INFO: Setting RX buffer config to 0x%08X \r\n", config[mode]);
+  axil_write_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_BUFFER_CONFIG, config[mode]);
+}
+
+void toggle_rx_buffer_enables(void){
+  static int mode = 0;
+  mode = (mode + 1) % 4;
+
+  unsigned config[] = {0x0, 0x3, 0x1, 0x2};
+  printf("INFO: Setting RX buffer config to 0x%08X \r\n", config[mode]);
+  axil_write_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_BUFFER_ENABLES, config[mode]);
 }
 
 void read_rx_status(void){
   for (int i=0; i<40; i++){
-    unsigned cshift = (i<<8);
-    unsigned status = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_UART_STATUS);
-    unsigned config = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_UART_CONFIG);
+    unsigned cshift  = (i<<8);
+    unsigned status  = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_UART_STATUS);
+    unsigned config  = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_UART_CONFIG);
+    unsigned ichan   = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_UART_CHAN);
     unsigned starts  = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_UART_STARTS);
     unsigned beats   = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_UART_BEATS);
     unsigned updates = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_UART_UPDATES);
     unsigned lost    = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_UART_LOST);
-    unsigned nchan  = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_UART_CHAN);
-    printf("%2d: ch: %2d cfg: 0x%08x status: 0x%08x s: %d b: %d u: %d l: %d\r\n",i, nchan, config, status, starts, beats, updates, lost);
+
+    printf("%2d: ch: %2d cfg: 0x%08x status: 0x%08x s: %d b: %d u: %d l: %d\r\n",i, ichan, config, status, starts, beats, updates, lost);
   }
   printf("rx buffer status------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_BUFFER_STATUS));
   printf("rx buffer config------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_BUFFER_CONFIG));
-  printf("heartbeat config------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_HEARTBEAT_CONFIG));
-  printf("sync config-----------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_ROLLOVER_CONFIG));
+  printf("rx buffer enables-----------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_BUFFER_ENABLES));
+  printf("rx pacman id----------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_PACMAN));
   printf("FIFO count------------------%d      \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_FIFO_CNT));
   printf("FIFO max--------------------%d      \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_FIFO_MAX));
+  printf("heartbeat config------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_HEARTBEAT_CONFIG));
+  printf("sync config-----------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_ROLLOVER_CONFIG));
+  printf("word_type_lut---------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_WORD_TYPE_LUT));
+
+  printf("heartbeat header------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_HEARTBEAT_HEADER));
+  printf("rollover header-------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_ROLLOVER_HEADER));
+  //printf("trigger header--------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_TRIG_HEADER));
+  printf("end of packet header--------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_EOP_HEADER));
 }
 
 void read_rx_look(void){
@@ -415,11 +430,11 @@ void benchmark_rxtx_loopback(void){
 
   const unsigned tx_packets  = 10000; // DMA packets to send
   const unsigned uarts       = 40;    // *** assuming all 40 uarts enabled ***
-  const unsigned uart_bytes  = 32;    // 128-bits per uart channel
+  const unsigned uart_bytes  = 24;    // 192-bits per uart channel
   const unsigned batch_size  = 100;
   const unsigned words       = TX_BUF_WORDS; // words in TX buffer (= 1 DMA packet)
   const unsigned rx_expected = uarts * uart_bytes * tx_packets;
-  const unsigned rx_trailer_bytes = 32; // Each DMA RX packet has a two 128-bit word trailer
+  const unsigned rx_trailer_bytes = 24; // Each DMA RX packet has a two 192-bit word trailer
 
   const unsigned timeout = 10000;
   unsigned rx_timeout = timeout;
