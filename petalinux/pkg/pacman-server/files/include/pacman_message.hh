@@ -42,7 +42,7 @@ static_assert(sizeof(pacman_header_t) == HEADER_LEN, "Header must be 24 bytes");
 typedef struct { uint8_t word_type; uint8_t _pad[23]; } pacman_word_ping_t;
 typedef struct { uint8_t word_type; uint8_t pacman; uint8_t _pad[6]; uint32_t addr; uint32_t value; uint8_t _pad2[8]; } pacman_word_read_t;
 typedef struct { uint8_t word_type; uint8_t pacman; uint8_t _pad[6]; uint32_t addr; uint32_t value; uint8_t _pad2[8]; } pacman_word_write_t;
-typedef struct { uint8_t word_type; uint8_t pacman; uint8_t chan; uint8_t _pad[5]; uint64_t timestamp; uint64_t payload; } pacman_word_data_t;
+typedef struct { uint8_t word_type; uint8_t chan;   uint8_t upper; uint8_t pacman;  uint8_t _pad[4]; uint64_t timestamp; uint64_t payload; } pacman_word_data_t;
 typedef struct { uint8_t word_type; uint8_t pacman; uint8_t sync_type; uint8_t clk_src; uint8_t _pad[4]; uint64_t timestamp; uint32_t status; uint8_t _pad2[4]; } pacman_word_sync_t;
 typedef struct { uint8_t word_type; uint8_t pacman; uint8_t trig_type; uint8_t trig_src; uint8_t _pad[4]; uint64_t timestamp; uint8_t _pad2[8]; } pacman_word_trig_t;
 typedef struct { uint8_t word_type; uint8_t pacman; uint8_t _pad[6]; uint64_t timestamp; uint32_t error_code; uint8_t _pad2[4]; } pacman_word_err_t;

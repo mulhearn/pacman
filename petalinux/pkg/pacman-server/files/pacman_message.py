@@ -34,6 +34,7 @@ WORD_TYPE_PING  = b'P'
 WORD_TYPE_READ  = b'R'
 WORD_TYPE_WRITE = b'W'
 WORD_TYPE_DATA  = b'D'
+WORD_TYPE_CFG   = b'C'
 WORD_TYPE_SYNC  = b'S'
 WORD_TYPE_TRIG  = b'T'
 WORD_TYPE_ERR   = b'E'
@@ -43,6 +44,7 @@ WORD_TYPE_TABLE = {
     'READ':  WORD_TYPE_READ,
     'WRITE': WORD_TYPE_WRITE,
     'DATA':  WORD_TYPE_DATA,
+    'CFG':   WORD_TYPE_CFG,
     'SYNC':  WORD_TYPE_SYNC,
     'TRIG':  WORD_TYPE_TRIG,
     'ERR':   WORD_TYPE_ERR
@@ -54,39 +56,43 @@ WORD_TYPE_TABLE_INV = {v:k for k,v in WORD_TYPE_TABLE.items()}
 # Word struct formats (192-bit / 24 bytes)
 # ----------------------------------------
 
-# PING:   0xWW000000 00000000 00000000 00000000 00000000 00000000
-#    W=word type
-# READ:   0xWWPP0000 00000000 AAAAAAAA RRRRRRRR 00000000 00000000
-#    W=word type, P=PACMAN id, A=address, R=value, S=Status
-# WRITE:  0xWWPP0000 00000000 AAAAAAAA RRRRRRRR 00000000 00000000
-#    W=word type, P=PACMAN id, A=address, R=value, S=Status
-# DATA:   0xWWPPUUUU 00000000 TTTTTTTT TTTTTTTT DDDDDDDD DDDDDDDD
+# PING:  (MSB) 0x00000000 00000000 00000000 00000000 00000000 PP0000WW (LSB)
+#    W=word type P=PACMAN id
+# READ:  (MSB) 0x00000000 00000000 RRRRRRRR AAAAAAAA 00000000 PP0000WW (LSB)
+#    W=word type, P=PACMAN id, A=address, R=value
+# WRITE: (MSB) 0x00000000 00000000 RRRRRRRR AAAAAAAA 00000000 PP0000WW (LSB)
+#    W=word type, P=PACMAN id, A=address, R=value
+# DATA:  (MSB) 0xDDDDDDDD DDDDDDDD TTTTTTTT TTTTTTTT 00000000 PPUUUUWW (LSB)
 #    W=word type, P=PACMAN id, U=channel, T=timestamp, D=payload
-# SYNC:   0xWWPPBBCC 00000000 TTTTTTTT TTTTTTTT SSSSSSSS 00000000
-#    W=word type, P=PACMAN id, B=subtype, C=clock source, T=timestamp, S=Status
-# TRIG:   0xWWPPBBGG 00000000 TTTTTTTT TTTTTTTT 00000000 00000000
-#    W=word type, P=PACMAN id, B=subtype, G=trigger source, T=timestamp
-# ERR:    0xWWPP0000 00000000 TTTTTTTT TTTTTTTT EEEEEEEE 00000000
+# CFG:   (MSB) 0xDDDDDDDD DDDDDDDD TTTTTTTT TTTTTTTT 00000000 PPUUUUWW (LSB)
+#    W=word type, U=channel, P=PACMAN id, T=timestamp, D=payload
+# SYNC:  (MSB) 0x00000000 SSSSSSSS TTTTTTTT TTTTTTTT 00000000 PPCCBBWW (LSB)
+#    W=word type, B=subtype, C=clock source, P=PACMAN id, T=timestamp, S=Status
+# TRIG:  (MSB) 0xDDDDDDDD DDDDDDDD TTTTTTTT TTTTTTTT 00000000 PPGGBBWW (LSB)
+#    W=word type, B=subtype, G=trig source, P=PACMAN id, T=timestamp, S=Status
+# ERR:   (MSB) 0x00000000 EEEEEEEE TTTTTTTT TTTTTTTT 00000000 PP0000WW (LSB)
 #    W=word type, P=PACMAN id, T=timestamp, E=error code
 
 WORD_LEN   = 24  # 192-bit
 WORD_STRUCT_TABLE = {
     'PING':  struct.Struct('<c23x'),       # word_type
-    'READ':  struct.Struct('<cB6xII8x'),   # word_type, pacman, address, value
-    'WRITE': struct.Struct('<cB6xII8x'),   # word_type, pacman, address, value
-    'DATA':  struct.Struct('<cBH4xQQ'),    # word_type, pacman, uart_channel, timestamp, payload
-    'SYNC':  struct.Struct('<cBBB4xQI4x'), # word_type, pacman, sync_type, clock_source, timestamp, status
-    'TRIG':  struct.Struct('<cBBB4xQ8x'),  # word_type, pacman, trigger_type, trigger_source, timestamp
-    'ERR':   struct.Struct('<cB6xQI4x')    # word_type, pacman, timestamp, error_code
+    'READ':  struct.Struct('<c2xB4xII8x'), # word_type, pacman, address, value
+    'WRITE': struct.Struct('<c2xB4xII8x'), # word_type, pacman, address, value
+    'DATA':  struct.Struct('<cHB4xQQ'),    # word_type, uart_channel, pacman, timestamp, payload
+    'CFG':   struct.Struct('<cHB4xQQ'),    # word_type, uart_channel, pacman, timestamp, payload
+    'SYNC':  struct.Struct('<cBBB4xQI4x'), # word_type, sync_type, clock_source, pacman, timestamp, status
+    'TRIG':  struct.Struct('<cBBB4xQ8x'),  # word_type, trigger_type, trigger_source, pacman, timestamp
+    'ERR':   struct.Struct('<c2xB4xQI4x')  # word_type, pacman, timestamp, error_code
 }
 
 WORD_FIELD_TABLE = {
     'PING':  ("word_type",),
     'READ':  ("word_type", "pacman", "addr", "value"),
     'WRITE': ("word_type", "pacman", "addr", "value"),
-    'DATA':  ("word_type", "pacman", "chan", "timestamp", "payload"),
-    'SYNC':  ("word_type", "pacman", "sync_type", "clk_src", "timestamp", "status"),
-    'TRIG':  ("word_type", "pacman", "trig_type", "trig_src", "timestamp"),
+    'DATA':  ("word_type", "chan", "pacman", "timestamp", "payload"),
+    'CFG':   ("word_type", "chan", "pacman", "timestamp", "payload"),
+    'SYNC':  ("word_type", "sync_type", "clk_src", "pacman", "timestamp", "status"),
+    'TRIG':  ("word_type", "trig_type", "trig_src", "pacman", "timestamp"),
     'ERR':   ("word_type", "pacman", "timestamp", "error_code")
 }
 
@@ -183,7 +189,14 @@ def content_data(*, channel, timestamp, payload, pacman=0):
     check_byte("channel", channel)
     check_uint64("timestamp", timestamp)
     check_uint64("payload", payload)
-    return ('DATA', pacman, channel, timestamp, payload)
+    return ('DATA', channel, pacman, timestamp, payload)
+
+def content_cfg(*, channel, timestamp, payload, pacman=0):
+    check_byte("pacman", pacman)
+    check_byte("channel", channel)
+    check_uint64("timestamp", timestamp)
+    check_uint64("payload", payload)
+    return ('CFG', channel, pacman, timestamp, payload)
 
 def content_sync(*, sync_type, timestamp, pacman=0, clock_source=0, status=0):
     check_byte("pacman", pacman)
@@ -217,6 +230,7 @@ def print_word(word):
         "READ":  "word_type:  READ:  pacman: {pacman:04d} addr: 0x{addr:08X} value: 0x{value:08X} ({value})",
         "WRITE": "word_type:  WRITE: pacman: {pacman:04d} addr: 0x{addr:08X} value: 0x{value:08X} ({value})",
         "DATA":  "word_type:  DATA:  pacman: {pacman:04d} chan: {chan:04d} payload: 0x{payload:08X} timestamp: {timestamp}",
+        "CFG":   "word_type:  CFG:   pacman: {pacman:04d} chan: {chan:04d} payload: 0x{payload:08X} timestamp: {timestamp}",
         "SYNC":  "word_type:  SYNC:  pacman: {pacman:04d} sync_type: {sync_type:c} clk_src: {clk_src} timestamp: {timestamp} status: 0x{status:08x}",
         "TRIG":  "word_type:  TRIG:  pacman: {pacman:04d} trig_type: {trig_type} trig_src: {trig_src} timestamp={timestamp}",
         "ERR":   "word_type:  ERR:   pacman: {pacman:04d} error_code=0x{error_code:08X} timestamp={timestamp}",

@@ -97,7 +97,7 @@ int main(int argc, char* argv[]){
 
       // Cast to pacman_msg_t and print
       pacman_msg_t* msg = reinterpret_cast<pacman_msg_t*>(zmq_msg_data(&req_msg));
-      //print_msg(msg, "INFO:  ");
+      print_msg(msg, "INFO:  ");
 
       // Start a reply message with the same number of words as the request:
       uint16_t n_words = msg->header.n_words;

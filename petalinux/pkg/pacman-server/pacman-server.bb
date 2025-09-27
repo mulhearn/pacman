@@ -14,6 +14,7 @@ SRC_URI = "file://src \
            file://power_up_tile.sh \
            file://report_power.sh \
            file://power_down.sh \
+           file://pacman_message.py \
            file://pacman_util.py \
            file://pump_socket.py \
            file://dump_socket.py \
@@ -44,6 +45,7 @@ do_install() {
 	     install -m 0755 ${S}/zmq_test ${D}${bindir}
 
              install -d ${D}${homedir}
+	     install -m 0755 ${S}/pacman_message.py ${D}${homedir}
              install -m 0755 ${S}/pacman_util.py ${D}${homedir}
 	     install -m 0755 ${S}/dump_socket.py ${D}${homedir}
 	     install -m 0755 ${S}/pump_socket.py ${D}${homedir}

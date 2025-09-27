@@ -80,25 +80,33 @@ def demo():
     test_message(msg_bytes)
 
     # -----------------------------
-    # Step 8: DATA / SYNC
+    # Step 8: DATA / CFG
     # -----------------------------
-    print("Step 8: Send DATA/SYNC")
+    print("Step 8: Send DATA/CFG")
+    words = [pm.content_cfg(channel=3, timestamp=ts, payload=0x1234ABCD, pacman=2)]
+    msg_bytes = pm.pack_msg('DATA', words, ts)
+    test_message(msg_bytes)
+
+    # -----------------------------
+    # Step 9: DATA / SYNC
+    # -----------------------------
+    print("Step 9: Send DATA/SYNC")
     words = [pm.content_sync(sync_type=0x53, timestamp=ts, pacman=2)]
     msg_bytes = pm.pack_msg('DATA', words, ts)
     test_message(msg_bytes)
 
     # -----------------------------
-    # Step 9: DATA / TRIG
+    # Step 10: DATA / TRIG
     # -----------------------------
-    print("Step 9: Send DATA/TRIG")
+    print("Step 10: Send DATA/TRIG")
     words = [pm.content_trig(trig_type=3, timestamp=ts)]
     msg_bytes = pm.pack_msg('DATA', words, ts)
     test_message(msg_bytes)
 
     # -----------------------------
-    # Step 10: REP / ERR
+    # Step 11: REP / ERR
     # -----------------------------
-    print("Step 10: Send REP/ERR")
+    print("Step 11: Send REP/ERR")
     words = [pm.content_err(error_code=0xEEEE, timestamp=ts)]
     msg_bytes = pm.pack_msg('REP', words, ts)
     test_message(msg_bytes)

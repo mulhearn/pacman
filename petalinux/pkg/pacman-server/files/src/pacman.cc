@@ -60,10 +60,12 @@ int pacman_init(int verbose){
 
   // DEFAULT parameters
   if (verbose){
-    printf("INFO:  Enabling Trigger, Sync, and Heartbeat words in the RX unit.\n");
     printf("INFO:  Setting number of cycles per DMA package to 140 (0x8C) as appropriate for DMA buffer length.\n");
+    //printf("INFO:  Enabling Trigger, Sync, and Heartbeat words in the RX unit.\n");
   }
-  G_PACMAN_AXIL[0x7FA4>>2] = 0x7008C;
+  G_PACMAN_AXIL[0x7FA4>>2] = 0x008C;
+  //G_PACMAN_AXIL[0x7FA8>>2] = 0x0003;
+  G_PACMAN_AXIL[0x7FA8>>2] = 0x0000;
 
   if (verbose){
     printf("INFO:  Limiting TX bandwidth to 1/2 of nominal UART rate (1/4 maximum) \n");
@@ -132,7 +134,7 @@ int pacman_init_rx(int verbose, int skip_reset){
 }
 
 int pacman_poll_rx(){
-  const unsigned rx_trailer_bytes = 32; // current firmware, each DMA RX packet has a 2x128-bit trailer
+  const unsigned rx_trailer_bytes = 24; // current firmware, each DMA RX packet has a 192-bit trailer
   const unsigned batch_size = 100;
   unsigned batch_count = 0;
   hw_addr_t nxta;
@@ -144,18 +146,15 @@ int pacman_poll_rx(){
     unsigned xbytes = dma_poll_bd_transferred(nxta);
     hw_ptr_t rx_buf = dma_get_buffer(nxta);
     if (xbytes > rx_trailer_bytes) {
-      unsigned full_words = (xbytes - rx_trailer_bytes) / 32;
+      unsigned full_words = (xbytes - rx_trailer_bytes) / 24;
       for (int i=0; i<full_words; i++){
 	// firmware is not yet consistent with message format, so fix here for now:
-	rx_data[0] = rx_buf[8*i+0];
-	rx_data[1] = 0;
-	rx_data[2] = rx_buf[8*i+6];
-	rx_data[3] = rx_buf[8*i+7];
-	rx_data[4] = rx_buf[8*i+2];
-	rx_data[5] = rx_buf[8*i+3];
-	uint8_t wt   = rx_data[0]&0xFF;
-	uint8_t chan = (rx_data[0]>>8)&0xFF;
-	rx_data[0] = wt + (chan<<16);
+	rx_data[0] = rx_buf[6*i+0];
+	rx_data[1] = rx_buf[6*i+1];
+	rx_data[2] = rx_buf[6*i+4];
+	rx_data[3] = rx_buf[6*i+5];
+	rx_data[4] = rx_buf[6*i+2];
+	rx_data[5] = rx_buf[6*i+3];
 	rx_buffer_in(rx_data);
       }
     }
@@ -163,7 +162,7 @@ int pacman_poll_rx(){
     dma_add_rx_bd(nxta);
   }
   if (batch_count > 0){
-    //printf("INFO:  returning %d RX buffers \r\n", batch_count);
+    printf("INFO:  returning %d RX buffers \r\n", batch_count);
     dma_rx_batch();
   }
   return EXIT_SUCCESS;

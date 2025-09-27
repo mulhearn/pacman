@@ -142,7 +142,7 @@ int pacman_poll_tx(){
 	  msg_done = false;
 	}
 	//printf("DEBUG:  count: %d chan: %3d tx_data: 0x%08x %08x\n", count, i, src[4+2*i+1], src[4+2*i+0]);
-	buffer[6*count + 0]=0x0044+((i+1)<<16)+(pacman_id<<8);
+	buffer[6*count + 0]=0x0044+((i+1)<<8)+(pacman_id<<24);
 	buffer[6*count + 1]=0;
 	buffer[6*count + 2]=0;
 	buffer[6*count + 3]=0;
