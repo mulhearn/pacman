@@ -44,7 +44,7 @@ architecture behaviour of rx_buffer_tb is
   signal tlast    : std_logic;
 
   signal look     : std_logic_vector(C_RX_WORDS_PER_TURN*C_RX_AXIS_WIDTH-1 downto 0);
-  
+
   signal header    : rx_header_array_t;
   signal data      : rx_data_array_t;
   signal timestamp : rx_timestamp_array_t;

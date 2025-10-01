@@ -189,7 +189,7 @@ begin
       data   <= (others => '0');
       wen    <= '0';
       last   <= '0';
-      
+
       if (state = IDLE) or (state = PAUSE) then
         if (VALID_I(turn) = '1') then
           state := SYNC;
@@ -207,7 +207,7 @@ begin
         elsif (turn = C_RX_NUM_CHAN-1) then
           state := PAUSE;
         end if;
-        
+
       end if;
       if (state = STREAM) then
         wen  <= '1';
@@ -229,7 +229,7 @@ begin
             state := PAUSE;
           else
             state := CYCLE;
-          end if;          
+          end if;
         end if;
       end if;
       if (state = TRAILER) then
@@ -262,14 +262,14 @@ begin
         end if;
       end if;
 
-      
+
       if (turn = C_RX_NUM_CHAN) then
         if not (state = IDLE) then
           cycles := (cycles + 1);
         end if;
         turn := 0;
       end if;
-      
+
       if (state = IDLE) then
         status(2 downto 0) <= "000";
       elsif (state = SYNC) then
