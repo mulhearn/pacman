@@ -210,6 +210,7 @@ begin
     wait for 10 ns;
     waddr   <= x"7FA8";
     wdata   <= x"00000003";
+    --wdata   <= x"00000000";
     wupdate <= '1';
     wait for 10 ns;
     waddr   <= x"7FB8";

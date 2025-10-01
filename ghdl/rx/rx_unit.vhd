@@ -86,7 +86,7 @@ architecture behaviour of rx_unit is
       M_AXIS_TLAST       : out std_logic;
       STATUS_O           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       CONFIG_I           : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      LOOK_O             : out std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
+      LOOK_O             : out std_logic_vector(C_RX_WORDS_PER_TURN*C_RX_AXIS_WIDTH-1 downto 0);
       -- the received data from the UART receivers and extra channels
       HEADER_I           : in  rx_header_array_t;
       DATA_I             : in  rx_data_array_t;
@@ -94,8 +94,7 @@ architecture behaviour of rx_unit is
       VALID_I            : in  std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
       READY_O            : out std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
       EOP_HEADER_I       : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      DEBUG_STATUS_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      DEBUG_DATA_O       : out std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0)
+      DEBUG_STATUS_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
       );
   end component;
 

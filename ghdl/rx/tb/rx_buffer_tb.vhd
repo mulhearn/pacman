@@ -22,7 +22,7 @@ architecture behaviour of rx_buffer_tb is
       M_AXIS_TLAST       : out std_logic;
       STATUS_O           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       CONFIG_I           : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      LOOK_O             : out std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
+      LOOK_O             : out std_logic_vector(C_RX_WORDS_PER_TURN*C_RX_AXIS_WIDTH-1 downto 0);
       -- the received data from the UART receivers and extra channels
       HEADER_I           : in  rx_header_array_t;
       DATA_I             : in  rx_data_array_t;
@@ -30,8 +30,7 @@ architecture behaviour of rx_buffer_tb is
       VALID_I            : in  std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
       READY_O            : out std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
       EOP_HEADER_I       : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      DEBUG_STATUS_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      DEBUG_DATA_O       : out std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0)
+      DEBUG_STATUS_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
     );
   end component;
 
@@ -44,6 +43,8 @@ architecture behaviour of rx_buffer_tb is
   signal tready   : std_logic := '0';
   signal tlast    : std_logic;
 
+  signal look     : std_logic_vector(C_RX_WORDS_PER_TURN*C_RX_AXIS_WIDTH-1 downto 0);
+  
   signal header    : rx_header_array_t;
   signal data      : rx_data_array_t;
   signal timestamp : rx_timestamp_array_t;
@@ -60,7 +61,6 @@ architecture behaviour of rx_buffer_tb is
   signal urc      : std_logic := '0';
   signal ulast    : std_logic := '0';
   signal status      : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-  signal look        : std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
   signal show_output : std_logic := '0';
 begin
 
@@ -70,7 +70,7 @@ begin
   ura <= uready(0);
   urb <= uready(1);
   urc <= uready(2);
-  ulast <= status(6);
+  ulast <= status(7);
 
   uut: rx_buffer port map (
     M_AXIS_ACLK     => aclk,
@@ -80,14 +80,14 @@ begin
     M_AXIS_TREADY   => tready,
     M_AXIS_TLAST    => tlast,
     CONFIG_I        => x"00000001",
+    LOOK_O          => look,
     HEADER_I        => header,
     DATA_I          => data,
     TIMESTAMP_I     => timestamp,
     VALID_I         => uvalid,
     READY_O         => uready,
     EOP_HEADER_I    => x"1100004C",
-    DEBUG_STATUS_O  => status, -- (non-delayed version for easy debugging)
-    DEBUG_DATA_O    => look   -- (non-delayed version for easy debugging)
+    DEBUG_STATUS_O  => status -- (non-delayed version for easy debugging)
   );
 
   aresetn_process : process
@@ -124,7 +124,7 @@ begin
     end if;
     if (init='1') then
       -- 44 RX channels (40 UARTS plus 4 extra for e.g. SYNC words)
-      uvalid <= x"00000000007";
+      uvalid <= x"00000000700";
       --uvalid <= x"0FFFFFFFFFF";
       init := '0';
     end if;
@@ -139,15 +139,15 @@ begin
   data_process : process
   begin
     data <= (others => (others => '0'));
-    header(0)  <= x"00000144";
-    header(1)  <= x"00000244";
-    header(2)  <= x"00000344";
-    data(0)(15 downto 0) <= x"AAAA";
-    data(1)(15 downto 0) <= x"BBBB";
-    data(2)(15 downto 0) <= x"CCCC";
-    timestamp(0)(15 downto 0) <= x"123A";
-    timestamp(1)(15 downto 0) <= x"123B";
-    timestamp(2)(15 downto 0) <= x"123C";
+    header(8)  <= x"00000144";
+    header(9)  <= x"00000244";
+    header(10)  <= x"00000344";
+    data(8)(15 downto 0) <= x"AAAA";
+    data(9)(15 downto 0) <= x"BBBB";
+    data(10)(15 downto 0) <= x"CCCC";
+    timestamp(8)(15 downto 0) <= x"123A";
+    timestamp(9)(15 downto 0) <= x"123B";
+    timestamp(10)(15 downto 0) <= x"123C";
     wait;
   end process;
 
@@ -171,10 +171,10 @@ output_process : process
     turn := to_integer(unsigned(status(13 downto 8)));
     word := to_integer(unsigned(status(15 downto 14)));
 
-    if (status(1 downto 0) = "00") then
-      wtype := 0;
-    elsif (word=2) then
+    if (word=2) and ((status(2 downto 0) = "011") or (status(2 downto 0) = "101")) then
       wtype := to_integer(unsigned(tdata(7 downto 0)));
+    else
+      wtype := 0;
     end if;
 
     if (show_output='1') then
@@ -184,27 +184,35 @@ output_process : process
       write (l, turn, left, 3);
       write (l, String'("w: "));
       write (l, word, left, 3);
-      if (status(1 downto 0) = "00") then
-        write (l, String'(" IDLE "));
-      elsif (status(1 downto 0) = "01") then
-        write (l, String'(" STRM "));
+      if (status(2 downto 0) = "000") then
+        write (l, String'(" IDL "));
+      elsif (status(2 downto 0) = "001") then
+        write (l, String'(" SYN "));
+      elsif (status(2 downto 0) = "010") then
+        write (l, String'(" CYC "));
+      elsif (status(2 downto 0) = "011") then
+        write (l, String'(" STR "));
+      elsif (status(2 downto 0) = "100") then
+        write (l, String'(" PAU "));
+      elsif (status(2 downto 0) = "101") then
+        write (l, String'(" TRA "));
       else
-        write (l, String'(" LAST "));
+        write (l, String'(" UNK  "));
       end if;
 
-      write (l, String'(" uva: "));
+      write (l, String'(" av:"));
       write (l, uva);
-      write (l, String'(" ura: "));
+      write (l, String'(" r:"));
       write (l, ura);
 
-      write (l, String'(" uvb: "));
+      write (l, String'(" bv:"));
       write (l, uvb);
-      write (l, String'(" urb: "));
+      write (l, String'(" r:"));
       write (l, urb);
 
-      write (l, String'(" uvc: "));
+      write (l, String'(" cv:"));
       write (l, uvc);
-      write (l, String'(" urc: "));
+      write (l, String'(" r:"));
       write (l, urc);
 
       write (l, String'(" ul: "));
@@ -215,8 +223,10 @@ output_process : process
       write (l, tready);
       write (l, String'(" tl: "));
       write (l, tlast);
-      write (l, String'(" tdata: "));
+      write (l, String'(" td: 0x"));
       hwrite (l, tdata);
+      --write (l, String'(" l: 0x"));
+      --hwrite (l, look);
       write (l, String'(" ("));
       write(L, character'val(wtype));
       write (l, String'(")"));
