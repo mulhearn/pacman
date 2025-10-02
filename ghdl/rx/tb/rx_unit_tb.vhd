@@ -103,7 +103,10 @@ begin
   timestamp_process : process
   begin
     timestamp <= x"0000000000000123";
-    wait until count=960;
+    --choose valid just in time, or one frag too late...
+    --test protection against mid-word valid.
+    --wait until count=958;
+    wait until count=959;
     timestamp <= x"0000000000000ABC";
     wait;
   end process;

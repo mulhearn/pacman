@@ -46,7 +46,7 @@ use work.common.all;
 entity rx_buffer is
   generic(
     constant TURN_MAX       : integer := C_RX_TURN_MAX;
-    constant WORDS_PER_TURN : integer := C_RX_WORDS_PER_TURN
+    constant FRAGS_PER_TURN : integer := C_RX_FRAGS_PER_TURN
   );
   port (
     -- clock and reset:
@@ -65,7 +65,7 @@ entity rx_buffer is
     -- configuration register for this module
     CONFIG_I           : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     -- the most recent data word sent to the stream
-    LOOK_O             : out std_logic_vector(C_RX_WORDS_PER_TURN*C_RX_AXIS_WIDTH-1 downto 0);
+    LOOK_O             : out std_logic_vector(C_RX_FRAGS_PER_TURN*C_RX_AXIS_WIDTH-1 downto 0);
 
     -- the received data from the UART receivers and extra channels
     HEADER_I           : in  rx_header_array_t;
@@ -133,12 +133,13 @@ architecture behavioral of rx_buffer is
   type state_t is (IDLE, WAIT_STATE, STREAM, TRAILER);
   signal state, next_state : state_t := IDLE;
 
-  -- turn and word counters:
-  signal word : integer range 0 to 2 := 0;
+  -- turn and frag counters:
+  signal frag : integer range 0 to 2 := 0;
   signal turn : integer range 0 to 43 := 0;
 
   -- FSM control signals:
   signal valid_channel      : std_logic := '0';
+  signal stream_active      : std_logic := '0';
   signal packet_timeout     : std_logic := '0';
   signal packet_full        : std_logic := '0';
 
@@ -170,7 +171,7 @@ begin
   rst <= not M_AXIS_ARESETN;
 
   -- FSM combinatoric state logic: (see description above)
-  process(state, valid_channel, packet_timeout, busy, packet_full, word, turn)
+  process(state, valid_channel, stream_active, packet_timeout, busy, packet_full, frag, turn)
   begin
     case state is
       when IDLE =>
@@ -192,9 +193,9 @@ begin
       when STREAM =>
         if busy = '1' then
           next_state <= STREAM;
-        elsif packet_full = '1' and word = 2 then
+        elsif packet_full = '1' and frag = 2 then
           next_state <= TRAILER;
-        elsif turn = 43 and word = 2 then
+        elsif turn = 43 and frag = 2 then
           next_state <= WAIT_STATE;
         else
           next_state <= STREAM;
@@ -203,7 +204,7 @@ begin
       when TRAILER =>
         if busy = '1' then
           next_state <= TRAILER;
-        elsif word = 2 then
+        elsif frag = 2 then
           next_state <= IDLE;
         else
           next_state <= TRAILER;
@@ -226,22 +227,22 @@ begin
     end if;
   end process;
 
-  -- turn and word counters:
+  -- turn and frag counters:
   -- only STREAM state uses turn counter
-  -- only STREAM and TRAILER states use word counter
+  -- only STREAM and TRAILER states use frag counter
   process(clk, rst)
   begin
     if rst = '1' then
       turn <= 0;
-      word <= 0;
+      frag <= 0;
     elsif rising_edge(clk) then
       case state is
         when STREAM =>
           if busy = '0' then
-            if word < 2 then
-              word <= word + 1;
+            if frag < 2 then
+              frag <= frag + 1;
             else
-              word <= 0;
+              frag <= 0;
               if turn < 43 then
                 turn <= turn + 1;
               else
@@ -253,15 +254,15 @@ begin
         when TRAILER =>
           turn <= 0;
           if busy = '0' then
-            if word < 2 then
-              word <= word + 1;
+            if frag < 2 then
+              frag <= frag + 1;
             else
-              word <= 0;  -- ready for next IDLE or WAIT_STATE
+              frag <= 0;  -- ready for next IDLE or WAIT_STATE
             end if;
           end if;
 
         when others =>
-          word <= 0;
+          frag <= 0;
           turn <= 0;
       end case;
     end if;
@@ -312,6 +313,8 @@ begin
       -- reset packet_full and its counter:
       sent_counter := 0;
       packet_full <= '0';
+      -- reset stream_active (see STREAM state)
+      stream_active <= '0';
       -- stream output siginals (La raison d'etre for this module)
       uready <= (others => '0');
       data   <= (others => '0');
@@ -329,20 +332,35 @@ begin
         sent_counter := 0;
         packet_full <= '0';
       elsif (state = STREAM) then
-        if (busy = '0') and (VALID_I(turn) = '1') then
-          wen <= '1';
-          if (word = 0) then
-            --increment before last fragment so that state transition can occur at fragment=2 when necessary
-            if (sent_counter < 16#7FFFFFFF#) then
-              sent_counter  := sent_counter + 1;
-            end if;
-            data(31 downto 0) <= HEADER_I(turn);
-          elsif (word = 1) then
-            data <= TIMESTAMP_I(turn);
-          else
-            data <= DATA_I(turn);
-            uready(turn) <= '1';
-          end if;
+        if (busy = '0') then
+          case frag is
+            when 0 =>
+              if (VALID_I(turn) = '1') then
+                stream_active <= '1';
+                wen <= '1';
+                --increment before last fragment so that state transition can occur at fragment=2 when necessary
+                if (sent_counter < 16#7FFFFFFF#) then
+                  sent_counter  := sent_counter + 1;
+                end if;
+                data(31 downto 0) <= HEADER_I(turn);
+              else
+                stream_active <= '0';
+              end if;
+
+            when 1 =>
+              if (stream_active = '1') then
+                wen <= '1';
+                data <= TIMESTAMP_I(turn);
+              end if;
+
+            when 2 =>
+              if (stream_active = '1') then
+                wen <= '1';
+                data <= DATA_I(turn);
+                uready(turn) <= '1';
+                stream_active <= '0';
+              end if;
+          end case;
         end if;
         if (sent_config > 0) and (sent_counter >= sent_config) then
           packet_full <= '1';
@@ -350,9 +368,9 @@ begin
       elsif (state = TRAILER) then
         if (busy = '0') then
           wen  <= '1';
-          if (word = 0) then
+          if (frag = 0) then
             data(31 downto 0)  <= EOP_HEADER_I;
-          elsif (word = 1) then
+          elsif (frag = 1) then
             data(31 downto 0)  <= std_logic_vector(to_unsigned(sent_counter, 32));
           else
             data  <= (others=>'0');
@@ -380,7 +398,7 @@ begin
   status(6) <= wen;
   status(7) <= last;
   status(13 downto 8) <= std_logic_vector(to_unsigned(turn, 6));
-  status(15 downto 14) <= std_logic_vector(to_unsigned(word, 2));
+  status(15 downto 14) <= std_logic_vector(to_unsigned(frag, 2));
 
   DEBUG_STATUS_O <= status;
 

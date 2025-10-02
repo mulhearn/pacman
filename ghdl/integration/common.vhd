@@ -28,7 +28,7 @@ package common is
   constant C_RX_HEADER_WIDTH   : integer  := 32;
 
   constant C_RX_TURN_MAX       : integer  := 64;
-  constant C_RX_WORDS_PER_TURN : integer  := 3;
+  constant C_RX_FRAGS_PER_TURN : integer  := 3;
   constant C_RX_EXTRA_CHAN     : integer  := 4;
   constant C_RX_NUM_CHAN       : integer  := C_NUM_UART + C_RX_EXTRA_CHAN;
   constant C_RX_BEAT_MAX       : integer  := 32;
