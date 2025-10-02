@@ -64,12 +64,12 @@ architecture behaviour of rx_buffer_tb is
   signal show_output : std_logic := '0';
 begin
 
-  uva <= uvalid(0);
-  uvb <= uvalid(1);
-  uvc <= uvalid(2);
-  ura <= uready(0);
-  urb <= uready(1);
-  urc <= uready(2);
+  uva <= uvalid(8);
+  uvb <= uvalid(9);
+  uvc <= uvalid(10);
+  ura <= uready(8);
+  urb <= uready(9);
+  urc <= uready(10);
   ulast <= status(7);
 
   uut: rx_buffer port map (
@@ -79,15 +79,15 @@ begin
     M_AXIS_TVALID   => tvalid,
     M_AXIS_TREADY   => tready,
     M_AXIS_TLAST    => tlast,
-    CONFIG_I        => x"00000001",
+    STATUS_O        => status,
+    CONFIG_I        => x"00030000",
     LOOK_O          => look,
     HEADER_I        => header,
     DATA_I          => data,
     TIMESTAMP_I     => timestamp,
     VALID_I         => uvalid,
     READY_O         => uready,
-    EOP_HEADER_I    => x"1100004C",
-    DEBUG_STATUS_O  => status -- (non-delayed version for easy debugging)
+    EOP_HEADER_I    => x"1100004C"
   );
 
   aresetn_process : process
@@ -139,9 +139,9 @@ begin
   data_process : process
   begin
     data <= (others => (others => '0'));
-    header(8)  <= x"00000144";
-    header(9)  <= x"00000244";
-    header(10)  <= x"00000344";
+    header(8)  <= x"00000944";
+    header(9)  <= x"00000A44";
+    header(10)  <= x"00000B44";
     data(8)(15 downto 0) <= x"AAAA";
     data(9)(15 downto 0) <= x"BBBB";
     data(10)(15 downto 0) <= x"CCCC";
@@ -171,7 +171,7 @@ output_process : process
     turn := to_integer(unsigned(status(13 downto 8)));
     word := to_integer(unsigned(status(15 downto 14)));
 
-    if (word=2) and ((status(2 downto 0) = "011") or (status(2 downto 0) = "101")) then
+    if (word=1) and ((status(2 downto 0) = "010") or (status(2 downto 0) = "011")) then
       wtype := to_integer(unsigned(tdata(7 downto 0)));
     else
       wtype := 0;
@@ -185,19 +185,15 @@ output_process : process
       write (l, String'("w: "));
       write (l, word, left, 3);
       if (status(2 downto 0) = "000") then
-        write (l, String'(" IDL "));
+        write (l, String'(" IDLE "));
       elsif (status(2 downto 0) = "001") then
-        write (l, String'(" SYN "));
+        write (l, String'(" WAIT "));
       elsif (status(2 downto 0) = "010") then
-        write (l, String'(" CYC "));
+        write (l, String'(" STRM "));
       elsif (status(2 downto 0) = "011") then
-        write (l, String'(" STR "));
-      elsif (status(2 downto 0) = "100") then
-        write (l, String'(" PAU "));
-      elsif (status(2 downto 0) = "101") then
-        write (l, String'(" TRA "));
+        write (l, String'(" TAIL "));
       else
-        write (l, String'(" UNK  "));
+        write (l, String'(" UNKN "));
       end if;
 
       write (l, String'(" av:"));

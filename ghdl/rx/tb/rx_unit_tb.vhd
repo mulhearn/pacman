@@ -103,11 +103,7 @@ begin
   timestamp_process : process
   begin
     timestamp <= x"0000000000000123";
-    -- this is just in the nick of time:
-    --wait until count=973;
-    -- this causes rollover to go valid in middle of word count,
-    -- testing protection for mid-word arrival of valid signal:
-    wait until count=975;
+    wait until count=960;
     timestamp <= x"0000000000000ABC";
     wait;
   end process;
@@ -206,6 +202,7 @@ begin
     wait for 10 ns;
     waddr   <= x"7FA4";
     wdata   <= x"00000001";
+    --wdata   <= x"00050000";
     wupdate <= '1';
     wait for 10 ns;
     waddr   <= x"7FA8";

@@ -63,4 +63,18 @@ package common is
   constant C_DEFAULT_RX_ROLLOVER_HEADER   : integer := 16#00005353#;
   constant C_DEFAULT_RX_EOP_HEADER        : integer := 16#0000004C#;
 
+  function bitwise_or(vec : std_logic_vector) return std_logic;
+
 end package common;
+
+package body common is
+  function bitwise_or(vec : std_logic_vector) return std_logic is
+  begin
+    for i in vec'range loop
+      if vec(i) = '1' then
+        return '1';
+      end if;
+    end loop;
+    return '0';
+  end function;
+end package body common;

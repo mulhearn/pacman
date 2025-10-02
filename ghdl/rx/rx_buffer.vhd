@@ -129,6 +129,19 @@ architecture behavioral of rx_buffer is
 
   signal status    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
 
+  -- FSM states:
+  type state_t is (IDLE, WAIT_STATE, STREAM, TRAILER);
+  signal state, next_state : state_t := IDLE;
+
+  -- turn and word counters:
+  signal word : integer range 0 to 2 := 0;
+  signal turn : integer range 0 to 43 := 0;
+
+  -- FSM control signals:
+  signal valid_channel      : std_logic := '0';
+  signal packet_timeout     : std_logic := '0';
+  signal packet_full        : std_logic := '0';
+
 begin
 
   -- stream writer component:
@@ -156,145 +169,218 @@ begin
   clk <= M_AXIS_ACLK;
   rst <= not M_AXIS_ARESETN;
 
-
-  -- STATE MACHINE
-  process(clk,rst)
-    variable timeout_cycles : integer;
-    variable max_sent       : integer;
-    variable turn   : integer range 0 to TURN_MAX-1 := 0;
-    variable word   : integer range 0 to WORDS_PER_TURN-1 := 0;
-    variable cycles : integer range 0 to C_COUNT_MAX := 0;
-    variable sent   : integer range 0 to C_COUNT_MAX := 0;
-
-    type state_t is (IDLE, SYNC, CYCLE, STREAM, PAUSE, TRAILER);
-    variable state : state_t := IDLE;
-
+  -- FSM combinatoric state logic: (see description above)
+  process(state, valid_channel, packet_timeout, busy, packet_full, word, turn)
   begin
-    if (rst='1') then
-      state  := IDLE;
-      turn   := 0;
-      word   := 0;
-      cycles := 0;
-      sent   := 0;
-      uready <= (others => '0');
-      data   <= (others => '0');
-      wen    <= '0';
-      last   <= '0';
-      status <= (others => '0');
-    elsif (rising_edge(clk)) then
-      timeout_cycles := to_integer(unsigned(CONFIG_I(15 downto 0)));
-      max_sent       := to_integer(unsigned(CONFIG_I(31 downto 16)));
-
-      uready <= (others => '0');
-      data   <= (others => '0');
-      wen    <= '0';
-      last   <= '0';
-
-      if (state = IDLE) or (state = PAUSE) then
-        if (VALID_I(turn) = '1') then
-          state := SYNC;
-        end if;
-      end if;
-      if (state = SYNC) then
-        if (turn=0) then
-          state := CYCLE;
-        end if;
-      end if;
-      if (state = CYCLE) then
-
-        if (busy = '0') and (VALID_I(turn) = '1') then
-          state := STREAM;
-        elsif (turn = C_RX_NUM_CHAN-1) then
-          state := PAUSE;
-        end if;
-
-      end if;
-      if (state = STREAM) then
-        wen  <= '1';
-        if (word = 0) then
-          data(31 downto 0) <= HEADER_I(turn);
-        elsif (word = 1) then
-          data <= TIMESTAMP_I(turn);
+    case state is
+      when IDLE =>
+        if valid_channel = '1' then
+          next_state <= STREAM;
         else
-          sent  := (sent + 1) mod C_COUNT_MAX;
-          data <= DATA_I(turn);
-          uready(turn) <= '1';
-          -- update the look output:
-          LOOK_O(31 downto 0)   <=  HEADER_I(turn);
-          LOOK_O(63 downto 32)  <=  (others => '0');
-          LOOK_O(127 downto 64) <=  TIMESTAMP_I(turn);
-          LOOK_O(191 downto 128) <=  DATA_I(turn);
+          next_state <= IDLE;
+        end if;
 
-          if (turn = C_RX_NUM_CHAN-1) then
-            state := PAUSE;
+      when WAIT_STATE =>
+        if packet_timeout = '1' then
+          next_state <= TRAILER;
+        elsif valid_channel = '1' then
+          next_state <= STREAM;
+        else
+          next_state <= WAIT_STATE;
+        end if;
+
+      when STREAM =>
+        if busy = '1' then
+          next_state <= STREAM;
+        elsif packet_full = '1' and word = 2 then
+          next_state <= TRAILER;
+        elsif turn = 43 and word = 2 then
+          next_state <= WAIT_STATE;
+        else
+          next_state <= STREAM;
+        end if;
+
+      when TRAILER =>
+        if busy = '1' then
+          next_state <= TRAILER;
+        elsif word = 2 then
+          next_state <= IDLE;
+        else
+          next_state <= TRAILER;
+        end if;
+
+      when others =>
+        next_state <= IDLE;
+    end case;
+
+  end process;
+
+  -- state register: on reset enter IDLE,
+  -- otherwise update state to next_state for next clock cycle:
+  process(clk, rst)
+  begin
+    if rst = '1' then
+      state <= IDLE;
+    elsif rising_edge(clk) then
+      state <= next_state;
+    end if;
+  end process;
+
+  -- turn and word counters:
+  -- only STREAM state uses turn counter
+  -- only STREAM and TRAILER states use word counter
+  process(clk, rst)
+  begin
+    if rst = '1' then
+      turn <= 0;
+      word <= 0;
+    elsif rising_edge(clk) then
+      case state is
+        when STREAM =>
+          if busy = '0' then
+            if word < 2 then
+              word <= word + 1;
+            else
+              word <= 0;
+              if turn < 43 then
+                turn <= turn + 1;
+              else
+                turn <= 0;
+              end if;
+            end if;
+          end if;
+
+        when TRAILER =>
+          turn <= 0;
+          if busy = '0' then
+            if word < 2 then
+              word <= word + 1;
+            else
+              word <= 0;  -- ready for next IDLE or WAIT_STATE
+            end if;
+          end if;
+
+        when others =>
+          word <= 0;
+          turn <= 0;
+      end case;
+    end if;
+  end process;
+
+  -- detect valid data on any channel:
+  process(clk, rst)
+  begin
+    if rst = '1' then
+      valid_channel <= '0';
+    elsif rising_edge(clk) then
+      valid_channel <= bitwise_or(VALID_I);
+    end if;
+  end process;
+
+  -- packet timeout: reset in IDLE, otherwise count until configurable timeout
+  -- is reached, then flag is high until next reset or IDLE.
+  process(clk, rst)
+    variable timeout_config : integer;
+    variable timeout_counter : integer range 0 to 16#FFFFF# := 0;
+  begin
+    if rst = '1' then
+      timeout_counter := 0;
+      packet_timeout <= '0';
+    elsif rising_edge(clk) then
+      timeout_config := to_integer(unsigned(CONFIG_I(15 downto 0)));
+
+      if (state = IDLE) then
+        timeout_counter := 0;
+        packet_timeout <= '0';
+      else
+        if (timeout_counter < 16#FFFFF#) then
+          timeout_counter := timeout_counter + 1;
+        end if;
+        if ((timeout_config > 0) and (timeout_counter >= timeout_config)) then
+          packet_timeout <= '1';
+        end if;
+      end if;
+    end if;
+  end process;
+
+  -- stream output process:
+  process(clk, rst)
+    variable sent_config  : integer;
+    variable sent_counter : integer range 0 to 16#7FFFFFFF# := 0;
+  begin
+    if rst = '1' then
+      -- reset packet_full and its counter:
+      sent_counter := 0;
+      packet_full <= '0';
+      -- stream output siginals (La raison d'etre for this module)
+      uready <= (others => '0');
+      data   <= (others => '0');
+      wen    <= '0';
+      last   <= '0';
+    elsif rising_edge(clk) then
+      sent_config := to_integer(unsigned(CONFIG_I(31 downto 16)));
+
+      uready <= (others => '0');
+      data   <= (others => '0');
+      wen    <= '0';
+      last   <= '0';
+
+      if (state = IDLE) then
+        sent_counter := 0;
+        packet_full <= '0';
+      elsif (state = STREAM) then
+        if (busy = '0') and (VALID_I(turn) = '1') then
+          wen <= '1';
+          if (word = 0) then
+            --increment before last fragment so that state transition can occur at fragment=2 when necessary
+            if (sent_counter < 16#7FFFFFFF#) then
+              sent_counter  := sent_counter + 1;
+            end if;
+            data(31 downto 0) <= HEADER_I(turn);
+          elsif (word = 1) then
+            data <= TIMESTAMP_I(turn);
           else
-            state := CYCLE;
+            data <= DATA_I(turn);
+            uready(turn) <= '1';
+          end if;
+        end if;
+        if (sent_config > 0) and (sent_counter >= sent_config) then
+          packet_full <= '1';
+        end if;
+      elsif (state = TRAILER) then
+        if (busy = '0') then
+          wen  <= '1';
+          if (word = 0) then
+            data(31 downto 0)  <= EOP_HEADER_I;
+          elsif (word = 1) then
+            data(31 downto 0)  <= std_logic_vector(to_unsigned(sent_counter, 32));
+          else
+            data  <= (others=>'0');
+            last <= '1';
           end if;
         end if;
       end if;
-      if (state = TRAILER) then
-        wen  <= '1';
-        if (word = 0) then
-          data(31 downto 0)  <= EOP_HEADER_I;
-        elsif (word = 1) then
-          data(31 downto 0)  <= std_logic_vector(to_unsigned(sent, 32));
-        else
-          data  <= (others=>'0');
-          last <= '1';
-          sent   := 0;
-          cycles := 0;
-          state  := IDLE;
-        end if;
-      end if;
-
-      if (busy='0') then
-        if (state = STREAM) or (state = TRAILER) then
-          word := word + 1;
-        else
-          word := 0;
-          turn := turn + 1;
-        end if;
-      end if;
-
-      if not ((state = STREAM) or (state = TRAILER)) then
-        if ((sent>0) and (timeout_cycles>0) and (cycles > timeout_cycles)) or ((max_sent > 0) and (sent >= max_sent)) then
-          state := TRAILER;
-        end if;
-      end if;
-
-
-      if (turn = C_RX_NUM_CHAN) then
-        if not (state = IDLE) then
-          cycles := (cycles + 1);
-        end if;
-        turn := 0;
-      end if;
-
-      if (state = IDLE) then
-        status(2 downto 0) <= "000";
-      elsif (state = SYNC) then
-        status(2 downto 0) <= "001";
-      elsif (state = CYCLE) then
-        status(2 downto 0) <= "010";
-      elsif (state = STREAM) then
-        status(2 downto 0) <= "011";
-      elsif (state = PAUSE) then
-        status(2 downto 0) <= "100";
-      elsif (state = TRAILER) then
-        status(2 downto 0) <= "101";
-      else
-        status(2 downto 0) <= "111";
-      end if;
-
-      status(3) <= tvalid;
-      status(4) <= tready;
-      status(5) <= busy;
-      status(6) <= wen;
-      status(7) <= last;
-      status(13 downto 8) <= std_logic_vector(to_unsigned(turn, 6));
-      status(15 downto 14) <= std_logic_vector(to_unsigned(word, 2));
     end if;
   end process;
+
+  LOOK_O <= (others => '0');
+  --LOOK_O(31 downto 0)   <=  HEADER_I(oturn);
+  --LOOK_O(63 downto 32)  <=  (others => '0');
+  --LOOK_O(127 downto 64) <=  TIMESTAMP_I(oturn);
+  --LOOK_O(191 downto 128) <=  DATA_I(oturn);
+
+  status(2 downto 0) <= "000" when state = IDLE else
+                        "001" when state = WAIT_STATE else
+                        "010" when state = STREAM else
+                        "011" when state = TRAILER else
+                        "111";
+  status(3) <= tvalid;
+  status(4) <= tready;
+  status(5) <= busy;
+  status(6) <= wen;
+  status(7) <= last;
+  status(13 downto 8) <= std_logic_vector(to_unsigned(turn, 6));
+  status(15 downto 14) <= std_logic_vector(to_unsigned(word, 2));
 
   DEBUG_STATUS_O <= status;
 
