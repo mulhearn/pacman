@@ -50,8 +50,10 @@ entity tx_buffer is
     VALID_O            : out std_logic_vector(C_NUM_UART-1 downto 0);
     -- one ready bit per UART, from TX channel
     -- valid is cleared when UART has both valid and ready
-    READY_I            : in std_logic_vector(C_NUM_UART-1 downto 0)
-  );
+    READY_I            : in std_logic_vector(C_NUM_UART-1 downto 0);
+
+    DEBUG_O           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+    );
 end;
 
 architecture behavioral of tx_buffer is
@@ -86,6 +88,10 @@ architecture behavioral of tx_buffer is
   signal packet_valid    : std_logic;
   signal packet_ready    : std_logic;
 
+  -- registered packet data and valid, to relieve congestion:
+  signal packet_data_z   : std_logic_vector(C_TX_AXIS_WIDTH*C_TX_AXIS_BEATS-1 downto 0);
+  signal packet_valid_z  : std_logic;
+
   -- status register
   signal status    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
@@ -117,12 +123,12 @@ begin
   stream_valid <= S_AXIS_TVALID;
   VALID_O <= uart_valid;
 
-  process(state, packet_valid, uart_valid)
+  process(state, packet_valid_z, uart_valid)
   begin
     next_state <= state;
     case state is
       when IDLE =>
-        if packet_valid='1' then
+        if packet_valid_z='1' then
           next_state <= START_TX;
         end if;
       when START_TX =>
@@ -144,6 +150,17 @@ begin
     end if;
   end process;
 
+  process(clk,rst)
+  begin
+    if (rst='1') then
+      packet_data_z  <= (others => '0');
+      packet_valid_z <= '0';
+    elsif (rising_edge(clk)) then
+      packet_data_z  <= packet_data;
+      packet_valid_z <= packet_valid;
+    end if;
+  end process;
+
   -- state dependent signals: packet_ready, uart_valid, DATA_O
   process(clk,rst)
   begin
@@ -159,9 +176,9 @@ begin
           DATA_O <= (others => (others => '0'));
         when START_TX =>
           packet_ready <= '1';
-          uart_valid <= packet_data(C_NUM_UART-1 downto 0);
+          uart_valid <= packet_data_z(C_NUM_UART-1 downto 0);
           for i in 0 to C_NUM_UART-1 loop
-            DATA_O(i) <= packet_data(C_UART_DATA_WIDTH*(i+3)-1 downto C_UART_DATA_WIDTH*(i+2));
+            DATA_O(i) <= packet_data_z(C_UART_DATA_WIDTH*(i+3)-1 downto C_UART_DATA_WIDTH*(i+2));
           end loop;
         when TX =>
           packet_ready <= '0';
@@ -178,12 +195,14 @@ begin
   status(0) <= stream_ready;
   status(1) <= stream_valid;
   status(4) <= packet_ready;
-  status(5) <= packet_valid;
+  status(5) <= packet_valid_z;
 
   status(9 downto 8) <= "00" when state = IDLE else
                         "01" when state = START_TX else
                         "10" when state = TX else
                         "11";
+  --undelayed status for the test bench:
+  DEBUG_O <= status;
 
   process(clk,rst)
   begin

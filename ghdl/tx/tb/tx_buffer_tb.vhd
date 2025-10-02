@@ -26,7 +26,9 @@ architecture behaviour of tx_buffer_tb is
 
       DATA_O             : out uart_data_array_t;
       VALID_O            : out std_logic_vector(C_NUM_UART-1 downto 0);
-      READY_I            : in std_logic_vector(C_NUM_UART-1 downto 0)
+      READY_I            : in std_logic_vector(C_NUM_UART-1 downto 0);
+
+      DEBUG_O           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
     );
   end component;
 
@@ -38,6 +40,8 @@ architecture behaviour of tx_buffer_tb is
   signal tvalid   : std_logic := '0';
   signal tready   : std_logic;
   signal tlast    : std_logic := '0';
+
+  signal status   : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
   signal odata    : uart_data_array_t;
   signal ovalid   : std_logic_vector(C_NUM_UART-1 downto 0);
@@ -53,7 +57,8 @@ begin
     S_AXIS_TLAST    => tlast,
     DATA_O          => odata,
     VALID_O         => ovalid,
-    READY_I         => oready
+    READY_I         => oready,
+    DEBUG_O        => status
   );
 
   aresetn_process : process
@@ -68,10 +73,10 @@ begin
   begin
     oready <= (others => '0');
     wait for 1 ns;
-    wait for 250 ns;
-    oready <= x"00000FFFFF";
+    wait for 280 ns;
+    oready <= x"00000000FF";
     wait for 10 ns;
-    oready <= x"FFFFF00000";
+    oready <= x"FFFFFFFF00";
     wait for 10 ns;
     oready <= x"0000000000";
     wait;
@@ -210,14 +215,21 @@ begin
       wait;
     end if;
 
+    if (status(9 downto 8) = "00") then
+      write (l, String'(" IDL "));
+    elsif (status(9 downto 8) = "01") then
+      write (l, String'(" STR "));
+    elsif (status(9 downto 8) = "10") then
+      write (l, String'(" TX  "));
+    else
+      write (l, String'(" UNKN "));
+    end if;
+
     write (l, String'("c: "));
     write (l, count, left, 4);
     --write (l, String'("aclk: "));
     --write (l, aclk);
     write (l, String'("|| tdata: 0x..."));
-    hwrite (l, tdata(111 downto 96));
-    --hwrite (l, tdata(79 downto 64));
-    write (l, String'("..."));
     hwrite (l, tdata(15 downto 0));
     write (l, String'(" tval: "));
     write (l, tvalid);
@@ -231,12 +243,8 @@ begin
     hwrite (l, odata(0)(11 downto 0));
     write (l, String'(" 1:"));
     hwrite (l, odata(1)(11 downto 0));
-    write (l, String'(" 2:"));
-    hwrite (l, odata(2)(11 downto 0));
-    write (l, String'(" 3:"));
-    hwrite (l, odata(3)(11 downto 0));
     write (l, String'(" 38:"));
-    hwrite (l, odata(38)(11 downto 0));
+    hwrite (l, odata(2)(11 downto 0));
     write (l, String'(" 39:"));
     hwrite (l, odata(39)(11 downto 0));
 
@@ -257,13 +265,8 @@ begin
     wait until (count=6);
     write(l, String'("INFO:  output buffer fills two uarts per beat: (only LSBs of several uart channels shown):"));
     writeline(output, l);
-    wait until (count=25);
-    write(l, String'("INFO:  output buffer is full, buffer output marked valid:"));
-    writeline(output, l);
-    wait until (count=27);
-    write(l, String'("INFO:  buffer becomes ready for new stream data (tready goes high):"));
-    writeline(output, l);
-    write(l, String'("INFO:  uarts reply ready 20 channels at a time (test pattern), corresponding data marked invalid:"));
+    wait until (count=24);
+    write(l, String'("INFO:  going to START_TX state, then TX:"));
     writeline(output, l);
     wait;
   end process;
