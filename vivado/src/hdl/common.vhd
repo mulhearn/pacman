@@ -28,7 +28,7 @@ package common is
   constant C_RX_HEADER_WIDTH   : integer  := 32;
 
   constant C_RX_TURN_MAX       : integer  := 64;
-  constant C_RX_WORDS_PER_TURN : integer  := 3;
+  constant C_RX_FRAGS_PER_TURN : integer  := 3;
   constant C_RX_EXTRA_CHAN     : integer  := 4;
   constant C_RX_NUM_CHAN       : integer  := C_NUM_UART + C_RX_EXTRA_CHAN;
   constant C_RX_BEAT_MAX       : integer  := 32;
@@ -63,4 +63,18 @@ package common is
   constant C_DEFAULT_RX_ROLLOVER_HEADER   : integer := 16#00005353#;
   constant C_DEFAULT_RX_EOP_HEADER        : integer := 16#0000004C#;
 
+  function bitwise_or(vec : std_logic_vector) return std_logic;
+
 end package common;
+
+package body common is
+  function bitwise_or(vec : std_logic_vector) return std_logic is
+  begin
+    for i in vec'range loop
+      if vec(i) = '1' then
+        return '1';
+      end if;
+    end loop;
+    return '0';
+  end function;
+end package body common;
