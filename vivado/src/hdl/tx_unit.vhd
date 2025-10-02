@@ -74,7 +74,10 @@ architecture behaviour of tx_unit is
 
       DATA_O             : out uart_data_array_t;
       VALID_O            : out std_logic_vector(C_NUM_UART-1 downto 0);
-      READY_I            : in std_logic_vector(C_NUM_UART-1 downto 0)
+      READY_I            : in std_logic_vector(C_NUM_UART-1 downto 0);
+
+      DEBUG_O            : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+
       );
   end component;
 
@@ -142,7 +145,8 @@ begin
     S_REGBUS_RB_WADDR   => S_REGBUS_RB_WADDR,
     S_REGBUS_RB_WDATA   => S_REGBUS_RB_WDATA,
     S_REGBUS_RB_WACK    => S_REGBUS_RB_WACK,
-    UART_LOOK_I  => data,
+    --UART_LOOK_I  => data,
+    UART_LOOK_I  => (others => (others => '0')),
     UART_STATUS_I  => status,
     BUFFER_STATUS_I => gstatus,
     UART_CONFIG_O  => config
