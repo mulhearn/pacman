@@ -89,15 +89,10 @@ architecture behavioral of tx_buffer is
   -- status register
   signal status    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
-  -- UART channel mask extrated from parallel data:
-  signal mask      : std_logic_vector(C_NUM_UART-1 downto 0);
-
   -- per UART channel valid for the valid/ready handshake with each TX channel:
   signal uart_valid    : std_logic_vector(C_NUM_UART-1 downto 0);
 
-  -- state of the TX buffer is either:
-  -- waiting on an AXI stream to finish, or
-  -- waiting on a TX to finish.
+  -- state of the TX buffer:
   type state_type is (IDLE, START_TX, TX);
   signal state      : state_type := IDLE;
   signal next_state : state_type := IDLE;
@@ -149,61 +144,33 @@ begin
     end if;
   end process;
 
-  -- simple flags
+  -- state dependent signals: packet_ready, uart_valid, DATA_O
   process(clk,rst)
   begin
     if (rst='1') then
       packet_ready <= '0';
-    elsif (rising_edge(clk)) then
-      packet_ready <= '0';
-      case state is
-        when IDLE =>
-          --do nothing
-        when START_TX =>
-          packet_ready <= '1';
-        when TX =>
-          --do nothing
-      end case;
-    end if;
-  end process;
-
-  -- register UART mask and data:
-  process(clk,rst)
-  begin
-    if (rst='1') then
+      uart_valid <= (others => '0');
       DATA_O <= (others => (others => '0'));
     elsif (rising_edge(clk)) then
       case state is
         when IDLE =>
+          packet_ready <= '0';
+          uart_valid <= (others => '0');
           DATA_O <= (others => (others => '0'));
         when START_TX =>
+          packet_ready <= '1';
+          uart_valid <= packet_data(C_NUM_UART-1 downto 0);
           for i in 0 to C_NUM_UART-1 loop
             DATA_O(i) <= packet_data(C_UART_DATA_WIDTH*(i+3)-1 downto C_UART_DATA_WIDTH*(i+2));
           end loop;
         when TX =>
-          --DATA_O is sticky
-      end case;
-    end if;
-  end process;
-
-  --process for uart_valid
-  process(clk,rst)
-  begin
-    if (rst='1') then
-      packet_ready <= '1';
-      uart_valid <= (others => '0');
-    elsif (rising_edge(clk)) then
-      case state is
-        when IDLE =>
-          uart_valid <= (others => '0');
-        when START_TX =>
-          uart_valid <= packet_data(C_NUM_UART-1 downto 0);
-        when TX =>
+          packet_ready <= '0';
           for i in 0 to C_NUM_UART-1 loop
             if (READY_I(i) = '1') then
               uart_valid(i) <= '0';
             end if;
           end loop;
+
       end case;
     end if;
   end process;
