@@ -261,10 +261,9 @@ begin
     write(l, String'("INFO:  output buffer is full, buffer output marked valid:"));
     writeline(output, l);
     wait until (count=27);
-    write(l, String'("INFO:  uarts reply ready 20 channels at a time (test pattern), corresponding data marked invalid:"));
-    writeline(output, l);
-    wait until (count=30);
     write(l, String'("INFO:  buffer becomes ready for new stream data (tready goes high):"));
+    writeline(output, l);
+    write(l, String'("INFO:  uarts reply ready 20 channels at a time (test pattern), corresponding data marked invalid:"));
     writeline(output, l);
     wait;
   end process;
