@@ -145,8 +145,8 @@ begin
     S_REGBUS_RB_WADDR   => S_REGBUS_RB_WADDR,
     S_REGBUS_RB_WDATA   => S_REGBUS_RB_WDATA,
     S_REGBUS_RB_WACK    => S_REGBUS_RB_WACK,
-    --UART_LOOK_I  => data,
-    UART_LOOK_I  => (others => (others => '0')),
+    UART_LOOK_I  => data,
+    --UART_LOOK_I  => (others => (others => '0')),
     UART_STATUS_I  => status,
     BUFFER_STATUS_I => gstatus,
     UART_CONFIG_O  => config
