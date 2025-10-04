@@ -19,9 +19,9 @@ use work.register_map.all;
 
 entity tx_registers is
   port (
-    -- clock and reset
-    ACLK	        : in std_logic;
-    ARESETN	        : in std_logic;  -- ACTIVE LOW
+    -- clock and active-high reset
+    CLK_I	        : in std_logic;
+    RST_I	        : in std_logic;  -- ACTIVE LOW
 
     -- register bus (REGBUS) interface
     S_REGBUS_RB_RUPDATE : in  std_logic;
@@ -66,6 +66,10 @@ architecture behavioral of tx_registers is
   signal status     : uart_reg_array_t;
   signal gstatus    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
+  -- stage-1 of the registering the inputs:
+  signal look_s     : uart_data_array_t := (others => (others => '0'));
+  signal status_s   : uart_reg_array_t;
+
   -- registered controlled configuration per UART channel
   signal config   : uart_reg_array_t := (others => (others => '0'));
   -- zero all counters:
@@ -78,8 +82,8 @@ architecture behavioral of tx_registers is
 
 begin
   -- connect signals to inputs and outputs:
-  clk <= ACLK;
-  rst <= not ARESETN;
+  clk <= CLK_I;
+  rst <= RST_I;
   rupdate  <= S_REGBUS_RB_RUPDATE;
   raddr    <= S_REGBUS_RB_RADDR;
   S_REGBUS_RB_RDATA <= rdata;
@@ -93,12 +97,16 @@ begin
   process(clk, rst)
   begin
     if (rst='1') then
+      look_s     <= (others => (others => '0'));
       look       <= (others => (others => '0'));
+      status_s   <= (others => (others => '0'));
       status     <= (others => (others => '0'));
       gstatus    <= (others => '0');
     elsif (rising_edge(clk)) then
-      look       <= UART_LOOK_I;
-      status     <= UART_STATUS_I;
+      look_s     <= UART_LOOK_I;
+      look       <= look_s;
+      status_s   <= UART_STATUS_I;
+      status     <= status_s;
       gstatus    <= BUFFER_STATUS_I;
     end if;
   end process;

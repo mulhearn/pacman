@@ -30,9 +30,9 @@ use work.common.all;
 
 entity tx_buffer is
   port (
-    -- clock and reset
-    S_AXIS_ACLK        : in std_logic;
-    S_AXIS_ARESETN     : in std_logic;
+    -- clock and active-high reset
+    CLK_I              : in std_logic;
+    RST_I              : in std_logic;
 
     -- AXI stream containing the data to be transmitted
     S_AXIS_TDATA       : in std_logic_vector(C_TX_AXIS_WIDTH-1 downto 0);
@@ -63,8 +63,8 @@ architecture behavioral of tx_buffer is
       constant C_AXIS_BEATS   : integer  := C_TX_AXIS_BEATS
       );
     port (
-      S_AXIS_ACLK        : in std_logic;
-      S_AXIS_ARESETN     : in std_logic;
+      CLK_I              : in std_logic;
+      RST_I              : in std_logic;
       S_AXIS_TDATA       : in std_logic_vector(C_AXIS_WIDTH-1 downto 0);
       S_AXIS_TVALID      : in std_logic;
       S_AXIS_TREADY      : out std_logic;
@@ -105,8 +105,8 @@ architecture behavioral of tx_buffer is
 
 begin
   ar0: axis_read port map (
-    S_AXIS_ACLK     => S_AXIS_ACLK,
-    S_AXIS_ARESETN  => S_AXIS_ARESETN,
+    CLK_I           => clk,
+    RST_I           => rst,
     S_AXIS_TDATA    => S_AXIS_TDATA,
     S_AXIS_TVALID   => stream_valid,
     S_AXIS_TREADY   => stream_ready,
@@ -117,8 +117,8 @@ begin
     READY_I         => packet_ready
   );
 
-  clk <= S_AXIS_ACLK;
-  rst <= not S_AXIS_ARESETN;
+  clk <= CLK_I;
+  rst <= RST_I;
   S_AXIS_TREADY <= stream_ready;
   stream_valid <= S_AXIS_TVALID;
   VALID_O <= uart_valid;

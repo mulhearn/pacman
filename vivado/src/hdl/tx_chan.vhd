@@ -13,8 +13,10 @@ use work.common.all;
 
 entity tx_chan is
   port (
-    ACLK          : in  std_logic;
-    ARESETN       : in  std_logic;
+    --clock and active-high reset:
+    CLK_I         : in  std_logic;
+    RST_I         : in  std_logic;
+
     UCLK_I        : in  std_logic;
     CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     STATUS_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -75,8 +77,8 @@ begin
     BUSY=>busy
   );
 
-  clk <= ACLK;
-  rst   <= not ARESETN;
+  clk <= CLK_I;
+  rst   <= RST_I;
 
   config <= CONFIG_I;
 

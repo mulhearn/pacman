@@ -15,8 +15,8 @@ use work.common.all;
 entity tx_unit is
   port (
     --clock and reset
-    S_AXIS_ACLK          : in std_logic;
-    S_AXIS_ARESETN       : in std_logic;
+    ACLK                 : in std_logic;
+    RST_I                : in std_logic;
 
     --ASIC clock (slower than ACLK)
     UCLK_I               : in  std_logic;
@@ -52,6 +52,9 @@ end tx_unit;
 -- UART channel, implemented via the VHDL generate mechanism.
 
 architecture behaviour of tx_unit is
+  signal clk         : std_logic;
+  signal rst         : std_logic := '1';
+
   signal data        : uart_data_array_t := (others => (others => '0'));
   signal valid       : std_logic_vector(C_NUM_UART-1 downto 0) := (others => '0');
   signal ready       : std_logic_vector(C_NUM_UART-1 downto 0) := (others => '0');
@@ -61,8 +64,8 @@ architecture behaviour of tx_unit is
 
   component tx_buffer is
     port (
-      S_AXIS_ACLK        : in std_logic;
-      S_AXIS_ARESETN     : in std_logic;
+      CLK_I              : in std_logic;
+      RST_I     : in std_logic;
 
       S_AXIS_TDATA       : in std_logic_vector(C_TX_AXIS_WIDTH-1 downto 0);
       S_AXIS_TVALID      : in std_logic;
@@ -83,8 +86,8 @@ architecture behaviour of tx_unit is
 
   component tx_registers is
     port (
-      ACLK	        : in std_logic;
-      ARESETN	        : in std_logic;
+      CLK_I	        : in std_logic;
+      RST_I	        : in std_logic;
 
       S_REGBUS_RB_RADDR	     : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
       S_REGBUS_RB_RDATA	     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -105,8 +108,8 @@ architecture behaviour of tx_unit is
 
   component tx_chan is
     port (
-      ACLK          : in  std_logic;
-      ARESETN       : in  std_logic;
+      CLK_I         : in  std_logic;
+      RST_I         : in  std_logic;
       UCLK_I        : in  std_logic;
       CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       STATUS_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -118,11 +121,13 @@ architecture behaviour of tx_unit is
       );
   end component;
 
-
 begin
+  clk <= ACLK;
+  rst <= RST_I;
+
   uut: tx_buffer port map (
-    S_AXIS_ACLK     => S_AXIS_ACLK,
-    S_AXIS_ARESETN  => S_AXIS_ARESETN,
+    CLK_I           => clk,
+    RST_I           => rst,
     S_AXIS_TDATA    => S_AXIS_TDATA,
     S_AXIS_TVALID   => S_AXIS_TVALID,
     S_AXIS_TREADY   => S_AXIS_TREADY,
@@ -135,8 +140,8 @@ begin
   );
 
   uut0: tx_registers port map (
-    ACLK                => S_AXIS_ACLK,
-    ARESETN             => S_AXIS_ARESETN,
+    CLK_I               => clk,
+    RST_I               => rst,
     S_REGBUS_RB_RUPDATE => S_REGBUS_RB_RUPDATE,
     S_REGBUS_RB_RADDR   => S_REGBUS_RB_RADDR,
     S_REGBUS_RB_RDATA   => S_REGBUS_RB_RDATA,
@@ -145,8 +150,8 @@ begin
     S_REGBUS_RB_WADDR   => S_REGBUS_RB_WADDR,
     S_REGBUS_RB_WDATA   => S_REGBUS_RB_WDATA,
     S_REGBUS_RB_WACK    => S_REGBUS_RB_WACK,
-    --UART_LOOK_I  => data,
-    UART_LOOK_I  => (others => (others => '0')),
+    UART_LOOK_I  => data,
+    --UART_LOOK_I  => (others => (others => '0')),
     UART_STATUS_I  => status,
     BUFFER_STATUS_I => gstatus,
     UART_CONFIG_O  => config
@@ -156,8 +161,8 @@ begin
   gtxchan0: for i in 0 to C_NUM_UART-1 generate
     txchan0: tx_chan
       port map(
-        ACLK       => S_AXIS_ACLK,
-        ARESETN    => S_AXIS_ARESETN,
+        CLK_I      => clk,
+        RST_I      => rst,
         UCLK_I     => UCLK_I,
         CONFIG_I   => config(i),
         STATUS_O   => status(i),

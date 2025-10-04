@@ -15,8 +15,10 @@ use work.common.all;
 entity rx_chan is
 
   port (
-    ACLK          : in  std_logic;
-    ARESETN       : in  std_logic;
+    --clock and active-high reset
+    CLK_I          : in  std_logic;
+    RST_I       : in  std_logic;
+
     CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     STATUS_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     DATA_O        : out  std_logic_vector(C_UART_DATA_WIDTH-1 downto 0);
@@ -45,12 +47,12 @@ architecture behavioral of rx_chan is
   end component;
 
   signal clk        : std_logic;
-  signal rst        : std_logic;
+  signal rst        : std_logic := '1';
 
   signal status     : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal status_z   : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
 
-  signal data       : std_logic_vector(C_UART_DATA_WIDTH-1 downto 0);
+  signal udata       : std_logic_vector(C_UART_DATA_WIDTH-1 downto 0) := (others => '0');
   signal valid      : std_logic;
   signal ready      : std_logic;
 
@@ -69,13 +71,13 @@ begin
     CLKIN_RATIO => CONFIG_I(7 downto 0),
     CLKIN_PHASE => CONFIG_I(11 downto 8),
     RX          => rx,
-    data        => data,
+    data        => udata,
     data_update => update,
     busy        => busy
   );
 
-  clk <= ACLK;
-  rst   <= not ARESETN;
+  clk <= CLK_I;
+  rst <= RST_I;
 
   VALID_O <= valid;
   ready <= READY_I;
@@ -101,7 +103,7 @@ begin
       mode := to_integer(unsigned(CONFIG_I(13 downto 12)));
       if (mode = 1) then
         if (update = '1') then
-          DATA_O <= data;
+          DATA_O <= udata;
           TIMESTAMP_O <= TIMESTAMP_I;
           if ((valid = '1') and (ready='0')) then
             lost <= '1';

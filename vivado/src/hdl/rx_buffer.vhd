@@ -49,9 +49,9 @@ entity rx_buffer is
     constant FRAGS_PER_TURN : integer := C_RX_FRAGS_PER_TURN
   );
   port (
-    -- clock and reset:
-    M_AXIS_ACLK        : in std_logic;
-    M_AXIS_ARESETN     : in std_logic; -- ACTIVE LOW
+    -- clock and active-high reset:
+    CLK_I              : in std_logic;
+    RST_I              : in std_logic;
 
     -- AXI stream containing RX data (out to PS via FIFO and then DMA)
     M_AXIS_TDATA       : out std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
@@ -88,7 +88,6 @@ end;
 
 
 
-
 architecture behavioral of rx_buffer is
   component axis_write is
     generic (
@@ -96,8 +95,8 @@ architecture behavioral of rx_buffer is
       constant C_DEBUG_WIDTH   : integer  := 8
     );
     port (
-      M_AXIS_ACLK        : in std_logic;
-      M_AXIS_ARESETN     : in std_logic;
+      CLK_I              : in std_logic;
+      RST_I              : in std_logic;
 
       M_AXIS_TDATA       : out std_logic_vector(C_AXIS_WIDTH-1 downto 0);
       M_AXIS_TVALID      : out std_logic;
@@ -150,8 +149,8 @@ begin
   -- the stream writer outputs a stream assembled from buffered input
   -- data sourced from the uarts.
   ar0: axis_write port map (
-    M_AXIS_ACLK     => M_AXIS_ACLK,
-    M_AXIS_ARESETN  => M_AXIS_ARESETN,
+    CLK_I           => clk,
+    RST_I           => rst,
     M_AXIS_TDATA    => M_AXIS_TDATA,
     M_AXIS_TVALID   => tvalid,
     M_AXIS_TREADY   => tready,
@@ -167,8 +166,8 @@ begin
 
   READY_O <= uready;
 
-  clk <= M_AXIS_ACLK;
-  rst <= not M_AXIS_ARESETN;
+  clk <= CLK_I;
+  rst <= RST_I;
 
   -- FSM combinatoric state logic: (see description above)
   process(state, valid_channel, stream_active, packet_timeout, busy, packet_full, frag, turn)

@@ -15,9 +15,9 @@ use work.common.all;
 
 entity rx_unit is
   port (
-    --clock and reset
-    M_AXIS_ACLK            : in std_logic;
-    M_AXIS_ARESETN         : in std_logic;
+    --clock and active-high reset
+    ACLK                   : in std_logic;
+    RST_I                  : in std_logic;
 
     -- AXI Stream containing data received
     M_AXIS_TDATA           : out std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
@@ -56,9 +56,12 @@ end rx_unit;
 -- mechanism.
 
 architecture behaviour of rx_unit is
-  signal bheader           : rx_header_array_t := (others => (others => '0'));
-  signal bdata             : rx_data_array_t;
-  signal udata            : uart_data_array_t;
+  signal clk              : std_logic;
+  signal rst              : std_logic;
+  signal bheader          : rx_header_array_t := (others => (others => '0'));
+  signal bdata            : rx_data_array_t  := (others => (others => '0'));
+  signal udata            : uart_data_array_t  := (others => (others => '0'));
+  signal udata_dbg        : uart_data_array_t  := (others => (others => '0'));
   signal timestamp        : rx_timestamp_array_t;
   signal valid            : std_logic_vector(C_RX_NUM_CHAN-1 downto 0) := (others => '0');
   signal ready            : std_logic_vector(C_RX_NUM_CHAN-1 downto 0) := (others => '0');
@@ -77,8 +80,8 @@ architecture behaviour of rx_unit is
 
   component rx_buffer is
     port (
-      M_AXIS_ACLK        : in std_logic;
-      M_AXIS_ARESETN     : in std_logic;
+      CLK_I              : in std_logic;
+      RST_I              : in std_logic;
       M_AXIS_TDATA       : out std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
       M_AXIS_TVALID      : out std_logic;
       M_AXIS_TREADY      : in  std_logic;
@@ -100,8 +103,8 @@ architecture behaviour of rx_unit is
 
   component rx_registers is
     port (
-      ACLK     : in std_logic;
-      ARESETN  : in std_logic;
+      CLK_I     : in std_logic;
+      RST_I  : in std_logic;
 
       S_REGBUS_RB_RADDR	  : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
       S_REGBUS_RB_RDATA	  : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -134,8 +137,8 @@ architecture behaviour of rx_unit is
 
   component rx_chan is
     port (
-      ACLK        : in  std_logic;
-      ARESETN     : in  std_logic;
+      CLK_I       : in  std_logic;
+      RST_I       : in  std_logic;
       CONFIG_I    : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       STATUS_O    : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       DATA_O      : out  std_logic_vector(C_UART_DATA_WIDTH-1 downto 0);
@@ -150,9 +153,9 @@ architecture behaviour of rx_unit is
   end component;
 
   component rx_header is
-        port (
-      ACLK        : in std_logic;
-      ARESETN     : in std_logic;
+    port (
+      CLK_I       : in std_logic;
+      RST_I       : in std_logic;
       PACMAN_I    : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       LUT_I       : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       CHAN_I      : in uart_reg_array_t;
@@ -164,8 +167,8 @@ architecture behaviour of rx_unit is
 
   component heartbeat is
     port (
-      ACLK        : in  std_logic;
-      ARESETN     : in  std_logic;
+      CLK_I       : in  std_logic;
+      RST_I       : in  std_logic;
       EN_I        : in  std_logic;
       CONFIG_I    : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       TIMESTAMP_O : out  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
@@ -178,8 +181,8 @@ architecture behaviour of rx_unit is
 
   component rollover is
     port (
-      ACLK        : in  std_logic;
-      ARESETN     : in  std_logic;
+      CLK_I       : in  std_logic;
+      RST_I       : in  std_logic;
       EN_I        : in  std_logic;
       CONFIG_I    : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       TIMESTAMP_O : out  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
@@ -191,9 +194,13 @@ architecture behaviour of rx_unit is
   end component;
 
 begin
+  clk <= ACLK;
+  rst <= RST_I;
+
+
   uut: rx_buffer port map (
-    M_AXIS_ACLK     => M_AXIS_ACLK,
-    M_AXIS_ARESETN  => M_AXIS_ARESETN,
+    CLK_I           => clk,
+    RST_I           => rst,
     M_AXIS_TDATA    => M_AXIS_TDATA,
     M_AXIS_TVALID   => M_AXIS_TVALID,
     M_AXIS_TREADY   => M_AXIS_TREADY,
@@ -210,8 +217,8 @@ begin
     );
 
   reg0: rx_registers port map (
-    ACLK                => M_AXIS_ACLK,
-    ARESETN             => M_AXIS_ARESETN,
+    CLK_I               => clk,
+    RST_I               => rst,
     S_REGBUS_RB_RUPDATE => S_REGBUS_RB_RUPDATE,
     S_REGBUS_RB_RADDR   => S_REGBUS_RB_RADDR,
     S_REGBUS_RB_RDATA   => S_REGBUS_RB_RDATA,
@@ -220,8 +227,7 @@ begin
     S_REGBUS_RB_WADDR   => S_REGBUS_RB_WADDR,
     S_REGBUS_RB_WDATA   => S_REGBUS_RB_WDATA,
     S_REGBUS_RB_WACK    => S_REGBUS_RB_WACK,
-    --UART_LOOK_I         => udata,
-    UART_LOOK_I         => (others => (others => '0')),
+    UART_LOOK_I         => udata,
     UART_STATUS_I       => ustatus,
     UART_CONFIG_O       => uconfig,
     UART_CHAN_O         => uchan,
@@ -241,8 +247,8 @@ begin
   grxchan0: for i in 0 to C_NUM_UART-1 generate
     rxchan0: rx_chan
       port map(
-        ACLK          => M_AXIS_ACLK,
-        ARESETN       => M_AXIS_ARESETN,
+        CLK_I         => clk,
+        RST_I         => rst,
         CONFIG_I      => uconfig(i),
         STATUS_O      => ustatus(i),
         DATA_O        => udata(i),
@@ -256,8 +262,8 @@ begin
   end generate grxchan0;
 
   h0: rx_header port map (
-    ACLK        => M_AXIS_ACLK,
-    ARESETN     => M_AXIS_ARESETN,
+    CLK_I       => clk,
+    RST_I       => rst,
     CHAN_I      => uchan,
     LUT_I       => wlut,
     PACMAN_I    => pacman,
@@ -266,8 +272,8 @@ begin
   );
 
   hb0: heartbeat port map (
-    ACLK          => M_AXIS_ACLK,
-    ARESETN       => M_AXIS_ARESETN,
+    CLK_I         => clk,
+    RST_I         => rst,
     EN_I          => benables(0),
     CONFIG_I      => heartbeat_config,
     TIMESTAMP_O   => timestamp(40),
@@ -277,8 +283,8 @@ begin
     );
 
   ro0: rollover port map (
-    ACLK          => M_AXIS_ACLK,
-    ARESETN       => M_AXIS_ARESETN,
+    CLK_I         => clk,
+    RST_I         => rst,
     EN_I          => benables(1),
     CONFIG_I      => rollover_config,
     TIMESTAMP_O   => timestamp(41),
@@ -293,6 +299,5 @@ begin
   end generate gheader0;
   bdata(40) <= (others => '0');
   bdata(41) <= (others => '0');
-  --bheader(40) <= x"00004053";
- -- bheader(41) <= x"00004153";
+
 end behaviour;
