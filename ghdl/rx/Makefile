@@ -38,12 +38,12 @@ testbenches:
 	ghdl -e -fsynopsys rx_unit_tb
 
 run-testbenches: all
-#	ghdl -r -fsynopsys rx_header_tb --stop-time=100ns
-#	ghdl -r -fsynopsys heartbeat_tb --stop-time=30us
-#	ghdl -r -fsynopsys rx_chan_tb --stop-time=30us
-	ghdl -r -fsynopsys rx_buffer_tb --stop-time=10us --vcd=../diagrams/rx_buffer_tb.vcd
-#	ghdl -r -fsynopsys rollover_tb --stop-time=30us
-#	ghdl -r -fsynopsys rx_registers_tb --stop-time=600ns
+	ghdl -r -fsynopsys rx_header_tb --stop-time=100ns
+	ghdl -r -fsynopsys heartbeat_tb --stop-time=30us
+	ghdl -r -fsynopsys rx_chan_tb --stop-time=30us
+	ghdl -r -fsynopsys rx_buffer_tb --stop-time=1us --vcd=../diagrams/rx_buffer_tb.vcd
+	ghdl -r -fsynopsys rollover_tb --stop-time=30us
+	ghdl -r -fsynopsys rx_registers_tb --stop-time=600ns
 run-unit-testbench: all
 	ghdl -r -fsynopsys rx_unit_tb --stop-time=30us
 run-dev:

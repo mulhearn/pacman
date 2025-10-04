@@ -13,8 +13,8 @@ end rx_buffer_tb;
 architecture behaviour of rx_buffer_tb is
   component rx_buffer is
     port (
-      M_AXIS_ACLK        : in std_logic;
-      M_AXIS_ARESETN     : in std_logic;
+      CLK_I              : in std_logic;
+      RST_I              : in std_logic;
       M_AXIS_TDATA       : out std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
       M_AXIS_TVALID      : out std_logic;
       M_AXIS_TREADY      : in  std_logic;
@@ -35,8 +35,8 @@ architecture behaviour of rx_buffer_tb is
   end component;
 
   signal count    : integer := 0;
-  signal aclk     : std_logic;
-  signal aresetn  : std_logic;
+  signal clk      : std_logic;
+  signal rst      : std_logic;
 
   signal tdata    : std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
   signal tvalid   : std_logic;
@@ -73,8 +73,8 @@ begin
   ulast <= status(7);
 
   uut: rx_buffer port map (
-    M_AXIS_ACLK     => aclk,
-    M_AXIS_ARESETN  => aresetn,
+    CLK_I           => clk,
+    RST_I           => rst,
     M_AXIS_TDATA    => tdata,
     M_AXIS_TVALID   => tvalid,
     M_AXIS_TREADY   => tready,
@@ -90,20 +90,20 @@ begin
     EOP_HEADER_I    => x"1100004C"
   );
 
-  aresetn_process : process
+  rst_process : process
   begin
-    aresetn <= '0';
+    rst <= '1';
     wait for 20 ns;
-    aresetn <= '1';
+    rst <= '0';
     wait;
   end process;
 
-  aclk_process : process
+  clk_process : process
   begin
     count <= count + 1;
-    aclk <= '1';
+    clk <= '1';
     wait for 5 ns;
-    aclk <= '0';
+    clk <= '0';
     wait for 5 ns;
   end process;
 
@@ -227,7 +227,7 @@ output_process : process
       write(L, character'val(wtype));
       write (l, String'(")"));
 
-      if (aresetn = '0') then
+      if (rst = '1') then
         write (l, String'(" (RESET)"));
       end if;
       if ((tvalid = '1') and (tready='1')) then

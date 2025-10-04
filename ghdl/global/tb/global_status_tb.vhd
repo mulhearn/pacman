@@ -13,8 +13,9 @@ end global_status_tb;
 architecture behaviour of global_status_tb is
   component global_status is
     port (
-      ACLK	          : in std_logic;
-      ARESETN	          : in std_logic;
+      --clock and active-high reset
+      CLK_I	          : in std_logic;
+      RST_I	          : in std_logic;
 
       LED_CONFIG_I        : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       GLOBAL_STATUS_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -24,8 +25,8 @@ architecture behaviour of global_status_tb is
   end component;
 
   signal count    : integer := 0;
-  signal aclk     : std_logic;
-  signal aresetn  : std_logic;
+  signal clk      : std_logic;
+  signal rst      : std_logic;
 
   signal config   : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '1');
   signal status   : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
@@ -34,27 +35,27 @@ architecture behaviour of global_status_tb is
   signal show_output : std_logic := '0';
 begin
   uut0: global_status port map (
-    ACLK             => aclk,
-    ARESETN          => aresetn,
+    CLK_I            => clk,
+    RST_I            => rst,
     LED_CONFIG_I     => config,
     GLOBAL_STATUS_O  => status,
     LED_O            => leds
     );
 
-  aresetn_process : process
+  rst_process : process
   begin
-    aresetn <= '0';
+    rst <= '1';
     wait for 20 ns;
-    aresetn <= '1';
+    rst <= '0';
     wait;
   end process;
 
-  aclk_process : process
+  clk_process : process
   begin
     count <= count + 1;
-    aclk <= '1';
+    clk <= '1';
     wait for 5 ns;
-    aclk <= '0';
+    clk <= '0';
     wait for 5 ns;
   end process;
 
@@ -85,8 +86,8 @@ begin
     if (show_output='1') then
       write (l, String'("c: "));
       write (l, count, left, 4);
-      --write (l, String'("aclk: "));
-      --write (l, aclk);
+      --write (l, String'("clk: "));
+      --write (l, clk);
       write (l, String'(" config: 0x"));
       hwrite (l, config);
       write (l, String'(" status: 0x"));
@@ -94,7 +95,7 @@ begin
       write (l, String'(" leds: "));
       write (l, leds(0));
       write (l, leds(1));
-      if (aresetn = '0') then
+      if (rst = '1') then
         write (l, String'(" (RESET)"));
       end if;
       writeline(output, l);

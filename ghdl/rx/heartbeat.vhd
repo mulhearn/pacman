@@ -8,8 +8,8 @@ use work.common.all;
 
 entity heartbeat is
   port (
-    ACLK          : in  std_logic;
-    ARESETN       : in  std_logic;
+    CLK_I         : in  std_logic;
+    RST_I         : in  std_logic;
     EN_I          : in  std_logic;
     CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     TIMESTAMP_O   : out  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
@@ -30,8 +30,8 @@ architecture behavioral of heartbeat is
   signal count      : integer;
 
 begin
-  clk <= ACLK;
-  rst   <= not ARESETN;
+  clk <= CLK_I;
+  rst <= RST_I;
 
   VALID_O <= valid;
   ready <= READY_I;

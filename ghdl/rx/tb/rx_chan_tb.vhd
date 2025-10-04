@@ -13,8 +13,8 @@ end rx_chan_tb;
 architecture behaviour of rx_chan_tb is
   component rx_chan is
     port (
-      ACLK          : in  std_logic;
-      ARESETN       : in  std_logic;
+      CLK_I         : in  std_logic;
+      RST_I         : in  std_logic;
       CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       STATUS_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       DATA_O        : out  std_logic_vector(C_UART_DATA_WIDTH-1 downto 0);
@@ -30,8 +30,8 @@ architecture behaviour of rx_chan_tb is
 
   signal count      : integer := 0;
   signal tstep_ns   : integer := 10;
-  signal aclk       : std_logic;
-  signal aresetn    : std_logic;
+  signal clk        : std_logic;
+  signal rst        : std_logic;
   signal uclk       : std_logic;
   signal status     : std_logic_vector(C_RB_DATA_WIDTH-1  downto 0);
   signal header     : std_logic_vector(C_RX_HEADER_WIDTH-1 DOWNTO 0);
@@ -46,8 +46,8 @@ architecture behaviour of rx_chan_tb is
 
 begin
   uut: rx_chan port map (
-    ACLK        => aclk,
-    ARESETN     => aresetn,
+    CLK_I       => clk,
+    RST_I       => rst,
     CONFIG_I    => x"00011001",
     DATA_O      => data,
     TIMESTAMP_O => tstamp,
@@ -60,20 +60,20 @@ begin
     --STATUS_O     => status
   );
 
-  aclk_process : process
+  clk_process : process
   begin
     count <= count + 1;
-    aclk <= '1';
+    clk <= '1';
     wait for 5 ns;
-    aclk <= '0';
+    clk <= '0';
     wait for 5 ns;
   end process;
 
-  aresetn_process : process
+  rst_process : process
   begin
-    aresetn <= '0';
+    rst <= '1';
     wait for 20 ns;
-    aresetn <= '1';
+    rst <= '0';
     wait;
   end process;
 
@@ -155,8 +155,8 @@ begin
     if (show_output='1') then
       write (l, String'("c: "));
       write (l, count, left, 5);
-      write  (l, String'("aclk: "));
-      write  (l, aclk);
+      write  (l, String'("clk: "));
+      write  (l, clk);
       write  (l, String'(" b: "));
       write (l, status(0));
       write  (l, String'(" v: "));
@@ -188,7 +188,7 @@ begin
       if (lost = '1') then
         write (l, String'(" !!! "));
       end if;
-      if (aresetn = '0') then
+      if (rst = '1') then
         write (l, String'(" (RESET)"));
       end if;
       writeline(output, l);

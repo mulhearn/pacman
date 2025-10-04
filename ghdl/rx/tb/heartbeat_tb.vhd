@@ -13,8 +13,8 @@ end heartbeat_tb;
 architecture behaviour of heartbeat_tb is
   component heartbeat is
     port (
-      ACLK          : in  std_logic;
-      ARESETN       : in  std_logic;
+      CLK_I         : in  std_logic;
+      RST_I         : in  std_logic;
       EN_I          : in  std_logic;
       CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       TIMESTAMP_O   : out  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
@@ -27,8 +27,8 @@ architecture behaviour of heartbeat_tb is
 
   signal count      : integer := 0;
   signal tstep_ns   : integer := 10;
-  signal aclk       : std_logic;
-  signal aresetn    : std_logic;
+  signal clk        : std_logic;
+  signal rst        : std_logic;
   signal uclk       : std_logic;
   signal tstamp     : std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
   signal tstamp_in  : std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0) := (others => '0');
@@ -41,8 +41,8 @@ begin
   tstamp_in <= std_logic_vector(to_unsigned(count, tstamp_in'length));
 
   uut: heartbeat port map (
-    ACLK        => aclk,
-    ARESETN     => aresetn,
+    CLK_I       => clk,
+    RST_I       => rst,
     EN_I        => '1',
     CONFIG_I    => x"00000008",
     TIMESTAMP_O => tstamp,
@@ -51,20 +51,20 @@ begin
     TIMESTAMP_I => tstamp_in
   );
 
-  aclk_process : process
+  clk_process : process
   begin
     count <= count + 1;
-    aclk <= '1';
+    clk <= '1';
     wait for 5 ns;
-    aclk <= '0';
+    clk <= '0';
     wait for 5 ns;
   end process;
 
-  aresetn_process : process
+  rst_process : process
   begin
-    aresetn <= '0';
+    rst <= '1';
     wait for 20 ns;
-    aresetn <= '1';
+    rst <= '0';
     wait;
   end process;
 
@@ -104,15 +104,11 @@ begin
       write (l, ready);
       write  (l, String'(" | ts: 0x"));
       hwrite (l, tstamp);
-      if (aresetn = '0') then
+      if (rst = '1') then
         write (l, String'(" (RESET)"));
       end if;
       writeline(output, l);
     end if;
   end process;
-
-
-
-
 
 end behaviour;

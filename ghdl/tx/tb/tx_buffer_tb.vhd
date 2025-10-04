@@ -13,8 +13,8 @@ end tx_buffer_tb;
 architecture behaviour of tx_buffer_tb is
   component tx_buffer is
     port (
-      S_AXIS_ACLK        : in std_logic;
-      S_AXIS_ARESETN     : in std_logic;
+      CLK_I              : in std_logic;
+      RST_I              : in std_logic;
 
       S_AXIS_TDATA       : in std_logic_vector(C_TX_AXIS_WIDTH-1 downto 0);
       S_AXIS_TVALID      : in std_logic;
@@ -33,8 +33,8 @@ architecture behaviour of tx_buffer_tb is
   end component;
 
   signal count    : integer := 0;
-  signal aclk     : std_logic;
-  signal aresetn  : std_logic;
+  signal clk      : std_logic;
+  signal rst      : std_logic;
 
   signal tdata    : std_logic_vector(C_TX_AXIS_WIDTH-1 downto 0) := (others => '0');
   signal tvalid   : std_logic := '0';
@@ -48,8 +48,8 @@ architecture behaviour of tx_buffer_tb is
   signal oready   : std_logic_vector(C_NUM_UART-1 downto 0);
 begin
   uut: tx_buffer port map (
-    S_AXIS_ACLK     => aclk,
-    S_AXIS_ARESETN  => aresetn,
+    CLK_I           => clk,
+    RST_I           => rst,
     S_AXIS_TDATA    => tdata,
     S_AXIS_TVALID   => tvalid,
     S_AXIS_TREADY   => tready,
@@ -61,11 +61,11 @@ begin
     DEBUG_O        => status
   );
 
-  aresetn_process : process
+  rst_process : process
   begin
-    aresetn <= '0';
+    rst <= '1';
     wait for 20 ns;
-    aresetn <= '1';
+    rst <= '0';
     wait;
   end process;
 
@@ -197,12 +197,12 @@ begin
     wait;
   end process;
 
-  aclk_process : process
+  clk_process : process
   begin
     count <= count + 1;
-    aclk <= '1';
+    clk <= '1';
     wait for 5 ns;
-    aclk <= '0';
+    clk <= '0';
     wait for 5 ns;
   end process;
 
@@ -248,7 +248,7 @@ begin
     write (l, String'(" 39:"));
     hwrite (l, odata(39)(11 downto 0));
 
-    if (aresetn = '0') then
+    if (rst = '1') then
       write (l, String'(" (RESET)"));
     end if;
     writeline(output, l);

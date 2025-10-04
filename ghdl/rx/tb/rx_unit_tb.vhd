@@ -13,8 +13,8 @@ end rx_unit_tb;
 architecture behaviour of rx_unit_tb is
   component rx_unit is
     port (
-      M_AXIS_ACLK            : in std_logic;
-      M_AXIS_ARESETN         : in std_logic;
+      ACLK                   : in std_logic;
+      RST_I                  : in std_logic;
       M_AXIS_TDATA           : out std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
       M_AXIS_TVALID          : out std_logic;
       M_AXIS_TREADY          : in std_logic;
@@ -39,16 +39,16 @@ architecture behaviour of rx_unit_tb is
       );
   end component;
 
-  signal timestamp : std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
-  signal count    : integer := 0;
-  signal aclk     : std_logic;
-  signal aresetn  : std_logic;
-  signal uclk     : std_logic;
+  signal timestamp : std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0) := (others => '0');
+  signal count     : integer := 0;
+  signal clk       : std_logic;
+  signal rst       : std_logic;
+  signal uclk      : std_logic;
 
-  signal tdata    : std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
-  signal tvalid   : std_logic;
-  signal tready   : std_logic := '0';
-  signal tlast    : std_logic;
+  signal tdata     : std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0) := (others => '0');
+  signal tvalid    : std_logic;
+  signal tready    : std_logic := '0';
+  signal tlast     : std_logic;
 
   -- read signals:
   signal raddr    : std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0) := (others => '0');
@@ -71,8 +71,8 @@ architecture behaviour of rx_unit_tb is
 
 begin
   uut: rx_unit port map (
-    M_AXIS_ACLK     => aclk,
-    M_AXIS_ARESETN  => aresetn,
+    ACLK            => clk,
+    RST_I           => rst,
     M_AXIS_TDATA    => tdata,
     M_AXIS_TVALID   => tvalid,
     M_AXIS_TREADY   => tready,
@@ -91,12 +91,12 @@ begin
     LOOPBACK_I          => (others => '1')
   );
 
-  aclk_process : process
+  clk_process : process
   begin
     count <= count + 1;
-    aclk <= '1';
+    clk <= '1';
     wait for 5 ns;
-    aclk <= '0';
+    clk <= '0';
     wait for 5 ns;
   end process;
 
@@ -111,11 +111,11 @@ begin
     wait;
   end process;
 
-  aresetn_process : process
+  rst_process : process
   begin
-    aresetn <= '0';
+    rst <= '1';
     wait for 10 ns;
-    aresetn <= '1';
+    rst <= '0';
     wait;
   end process;
 
@@ -266,7 +266,7 @@ begin
       hwrite (l, wdata);
       write (l, String'(" wk:"));
       write (l, wack);
-      if (aresetn = '0') then
+      if (rst = '1') then
         write (l, String'(" (RESET)"));
       end if;
       writeline(output, l);
@@ -317,7 +317,7 @@ begin
         if (tlast = '1') then
           write (l, String'(" *** "));
         end if;
-        if (aresetn = '0') then
+        if (rst = '1') then
           write (l, String'(" (RESET)"));
         end if;
         writeline(output, l);

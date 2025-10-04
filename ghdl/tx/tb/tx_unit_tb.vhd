@@ -13,8 +13,8 @@ end tx_unit_tb;
 architecture behaviour of tx_unit_tb is
   component tx_unit is
     port (
-      S_AXIS_ACLK            : in std_logic;
-      S_AXIS_ARESETN         : in std_logic;
+      ACLK                   : in std_logic;
+      RST_I                  : in std_logic;
       UCLK_I                 : in  std_logic;
 
       S_AXIS_TDATA           : in std_logic_vector(C_TX_AXIS_WIDTH-1 downto 0);
@@ -39,8 +39,8 @@ architecture behaviour of tx_unit_tb is
   end component;
 
   signal count    : integer := 0;
-  signal aclk     : std_logic  := '0';
-  signal aresetn  : std_logic  := '0';
+  signal clk      : std_logic  := '0';
+  signal rst      : std_logic  := '0';
   signal uclk     : std_logic  := '0';
 
   signal tdata    : std_logic_vector(C_TX_AXIS_WIDTH-1 downto 0) := (others => '0');
@@ -70,8 +70,8 @@ architecture behaviour of tx_unit_tb is
 
 begin
   uut: tx_unit port map (
-    S_AXIS_ACLK     => aclk,
-    S_AXIS_ARESETN  => aresetn,
+    ACLK            => clk,
+    RST_I           => rst,
     UCLK_I          => uclk,
     S_AXIS_TDATA    => tdata,
     S_AXIS_TVALID   => tvalid,
@@ -90,20 +90,20 @@ begin
     DEBUG_O             => debug
   );
 
-  aclk_process : process
+  clk_process : process
   begin
     count <= count + 1;
-    aclk <= '1';
+    clk <= '1';
     wait for 5 ns;
-    aclk <= '0';
+    clk <= '0';
     wait for 5 ns;
   end process;
 
-  aresetn_process : process
+  rst_process : process
   begin
-    aresetn <= '0';
+    rst <= '1';
     wait for 20 ns;
-    aresetn <= '1';
+    rst <= '0';
     wait;
   end process;
 
@@ -267,7 +267,7 @@ begin
       write (l, wack);
       write (l, String'(" || debug: 0x"));
       hwrite (l, debug);
-      if (aresetn = '0') then
+      if (rst = '1') then
         write (l, String'(" (RESET)"));
       end if;
       writeline(output, l);
@@ -292,7 +292,7 @@ begin
       write (l, tready);
       write (l, String'(" ltast: "));
       write (l, tlast);
-      if (aresetn = '0') then
+      if (rst = '1') then
         write (l, String'(" (RESET)"));
       end if;
       writeline(output, l);
