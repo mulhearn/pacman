@@ -7,7 +7,7 @@ package register_map is
   -- Top Level SCOPE (4 - bits)
   constant C_SCOPE_GLOBAL   : integer := 2#1111#; -- GLOBAL = 0xF = 0b1111
   constant C_SCOPE_TIMING   : integer := 2#1110#; -- TIMING = 0xE = 0b1110
-  constant C_SCOPE_ADC      : integer := 2#1110#; -- ADC    = 0xD = 0b1101
+  constant C_SCOPE_ADC      : integer := 2#1101#; -- ADC    = 0xD = 0b1101
   constant C_SCOPE_UPPER_TX : integer := 2#00#;   -- TX     =     = 0b00XX
   constant C_SCOPE_UPPER_RX : integer := 2#01#;   -- RX     =     = 0b01XX
 
@@ -92,6 +92,11 @@ package register_map is
   constant C_ADDR_RX_ROLLOVER_HEADER  : integer := 16#D4#;
   constant C_ADDR_RX_TRIG_HEADER      : integer := 16#D8#; -- not yet implemented
   constant C_ADDR_RX_EOP_HEADER       : integer := 16#DC#;
+
+  -- Registers with SCOPE=ADC
+  constant C_ADDR_ADC_STATUS          : integer := 16#000#;
+  constant C_ADDR_ADC_CONFIG          : integer := 16#004#;
+  constant C_ADDR_ADC_LOOK            : integer := 16#010#;
 
   -- Registers with SCOPE=TIMING ROLE(2 bits)=CFG, COUNTER, REGULAR
   constant C_TIMING_REGULAR : integer := 16#0#;

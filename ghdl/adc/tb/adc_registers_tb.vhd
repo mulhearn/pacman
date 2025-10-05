@@ -7,14 +7,14 @@ library work;
 use work.common.all;
 
 --  Defines a testbench (without any ports)
-entity adc_reg_tb is
-end adc_reg_tb;
+entity adc_registers_tb is
+end adc_registers_tb;
 
-architecture behaviour of adc_reg_tb is
-  component adc_reg is
+architecture behaviour of adc_registers_tb is
+  component adc_registers is
     port (
-      ACLK	           : in std_logic;
-      ARESETN	           : in std_logic;
+      CLK_I	           : in std_logic;
+      RST_I	           : in std_logic;
 
       S_REGBUS_RB_RADDR	   : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
       S_REGBUS_RB_RDATA	   : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -26,22 +26,16 @@ architecture behaviour of adc_reg_tb is
       S_REGBUS_RB_WDATA	   : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_WACK     : out std_logic;
 
-      CONFIG_O             : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      CLKPAR_O             : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      COMMAND_O            : out std_logic_vector(7 downto 0);
-      STATE_I              : in  std_logic_vector(3 downto 0);
-      STATUS_I             : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      LAST_I               : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      LOOK_I               : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+      CONFIG_O            : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      --STATUS_I            : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      LOOK_I              : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
       );
   end component;
   signal count     : integer := 0;
-  signal aclk      : std_logic;
-  signal aresetn   : std_logic;
+  signal clk      : std_logic;
+  signal rst   : std_logic;
   -- registers
   signal config  : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
-  signal clkpar  : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
-  signal command : std_logic_vector(7 downto 0);
 
   -- read signals:
   signal raddr   : std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0) := (others => '0');
@@ -54,9 +48,9 @@ architecture behaviour of adc_reg_tb is
   signal wdata   : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal wack    : std_logic := '0';
 begin
-  uut: adc_reg port map (
-      ACLK           => aclk,
-      ARESETN        => aresetn,
+  uut: adc_registers port map (
+      CLK_I               => clk,
+      RST_I               => rst,
       S_REGBUS_RB_RUPDATE => rupdate,
       S_REGBUS_RB_RADDR   => raddr,
       S_REGBUS_RB_RDATA   => rdata,
@@ -67,56 +61,39 @@ begin
       S_REGBUS_RB_WACK    => wack,
 
       CONFIG_O            => config,
-      CLKPAR_O            => clkpar,
-      COMMAND_O           => command,
-      STATUS_I            => x"11112222",
-      STATE_I             => x"4",
-      LAST_I              => x"00000AAA",
-      LOOK_I              => x"11111BBB"
+      LOOK_I              => x"00000123"
       );
 
-  aresetn_process : process
+  rst_process : process
   begin
-    aresetn <= '0';
-    wait for 12 ns;
-    aresetn <= '1';
+    rst <= '1';
+    wait for 20 ns;
+    rst <= '0';
     wait;
   end process;
 
-  aclk_process : process
+  clk_process : process
   begin
     count <= count + 1;
-    aclk <= '1';
+    clk <= '1';
     wait for 5 ns;
-    aclk <= '0';
+    clk <= '0';
     wait for 5 ns;
   end process;
 
   read_process : process
   begin
+    wait for 1 ns;
     raddr   <= x"0000";
     rupdate <= '0';
-    wait for 1 ns;
-    wait for 40 ns;
-    raddr   <= x"D100";
+    wait for 20 ns;
+    raddr   <= x"D000";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"D104";
+    raddr   <= x"D004";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"D108";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"D110";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"D114";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"D200";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"D204";
+    raddr   <= x"D010";
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"0000";
@@ -126,21 +103,10 @@ begin
 
   write_process : process
   begin
-    wait for 18 ns;
-    waddr   <= x"D110";
-    wdata   <= x"FEEDDADA";
-    wupdate <= '1';
-    wait for 10 ns;
-    waddr   <= x"D114";
-    wdata   <= x"DEADBEEF";
-    wupdate <= '1';
-    wait for 10 ns;
-    waddr   <= x"D118";
-    wdata   <= x"000000EF";
-    wupdate <= '1';
-    wait for 10 ns;
-    waddr   <= x"D200";
-    wdata   <= x"AAAAAAAA";
+    wait for 1 ns;
+    wait for 20 ns;
+    waddr   <= x"D004";
+    wdata   <= x"00000001";
     wupdate <= '1';
     wait for 10 ns;
     waddr   <= x"0000";
@@ -159,8 +125,6 @@ output_process : process
     end if;
     write (l, String'("c: "));
     write (l, count, left, 4);
-    --write (l, String'("aclk: "));
-    --write (l, aclk);
     write (l, String'(" || ra: 0x"));
     hwrite (l, raddr);
     write (l, String'(" ru:"));
@@ -177,7 +141,7 @@ output_process : process
     hwrite (l, wdata);
     write (l, String'(" wk:"));
     write (l, wack);
-    if (aresetn = '0') then
+    if (rst = '1') then
       write (l, String'(" (RESET)"));
     end if;
     writeline(output, l);

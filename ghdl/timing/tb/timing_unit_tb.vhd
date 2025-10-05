@@ -14,7 +14,7 @@ architecture behaviour of timing_unit_tb is
   component timing_unit is
     port (
     ACLK                 : in std_logic; -- fast clock
-    ARESETN              : in std_logic;
+    RST_I                : in std_logic;
     UCLK_I               : in std_logic; -- slow clock
 
 
@@ -42,8 +42,8 @@ architecture behaviour of timing_unit_tb is
   end component;
 
   signal count    : integer := 0;
-  signal aclk     : std_logic;
-  signal aresetn  : std_logic;
+  signal clk     : std_logic;
+  signal rst  : std_logic;
   signal uclk     : std_logic;
   -- read signals:
   signal raddr    : std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0) := (others => '0');
@@ -68,8 +68,8 @@ architecture behaviour of timing_unit_tb is
   signal show_output : std_logic := '0';
 begin
   uut0: timing_unit port map (
-    ACLK                => aclk,
-    ARESETN             => aresetn,
+    ACLK                => clk,
+    RST_I               => rst,
     UCLK_I              => uclk,
     S_REGBUS_RB_RUPDATE => rupdate,
     S_REGBUS_RB_RADDR   => raddr,
@@ -89,20 +89,20 @@ begin
     DEBUG               => debug
   );
 
-  aresetn_process : process
+  rsst_process : process
   begin
-    aresetn <= '0';
+    rst <= '1';
     wait for 20 ns;
-    aresetn <= '1';
+    rst <= '0';
     wait;
   end process;
 
-  aclk_process : process
+  clk_process : process
   begin
     count <= count + 1;
-    aclk <= '1';
+    clk <= '1';
     wait for 5 ns;
-    aclk <= '0';
+    clk <= '0';
     wait for 5 ns;
   end process;
 
@@ -223,8 +223,8 @@ begin
     if (show_output='1') then
       write (l, String'("c: "));
       write (l, count, left, 4);
-      write (l, String'("aclk: "));
-      write (l, aclk);
+      write (l, String'("clk: "));
+      write (l, clk);
       write (l, String'(" uclk: "));
       write (l, uclk);
       --write (l, String'(" lemo_a: "));
@@ -264,7 +264,7 @@ begin
       --if (trig(0) = '1') then
       --  write (l, String'(" *** "));
       --end if;
-      if (aresetn = '0') then
+      if (rst = '1') then
         write (l, String'(" (RESET)"));
       end if;
       writeline(output, l);
