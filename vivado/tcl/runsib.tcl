@@ -23,4 +23,6 @@ open_run impl_1
 launch_runs impl_1 -to_step write_bitstream -jobs 2
 wait_on_run impl_1
 
+report_control_sets -hierarchical -hierarchical_depth 5 -file ../reports/control_sets.txt
+report_utilization -hierarchical -hierarchical_depth 5 -file ../reports/utilization.txt
 write_hw_platform -fixed -include_bit -force -file ${origin_dir}/../products/pacman.xsa
