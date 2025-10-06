@@ -56,36 +56,37 @@ end rx_unit;
 -- mechanism.
 
 architecture behaviour of rx_unit is
-  signal clk              : std_logic;
-  signal rst              : std_logic;
+  signal clk                : std_logic;
+  signal rst                : std_logic;
 
-  signal uart_data        : uart_data_array_t  := (others => (others => '0'));  
-  signal timestamp        : rx_timestamp_array_t;
-  
-  signal valid            : std_logic_vector(C_RX_NUM_CHAN-1 downto 0) := (others => '0');
-  signal ready            : std_logic_vector(C_RX_NUM_CHAN-1 downto 0) := (others => '0');
-  signal uart_statuses    : uart_reg_array_t;
-  signal uart_configs     : uart_reg_array_t := (others => (others => '0'));
-  signal uart_chans       : uart_small_array_t := (others => (others => '0'));
+  signal uart_data          : uart_data_array_t  := (others => (others => '0'));
+  signal timestamp          : rx_timestamp_array_t;
 
-  signal buffer_config          : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-  signal buffer_enables         : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-  signal buffer_status          : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-  signal buffer_chan_select     : std_logic_vector(C_SELECT_WIDTH-1 downto 0);
-  signal buffer_header          : std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0) := (others => '0');
-  signal buffer_frag_a          : std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0) := (others => '0');
-  signal buffer_frag_b          : std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0) := (others => '0');
+  signal valid              : std_logic_vector(C_RX_NUM_CHAN-1 downto 0) := (others => '0');
+  signal ready              : std_logic_vector(C_RX_NUM_CHAN-1 downto 0) := (others => '0');
+  signal uart_statuses      : uart_reg_array_t;
+  signal uart_configs       : uart_reg_array_t := (others => (others => '0'));
+  signal uart_chans         : uart_small_array_t := (others => (others => '0'));
 
-  signal heartbeat_config : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-  signal rollover_config  : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-  signal pacman           : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-  signal word_type_lut             : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-  signal heartbeat_header       : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-  signal rollover_header       : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-  signal eop_header       : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+  signal buffer_config      : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+  signal buffer_enables     : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+  signal buffer_status      : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+  signal buffer_chan_select : std_logic_vector(C_SELECT_WIDTH-1 downto 0);
+  signal buffer_header      : std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0) := (others => '0');
+  signal buffer_frag_a      : std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0) := (others => '0');
+  signal buffer_frag_b      : std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0) := (others => '0');
 
-  signal word_type : std_logic_vector(C_BYTE-1 downto 0);  
-  
+  signal heartbeat_config   : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+  signal rollover_config    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+  signal pacman             : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+  signal word_type_lut      : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+  signal heartbeat_header   : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+  signal rollover_header    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+  signal eop_header         : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+  signal look_chan_select   : std_logic_vector(C_SELECT_WIDTH-1 downto 0);
+  signal look_uart_data     : std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
+  signal word_type          : std_logic_vector(C_BYTE-1 downto 0);
+
   component rx_buffer is
     port (
       CLK_I              : in std_logic;
@@ -137,7 +138,9 @@ architecture behaviour of rx_unit is
       WORD_TYPE_LUT_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       HEARTBEAT_HEADER_O  : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       ROLLOVER_HEADER_O   : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      EOP_HEADER_O        : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+      EOP_HEADER_O        : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      LOOK_SELECT_O       : out std_logic_vector(C_SELECT_WIDTH-1 downto 0);
+      LOOK_UART_DATA_I    : in std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0)
       );
   end component;
 
@@ -163,6 +166,7 @@ architecture behaviour of rx_unit is
       CLK_I      : in std_logic;
       RST_I      : in std_logic;
       SEL_I      : in  std_logic_vector(C_SELECT_WIDTH-1 downto 0);
+      WTYPE_I    : in  std_logic_vector(C_BYTE-1 downto 0);
       HEADER_A_I : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       HEADER_B_I : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       HEADER_C_I : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -197,7 +201,7 @@ architecture behaviour of rx_unit is
     );
   end component;
 
-  
+
   component heartbeat is
     port (
       CLK_I       : in  std_logic;
@@ -273,8 +277,10 @@ begin
     WORD_TYPE_LUT_O     => word_type_lut,
     HEARTBEAT_HEADER_O  => heartbeat_header,
     ROLLOVER_HEADER_O   => rollover_header,
-    EOP_HEADER_O        => eop_header
-  );
+    EOP_HEADER_O        => eop_header,
+    LOOK_SELECT_O       => look_chan_select,
+    LOOK_UART_DATA_I    => look_uart_data
+    );
 
   grxchan0: for i in 0 to C_NUM_UART-1 generate
     rxchan0: rx_chan
@@ -292,16 +298,17 @@ begin
         TIMESTAMP_I   => TIMESTAMP_I
         );
   end generate grxchan0;
-  
+
   h0: rx_header port map (
     CLK_I      => clk,
     RST_I      => rst,
-    SEL_I      => buffer_chan_select,    
-    HEADER_A_I => x"00004853",    
-    HEADER_B_I => x"00005353",    
-    HEADER_C_I => x"0000CCCC",    
-    HEADER_D_I => x"0000DDDD",    
-    PACMAN_I   => x"00000015",
+    SEL_I      => buffer_chan_select,
+    WTYPE_I    => word_type,
+    HEADER_A_I => heartbeat_header,
+    HEADER_B_I => rollover_header,
+    HEADER_C_I => (others => '0'),
+    HEADER_D_I => (others => '0'),
+    PACMAN_I   => pacman,
     CHAN_I     => uart_chans,
     HEADER_O   => buffer_header
   );
@@ -318,11 +325,11 @@ begin
     CLK_I           => clk,
     RST_I           => rst,
     SEL_A_I         => buffer_chan_select,
-    SEL_B_I         => (others => '0'),
+    SEL_B_I         => look_chan_select,
     DATA_I          => uart_data,
     DATA_A_O        => buffer_frag_b,
-    --DATA_B_O        => out_b,
-    LUT_I           => x"44444444",
+    DATA_B_O        => look_uart_data,
+    LUT_I           => word_type_lut,
     WTYPE_A_O       => word_type
   );
 

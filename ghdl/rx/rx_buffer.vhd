@@ -66,7 +66,7 @@ entity rx_buffer is
     HEADER_I           : in  std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
     FRAG_A_I           : in  std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
     FRAG_B_I           : in  std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
-    
+
     -- one valid bit for each UART receiver and extra channel
     VALID_I            : in  std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
     -- ready bit is set as each channel is streamed, which clears valid:
@@ -112,7 +112,7 @@ architecture behavioral of rx_buffer is
   signal rst       : std_logic;
   signal ready    : std_logic_vector(C_RX_NUM_CHAN-1 downto 0) := (others => '0');
   signal tvalid    : std_logic;
-  signal tready    : std_logic;  
+  signal tready    : std_logic;
   signal data      : std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0) := (others => '0');
   signal last      : std_logic := '0';
   signal busy      : std_logic;
@@ -131,7 +131,7 @@ architecture behavioral of rx_buffer is
   signal header      : std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
   signal frag_a      : std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
   signal frag_b      : std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
-  
+
   -- FSM control signals:
   signal valid_channel      : std_logic := '0';
   signal packet_timeout     : std_logic := '0';
@@ -313,8 +313,8 @@ begin
       frag_a <= (others => '0');
       frag_b <= (others => '0');
     elsif rising_edge(clk) then
-      ready         <= ready;
-      chan_select   <= chan_select; 
+      ready         <= (others => '0');
+      chan_select   <= chan_select;
       stream_active <= stream_active;
       header <= header;
       frag_a <= frag_a;
@@ -334,17 +334,17 @@ begin
             else
               buffer_active:= false;
             end if;
-            
+
           when 1 =>
             --waiting for mux...
-            
+
           when 2 =>
             if (buffer_active) then
               -- buffer the MUX inputs:
               header <= HEADER_I;
               frag_a <= FRAG_A_I;
               frag_b <= FRAG_B_I;
-              
+
               -- clear valid for this channel now that it is buffered
               ready(turn) <= '1';
               -- output to stream during the following turn:
@@ -360,7 +360,7 @@ begin
   -- stream output process:
   process(clk, rst)
     variable sent_counter  : integer range 0 to 16#7FFFFFFF# := 0;
-    variable sent_config   : integer := 0;    
+    variable sent_config   : integer := 0;
   begin
     if rst = '1' then
       packet_full <= '0';
@@ -394,13 +394,13 @@ begin
             when 1 =>
               if (stream_active = '1') then
                 wen <= '1';
-                data <= frag_a;                
+                data <= frag_a;
               end if;
 
             when 2 =>
               if (stream_active = '1') then
                 wen <= '1';
-                data <= frag_b;                
+                data <= frag_b;
               end if;
           end case;
         end if;
@@ -413,8 +413,8 @@ begin
           case frag is
             when 0 =>
               data(31 downto 0)  <= EOP_HEADER_I;
-          
-            when 1 => 
+
+            when 1 =>
               data(31 downto 0)  <= std_logic_vector(to_unsigned(sent_counter, 32));
 
             when 2 =>

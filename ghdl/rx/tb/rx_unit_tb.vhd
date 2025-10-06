@@ -134,13 +134,17 @@ begin
     rupdate <= '0';
     wait for 1 ns;
     wait for 30 ns;
+    -- uart status
     raddr   <= x"4000";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"7FA0";
+    raddr   <= x"7FB0";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"7FA4";
+    raddr   <= x"7FB4";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"7FB8";
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"4004";
@@ -158,13 +162,13 @@ begin
     raddr   <= x"4000";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"7FA0";
+    raddr   <= x"7FB0";
     rupdate <= '1';
     wait for 30 ns;
-    raddr   <= x"4010";
+    raddr   <= x"7FA4";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"4014";
+    raddr   <= x"7FA8";
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"4020";
@@ -179,10 +183,10 @@ begin
     raddr   <= x"402C";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"7FC0";
+    raddr   <= x"7FF0";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"7FC4";
+    raddr   <= x"7FF4";
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"0000";
@@ -199,29 +203,24 @@ begin
     wupdate <= '0';
     wait for 1 ns;
     wait for 20 ns;
+    -- broadcasting RX config:
     waddr   <= x"7B04";
     wdata   <= x"00001001";
     wupdate <= '1';
     wait for 10 ns;
-    waddr   <= x"7FA4";
+    -- setting buffer config:
+    waddr   <= x"7FB4";
     wdata   <= x"00000001";
-    --wdata   <= x"00050000";
+    --wdata   <= x"000A0000";
     wupdate <= '1';
     wait for 10 ns;
-    waddr   <= x"7FA8";
-    wdata   <= x"00000003";
-    --wdata   <= x"00000000";
-    wupdate <= '1';
-    wait for 10 ns;
+    -- setting buffer enables:
     waddr   <= x"7FB8";
+    --wdata   <= x"00000003";
     wdata   <= x"00000000";
     wupdate <= '1';
     wait for 10 ns;
-    waddr   <= x"7FAC";
-    wdata <= x"000000AB";
-    wupdate <= '1';
-    wait for 10 ns;
-    waddr   <= x"7FAC";
+    waddr   <= x"7FBC";
     wdata <= x"000000AB";
     wupdate <= '1';
     wait for 10 ns;
@@ -284,7 +283,7 @@ begin
     show_axis_output<='0';
     wait until (count=740);
     show_axis_output<='1';
-    wait until (count=1610);
+    wait until (count=3000);
     wait for 10 ns;
     show_axis_output<='0';
     wait;

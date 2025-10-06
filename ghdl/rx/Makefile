@@ -57,5 +57,5 @@ run-testbenches: all
 
 run-unit-testbench: all
 	ghdl -r -fsynopsys rx_unit_tb --stop-time=30us
-run-dev:
-	ghdl -r -fsynopsys rx_buffer_tb --stop-time=10us --vcd=../diagrams/rx_buffer_tb.vcd
+run-dev: all
+	ghdl -r -fsynopsys rx_buffer_tb --stop-time=3us

@@ -27,9 +27,9 @@ architecture behaviour of rx_timestamp_mux_tb is
   signal sel       : std_logic_vector(C_SELECT_WIDTH-1 downto 0) := (others => '0');
   signal timestamp : rx_timestamp_array_t;
   signal tso       : std_logic_vector(C_UART_DATA_WIDTH-1 downto 0);
-  
+
 begin
-  
+
   uut: rx_timestamp_mux port map (
     CLK_I           => clk,
     RST_I           => rst,
@@ -79,7 +79,7 @@ begin
     sel <= (others => '1');
     wait;
   end process;
-  
+
   output_process : process
     variable l : line;
   begin
@@ -87,12 +87,12 @@ begin
 
     write (l, String'("c: "));
     write (l, count, left, 4);
-    
+
     write (l, String'(" sel: 0x"));
     hwrite (l, "00" & sel);
 
     write (l, String'(" ts: 0x"));
-    hwrite (l, tso);    
+    hwrite (l, tso);
     if (rst = '1') then
       write (l, String'(" (RESET)"));
     end if;

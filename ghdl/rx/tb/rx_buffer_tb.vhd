@@ -124,8 +124,8 @@ begin
     end if;
     if (init='1') then
       -- 44 RX channels (40 UARTS plus 4 extra for e.g. SYNC words)
-      uvalid <= x"00000000001";
-      --uvalid <= x"00000000700";
+      --uvalid <= x"00000000001";
+      uvalid <= x"00000000700";
       --uvalid <= x"0FFFFFFFFFF";
       init := '0';
     end if;
@@ -139,40 +139,40 @@ begin
 
   data_process : process
   begin
-    wait for 10 ns;    
-    if (to_integer(unsigned(chan_select)) = 0) then        
+    wait for 10 ns;
+    if (to_integer(unsigned(chan_select)) = 0) then
       header <= x"0000000000000144";
       frag_a <= x"0000000001598762";
       frag_b <= x"000000002244BBBB";
-    elsif (to_integer(unsigned(chan_select)) = 1) then        
+    elsif (to_integer(unsigned(chan_select)) = 1) then
       header <= x"0000000000000244";
       frag_a <= x"0000000001598762";
       frag_b <= x"000000002244BBBB";
-    elsif (to_integer(unsigned(chan_select)) = 8) then        
+    elsif (to_integer(unsigned(chan_select)) = 8) then
       header <= x"0000000000000944";
       frag_a <= x"0000000001598762";
       frag_b <= x"000000002244BBBB";
-    elsif (to_integer(unsigned(chan_select)) = 9) then        
+    elsif (to_integer(unsigned(chan_select)) = 9) then
       header <= x"0000000000000A44";
       frag_a <= x"0000000001598762";
       frag_b <= x"000000002244BBBB";
-    elsif (to_integer(unsigned(chan_select)) = 10) then        
+    elsif (to_integer(unsigned(chan_select)) = 10) then
       header <= x"0000000000000B44";
       frag_a <= x"0000000001598762";
       frag_b <= x"000000002244BBBB";
-    elsif (to_integer(unsigned(chan_select)) = 11) then        
+    elsif (to_integer(unsigned(chan_select)) = 11) then
       header <= x"0000000000000C44";
       frag_a <= x"0000000001598762";
       frag_b <= x"000000002244BBBB";
-    elsif (to_integer(unsigned(chan_select)) = 42) then        
+    elsif (to_integer(unsigned(chan_select)) = 42) then
       header <= x"0000000000002B44";
       frag_a <= x"0000000001598762";
-      frag_b <= x"000000002244BBBB";      
-    elsif (to_integer(unsigned(chan_select)) = 43) then        
+      frag_b <= x"000000002244BBBB";
+    elsif (to_integer(unsigned(chan_select)) = 43) then
       header <= x"0000000000002C44";
       frag_a <= x"0000000001598762";
       frag_b <= x"000000002244BBBB";
-    else 
+    else
       header <= x"000000000000EE44";
       frag_a <= x"00000000EEEEEEEE";
       frag_b <= x"00000000EEEEEEEE";

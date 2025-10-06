@@ -4,7 +4,7 @@ use ieee.numeric_std.all;
 library work;
 use work.common.all;
 
--- rx_data_mux: 
+-- rx_data_mux:
 
 entity rx_data_mux is
   port (
@@ -15,10 +15,10 @@ entity rx_data_mux is
     -- channel selection for A and B outputs:
     SEL_A_I    : in  std_logic_vector(C_SELECT_WIDTH-1 downto 0);
     SEL_B_I    : in  std_logic_vector(C_SELECT_WIDTH-1 downto 0);
-    
+
     -- incoming data:
     DATA_I     : in  uart_data_array_t;
-    
+
     -- selected A and B outputs:
     DATA_A_O   : out std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
     DATA_B_O   : out std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
@@ -41,7 +41,7 @@ architecture behavioral of rx_data_mux is
   type lut_t is array(0 to 3) of std_logic_vector(7 downto 0);
   signal lut       : lut_t;
   signal wtype_a   : std_logic_vector(C_BYTE-1 downto 0);
-  
+
 begin
   clk <= CLK_I;
   rst <= RST_I;
@@ -63,14 +63,14 @@ begin
     else
       data   := (others => '0');
       chan   := to_integer(unsigned(SEL_B_I));
-            
+
       if (chan < 40) then
         data   := DATA_I(chan);
       end if;
     end if;
     data_b  <= data;
   end process;
-  
+
   process (rst, SEL_A_I, DATA_I, lut)
     variable chan     : integer;
     variable data     : std_logic_vector(C_UART_DATA_WIDTH-1 downto 0);
@@ -83,16 +83,16 @@ begin
       data   := (others => '0');
       wtype  := (others => '0');
       chan   := to_integer(unsigned(SEL_A_I));
-            
+
       if (chan < 40) then
         data   := DATA_I(chan);
         wtype  := lut(to_integer(unsigned(data(1 downto 0))));
       end if;
     end if;
     data_a  <= data;
-    wtype_a <= wtype;    
+    wtype_a <= wtype;
   end process;
-      
+
   process(clk, rst)
   begin
     if rst = '1' then
@@ -100,7 +100,7 @@ begin
       DATA_B_O  <= (others => '0');
       WTYPE_A_O <= (others => '0');
     elsif rising_edge(clk) then
-      DATA_A_O  <= data_a; 
+      DATA_A_O  <= data_a;
       DATA_B_O  <= data_b;
       WTYPE_A_O <= wtype_a;
     end if;

@@ -40,7 +40,9 @@ architecture behaviour of rx_registers_tb is
       WORD_TYPE_LUT_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       HEARTBEAT_HEADER_O  : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       ROLLOVER_HEADER_O   : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      EOP_HEADER_O        : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+      EOP_HEADER_O        : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      LOOK_SELECT_O       : out std_logic_vector(C_SELECT_WIDTH-1 downto 0);
+      LOOK_UART_DATA_I    : in std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0)
     );
   end component;
 
@@ -84,7 +86,8 @@ begin
     PACMAN_O            => pacman,
     WORD_TYPE_LUT_O     => wlut,
     BUFFER_STATUS_I     => x"AAAABBBB",
-    FIFO_COUNT_I        => fifo_count
+    FIFO_COUNT_I        => fifo_count,
+    LOOK_UART_DATA_I    => x"BBBBBBBBAAAAAAAA"
   );
 
   rst_process : process
@@ -132,10 +135,10 @@ begin
     raddr   <= x"0000";
     rupdate <= '0';
     wait for 10 ns;
-    raddr   <= x"7FA4";
+    raddr   <= x"7FB4";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"7FAC";
+    raddr   <= x"7FBC";
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"7FC0";
@@ -159,31 +162,31 @@ begin
     raddr   <= x"0000";
     rupdate <= '0';
     wait for 10 ns;
-    raddr   <= x"7FA0";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"0000";
-    rupdate <= '0';
-    wait for 10 ns;
-    raddr   <= x"4010";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"4014";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"4110";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"4114";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"0000";
-    rupdate <= '0';
-    wait for 10 ns;
     raddr   <= x"7FB0";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"7FB4";
+    raddr   <= x"0000";
+    rupdate <= '0';
+    wait for 10 ns;
+    raddr   <= x"7FA0";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"7FA4";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"7FA8";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"0000";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"0000";
+    rupdate <= '0';
+    wait for 10 ns;
+    raddr   <= x"7FF0";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"7FF4";
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"0000";
@@ -225,11 +228,17 @@ begin
     raddr   <= x"402C";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"7FB0";
+    raddr   <= x"0000";
+    rupdate <= '0';
+    wait for 10 ns;
+    raddr   <= x"7FF0";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"7FB4";
+    raddr   <= x"7FF4";
     rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"0000";
+    rupdate <= '0';
     wait for 10 ns;
     raddr   <= x"7FD0";
     rupdate <= '1';
@@ -260,7 +269,7 @@ begin
     wdata   <= x"00001001";
     wupdate <= '1';
     wait for 10 ns;
-    waddr   <= x"7FA4";
+    waddr   <= x"7FB4";
     wdata   <= x"0000AA55";
     wupdate <= '1';
     wait for 10 ns;
@@ -276,7 +285,7 @@ begin
     wdata   <= x"44444444";
     wupdate <= '1';
     wait for 10 ns;
-    waddr   <= x"7FAC";
+    waddr   <= x"7FBC";
     wdata   <= x"00000011";
     wupdate <= '1';
     wait for 10 ns;
@@ -284,7 +293,7 @@ begin
     wdata   <= x"00000000";
     wupdate <= '0';
     wait for 270 ns;
-    waddr   <= x"7FB8";
+    waddr   <= x"7FF8";
     wdata   <= x"00000000";
     wupdate <= '1';
     wait for 10 ns;
@@ -297,7 +306,7 @@ begin
   show_output_process : process
   begin
     show_output<='1';
-    wait until (count=52);
+    wait until (count=53);
     wait for 10 ns;
     show_output<='0';
     wait;
@@ -387,7 +396,7 @@ begin
     wait until (count=47);
     write(l, String'("INFO:  FIFO maximum is lower after zero counts"));
     writeline(output, l);
-    wait until (count=48);
+    wait until (count=50);
     write(l, String'("INFO:  read headers"));
     writeline(output, l);
 

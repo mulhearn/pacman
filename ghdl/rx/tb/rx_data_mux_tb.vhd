@@ -35,9 +35,9 @@ architecture behaviour of rx_data_mux_tb is
   signal out_a    : std_logic_vector(C_UART_DATA_WIDTH-1 downto 0);
   signal out_b    : std_logic_vector(C_UART_DATA_WIDTH-1 downto 0);
   signal wtype    : std_logic_vector(C_BYTE-1 downto 0);
-  
+
 begin
-  
+
   uut: rx_data_mux port map (
     CLK_I           => clk,
     RST_I           => rst,
@@ -93,7 +93,7 @@ begin
     sel_b <= (others => '1');
     wait;
   end process;
-  
+
   output_process : process
     variable l : line;
   begin
@@ -101,7 +101,7 @@ begin
 
     write (l, String'("c: "));
     write (l, count, left, 4);
-    
+
     write (l, String'(" sel_a: 0x"));
     hwrite (l, "00" & sel_a);
     write (l, String'(" sel_b: 0x"));
@@ -114,7 +114,7 @@ begin
     write (l, String'(" wtype: 0x"));
     hwrite (l, wtype);
 
-    
+
     if (rst = '1') then
       write (l, String'(" (RESET)"));
     end if;

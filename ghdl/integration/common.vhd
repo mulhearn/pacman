@@ -20,18 +20,18 @@ package common is
   -- in some cases, don't propogate the entire 32-bits:
   constant C_SMALL               : integer  := 16;
   constant C_BYTE                : integer  := 8;
-  
+
   -- TX unit:
   -- DMA stream width and number of beats
   constant C_TX_AXIS_WIDTH     : integer  := 128;
   constant C_TX_AXIS_BEATS     : integer  := 21;
-  
+
   -- RX unit:
   -- DMA stream width
   constant C_RX_AXIS_WIDTH     : integer  := 64;
   constant C_UART_DATA_WIDTH   : integer  := 64;
   constant C_TIMESTAMP_WIDTH   : integer  := 64;
-  
+
   -- number of fragments per turn (first is a pause):
   constant C_RX_FRAGS_PER_TURN : integer  := 3;
   constant C_RX_EXTRA_CHAN     : integer  := 4;
@@ -66,9 +66,9 @@ package common is
   constant C_DEFAULT_RX_BUFFER_CONFIG     : integer := 16#00000001#;
   constant C_DEFAULT_RX_WORD_TYPE_LUT     : integer := 16#44444444#;
   constant C_DEFAULT_RX_HEARTBEAT_CONFIG  : integer := 16#3b9aca00#;
-  constant C_DEFAULT_RX_HEARTBEAT_HEADER  : integer := 16#00004853#;
+  constant C_DEFAULT_RX_HEARTBEAT_HEADER  : integer := 16#00480053#;
   constant C_DEFAULT_RX_ROLLOVER_CONFIG   : integer := 16#1#;
-  constant C_DEFAULT_RX_ROLLOVER_HEADER   : integer := 16#00005353#;
+  constant C_DEFAULT_RX_ROLLOVER_HEADER   : integer := 16#00530053#;
   constant C_DEFAULT_RX_EOP_HEADER        : integer := 16#0000004C#;
 
 
@@ -78,7 +78,7 @@ package common is
 
 
 
-  
+
   function bitwise_or(vec : std_logic_vector) return std_logic;
 
 end package common;
