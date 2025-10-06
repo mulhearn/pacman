@@ -36,8 +36,6 @@ entity rx_registers is
     S_REGBUS_RB_WACK    : out std_logic;
 
     -- UART registers (inputs):
-    -- look buffer contains the most recent RX payload for each UART
-    UART_LOOK_I         : in  uart_data_array_t;
     -- status register from each UART TX channel
     UART_STATUS_I       : in  uart_reg_array_t;
 
@@ -45,7 +43,7 @@ entity rx_registers is
     -- configuration register for each UART TX channel
     UART_CONFIG_O       : out uart_reg_array_t;
     -- header register for each UART TX channel
-    UART_CHAN_O       : out uart_reg_array_t;
+    UART_CHAN_O         : out uart_small_array_t;
 
     -- Buffer registers (inputs):
     -- RX buffer status reported by RX buffer.
@@ -91,7 +89,7 @@ architecture behavioral of rx_registers is
 
   -- output registers:
   signal uart_config      : uart_reg_array_t := (others => (others => '0'));
-  signal uart_chan        : uart_reg_array_t := (others => (others => '0'));
+  signal uart_chan        : uart_small_array_t := (others => (others => '0'));
   signal heartbeat_config : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal rollover_config  : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal bconfig          : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
@@ -103,14 +101,9 @@ architecture behavioral of rx_registers is
   signal eop_header       : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
 
   -- input data for registers:
-  signal ulook      : uart_data_array_t := (others => (others => '0'));
   signal ustatus    : uart_reg_array_t  := (others => (others => '0'));
   signal bstatus    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal fifo_count : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
-
-  -- stage one of double registered inputs:
-  signal ulook_s    : uart_data_array_t := (others => (others => '0'));
-  signal ustatus_s  : uart_reg_array_t  := (others => (others => '0'));
 
   -- signal to set all counter / maximums to 0
   signal zero_counters : std_logic := '0';
@@ -122,16 +115,16 @@ architecture behavioral of rx_registers is
   signal ilost    : uart_counter_array_t := (others => 0);
   signal fifo_max : unsigned(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
 
-  function init_chan_array return uart_reg_array_t is
-    variable tmp : uart_reg_array_t;
+  function init_chan_array return uart_small_array_t is
+    variable tmp : uart_small_array_t;
   begin
     for i in tmp'range loop
-      tmp(i) := std_logic_vector(to_unsigned(i+1, 32));
+      tmp(i) := std_logic_vector(to_unsigned(i+1, 16));
     end loop;
     return tmp;
   end function;
 
-  constant init_chan : uart_reg_array_t := init_chan_array;
+  constant init_chan : uart_small_array_t := init_chan_array;
 
 begin
   -- connect signals to inputs and outputs
@@ -167,15 +160,11 @@ begin
   process(clk, rst)
   begin
     if (rst='1') then
-      ulook       <= (others => (others => '0'));
       ustatus     <= (others => (others => '0'));
       bstatus    <= (others => '0');
       fifo_count <= (others => '0');
     elsif (rising_edge(clk)) then
-      ulook_s     <= UART_LOOK_I;
-      ulook       <= ulook_s;
-      ustatus_s   <= UART_STATUS_I;
-      ustatus     <= ustatus_s;
+      ustatus    <= UART_STATUS_I;
       bstatus    <= BUFFER_STATUS_I;
       fifo_count <= FIFO_COUNT_I;
     end if;
@@ -221,13 +210,14 @@ begin
                 rdata <= uart_config(chan);
                 rack  <= '1';
               elsif (reg=C_ADDR_RX_UART_CHAN) then
-                rdata <= uart_chan(chan);
+                rdata <= (others => '0');
+                rdata(15 downto 0) <= uart_chan(chan);
                 rack  <= '1';
               elsif (reg=C_ADDR_RX_UART_LOOK_A) then
-                rdata <= ulook(chan)(31 downto 0);
+                rdata <= (others => '0');
                 rack  <= '1';
               elsif (reg=C_ADDR_RX_UART_LOOK_B) then
-                rdata <= ulook(chan)(63 downto 32);
+                rdata <= (others => '0');
                 rack  <= '1';
               elsif (reg=C_ADDR_RX_UART_STARTS) then
                 rdata <= std_logic_vector(to_unsigned(istarts(chan),C_RB_DATA_WIDTH));
@@ -334,7 +324,7 @@ begin
               uart_config(chan) <= wdata;
               wack  <= '1';
             elsif (reg=C_ADDR_RX_UART_CHAN) then
-              uart_chan(chan) <= wdata;
+              uart_chan(chan) <= wdata(15 downto 0);
               wack  <= '1';
             end if;
           end if;

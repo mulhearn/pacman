@@ -22,15 +22,14 @@ architecture behaviour of rx_buffer_tb is
       M_AXIS_TLAST       : out std_logic;
       STATUS_O           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       CONFIG_I           : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      LOOK_O             : out std_logic_vector(C_RX_FRAGS_PER_TURN*C_RX_AXIS_WIDTH-1 downto 0);
-      -- the received data from the UART receivers and extra channels
-      HEADER_I           : in  rx_header_array_t;
-      DATA_I             : in  rx_data_array_t;
-      TIMESTAMP_I        : in  rx_timestamp_array_t;
+      CHAN_SELECT_O      : out std_logic_vector(C_SELECT_WIDTH-1 downto 0);
+      HEADER_I           : in  std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
+      FRAG_A_I           : in  std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
+      FRAG_B_I           : in  std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
       VALID_I            : in  std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
       READY_O            : out std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
       EOP_HEADER_I       : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      DEBUG_STATUS_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+      DEBUG_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
     );
   end component;
 
@@ -45,9 +44,10 @@ architecture behaviour of rx_buffer_tb is
 
   signal look     : std_logic_vector(C_RX_FRAGS_PER_TURN*C_RX_AXIS_WIDTH-1 downto 0);
 
-  signal header    : rx_header_array_t;
-  signal data      : rx_data_array_t;
-  signal timestamp : rx_timestamp_array_t;
+  signal chan_select     : std_logic_vector(C_SELECT_WIDTH-1 downto 0);
+  signal header   : std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0) := (others => '0');
+  signal frag_a   : std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0) := (others => '0');
+  signal frag_b   : std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0) := (others => '0');
 
   signal uvalid   : std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
   signal uready   : std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
@@ -81,10 +81,10 @@ begin
     M_AXIS_TLAST    => tlast,
     STATUS_O        => status,
     CONFIG_I        => x"00030000",
-    LOOK_O          => look,
+    CHAN_SELECT_O   => chan_select,
     HEADER_I        => header,
-    DATA_I          => data,
-    TIMESTAMP_I     => timestamp,
+    FRAG_A_I        => frag_a,
+    FRAG_B_I        => frag_b,
     VALID_I         => uvalid,
     READY_O         => uready,
     EOP_HEADER_I    => x"1100004C"
@@ -119,12 +119,13 @@ begin
   begin
     if (delay='1') then
       uvalid <= x"00000000000";
-      wait for 580 ns;
+      wait for 500 ns;
       delay := '0';
     end if;
     if (init='1') then
       -- 44 RX channels (40 UARTS plus 4 extra for e.g. SYNC words)
-      uvalid <= x"00000000700";
+      uvalid <= x"00000000001";
+      --uvalid <= x"00000000700";
       --uvalid <= x"0FFFFFFFFFF";
       init := '0';
     end if;
@@ -138,17 +139,45 @@ begin
 
   data_process : process
   begin
-    data <= (others => (others => '0'));
-    header(8)  <= x"00000944";
-    header(9)  <= x"00000A44";
-    header(10)  <= x"00000B44";
-    data(8)(15 downto 0) <= x"AAAA";
-    data(9)(15 downto 0) <= x"BBBB";
-    data(10)(15 downto 0) <= x"CCCC";
-    timestamp(8)(15 downto 0) <= x"123A";
-    timestamp(9)(15 downto 0) <= x"123B";
-    timestamp(10)(15 downto 0) <= x"123C";
-    wait;
+    wait for 10 ns;    
+    if (to_integer(unsigned(chan_select)) = 0) then        
+      header <= x"0000000000000144";
+      frag_a <= x"0000000001598762";
+      frag_b <= x"000000002244BBBB";
+    elsif (to_integer(unsigned(chan_select)) = 1) then        
+      header <= x"0000000000000244";
+      frag_a <= x"0000000001598762";
+      frag_b <= x"000000002244BBBB";
+    elsif (to_integer(unsigned(chan_select)) = 8) then        
+      header <= x"0000000000000944";
+      frag_a <= x"0000000001598762";
+      frag_b <= x"000000002244BBBB";
+    elsif (to_integer(unsigned(chan_select)) = 9) then        
+      header <= x"0000000000000A44";
+      frag_a <= x"0000000001598762";
+      frag_b <= x"000000002244BBBB";
+    elsif (to_integer(unsigned(chan_select)) = 10) then        
+      header <= x"0000000000000B44";
+      frag_a <= x"0000000001598762";
+      frag_b <= x"000000002244BBBB";
+    elsif (to_integer(unsigned(chan_select)) = 11) then        
+      header <= x"0000000000000C44";
+      frag_a <= x"0000000001598762";
+      frag_b <= x"000000002244BBBB";
+    elsif (to_integer(unsigned(chan_select)) = 42) then        
+      header <= x"0000000000002B44";
+      frag_a <= x"0000000001598762";
+      frag_b <= x"000000002244BBBB";      
+    elsif (to_integer(unsigned(chan_select)) = 43) then        
+      header <= x"0000000000002C44";
+      frag_a <= x"0000000001598762";
+      frag_b <= x"000000002244BBBB";
+    else 
+      header <= x"000000000000EE44";
+      frag_a <= x"00000000EEEEEEEE";
+      frag_b <= x"00000000EEEEEEEE";
+    end if;
+
   end process;
 
 show_process : process
@@ -162,16 +191,16 @@ end process;
 
 output_process : process
     variable l : line;
-    variable turn  : integer;
-    variable word  : integer;
+    variable iturn  : integer;
+    variable iword  : integer;
     variable wtype : integer := 0;
   begin
     wait for 10 ns;
 
-    turn := to_integer(unsigned(status(13 downto 8)));
-    word := to_integer(unsigned(status(15 downto 14)));
+    iturn := to_integer(unsigned(status(13 downto 8)));
+    iword := to_integer(unsigned(status(15 downto 14)));
 
-    if (word=1) and ((status(2 downto 0) = "010") or (status(2 downto 0) = "011")) then
+    if (iword=1) and ((status(2 downto 0) = "010") or (status(2 downto 0) = "011")) then
       wtype := to_integer(unsigned(tdata(7 downto 0)));
     else
       wtype := 0;
@@ -181,9 +210,9 @@ output_process : process
       write (l, String'("c: "));
       write (l, count, left, 4);
       write (l, String'("t: "));
-      write (l, turn, left, 3);
+      write (l, iturn, left, 3);
       write (l, String'("w: "));
-      write (l, word, left, 3);
+      write (l, iword, left, 3);
       if (status(2 downto 0) = "000") then
         write (l, String'(" IDLE "));
       elsif (status(2 downto 0) = "001") then

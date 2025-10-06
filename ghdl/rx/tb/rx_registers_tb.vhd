@@ -26,10 +26,9 @@ architecture behaviour of rx_registers_tb is
       S_REGBUS_RB_WDATA	  : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_WACK    : out std_logic;
 
-      UART_LOOK_I         : in  uart_data_array_t;
       UART_STATUS_I       : in  uart_reg_array_t;
       UART_CONFIG_O       : out uart_reg_array_t;
-      UART_CHAN_O         : out uart_reg_array_t;
+      UART_CHAN_O         : out uart_small_array_t;
 
       BUFFER_STATUS_I     : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       FIFO_COUNT_I        : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -60,7 +59,7 @@ architecture behaviour of rx_registers_tb is
   signal wack     : std_logic := '0';
 
   signal uconfig   : uart_reg_array_t;
-  signal uchan     : uart_reg_array_t;
+  signal uchan     : uart_small_array_t;
   signal bconfig  : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
   signal pacman   : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
   signal wlut     : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -78,7 +77,6 @@ begin
     S_REGBUS_RB_WADDR   => waddr,
     S_REGBUS_RB_WDATA   => wdata,
     S_REGBUS_RB_WACK    => wack,
-    UART_LOOK_I         => (others => x"BBBBBBBBAAAAAAAA"),
     UART_STATUS_I       => (others => x"0000ABFF"),
     UART_CONFIG_O       => uconfig,
     UART_CHAN_O         => uchan,

@@ -13,35 +13,56 @@ end rx_header_tb;
 architecture behaviour of rx_header_tb is
   component rx_header is
     port (
-      CLK_I       : in std_logic;
-      RST_I       : in std_logic;
-      PACMAN_I    : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      LUT_I       : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      CHAN_I      : in uart_reg_array_t;
-      DATA_I      : in uart_data_array_t;
-      HEADER_O    : out uart_reg_array_t;
-      DEBUG_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+      CLK_I      : in std_logic;
+      RST_I      : in std_logic;
+      SEL_I      : in  std_logic_vector(C_SELECT_WIDTH-1 downto 0);
+      HEADER_A_I : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      HEADER_B_I : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      HEADER_C_I : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      HEADER_D_I : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      PACMAN_I   : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      CHAN_I     : in uart_small_array_t;
+      HEADER_O   : out std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0)
     );
   end component;
 
   signal count      : integer := 0;
   signal clk        : std_logic;
   signal rst        : std_logic;
-  signal headers    : uart_reg_array_t;
-  signal data       : uart_data_array_t := (others => (others => '0'));
+  signal header     : std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
+  signal cselect    : std_logic_vector(C_SELECT_WIDTH-1 downto 0) := (others => '0');
+  signal chan       : uart_small_array_t;
 begin
   --tstamp_in <= std_logic_vector(to_unsigned(count, tstamp_in'length));
 
   uut: rx_header port map (
-    CLK_I       => clk,
-    RST_I       => rst,
-    CHAN_I      => (others => x"00000011"),
-    LUT_I       => x"DDCCBBAA",
-    PACMAN_I    => x"00000015",
-    DATA_I      => data,
-    HEADER_O    => headers
+    CLK_I      => clk,
+    RST_I      => rst,
+    SEL_I      => cselect,    
+    HEADER_A_I => x"00004853",    
+    HEADER_B_I => x"00005353",    
+    HEADER_C_I => x"0000CCCC",    
+    HEADER_D_I => x"0000DDDD",    
+    PACMAN_I   => x"00000015",
+    CHAN_I     => chan,
+    HEADER_O   => header
   );
 
+  chan_process : process
+  begin
+    for i in 0 to 39 loop
+      chan(i) <= std_logic_vector(to_unsigned(i + 1, 16));
+    end loop;
+    wait;
+  end process;
+
+  cselect_process : process
+  begin
+    wait for 2 ns;
+    cselect <= std_logic_vector(to_unsigned(count, cselect'length));
+    wait for 8 ns;
+  end process;
+  
   clk_process : process
   begin
     count <= count + 1;
@@ -59,17 +80,6 @@ begin
     wait;
   end process;
 
-  data_process : process
-  begin
-    data(0)(1 downto 0) <= "00";
-    wait for 10 ns;
-    data(0)(1 downto 0) <= "01";
-    wait for 10 ns;
-    data(0)(1 downto 0) <= "10";
-    wait for 10 ns;
-    data(0)(1 downto 0) <= "11";
-    wait for 10 ns;
-  end process;
 
   output_process : process
     variable l : line;
@@ -81,10 +91,10 @@ begin
 
     write (l, String'("c: "));
     write (l, count, left, 5);
-    write  (l, String'(" | h0: 0x"));
-    hwrite (l, headers(0));
-    write  (l, String'(" | h1: 0x"));
-    hwrite (l, headers(1));
+    write  (l, String'(" | chan: 0x"));
+    hwrite (l, "00" & cselect);    
+    write  (l, String'(" | h: 0x"));
+    hwrite (l, header);
     if (rst = '1') then
       write (l, String'(" (RESET)"));
     end if;

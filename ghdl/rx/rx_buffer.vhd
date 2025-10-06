@@ -44,10 +44,6 @@ use work.common.all;
 --        In both cases, a zero is no timeout / no maximum
 
 entity rx_buffer is
-  generic(
-    constant TURN_MAX       : integer := C_RX_TURN_MAX;
-    constant FRAGS_PER_TURN : integer := C_RX_FRAGS_PER_TURN
-  );
   port (
     -- clock and active-high reset:
     CLK_I              : in std_logic;
@@ -56,7 +52,7 @@ entity rx_buffer is
     -- AXI stream containing RX data (out to PS via FIFO and then DMA)
     M_AXIS_TDATA       : out std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
     M_AXIS_TVALID      : out std_logic;
-    M_AXIS_TREADY      : in std_logic;
+    M_AXIS_TREADY      : in  std_logic;
     M_AXIS_TKEEP       : out std_logic_vector(C_RX_AXIS_WIDTH/8-1 downto 0);
     M_AXIS_TLAST       : out std_logic;
 
@@ -64,13 +60,13 @@ entity rx_buffer is
     STATUS_O           : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     -- configuration register for this module
     CONFIG_I           : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    -- the most recent data word sent to the stream
-    LOOK_O             : out std_logic_vector(C_RX_FRAGS_PER_TURN*C_RX_AXIS_WIDTH-1 downto 0);
 
     -- the received data from the UART receivers and extra channels
-    HEADER_I           : in  rx_header_array_t;
-    DATA_I             : in  rx_data_array_t;
-    TIMESTAMP_I        : in  rx_timestamp_array_t;
+    CHAN_SELECT_O      : out std_logic_vector(C_SELECT_WIDTH-1 downto 0);
+    HEADER_I           : in  std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
+    FRAG_A_I           : in  std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
+    FRAG_B_I           : in  std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
+    
     -- one valid bit for each UART receiver and extra channel
     VALID_I            : in  std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
     -- ready bit is set as each channel is streamed, which clears valid:
@@ -80,10 +76,8 @@ entity rx_buffer is
     EOP_HEADER_I       : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
     -- debugging:
-    DEBUG_STATUS_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+    DEBUG_O            : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
   );
-begin
-  assert(TURN_MAX >= C_RX_NUM_CHAN) severity failure;
 end;
 
 
@@ -116,16 +110,13 @@ architecture behavioral of rx_buffer is
 
   signal clk       : std_logic;
   signal rst       : std_logic;
-
-  signal uready    : std_logic_vector(C_RX_NUM_CHAN-1 downto 0) := (others => '0');
-
+  signal ready    : std_logic_vector(C_RX_NUM_CHAN-1 downto 0) := (others => '0');
   signal tvalid    : std_logic;
-  signal tready    : std_logic;
+  signal tready    : std_logic;  
   signal data      : std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0) := (others => '0');
   signal last      : std_logic := '0';
   signal busy      : std_logic;
   signal wen       : std_logic := '0';
-
   signal status    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
 
   -- FSM states:
@@ -133,14 +124,19 @@ architecture behavioral of rx_buffer is
   signal state, next_state : state_t := IDLE;
 
   -- turn and frag counters:
-  signal frag : integer range 0 to 2 := 0;
-  signal turn : integer range 0 to 43 := 0;
+  signal frag   : integer range 0 to C_RX_FRAGS_PER_TURN-1 := 0;
+  signal turn   : integer range 0 to (C_RX_NUM_CHAN)       := 0;
 
+  signal chan_select : std_logic_vector(C_SELECT_WIDTH-1 downto 0);
+  signal header      : std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
+  signal frag_a      : std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
+  signal frag_b      : std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
+  
   -- FSM control signals:
   signal valid_channel      : std_logic := '0';
-  signal stream_active      : std_logic := '0';
   signal packet_timeout     : std_logic := '0';
   signal packet_full        : std_logic := '0';
+  signal stream_active      : std_logic := '0';
 
 begin
 
@@ -164,13 +160,14 @@ begin
   M_AXIS_TVALID <= tvalid;
   tready <= M_AXIS_TREADY;
 
-  READY_O <= uready;
+  READY_O <= ready;
+  CHAN_SELECT_O <= chan_select;
 
   clk <= CLK_I;
   rst <= RST_I;
 
   -- FSM combinatoric state logic: (see description above)
-  process(state, valid_channel, stream_active, packet_timeout, busy, packet_full, frag, turn)
+  process(state, busy, valid_channel, packet_timeout, packet_full, frag, turn)
   begin
     case state is
       when IDLE =>
@@ -192,9 +189,9 @@ begin
       when STREAM =>
         if busy = '1' then
           next_state <= STREAM;
-        elsif packet_full = '1' and frag = 2 then
+        elsif packet_full = '1' and frag = (C_RX_FRAGS_PER_TURN-1) then
           next_state <= TRAILER;
-        elsif turn = 43 and frag = 2 then
+        elsif turn = C_RX_NUM_CHAN and frag = (C_RX_FRAGS_PER_TURN-1) then
           next_state <= WAIT_STATE;
         else
           next_state <= STREAM;
@@ -203,7 +200,7 @@ begin
       when TRAILER =>
         if busy = '1' then
           next_state <= TRAILER;
-        elsif frag = 2 then
+        elsif frag = (C_RX_FRAGS_PER_TURN-1) then
           next_state <= IDLE;
         else
           next_state <= TRAILER;
@@ -212,7 +209,6 @@ begin
       when others =>
         next_state <= IDLE;
     end case;
-
   end process;
 
   -- state register: on reset enter IDLE,
@@ -238,11 +234,12 @@ begin
       case state is
         when STREAM =>
           if busy = '0' then
-            if frag < 2 then
+            if frag < C_RX_FRAGS_PER_TURN-1 then
               frag <= frag + 1;
             else
               frag <= 0;
-              if turn < 43 then
+              -- turn = C_RX_NUM_CHAN is used to stream last channel...
+              if turn < C_RX_NUM_CHAN then
                 turn <= turn + 1;
               else
                 turn <= 0;
@@ -253,7 +250,7 @@ begin
         when TRAILER =>
           turn <= 0;
           if busy = '0' then
-            if frag < 2 then
+            if frag < C_RX_FRAGS_PER_TURN-1 then
               frag <= frag + 1;
             else
               frag <= 0;  -- ready for next IDLE or WAIT_STATE
@@ -303,30 +300,79 @@ begin
     end if;
   end process;
 
-  -- stream output process:
+
+  -- buffer inputs process:
   process(clk, rst)
-    variable sent_config  : integer;
-    variable sent_counter : integer range 0 to 16#7FFFFFFF# := 0;
+    variable buffer_active : boolean;
   begin
     if rst = '1' then
-      -- reset packet_full and its counter:
-      sent_counter := 0;
-      packet_full <= '0';
-      -- reset stream_active (see STREAM state)
+      ready       <= (others => '0');
+      chan_select <= (others => '0');
       stream_active <= '0';
-      -- stream output siginals (La raison d'etre for this module)
-      uready <= (others => '0');
-      data   <= (others => '0');
-      wen    <= '0';
-      last   <= '0';
+      header <= (others => '0');
+      frag_a <= (others => '0');
+      frag_b <= (others => '0');
+    elsif rising_edge(clk) then
+      ready         <= ready;
+      chan_select   <= chan_select; 
+      stream_active <= stream_active;
+      header <= header;
+      frag_a <= frag_a;
+      frag_b <= frag_b;
+
+      if (busy='0') and (state = STREAM) then
+        case frag is
+          when 0 =>
+            if (turn < C_RX_NUM_CHAN) then
+              chan_select <= std_logic_vector(to_unsigned(turn,chan_select'length));
+              if (VALID_I(turn) = '1') then
+                -- set the buffer active flag:
+                buffer_active := true;
+              else
+                buffer_active := false;
+              end if;
+            else
+              buffer_active:= false;
+            end if;
+            
+          when 1 =>
+            --waiting for mux...
+            
+          when 2 =>
+            if (buffer_active) then
+              -- buffer the MUX inputs:
+              header <= HEADER_I;
+              frag_a <= FRAG_A_I;
+              frag_b <= FRAG_B_I;
+              
+              -- clear valid for this channel now that it is buffered
+              ready(turn) <= '1';
+              -- output to stream during the following turn:
+              stream_active <= '1';
+            else
+              stream_active <= '0';
+            end if;
+        end case;
+      end if;
+    end if;
+  end process;
+
+  -- stream output process:
+  process(clk, rst)
+    variable sent_counter  : integer range 0 to 16#7FFFFFFF# := 0;
+    variable sent_config   : integer := 0;    
+  begin
+    if rst = '1' then
+      packet_full <= '0';
+      data        <= (others => '0');
+      wen         <= '0';
+      last        <= '0';
     elsif rising_edge(clk) then
       sent_config := to_integer(unsigned(CONFIG_I(31 downto 16)));
-
-      uready <= (others => '0');
-      data   <= (others => '0');
-      wen    <= '0';
-      last   <= '0';
-
+      packet_full <= packet_full;
+      data        <= (others => '0');
+      wen         <= '0';
+      last        <= '0';
       if (state = IDLE) then
         sent_counter := 0;
         packet_full <= '0';
@@ -334,30 +380,27 @@ begin
         if (busy = '0') then
           case frag is
             when 0 =>
-              if (VALID_I(turn) = '1') then
-                stream_active <= '1';
+              if (stream_active = '1') then
+                -- send the header:
                 wen <= '1';
-                --increment before last fragment so that state transition can occur at fragment=2 when necessary
+                data <= header;
+                -- we are fully committed, increment now so that we
+                -- can act on packet_full by last fragment
                 if (sent_counter < 16#7FFFFFFF#) then
                   sent_counter  := sent_counter + 1;
                 end if;
-                data(31 downto 0) <= HEADER_I(turn);
-              else
-                stream_active <= '0';
               end if;
 
             when 1 =>
               if (stream_active = '1') then
                 wen <= '1';
-                data <= TIMESTAMP_I(turn);
+                data <= frag_a;                
               end if;
 
             when 2 =>
               if (stream_active = '1') then
                 wen <= '1';
-                data <= DATA_I(turn);
-                uready(turn) <= '1';
-                stream_active <= '0';
+                data <= frag_b;                
               end if;
           end case;
         end if;
@@ -367,24 +410,20 @@ begin
       elsif (state = TRAILER) then
         if (busy = '0') then
           wen  <= '1';
-          if (frag = 0) then
-            data(31 downto 0)  <= EOP_HEADER_I;
-          elsif (frag = 1) then
-            data(31 downto 0)  <= std_logic_vector(to_unsigned(sent_counter, 32));
-          else
-            data  <= (others=>'0');
-            last <= '1';
-          end if;
+          case frag is
+            when 0 =>
+              data(31 downto 0)  <= EOP_HEADER_I;
+          
+            when 1 => 
+              data(31 downto 0)  <= std_logic_vector(to_unsigned(sent_counter, 32));
+
+            when 2 =>
+              last <= '1';
+          end case;
         end if;
       end if;
     end if;
   end process;
-
-  LOOK_O <= (others => '0');
-  --LOOK_O(31 downto 0)   <=  HEADER_I(oturn);
-  --LOOK_O(63 downto 32)  <=  (others => '0');
-  --LOOK_O(127 downto 64) <=  TIMESTAMP_I(oturn);
-  --LOOK_O(191 downto 128) <=  DATA_I(oturn);
 
   status(2 downto 0) <= "000" when state = IDLE else
                         "001" when state = WAIT_STATE else
@@ -399,7 +438,7 @@ begin
   status(13 downto 8) <= std_logic_vector(to_unsigned(turn, 6));
   status(15 downto 14) <= std_logic_vector(to_unsigned(frag, 2));
 
-  DEBUG_STATUS_O <= status;
+  DEBUG_O <= status;
 
   process(clk,rst)
   begin

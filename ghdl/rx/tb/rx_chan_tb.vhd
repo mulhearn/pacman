@@ -34,7 +34,6 @@ architecture behaviour of rx_chan_tb is
   signal rst        : std_logic;
   signal uclk       : std_logic;
   signal status     : std_logic_vector(C_RB_DATA_WIDTH-1  downto 0);
-  signal header     : std_logic_vector(C_RX_HEADER_WIDTH-1 DOWNTO 0);
   signal data       : std_logic_vector(C_UART_DATA_WIDTH-1 DOWNTO 0);
   signal tstamp     : std_logic_vector(C_UART_DATA_WIDTH-1 DOWNTO 0);
   signal rx         : std_logic := '1';
