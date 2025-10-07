@@ -32,19 +32,28 @@ package register_map is
   constant C_ADDR_GLOBAL_VIVADO_MINOR    : integer := 16#F54#; -- Read Only
   --
   -- Registers with SCOPE=UART_TX
+  -- Per UART registers, with chan = 0x00-0x28, and broadcast chan=0x3B (if writable):
   --
   constant C_ADDR_TX_UART_STATUS    : integer := 16#00#; -- Read Only
   constant C_ADDR_TX_UART_CONFIG    : integer := 16#04#; -- Read Only
-  -- 64-bit RX register as two 32-bit words (LSB) A B C D (MSB)
-  constant C_ADDR_TX_UART_LOOK_A    : integer := 16#10#; -- Read Only
-  constant C_ADDR_TX_UART_LOOK_B    : integer := 16#14#; -- Read Only
-  -- Counters: (Zero by writing ZERO_CNTS register on global channel 0x7F)
+
   constant C_ADDR_TX_UART_STARTS    : integer := 16#20#;
   constant C_ADDR_TX_UART_BEATS     : integer := 16#24#; -- count valid='1' & ready='1'
 
-  -- Global Status and Flags
-  constant C_ADDR_TX_BUFFER_STATUS  : integer := 16#A0#;
-  constant C_ADDR_TX_ZERO_CNTS      : integer := 16#B8#;
+  --
+  -- Registers with SCOPE=UART_RX
+  -- Not UART specific, at chan=0x3F:
+  --
+
+  -- TX look feature channel selection:
+  constant C_ADDR_TX_LOOK_SELECT    : integer := 16#A0#;
+  -- TX look feature UART data (MSB) B(32 bits) A(32 bits) (LSB):
+  constant C_ADDR_TX_LOOK_UA        : integer := 16#A4#; -- Read Only
+  constant C_ADDR_TX_LOOK_UB        : integer := 16#A8#; -- Read Only
+
+  -- TX buffer status
+  constant C_ADDR_TX_BUFFER_STATUS  : integer := 16#B0#;
+  constant C_ADDR_TX_ZERO_CNTS      : integer := 16#F8#;
 
   --
   -- Registers with SCOPE=UART_RX

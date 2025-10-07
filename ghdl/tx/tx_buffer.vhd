@@ -93,6 +93,7 @@ architecture behavioral of tx_buffer is
 
   -- per UART channel valid for the valid/ready handshake with each TX channel:
   signal uart_valid    : std_logic_vector(C_NUM_UART-1 downto 0);
+  signal uart_data     : uart_data_array_t;
 
   -- state of the TX buffer:
   type state_type is (IDLE, START_TX, TX);
@@ -118,6 +119,7 @@ begin
   S_AXIS_TREADY <= stream_ready;
   stream_valid <= S_AXIS_TVALID;
   VALID_O <= uart_valid;
+  DATA_O  <= uart_data;
 
   process(state, packet_valid, uart_valid)
   begin
@@ -146,24 +148,27 @@ begin
     end if;
   end process;
 
-  -- state dependent signals: packet_ready, uart_valid, DATA_O
+  -- state dependent signals: packet_ready, uart_valid, uart_data
   process(clk,rst)
   begin
     if (rst='1') then
       packet_ready <= '0';
       uart_valid <= (others => '0');
-      DATA_O <= (others => (others => '0'));
+      uart_data <= (others => (others => '0'));
     elsif (rising_edge(clk)) then
+      packet_ready <= packet_ready;
+      uart_valid <= uart_valid;
+      uart_data <= uart_data;
+
       case state is
         when IDLE =>
           packet_ready <= '0';
           uart_valid <= (others => '0');
-          DATA_O <= (others => (others => '0'));
         when START_TX =>
           packet_ready <= '1';
           uart_valid <= packet_data(C_NUM_UART-1 downto 0);
           for i in 0 to C_NUM_UART-1 loop
-            DATA_O(i) <= packet_data(C_UART_DATA_WIDTH*(i+3)-1 downto C_UART_DATA_WIDTH*(i+2));
+            uart_data(i) <= packet_data(C_UART_DATA_WIDTH*(i+2)-1 downto C_UART_DATA_WIDTH*(i+1));
           end loop;
         when TX =>
           packet_ready <= '0';

@@ -26,11 +26,11 @@ architecture behaviour of tx_registers_tb is
       S_REGBUS_RB_WDATA	     : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_WACK       : out std_logic;
 
-      UART_LOOK_I            : in uart_data_array_t;
       UART_STATUS_I          : in uart_reg_array_t;
       UART_CONFIG_O          : out uart_reg_array_t;
-
-      BUFFER_STATUS_I        : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+      BUFFER_STATUS_I        : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      LOOK_SELECT_O       : out std_logic_vector(C_SELECT_WIDTH-1 downto 0);
+      LOOK_UART_DATA_I    : in std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0)
     );
   end component;
 
@@ -62,7 +62,7 @@ begin
     S_REGBUS_RB_WADDR   => waddr,
     S_REGBUS_RB_WDATA   => wdata,
     S_REGBUS_RB_WACK    => wack,
-    UART_LOOK_I  => (others => x"DDDDDDDDCCCCCCCC"),
+    LOOK_UART_DATA_I  => x"DDDDDDDDCCCCCCCC",
     UART_STATUS_I  => (others => x"1234ABCD"),
     BUFFER_STATUS_I  => x"AABBCCDD",
     UART_CONFIG_O  => config
@@ -103,17 +103,17 @@ begin
     raddr   <= x"0000";
     rupdate <= '0';
     wait for 10 ns;
-    raddr   <= x"0010";
+    raddr   <= x"3FA0";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"0014";
+    raddr   <= x"3FA4";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"0C10";
+    raddr   <= x"3FA8";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"0C14";
-    rupdate <= '1';
+    raddr   <= x"0000";
+    rupdate <= '0';
     wait for 10 ns;
     raddr   <= x"0000";
     rupdate <= '0';
@@ -136,19 +136,7 @@ begin
     raddr   <= x"0000";
     rupdate <= '0';
     wait for 10 ns;
-    raddr   <= x"3FA0";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"0000";
-    rupdate <= '0';
-    wait for 10 ns;
-    raddr   <= x"0C50";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"0150";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"0050";
+    raddr   <= x"3FB0";
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"0000";
@@ -175,7 +163,7 @@ begin
     wdata   <= x"00000000";
     wupdate <= '0';
     wait for 130 ns;
-    waddr   <= x"3FB8";
+    waddr   <= x"3FF8";
     wdata   <= x"00000000";
     wupdate <= '1';
     wait for 10 ns;
@@ -238,9 +226,6 @@ begin
     writeline(output, l);
     wait until (count=31);
     write(l, String'("INFO:  Reading TX global status: (Test pattern input:  0xAABBCCDD)"));
-    writeline(output, l);
-    wait until (count=33);
-    write(l, String'("INFO:  Reading back channel number from several channels:"));
     writeline(output, l);
     wait;
   end process;

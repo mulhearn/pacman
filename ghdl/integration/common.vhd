@@ -23,8 +23,8 @@ package common is
 
   -- TX unit:
   -- DMA stream width and number of beats
-  constant C_TX_AXIS_WIDTH     : integer  := 128;
-  constant C_TX_AXIS_BEATS     : integer  := 21;
+  constant C_TX_AXIS_WIDTH     : integer  := 64;
+  constant C_TX_AXIS_BEATS     : integer  := 41;
 
   -- RX unit:
   -- DMA stream width

@@ -118,7 +118,7 @@ begin
   runshow_process : process
   begin
     show_tx_output <= '0';
-    wait for 300 ns;
+    wait for 600 ns;
     show_tx_output <= '1';
     wait for 7200 ns;
     show_tx_output <= '0';
@@ -138,18 +138,14 @@ begin
     tdata(63 downto 0)    <= x"000000FFFFFFFFFF";
     tlast                 <= '0';
     wait for 10 ns;
-    for i in 0 to 19 loop
+    for i in 0 to 40-1 loop
       tvalid <= '1';
       tdata <= (others => '0');
       ibuf := 16#1111CC00# + 2*i;
       tdata(31 downto 0)    <= std_logic_vector(to_unsigned(ibuf, 32));
       ibuf := 16#1111DD00# + 2*i;
       tdata(63 downto 32)    <= std_logic_vector(to_unsigned(ibuf, 32));
-      ibuf := 16#2222CC00# + 2*i+1;
-      tdata(95 downto 64)    <= std_logic_vector(to_unsigned(ibuf, 32));
-      ibuf := 16#2222DD00# + 2*i+1;
-      tdata(127 downto 96)    <= std_logic_vector(to_unsigned(ibuf, 32));
-      if (i < 19) then
+      if (i < 40-1) then
         tlast <= '0';
       else
         tlast <= '1';
@@ -196,22 +192,13 @@ begin
     raddr   <= x"0C20";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"0010";
+    raddr   <= x"3FA0";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"0014";
+    raddr   <= x"3FA4";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"0110";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"0114";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"0C10";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"0C14";
+    raddr   <= x"3FA8";
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"0000";
@@ -232,13 +219,13 @@ begin
     wdata   <= x"00001601";
     wupdate <= '1';
     wait for 10 ns;
+    waddr   <= x"3FA0";
+    wdata   <= x"0000000A";
+    wupdate <= '1';
+    wait for 10 ns;
     waddr   <= x"0000";
     wdata   <= x"00000000";
     wupdate <= '0';
-    --wait for 1000 ns;
-    --waddr   <= x"3FB8";
-    --wdata   <= x"00000000";
-    --wupdate <= '1';
     wait;
   end process;
 
@@ -333,13 +320,9 @@ begin
     wait until (count=60);
     write(l, String'("INFO:  TX begins with start bit (0) on each uart channel:"));
     writeline(output, l);
-    wait until (count=70);
-    write(l, String'("INFO:  TX payload follows, with 64 bits for each uart channel:"));
-    writeline(output, l);
-    wait until (count=710);
+    wait until (count=730);
     write(l, String'("INFO:  TX ends with stop bit (1) on each uart channel:"));
     writeline(output, l);
-    wait until (count=720);
     write(l, String'("INFO:  TX output remains high until the next transmission:"));
     writeline(output, l);
     wait until (count=800);

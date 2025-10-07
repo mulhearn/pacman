@@ -62,6 +62,9 @@ architecture behaviour of tx_unit is
   signal gstatus     : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal config      : uart_reg_array_t;
 
+  signal look_chan_select  : std_logic_vector(C_SELECT_WIDTH-1 downto 0);
+  signal look_uart_data    : std_logic_vector(C_UART_DATA_WIDTH-1 downto 0)  := (others => '0');
+
   component tx_buffer is
     port (
       CLK_I              : in std_logic;
@@ -84,6 +87,16 @@ architecture behaviour of tx_unit is
       );
   end component;
 
+  component tx_data_mux is
+    port (
+      CLK_I      : in std_logic;
+      RST_I      : in std_logic;
+      SEL_I      : in  std_logic_vector(C_SELECT_WIDTH-1 downto 0);
+      DATA_I     : in  uart_data_array_t;
+      DATA_O     : out std_logic_vector(C_UART_DATA_WIDTH-1 downto 0)
+    );
+  end component;
+
   component tx_registers is
     port (
       CLK_I	        : in std_logic;
@@ -99,11 +112,13 @@ architecture behaviour of tx_unit is
       S_REGBUS_RB_WDATA	     : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_WACK       : out std_logic;
 
-      UART_LOOK_I            : in uart_data_array_t;
       UART_STATUS_I          : in uart_reg_array_t;
       BUFFER_STATUS_I        : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      UART_CONFIG_O          : out uart_reg_array_t
-      );
+      UART_CONFIG_O          : out uart_reg_array_t;
+
+      LOOK_SELECT_O          : out std_logic_vector(C_SELECT_WIDTH-1 downto 0);
+      LOOK_UART_DATA_I       : in std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0)
+    );
   end component;
 
   component tx_chan is
@@ -125,7 +140,7 @@ begin
   clk <= ACLK;
   rst <= RST_I;
 
-  uut: tx_buffer port map (
+  b0: tx_buffer port map (
     CLK_I           => clk,
     RST_I           => rst,
     S_AXIS_TDATA    => S_AXIS_TDATA,
@@ -139,7 +154,15 @@ begin
     READY_I         => ready
   );
 
-  uut0: tx_registers port map (
+  dm0: tx_data_mux port map (
+    CLK_I           => clk,
+    RST_I           => rst,
+    SEL_I           => look_chan_select,
+    DATA_I          => data,
+    DATA_O          => look_uart_data
+  );
+
+  reg0: tx_registers port map (
     CLK_I               => clk,
     RST_I               => rst,
     S_REGBUS_RB_RUPDATE => S_REGBUS_RB_RUPDATE,
@@ -150,11 +173,11 @@ begin
     S_REGBUS_RB_WADDR   => S_REGBUS_RB_WADDR,
     S_REGBUS_RB_WDATA   => S_REGBUS_RB_WDATA,
     S_REGBUS_RB_WACK    => S_REGBUS_RB_WACK,
-    UART_LOOK_I  => data,
-    --UART_LOOK_I  => (others => (others => '0')),
     UART_STATUS_I  => status,
     BUFFER_STATUS_I => gstatus,
-    UART_CONFIG_O  => config
+    UART_CONFIG_O  => config,
+    LOOK_SELECT_O  => look_chan_select,
+    LOOK_UART_DATA_I  => look_uart_data
   );
 
   -- generate C_NUM_UART instances of tx_chan and connect to appropriate signals.
