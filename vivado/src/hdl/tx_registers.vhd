@@ -34,14 +34,16 @@ entity tx_registers is
     S_REGBUS_RB_WDATA	: in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     S_REGBUS_RB_WACK    : out std_logic;
 
-    -- look buffer contains the most recent TX for each UART
-    UART_LOOK_I              : in uart_data_array_t;
     -- status register from each UART TX channel
     UART_STATUS_I            : in uart_reg_array_t;
     -- configuration register for each UART TX channel
     UART_CONFIG_O            : out uart_reg_array_t;
     -- global status reported from the TX buffer
-    BUFFER_STATUS_I    	: in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+    BUFFER_STATUS_I    	: in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+
+    -- look feature:
+    LOOK_SELECT_O       : out std_logic_vector(C_SELECT_WIDTH-1 downto 0);
+    LOOK_UART_DATA_I    : in std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0)
     );
 end;
 
@@ -62,13 +64,9 @@ architecture behavioral of tx_registers is
   signal wack     : std_logic := '0';
 
   -- input data for registers:
-  signal look       : uart_data_array_t := (others => (others => '0'));
+  signal look       : std_logic_vector(C_UART_DATA_WIDTH-1 downto 0);
   signal status     : uart_reg_array_t;
-  signal gstatus    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-
-  -- stage-1 of the registering the inputs:
-  signal look_s     : uart_data_array_t := (others => (others => '0'));
-  signal status_s   : uart_reg_array_t;
+  signal bstatus    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
   -- registered controlled configuration per UART channel
   signal config   : uart_reg_array_t := (others => (others => '0'));
@@ -78,6 +76,8 @@ architecture behavioral of tx_registers is
   signal starts   : uart_reg_array_t := (others => (others => '0'));
   -- count of TX starts:
   signal beats    : uart_reg_array_t := (others => (others => '0'));
+
+  signal look_select : std_logic_vector(C_SELECT_WIDTH-1 downto 0)  := (others => '0');
 
 
 begin
@@ -92,22 +92,19 @@ begin
   waddr    <= S_REGBUS_RB_WADDR;
   wdata    <= S_REGBUS_RB_WDATA;
   S_REGBUS_RB_WACK	 <= wack;
+  LOOK_SELECT_O           <= look_select;
 
   -- register input data:
   process(clk, rst)
   begin
     if (rst='1') then
-      look_s     <= (others => (others => '0'));
-      look       <= (others => (others => '0'));
-      status_s   <= (others => (others => '0'));
+      look       <= (others => '0');
       status     <= (others => (others => '0'));
-      gstatus    <= (others => '0');
+      bstatus    <= (others => '0');
     elsif (rising_edge(clk)) then
-      look_s     <= UART_LOOK_I;
-      look       <= look_s;
-      status_s   <= UART_STATUS_I;
-      status     <= status_s;
-      gstatus    <= BUFFER_STATUS_I;
+      look       <= LOOK_UART_DATA_I;
+      status     <= UART_STATUS_I;
+      bstatus    <= BUFFER_STATUS_I;
     end if;
   end process;
 
@@ -152,12 +149,6 @@ begin
               elsif (reg=C_ADDR_TX_UART_CONFIG) then
                 rdata <= config(chan);
                 rack  <= '1';
-              elsif (reg=C_ADDR_TX_UART_LOOK_A) then
-                rdata <= look(chan)(31 downto 0);
-                rack  <= '1';
-              elsif (reg=C_ADDR_TX_UART_LOOK_B) then
-                rdata <= look(chan)(63 downto 32);
-                rack  <= '1';
               elsif (reg=C_ADDR_TX_UART_STARTS) then
                 rdata <= starts(chan);
                 rack  <= '1';
@@ -168,7 +159,17 @@ begin
             -- global (to TX) registers:
             elsif (chan = 16#3F#) then
               if (reg=C_ADDR_TX_BUFFER_STATUS) then
-                rdata <= gstatus;
+                rdata <= bstatus;
+                rack  <= '1';
+              elsif (reg=C_ADDR_TX_LOOK_SELECT) then
+                rdata <= (others => '0');
+                rdata(C_SELECT_WIDTH-1 downto 0) <= look_select;
+                rack  <= '1';
+              elsif (reg=C_ADDR_TX_LOOK_UA) then
+                rdata <= look(31 downto 0);
+                rack  <= '1';
+              elsif (reg=C_ADDR_TX_LOOK_UB) then
+                rdata <= look(63 downto 32);
                 rack  <= '1';
               end if;
             end if;
@@ -227,6 +228,9 @@ begin
           if ((scope=0) and (chan = 16#3F#)) then
             if (reg=C_ADDR_TX_ZERO_CNTS) then
               zero_counters <= '1';
+              wack  <= '1';
+            elsif (reg=C_ADDR_TX_LOOK_SELECT) then
+              look_select <= wdata(C_SELECT_WIDTH-1 downto 0);
               wack  <= '1';
             end if;
           end if;
