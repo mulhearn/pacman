@@ -8,7 +8,7 @@ use work.common.all;
 entity timing_unit is
   port (
     ACLK                   : in std_logic; -- fast clock
-    ARESETN                : in std_logic;
+    RST_I                  : in std_logic;
     UCLK_I                 : in std_logic; -- slow clock
 
 
@@ -174,6 +174,7 @@ architecture behaviour of timing_unit is
 
   signal clk            : std_logic;
   signal rst            : std_logic;
+  signal rstn            : std_logic;
   signal uresetn        : std_logic;
   signal tstamp         : std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
   signal status         : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
@@ -195,9 +196,6 @@ architecture behaviour of timing_unit is
   signal lemo_b_s         : std_logic;
   signal poke_c_s         : std_logic;
   signal poke_d_s         : std_logic;
-
-
-
 
 --output and cfg
   signal   atc_h         :  std_logic_vector(9 downto 0) := (others => '0');
@@ -235,7 +233,8 @@ begin
 
   TIMESTAMP_O <= tstamp;
   GLB_CLK_O <= UCLK_I;
-  rst <= not ARESETN;
+  rst <= RST_I;
+  rstn <= not RST_I;
   clk <= ACLK;
   DEBUG(0) <= lemo_b_f;
   DEBUG(1) <= lemo_b_s;
@@ -244,8 +243,8 @@ begin
 
 
   uut0: timing_registers port map (
-    ACLK                => ACLK,
-    ARESETN             => ARESETN,
+    ACLK                => clk,
+    ARESETN             => rstn,
     S_REGBUS_RB_RUPDATE => S_REGBUS_RB_RUPDATE,
     S_REGBUS_RB_RADDR   => S_REGBUS_RB_RADDR,
     S_REGBUS_RB_RDATA   => S_REGBUS_RB_RDATA,
@@ -303,7 +302,7 @@ begin
   --reset signal across clock domain
   counter_slow: slow_pulse port map(
     CLK_F_I    => ACLK,
-    RSTN_F_I   => ARESETN,
+    RSTN_F_I   => rstn,
     UPDATE_I   => reset_sync ,
     CONFIG_POL => '0',
 
@@ -318,7 +317,7 @@ begin
   lemo_a_fast: external_update port map(
       UPDATE_E_I   => LEMO_A_I,
       CLK_F_I      => ACLK,
-      RSTN         => ARESETN,
+      RSTN         => rstn,
       COUNT_P      => lemo_a_c,
       PULSE_OUT    => lemo_a_f,
       COUNT_START  => start_sync,
@@ -328,7 +327,7 @@ begin
   lemo_b_fast: external_update port map(
       UPDATE_E_I      => LEMO_B_I,
       CLK_F_I         => ACLK,
-      RSTN            => ARESETN,
+      RSTN            => rstn,
       COUNT_P         => lemo_b_c,
       PULSE_OUT       =>  lemo_b_f,
       COUNT_START     => start_sync,
@@ -338,7 +337,7 @@ begin
   --input 0f lemo and poke signal (fast to slow)
   lemo_a_ts: slow_pulse port map(
     CLK_F_I  => ACLK,
-    RSTN_F_I  => ARESETN,
+    RSTN_F_I  => rstn,
     UPDATE_I  => lemo_a_f ,
     CONFIG_POL => polarity_cfg(0),
 
@@ -350,7 +349,7 @@ begin
   );
   lemo_b_ts: slow_pulse port map(
     CLK_F_I  => ACLK,
-    RSTN_F_I  => ARESETN,
+    RSTN_F_I  => rstn,
     UPDATE_I  => lemo_b_f ,
     CONFIG_POL => polarity_cfg(1),
 
@@ -362,7 +361,7 @@ begin
   );
   poke_c_ts: slow_pulse port map(
     CLK_F_I  => ACLK,
-    RSTN_F_I  => ARESETN,
+    RSTN_F_I  => rstn,
     UPDATE_I	 => poke_c_f ,
     CONFIG_POL => polarity_cfg(2),
 
@@ -374,7 +373,7 @@ begin
   );
   poke_d_ts: slow_pulse port map(
     CLK_F_I    => ACLK,
-    RSTN_F_I   => ARESETN,
+    RSTN_F_I   => rstn,
     UPDATE_I	 => poke_d_f ,
     CONFIG_POL => polarity_cfg(3),
 
@@ -388,7 +387,7 @@ begin
   --output signal
   output: atc_mux port map (
     UCLK  => UCLK_I,
-    RSTN  => ARESETN,
+    RSTN  => rstn,
     UPDATE_LEMO_A_I => lemo_a_s,
     UPDATE_LEMO_B_I => lemo_b_s,
     UPDATE_POKE_C_I => poke_c_s,
@@ -413,7 +412,7 @@ begin
   );
     ts: timestamp port map (
     CLK_A_I        => ACLK,
-    RSTN_A_I	   => ARESETN,
+    RSTN_A_I	   => rstn,
     TIMESTAMP_A_O  => tstamp,
     CLK_B_I        => UCLK_I,
     RSTN_B_I       => ts_sy

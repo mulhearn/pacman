@@ -4,47 +4,56 @@ use ieee.numeric_std.all;
 
 package common is
 
-  constant C_NUM_TILE          : integer  := 10;
-  constant C_NUM_UART          : integer  := 40;
-  constant C_NUM_LED           : integer  := 2;
+  -- number of tile cards supported:
+  constant C_NUM_TILE            : integer  := 10;
+  -- number of UART channels supported:
+  constant C_NUM_UART            : integer  := 40;
+  -- number of LEDSs supported:
+  constant C_NUM_LED             : integer  := 2;
 
-  constant C_BYTE              : integer  := 8;
-
-  constant BRAM_ADDR_WIDTH     : integer  := 13;
-  constant ADC_DATA_WIDTH      : integer  := 12;
-  constant BRAM_DATA_WIDTH     : integer  := 32;
+  -- number bits needed for UART channel selection:
+  constant C_SELECT_WIDTH        : integer  := 6;
 
   -- register bus data is 32 bits, address 16 bits.
-  constant C_RB_DATA_WIDTH     : integer  := 32;
-  constant C_RB_ADDR_WIDTH     : integer  := 16;
+  constant C_RB_ADDR_WIDTH       : integer  := 16;
+  constant C_RB_DATA_WIDTH       : integer  := 32;
+  -- in some cases, don't propogate the entire 32-bits:
+  constant C_SMALL               : integer  := 16;
+  constant C_BYTE                : integer  := 8;
 
-  -- DMA stream data widths:
+  -- TX unit:
+  -- DMA stream width and number of beats
   constant C_TX_AXIS_WIDTH     : integer  := 128;
   constant C_TX_AXIS_BEATS     : integer  := 21;
-  constant C_RX_AXIS_WIDTH     : integer  := 64;
 
+  -- RX unit:
+  -- DMA stream width
+  constant C_RX_AXIS_WIDTH     : integer  := 64;
   constant C_UART_DATA_WIDTH   : integer  := 64;
   constant C_TIMESTAMP_WIDTH   : integer  := 64;
-  constant C_RX_HEADER_WIDTH   : integer  := 32;
 
-  constant C_RX_TURN_MAX       : integer  := 64;
+  -- number of fragments per turn (first is a pause):
   constant C_RX_FRAGS_PER_TURN : integer  := 3;
   constant C_RX_EXTRA_CHAN     : integer  := 4;
   constant C_RX_NUM_CHAN       : integer  := C_NUM_UART + C_RX_EXTRA_CHAN;
-  constant C_RX_BEAT_MAX       : integer  := 32;
+
+  --arrays of std_logic_vectors with array length the number of uart channels:
+  type uart_reg_array_t       is array (0 to C_NUM_UART-1) of std_logic_vector (C_RB_DATA_WIDTH-1 downto 0);
+  type uart_small_array_t     is array (0 to C_NUM_UART-1) of std_logic_vector (C_SMALL-1 downto 0);
+  type uart_data_array_t      is array (0 to C_NUM_UART-1) of std_logic_vector (C_UART_DATA_WIDTH-1 downto 0);
+
+  --type rx_header_array_t      is array (0 to C_RX_NUM_CHAN-1) of std_logic_vector (C_RX_HEADER_WIDTH-1 downto 0);
+  type rx_data_array_t        is array (0 to C_RX_NUM_CHAN-1) of std_logic_vector (C_UART_DATA_WIDTH-1 downto 0);
+  type rx_timestamp_array_t   is array (0 to C_RX_NUM_CHAN-1) of std_logic_vector (C_TIMESTAMP_WIDTH-1 downto 0);
+
+
 
   --arrays of std_logic_vectors with array length the number of tiles:
   type ATC_array              is array (0 to C_NUM_TILE-1) of std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
-  --arrays of std_logic_vectors with array length the number of uart channels:
-  type uart_reg_array_t       is array (0 to C_NUM_UART-1) of std_logic_vector (C_RB_DATA_WIDTH-1 downto 0);
-  type uart_data_array_t      is array (0 to C_NUM_UART-1) of std_logic_vector (C_UART_DATA_WIDTH-1 downto 0);
 
-  type rx_header_array_t      is array (0 to C_RX_NUM_CHAN-1) of std_logic_vector (C_RX_HEADER_WIDTH-1 downto 0);
-  type rx_data_array_t        is array (0 to C_RX_NUM_CHAN-1) of std_logic_vector (C_UART_DATA_WIDTH-1 downto 0);
-  type rx_timestamp_array_t   is array (0 to C_RX_NUM_CHAN-1) of std_logic_vector (C_TIMESTAMP_WIDTH-1 downto 0);
 
-  -- uart counter arrays that roll over at C_COUNT_MAX:
+-- uart counter arrays that roll over at C_COUNT_MAX:
   constant C_COUNT_MAX : integer := 16#10000#;
   type uart_counter_array_t is array (0 to C_NUM_UART-1) of integer range 0 to C_COUNT_MAX;
 
@@ -53,15 +62,22 @@ package common is
   constant C_DEFAULT_RX_UART_CONFIG : integer := 16#00001002#;
 
   -- default TX / RX global config register (one global setting)
-  constant C_DEFAULT_TX_BUFFER_CONFIG : integer := 16#00000000#;
-  constant C_DEFAULT_RX_BUFFER_CONFIG : integer := 16#00000000#;
-  constant C_DEFAULT_RX_WORD_TYPE_LUT : integer := 16#44444444#;
-
+  constant C_DEFAULT_TX_BUFFER_CONFIG     : integer := 16#00000000#;
+  constant C_DEFAULT_RX_BUFFER_CONFIG     : integer := 16#00000001#;
+  constant C_DEFAULT_RX_WORD_TYPE_LUT     : integer := 16#44444444#;
   constant C_DEFAULT_RX_HEARTBEAT_CONFIG  : integer := 16#3b9aca00#;
-  constant C_DEFAULT_RX_HEARTBEAT_HEADER  : integer := 16#00004853#;
+  constant C_DEFAULT_RX_HEARTBEAT_HEADER  : integer := 16#00480053#;
   constant C_DEFAULT_RX_ROLLOVER_CONFIG   : integer := 16#1#;
-  constant C_DEFAULT_RX_ROLLOVER_HEADER   : integer := 16#00005353#;
+  constant C_DEFAULT_RX_ROLLOVER_HEADER   : integer := 16#00530053#;
   constant C_DEFAULT_RX_EOP_HEADER        : integer := 16#0000004C#;
+
+
+  constant BRAM_ADDR_WIDTH     : integer  := 13;
+  constant ADC_DATA_WIDTH      : integer  := 12;
+  constant BRAM_DATA_WIDTH     : integer  := 32;
+
+
+
 
   function bitwise_or(vec : std_logic_vector) return std_logic;
 

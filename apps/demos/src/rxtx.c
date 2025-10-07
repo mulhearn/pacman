@@ -311,9 +311,9 @@ void read_rx_status(void){
 
 void read_rx_look(void){
   for (int i=0; i<40; i++){
-    unsigned cshift = (i<<8);
-    unsigned a = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_UART_LOOK_A);
-    unsigned b = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_UART_LOOK_B);
+    axil_write_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_LOOK_SELECT, i);
+    unsigned a = axil_read_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_LOOK_UA);
+    unsigned b = axil_read_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_LOOK_UB);
     printf("Channel %2d Look:  0x%08x %08x \r\n", i, b, a);
   }
 }

@@ -4,52 +4,88 @@ use ieee.numeric_std.all;
 library work;
 use work.common.all;
 
--- rx_header: create an RX header based on configurable parameters and snooping
---   inside the LArPix payload for the packet descriptor.
+-- rx_header: output an RX header for the selected channel based on configurable parameters
+--
+-- Note: the word type is determined elsewhere for data words and set to zero otherwise.
+-- It arrives synchronously with the output and is ORed into header combinatorically.
+--
 
 entity rx_header is
   port (
     -- clock and active-high reset:
-    CLK_I        : in std_logic;
-    RST_I        : in std_logic;
+    CLK_I      : in std_logic;
+    RST_I      : in std_logic;
+
+    -- channel selection for header output:
+    SEL_I      : in std_logic_vector(C_SELECT_WIDTH-1 downto 0);
+
+    -- word type determined elsewhere by snooping into packet
+    WTYPE_I    : in std_logic_vector(C_BYTE-1 downto 0);
+
+    -- headers for rollover and heartbeat sync messages:
+    HEADER_A_I : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+    HEADER_B_I : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+    HEADER_C_I : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+    HEADER_D_I : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
     -- configurable PACMAN id:
     PACMAN_I           : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
-    -- configuration register for this module:
-    LUT_I              : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-
     -- UART channel array (configurable):
-    CHAN_I             : in uart_reg_array_t;
-    DATA_I             : in uart_data_array_t;
+    CHAN_I             : in uart_small_array_t;
 
     -- outgoing (modified) headers:
-    HEADER_O           : out uart_reg_array_t;
-
--- debugging:
-    DEBUG_O     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+    HEADER_O           : out std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0)
   );
 end;
 
 architecture behavioral of rx_header is
-  signal clk       : std_logic;
-  signal rst       : std_logic;
-  type lut_t is array(0 to 3) of std_logic_vector(7 downto 0);
-  signal lut       : lut_t;
-  signal data      : uart_data_array_t := (others => (others => '0'));
+  signal clk         : std_logic;
+  signal rst         : std_logic;
+  signal header_next : std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
+  signal header      : std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
 begin
-  lut(0) <= LUT_I(7  downto 0);
-  lut(1) <= LUT_I(15 downto 8);
-  lut(2) <= LUT_I(23 downto 16);
-  lut(3) <= LUT_I(31 downto 24);
 
-  data <= DATA_I when RST_I = '0' else (others => (others => '0'));
+  clk <= CLK_I;
+  rst <= RST_I;
 
-  -- HEADER FORMAT:  0xWWUUUUPP  -- W=word, U=chan, P=PACMAN
-  gheader0: for i in 0 to C_NUM_UART-1 generate
-    HEADER_O(i)(7 downto 0) <= lut(to_integer(unsigned(data(i)(1 downto 0))));
-    HEADER_O(i)(23 downto 8)  <= CHAN_I(i)(15 downto 0);
-    HEADER_O(i)(31 downto 24) <= PACMAN_I(7 downto 0);
-  end generate gheader0;
+  HEADER_O(7 downto 0)  <= header(7 downto 0) or WTYPE_I;
+  HEADER_O(63 downto 8) <= header(63 downto 8);
+
+  process(rst, SEL_I, HEADER_A_I, HEADER_B_I, HEADER_C_I, HEADER_D_I, PACMAN_I, CHAN_I)
+    variable chan       : integer;
+  begin
+    if (rst='1') then
+      header_next <= (others => '0');
+    else
+      header_next <= (others => '0');
+      chan := to_integer(unsigned(SEL_I));
+      if    (chan = C_NUM_UART+0) then
+        header_next(C_RB_DATA_WIDTH-1 downto 0) <= HEADER_A_I;
+      elsif (chan = C_NUM_UART+1) then
+        header_next(C_RB_DATA_WIDTH-1 downto 0) <= HEADER_B_I;
+      elsif (chan = C_NUM_UART+2) then
+        header_next(C_RB_DATA_WIDTH-1 downto 0) <= HEADER_C_I;
+      elsif (chan = C_NUM_UART+3) then
+        header_next(C_RB_DATA_WIDTH-1 downto 0) <= HEADER_D_I;
+      elsif (chan > C_NUM_UART+3) then
+        header_next(C_RB_DATA_WIDTH-1 downto 0) <= (others => '0');
+      else
+        header_next (7 downto 0)   <= (others => '0');
+        header_next (15 downto 8)  <= PACMAN_I(7 downto 0);
+        header_next (31 downto 16) <= CHAN_I(chan);
+      end if;
+    end if;
+  end process;
+
+  process(clk, rst)
+  begin
+    if rst = '1' then
+      header <= (others => '0');
+    elsif rising_edge(clk) then
+      header <= header_next;
+    end if;
+  end process;
+
 
 end;

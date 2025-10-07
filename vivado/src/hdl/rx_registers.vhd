@@ -36,8 +36,6 @@ entity rx_registers is
     S_REGBUS_RB_WACK    : out std_logic;
 
     -- UART registers (inputs):
-    -- look buffer contains the most recent RX payload for each UART
-    UART_LOOK_I         : in  uart_data_array_t;
     -- status register from each UART TX channel
     UART_STATUS_I       : in  uart_reg_array_t;
 
@@ -45,7 +43,7 @@ entity rx_registers is
     -- configuration register for each UART TX channel
     UART_CONFIG_O       : out uart_reg_array_t;
     -- header register for each UART TX channel
-    UART_CHAN_O       : out uart_reg_array_t;
+    UART_CHAN_O         : out uart_small_array_t;
 
     -- Buffer registers (inputs):
     -- RX buffer status reported by RX buffer.
@@ -69,7 +67,11 @@ entity rx_registers is
     -- headers for additional non-UART words:
     HEARTBEAT_HEADER_O  : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     ROLLOVER_HEADER_O   : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    EOP_HEADER_O        : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+    EOP_HEADER_O        : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+
+    -- look feature:
+    LOOK_SELECT_O       : out std_logic_vector(C_SELECT_WIDTH-1 downto 0);
+    LOOK_UART_DATA_I    : in std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0)
   );
 end;
 
@@ -91,7 +93,10 @@ architecture behavioral of rx_registers is
 
   -- output registers:
   signal uart_config      : uart_reg_array_t := (others => (others => '0'));
-  signal uart_chan        : uart_reg_array_t := (others => (others => '0'));
+  signal uart_chan        : uart_small_array_t := (others => (others => '0'));
+  -- Most singletons are all left as full 32-bit registers for now, so
+  -- that adjusting configuration fields does not require changes
+  -- here, but note that, as a result, unused bits appear in read.
   signal heartbeat_config : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal rollover_config  : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal bconfig          : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
@@ -101,16 +106,12 @@ architecture behavioral of rx_registers is
   signal heartbeat_header : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal rollover_header  : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal eop_header       : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
+  signal look_select      : std_logic_vector(C_SELECT_WIDTH-1 downto 0)  := (others => '0');
 
   -- input data for registers:
-  signal ulook      : uart_data_array_t := (others => (others => '0'));
   signal ustatus    : uart_reg_array_t  := (others => (others => '0'));
   signal bstatus    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal fifo_count : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
-
-  -- stage one of double registered inputs:
-  signal ulook_s    : uart_data_array_t := (others => (others => '0'));
-  signal ustatus_s  : uart_reg_array_t  := (others => (others => '0'));
 
   -- signal to set all counter / maximums to 0
   signal zero_counters : std_logic := '0';
@@ -122,16 +123,16 @@ architecture behavioral of rx_registers is
   signal ilost    : uart_counter_array_t := (others => 0);
   signal fifo_max : unsigned(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
 
-  function init_chan_array return uart_reg_array_t is
-    variable tmp : uart_reg_array_t;
+  function init_chan_array return uart_small_array_t is
+    variable tmp : uart_small_array_t;
   begin
     for i in tmp'range loop
-      tmp(i) := std_logic_vector(to_unsigned(i+1, 32));
+      tmp(i) := std_logic_vector(to_unsigned(i+1, 16));
     end loop;
     return tmp;
   end function;
 
-  constant init_chan : uart_reg_array_t := init_chan_array;
+  constant init_chan : uart_small_array_t := init_chan_array;
 
 begin
   -- connect signals to inputs and outputs
@@ -155,27 +156,29 @@ begin
   HEARTBEAT_CONFIG_O      <= heartbeat_config;
   ROLLOVER_CONFIG_O       <= rollover_config;
   WORD_TYPE_LUT_O         <= wlut;
+  LOOK_SELECT_O           <= look_select;
 
-  HEARTBEAT_HEADER_O(23 downto 0) <= heartbeat_header(23 downto 0);
-  ROLLOVER_HEADER_O(23 downto 0)  <= rollover_header(23 downto 0);
-  EOP_HEADER_O(23 downto 0)       <= eop_header(23 downto 0);
-  HEARTBEAT_HEADER_O(31 downto 24) <= pacman(7 downto 0);
-  ROLLOVER_HEADER_O(31 downto 24) <= pacman(7 downto 0);
-  EOP_HEADER_O(31 downto 24) <= pacman(7 downto 0);
+  -- splice PACMAN ID field into the headers:
+  HEARTBEAT_HEADER_O(7 downto 0)   <= heartbeat_header(7 downto 0);
+  HEARTBEAT_HEADER_O(15 downto 8)  <= pacman(7 downto 0);
+  HEARTBEAT_HEADER_O(31 downto 16) <= heartbeat_header(31 downto 16);
 
+  ROLLOVER_HEADER_O(7 downto 0)    <= rollover_header(7 downto 0);
+  ROLLOVER_HEADER_O(15 downto 8)   <= pacman(7 downto 0);
+  ROLLOVER_HEADER_O(31 downto 16)  <= rollover_header(31 downto 16);
+
+  EOP_HEADER_O(7 downto 0)         <= eop_header(7 downto 0);
+  EOP_HEADER_O(15 downto 8)        <= pacman(7 downto 0);
+  EOP_HEADER_O(31 downto 16)       <= eop_header(31 downto 16);
   -- register input data:
   process(clk, rst)
   begin
     if (rst='1') then
-      ulook       <= (others => (others => '0'));
       ustatus     <= (others => (others => '0'));
       bstatus    <= (others => '0');
       fifo_count <= (others => '0');
     elsif (rising_edge(clk)) then
-      ulook_s     <= UART_LOOK_I;
-      ulook       <= ulook_s;
-      ustatus_s   <= UART_STATUS_I;
-      ustatus     <= ustatus_s;
+      ustatus    <= UART_STATUS_I;
       bstatus    <= BUFFER_STATUS_I;
       fifo_count <= FIFO_COUNT_I;
     end if;
@@ -221,13 +224,8 @@ begin
                 rdata <= uart_config(chan);
                 rack  <= '1';
               elsif (reg=C_ADDR_RX_UART_CHAN) then
-                rdata <= uart_chan(chan);
-                rack  <= '1';
-              elsif (reg=C_ADDR_RX_UART_LOOK_A) then
-                rdata <= ulook(chan)(31 downto 0);
-                rack  <= '1';
-              elsif (reg=C_ADDR_RX_UART_LOOK_B) then
-                rdata <= ulook(chan)(63 downto 32);
+                rdata <= (others => '0');
+                rdata(15 downto 0) <= uart_chan(chan);
                 rack  <= '1';
               elsif (reg=C_ADDR_RX_UART_STARTS) then
                 rdata <= std_logic_vector(to_unsigned(istarts(chan),C_RB_DATA_WIDTH));
@@ -280,6 +278,16 @@ begin
               elsif (reg=C_ADDR_RX_EOP_HEADER) then
                 rdata <= eop_header;
                 rack  <= '1';
+              elsif (reg=C_ADDR_RX_LOOK_SELECT) then
+                rdata <= (others => '0');
+                rdata(C_SELECT_WIDTH-1 downto 0) <= look_select;
+                rack  <= '1';
+              elsif (reg=C_ADDR_RX_LOOK_UA) then
+                rdata <= LOOK_UART_DATA_I(31 downto 0);
+                rack  <= '1';
+              elsif (reg=C_ADDR_RX_LOOK_UB) then
+                rdata <= LOOK_UART_DATA_I(63 downto 32);
+                rack  <= '1';
               end if;
             end if;
           end if;
@@ -320,6 +328,7 @@ begin
       rollover_header        <= std_logic_vector(to_unsigned(C_DEFAULT_RX_ROLLOVER_HEADER,  C_RB_DATA_WIDTH));
       eop_header             <= std_logic_vector(to_unsigned(C_DEFAULT_RX_EOP_HEADER,       C_RB_DATA_WIDTH));
       zero_counters <= '0';
+      look_select <= (others => '0');
     else
       if (rising_edge(clk)) then
         wack <= '0';
@@ -334,7 +343,7 @@ begin
               uart_config(chan) <= wdata;
               wack  <= '1';
             elsif (reg=C_ADDR_RX_UART_CHAN) then
-              uart_chan(chan) <= wdata;
+              uart_chan(chan) <= wdata(15 downto 0);
               wack  <= '1';
             end if;
           end if;
@@ -378,6 +387,9 @@ begin
               wack  <= '1';
             elsif (reg=C_ADDR_RX_EOP_HEADER) then
               eop_header <= wdata;
+              wack  <= '1';
+            elsif (reg=C_ADDR_RX_LOOK_SELECT) then
+              look_select <= wdata(C_SELECT_WIDTH-1 downto 0);
               wack  <= '1';
             end if;
           end if;

@@ -7,7 +7,7 @@ package register_map is
   -- Top Level SCOPE (4 - bits)
   constant C_SCOPE_GLOBAL   : integer := 2#1111#; -- GLOBAL = 0xF = 0b1111
   constant C_SCOPE_TIMING   : integer := 2#1110#; -- TIMING = 0xE = 0b1110
-  constant C_SCOPE_ADC      : integer := 2#1110#; -- ADC    = 0xD = 0b1101
+  constant C_SCOPE_ADC      : integer := 2#1101#; -- ADC    = 0xD = 0b1101
   constant C_SCOPE_UPPER_TX : integer := 2#00#;   -- TX     =     = 0b00XX
   constant C_SCOPE_UPPER_RX : integer := 2#01#;   -- RX     =     = 0b01XX
 
@@ -53,9 +53,6 @@ package register_map is
   constant C_ADDR_RX_UART_STATUS    : integer := 16#00#; -- Read Only
   constant C_ADDR_RX_UART_CONFIG    : integer := 16#04#;
   constant C_ADDR_RX_UART_CHAN      : integer := 16#08#;
-  -- 128-bit RX register as four 32-bit words (LSB) A B C D (MSB)
-  constant C_ADDR_RX_UART_LOOK_A    : integer := 16#10#; -- Read Only
-  constant C_ADDR_RX_UART_LOOK_B    : integer := 16#14#; -- Read Only
 
   -- Counters: (Zero by writing ZERO_CNTS register on global channel 0x7F)
   constant C_ADDR_RX_UART_STARTS    : integer := 16#20#; -- count busy '0'->'1'
@@ -68,19 +65,23 @@ package register_map is
   -- Not UART specific, at chan=0x3F:
   --
 
-  -- RX buffer status, config, and enables:
-  constant C_ADDR_RX_BUFFER_STATUS  : integer := 16#A0#; -- Read Only
-  constant C_ADDR_RX_BUFFER_CONFIG  : integer := 16#A4#;
-  constant C_ADDR_RX_BUFFER_ENABLES : integer := 16#A8#;
+  -- RX look feature channel selection:
+  constant C_ADDR_RX_LOOK_SELECT    : integer := 16#A0#;
+  -- RX look feature UART data (MSB) B(32 bits) A(32 bits) (LSB):
+  constant C_ADDR_RX_LOOK_UA        : integer := 16#A4#; -- Read Only
+  constant C_ADDR_RX_LOOK_UB        : integer := 16#A8#; -- Read Only
 
+  -- RX buffer status, config, and enables:
+  constant C_ADDR_RX_BUFFER_STATUS  : integer := 16#B0#; -- Read Only
+  constant C_ADDR_RX_BUFFER_CONFIG  : integer := 16#B4#;
+  constant C_ADDR_RX_BUFFER_ENABLES : integer := 16#B8#;
   -- PACMAN ID:
-  constant C_ADDR_RX_PACMAN        : integer := 16#AC#;
+  constant C_ADDR_RX_PACMAN         : integer := 16#BC#;
 
   -- FIFO counters from AXI Stream DATA FIFO
-  constant C_ADDR_RX_FIFO_CNT  : integer := 16#B0#;
-  constant C_ADDR_RX_FIFO_MAX  : integer := 16#B4#;
-  constant C_ADDR_RX_ZERO_CNTS : integer := 16#B8#;
-
+  constant C_ADDR_RX_FIFO_CNT  : integer := 16#F0#;
+  constant C_ADDR_RX_FIFO_MAX  : integer := 16#F4#;
+  constant C_ADDR_RX_ZERO_CNTS : integer := 16#F8#;
 
   -- Heartbeat and Sync Config regisiters
   constant C_ADDR_RX_HEARTBEAT_CONFIG : integer := 16#C0#;
@@ -92,6 +93,11 @@ package register_map is
   constant C_ADDR_RX_ROLLOVER_HEADER  : integer := 16#D4#;
   constant C_ADDR_RX_TRIG_HEADER      : integer := 16#D8#; -- not yet implemented
   constant C_ADDR_RX_EOP_HEADER       : integer := 16#DC#;
+
+  -- Registers with SCOPE=ADC
+  constant C_ADDR_ADC_STATUS          : integer := 16#000#;
+  constant C_ADDR_ADC_CONFIG          : integer := 16#004#;
+  constant C_ADDR_ADC_LOOK            : integer := 16#010#;
 
   -- Registers with SCOPE=TIMING ROLE(2 bits)=CFG, COUNTER, REGULAR
   constant C_TIMING_REGULAR : integer := 16#0#;

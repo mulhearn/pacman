@@ -15,19 +15,24 @@ extern "C" {
 #define C_ADDR_RX_UART_STATUS       0x00
 #define C_ADDR_RX_UART_CONFIG       0x04
 #define C_ADDR_RX_UART_CHAN         0x08
-#define C_ADDR_RX_UART_LOOK_A       0x10
-#define C_ADDR_RX_UART_LOOK_B       0x14
+
 #define C_ADDR_RX_UART_STARTS       0x20
 #define C_ADDR_RX_UART_BEATS        0x24
 #define C_ADDR_RX_UART_UPDATES      0x28
 #define C_ADDR_RX_UART_LOST         0x2C
-#define C_ADDR_RX_BUFFER_STATUS     0xA0
-#define C_ADDR_RX_BUFFER_CONFIG     0xA4
-#define C_ADDR_RX_BUFFER_ENABLES    0xA8
-#define C_ADDR_RX_PACMAN            0xAC
-#define C_ADDR_RX_FIFO_CNT          0xB0
-#define C_ADDR_RX_FIFO_MAX          0xB4
-#define C_ADDR_RX_ZERO_CNTS         0xB8
+
+#define C_ADDR_RX_LOOK_SELECT       0xA0
+#define C_ADDR_RX_LOOK_UA           0xA4
+#define C_ADDR_RX_LOOK_UB           0xA8
+
+#define C_ADDR_RX_BUFFER_STATUS     0xB0
+#define C_ADDR_RX_BUFFER_CONFIG     0xB4
+#define C_ADDR_RX_BUFFER_ENABLES    0xB8
+#define C_ADDR_RX_PACMAN            0xBC
+
+#define C_ADDR_RX_FIFO_CNT          0xF0
+#define C_ADDR_RX_FIFO_MAX          0xF4
+#define C_ADDR_RX_ZERO_CNTS         0xF8
 #define C_ADDR_RX_HEARTBEAT_CONFIG  0xC0
 #define C_ADDR_RX_ROLLOVER_CONFIG   0xC4
 #define C_ADDR_RX_WORD_TYPE_LUT     0xC8
