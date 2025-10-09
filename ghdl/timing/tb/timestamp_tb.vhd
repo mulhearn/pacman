@@ -3,66 +3,77 @@ use std.textio.all;
 use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
 use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08
-
+use work.common.all;
 
 --  Defines a testbench (without any ports)
 entity timestamp_tb is
-  generic (
-    constant C_TIMESTAMP_WIDTH     : integer := 4
-  );
 end timestamp_tb;
 
 architecture behaviour of timestamp_tb is
-  component timestamp is
-    generic (
-      constant C_TIMESTAMP_WIDTH     : integer := C_TIMESTAMP_WIDTH
-    );
+
+  signal count    : integer := 0;
+  signal clk     : std_logic;
+  signal rst  : std_logic;
+  signal uclk     : std_logic;
+
+  -- dut output:
+  signal ts_fast  : std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);  
+  signal ts_slow  : std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);  
+
+  signal show_output : std_logic := '0';
+
+  component timestamp_slow is
     port (
-      -- Clock Domain A: (Fast Clock)
-      CLK_A_I	        : in  std_logic;
-      RSTN_A_I	        : in  std_logic;
-      TIMESTAMP_A_O       : out std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
-      -- Clock Domain B: (Slow Clock)
-      CLK_B_I             : in  std_logic;
-      RSTN_B_I            : in  std_logic;
-      TIMESTAMP_B_O       : out std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0)
-    );
+      UCLK_I	        : in  std_logic;
+      URST_I	        : in  std_logic;
+      TIMESTAMP_O         : out std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0)
+      );
   end component;
 
-  signal count       : integer := 0;
-  signal aclk        : std_logic;
-  signal aresetn     : std_logic;
-  signal uclk        : std_logic;
-  signal uresetn     : std_logic;
-  signal show_output : std_logic := '0';
-  signal timestamp_a : std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
-
-  signal sync_a      : std_logic;
+  component timestamp_fast_sync is
+    port (
+      CLK_I	      : in  std_logic;
+      RST_I	      : in  std_logic;    
+      TIMESTAMP_SLOW_I  : in  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
+      TIMESTAMP_FAST_O  : out std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0)
+      );
+  end component;
 
 begin
-  uut: timestamp port map (
-    CLK_A_I        => aclk,
-    RSTN_A_I	   => aresetn,
-    TIMESTAMP_A_O  => timestamp_a,
-    CLK_B_I        => uclk,
-    RSTN_B_I       => uresetn
+  dut0: timestamp_slow port map (
+    UCLK_I              => uclk,
+    URST_I              => rst,
+    TIMESTAMP_O         => ts_slow
   );
 
-  aclk_process : process
+  dut2: timestamp_fast_sync port map (
+    CLK_I              => clk,
+    RST_I              => rst,
+    TIMESTAMP_SLOW_I   => ts_slow,
+    TIMESTAMP_FAST_O   => ts_fast
+  );
+
+
+  
+  rst_process : process
   begin
-    count <= count + 1;
-    aclk <= '1';
-    wait for 5 ns;
-    aclk <= '0';
-    wait for 5 ns;
+    rst <= '1';
+    wait for 20 ns;
+    rst <= '0';
+    wait until count=30;
+    rst <= '1';
+    wait for 20 ns;
+    rst <= '0';
+           
   end process;
 
-  aresetn_process : process
+  clk_process : process
   begin
-    aresetn <= '0';
-    wait for 20 ns;
-    aresetn <= '1';
-    wait;
+    count <= count + 1;
+    clk <= '1';
+    wait for 5 ns;
+    clk <= '0';
+    wait for 5 ns;
   end process;
 
   uclk_process : process
@@ -73,49 +84,35 @@ begin
     wait for 50 ns;
   end process;
 
-  uresetn_process : process
-  begin
-    uresetn <= '1';
-    wait for 400 ns;
-    uresetn <= '0';
-    wait for 400 ns;
-    uresetn <= '1';
-    wait;
-  end process;
 
-
-    show_process : process
+  show_output_process : process
   begin
-    show_output <= '1';
-    wait until (count = 200);
+    show_output<='1';
+    wait until (count=100);
     wait for 10 ns;
-    show_output <= '0';
+    show_output<='0';
     wait;
   end process;
 
   output_process : process
     variable l : line;
   begin
+    --wait for 1 ns;
     wait for 10 ns;
-
     if (show_output='1') then
       write (l, String'("c: "));
-      write (l, count, left, 5);
-      write  (l, String'(" aclk: "));
-      write  (l, aclk);
-      write  (l, String'(" uclk: "));
-      write  (l, uclk);
-      write  (l, String'(" ts_a: "));
-      hwrite  (l, timestamp_a);
-
-      if (aresetn = '0') then
-        write (l, String'(" (RST A)"));
+      write (l, count, left, 4);
+      --write (l, String'("clk: "));
+      --write (l, clk);
+      write (l, String'(" "));
+      write (l, uclk);
+      write (l, String'(" slow: 0x"));
+      hwrite (l, ts_slow);
+      write (l, String'(" fast: 0x"));
+      hwrite (l, ts_fast);
+      if (rst = '1') then
+        write (l, String'(" (RESET)"));
       end if;
-      if (uresetn = '0') then
-        write (l, String'(" (RST U)"));
-      end if;
-
-
       writeline(output, l);
     end if;
   end process;
