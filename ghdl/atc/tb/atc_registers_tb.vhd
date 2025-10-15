@@ -5,6 +5,7 @@ use ieee.std_logic_1164.all;
 use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08
 library work;
 use work.common.all;
+use work.atc_pkg.all;
 
 --  Defines a testbench (without any ports)
 entity atc_registers_tb is
@@ -13,37 +14,33 @@ end atc_registers_tb;
 architecture behaviour of atc_registers_tb is
   component atc_registers is
     port (
-      CLK_I	          : in std_logic;
-      RST_I	          : in std_logic;
-
-      S_REGBUS_RB_RADDR	  : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
-      S_REGBUS_RB_RDATA	  : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      CLK_I : in std_logic;
+      RST_I : in std_logic;
+    
       S_REGBUS_RB_RUPDATE : in  std_logic;
+      S_REGBUS_RB_RADDR	: in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
+      S_REGBUS_RB_RDATA	: out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_RACK    : out std_logic;
-
       S_REGBUS_RB_WUPDATE : in  std_logic;
-      S_REGBUS_RB_WADDR	  : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
-      S_REGBUS_RB_WDATA	  : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      S_REGBUS_RB_WADDR	: in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
+      S_REGBUS_RB_WDATA	: in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_WACK    : out std_logic;
 
-      UPDATE_CONFIGS_O    : out std_logic;
-      BUSY_CONFIGS_I      : in std_logic;
-      UPDATE_COUNTS_O     : out std_logic;
-      POKE_C_O            : out std_logic;
-      MASK_C_O            : out std_logic_vector(C_NUM_TILE-1 downto 0);
-      POKE_D_O            : out std_logic;
-      MASK_D_O            : out std_logic_vector(C_NUM_TILE-1 downto 0);
-      CONFIG_O            : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      POLARITY_O          : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      LOGIC_O             : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      DST_LEMO_A_O        : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      DST_LEMO_B_O        : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      DST_POKE_C_O        : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      DST_POKE_D_O        : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      DST_LOGIC_E_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      DST_LOGIC_F_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      COUNT_SELECT_O      : out std_logic_vector(C_ATC_COUNT_SELECT_WIDTH-1 downto 0);
-      COUNT_I             : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      -- request update of configuration: (from CLK to UCLK)
+      UPDATE_CONFIGS_O    : out std_logic;  -- CDC
+      
+      -- request update of counts: (from UCLK to CLK)
+      UPDATE_COUNTS_O     : out std_logic;  -- CDC 
+      
+      -- poke stimuli, each with associated mask, handled expiditiously:
+      POKE_C_O            : out std_logic;  -- CDC
+      MASK_C_O            : out std_logic_vector(C_NUM_TILE-1 downto 0); -- CDC
+      POKE_D_O            : out std_logic;  -- CDC 
+      MASK_D_O            : out std_logic_vector(C_NUM_TILE-1 downto 0); -- CDC
+
+      -- The following configuration registers may be written at any time,
+      CONFIG_O            : out atc_config_t; 
+
       STATUS_I            : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       TIMESTAMP_I         : in  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0)    
     );
@@ -85,13 +82,11 @@ begin
     S_REGBUS_RB_WDATA   => wdata,
     S_REGBUS_RB_WACK    => wack,
     UPDATE_CONFIGS_O    => update_configs,
-    BUSY_CONFIGS_I      => '0',
     UPDATE_COUNTS_O     => update_counts,
     POKE_C_O            => poke_c,
     MASK_C_O            => mask_c,
     POKE_D_O            => poke_d,
     MASK_D_O            => mask_d,
-    COUNT_I             => x"00000005",
     STATUS_I            => x"1234ABCD",
     TIMESTAMP_I         => x"AAAABBBBCCCCDDDD"
   );

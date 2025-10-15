@@ -6,12 +6,19 @@ use ieee.numeric_std.all;
 
 entity update_request is
   port (
-    CLK_I	        : in std_logic;
-    RST_I	        : in std_logic;
-    UPDATE_I            : in std_logic;
-    BUSY_O              : out std_logic;
-    REQUEST_O           : out std_logic;
-    ASYNC_REPLY_I       : in std_logic
+    -- clock and active-high reset (request domain)
+    CLK_I	: in std_logic;
+    RST_I	: in std_logic;
+
+    -- update request:
+    REQUEST_I   : in std_logic;
+
+    -- a previous request is busy:
+    BUSY_O      : out std_logic;
+
+    -- handshake with update_reply (CDC)
+    REQUEST_O   : out std_logic;
+    REPLY_A     : in std_logic
   );
 end;
 
@@ -31,10 +38,10 @@ architecture behavioral of update_request is
   attribute ASYNC_REG of reply_sync: signal is "TRUE";
 
 begin
-  clk       <= CLK_I;
-  rst       <= RST_I;
-  BUSY_O    <= busy;
-  REQUEST_O <= request;
+  clk              <= CLK_I;
+  rst              <= RST_I;
+  BUSY_O           <= busy;
+  REQUEST_O        <= request;
 
   -- double flop synchronization of reply signal:
   process(clk, rst)
@@ -46,12 +53,12 @@ begin
       busy       <= '0';
       request    <= '0';      
     elsif (rising_edge(clk)) then
-      reply_meta <= ASYNC_REPLY_I;
+      reply_meta <= REPLY_A;
       reply_sync <= reply_meta;
       reply_prev <= reply_sync;
       busy       <= busy;
       request    <= request;      
-      if (busy = '0') and (UPDATE_I = '1') then
+      if (busy = '0') and (REQUEST_I = '1') then
         busy <= '1';
         request <= not request;
       end if;

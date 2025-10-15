@@ -6,87 +6,76 @@ use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08
 use work.common.all;
 
 --  Defines a testbench (without any ports)
-entity update_tb is
-end update_tb;
+entity poke_sync_tb is
+end poke_sync_tb;
 
-architecture behaviour of update_tb is
+architecture behaviour of poke_sync_tb is
 
   signal count    : integer := 0;
   signal clk      : std_logic;
   signal rst      : std_logic;
   signal uclk     : std_logic;
 
-  signal update_fast : std_logic := '0';
-  signal update_slow : std_logic;
-  signal update_comb : std_logic;
+  signal update      : std_logic := '0';
   signal request     : std_logic;
   signal busy        : std_logic;
   signal reply       : std_logic;
-  signal done        : std_logic;
-
+  signal poke        : std_logic;
+  signal mask        : std_logic_vector(C_REG16_WIDTH-1 downto 0);
+  
   signal show_output : std_logic := '0';
   
   component update_request is
     port (
-      CLK_I	    : in  std_logic;
-      RST_I	    : in  std_logic;
-      UPDATE_I      : in std_logic;
-      BUSY_O        : out std_logic;
-      REQUEST_O     : out std_logic;
-      ASYNC_REPLY_I : in std_logic
+      CLK_I	 : in  std_logic;
+      RST_I	 : in  std_logic;
+      REQUEST_I  : in std_logic;
+      BUSY_O     : out std_logic;
+      REQUEST_O  : out std_logic;
+      REPLY_A    : in std_logic
       );
   end component;
 
-  component update_reply is
+  component poke_sync is
+    generic ( PAYLOAD_WIDTH : integer := 16 );
     port (
-      CLK_I	      : in  std_logic;
-      RST_I	      : in  std_logic;
-      UPDATE_O        : out std_logic;
-      UPDATE_COMB_O   : out std_logic;
-      ASYNC_REQUEST_I : in  std_logic;
-      DONE_I          : in  std_logic; 
-      REPLY_O         : out std_logic
+      CLK_I	  : in  std_logic;
+      RST_I	  : in  std_logic;
+      POKE_O      : out std_logic;
+      PAYLOAD_O   : out std_logic_vector(PAYLOAD_WIDTH-1 downto 0);
+      REPLY_O     : out std_logic;
+      REQUEST_A   : in  std_logic;
+      PAYLOAD_A   : in  std_logic_vector(PAYLOAD_WIDTH-1 downto 0)
     );
   end component;
 
 begin
   dut0: update_request port map (
-    CLK_I          => clk,
-    RST_I          => rst,
-    UPDATE_I       => update_fast,
-    BUSY_O         => busy,
-    REQUEST_O      => request,
-    ASYNC_REPLY_I  => reply
+    CLK_I      => clk,
+    RST_I      => rst,
+    REQUEST_I  => update,
+    BUSY_O     => busy,
+    REQUEST_O  => request,
+    REPLY_A    => reply
     );
 
-  dut2: update_reply port map (
-    CLK_I           => uclk,
-    RST_I           => rst,
-    UPDATE_O        => update_slow,
-    UPDATE_COMB_O   => update_comb,
-    ASYNC_REQUEST_I => request,
-    DONE_I          => done,
-    REPLY_O         => reply
+  poke0: poke_sync port map (
+    CLK_I      => uclk,
+    RST_I      => rst,
+    POKE_O     => poke,
+    PAYLOAD_O  => mask,
+    REPLY_O    => reply,
+    REQUEST_A  => request,
+    PAYLOAD_A  => x"03FF"
   );
-
-
+  
   update_process : process
   begin
-    update_fast <= '0';
-    wait for 70 ns;
-    update_fast <= '1';
+    update <= '0';
+    wait for 40 ns;
+    update <= '1';
     wait for 10 ns;
-    update_fast <= '0';
-    wait;
-  end process;
-
-  done_process : process
-  begin
-    done <= '0';
-    wait for 600 ns;
-    done <= '1';
-    wait for 100 ns;
-    done <= '0';
+    update <= '0';
     wait;
   end process;
   
@@ -119,7 +108,7 @@ begin
   show_output_process : process
   begin
     show_output<='1';
-    wait until (count=100);
+    wait until (count=50);
     wait for 10 ns;
     show_output<='0';
     wait;
@@ -138,16 +127,13 @@ begin
       --write (l, String'("clk: "));
       --write (l, clk);
       write (l, String'(" fast: update: "));
-      write (l, update_fast);
+      write (l, update);
       write (l, String'(" busy: "));
       write (l, busy);      
-      write (l, String'(" slow: u:"));
-      write (l, update_slow);
-      write (l, String'(" comb: "));
-      write (l, update_comb);
-      write (l, String'(" done: "));
-      write (l, done);
-
+      write (l, String'(" slow: poke:"));
+      write (l, poke);
+      write (l, String'(" mask: "));
+      write (l, mask);
       if (rst = '1') then
         write (l, String'(" (RESET)"));
       end if;

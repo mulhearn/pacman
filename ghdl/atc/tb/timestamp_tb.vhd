@@ -12,59 +12,70 @@ end timestamp_tb;
 architecture behaviour of timestamp_tb is
 
   signal count    : integer := 0;
-  signal clk     : std_logic;
-  signal rst  : std_logic;
+  signal clk      : std_logic;
+  signal rst      : std_logic;
+  signal tzero    : std_logic;
+  signal rst_or   : std_logic;
   signal uclk     : std_logic;
 
   -- dut output:
   signal ts_fast  : std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);  
   signal ts_slow  : std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);  
+  signal toggle   : std_logic;
+  signal tsync    : std_logic;
 
   signal show_output : std_logic := '0';
 
-  component timestamp_slow is
+  component timestamp_simple is
     port (
-      UCLK_I	        : in  std_logic;
-      URST_I	        : in  std_logic;
-      TIMESTAMP_O         : out std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0)
-      );
+      CLK_I	        : in  std_logic;
+      RST_I	        : in  std_logic;
+      TIMESTAMP_O         : out std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
+      TOGGLE_O            : out std_logic;
+      TSYNC_O             : out std_logic
+    );
   end component;
 
-  component timestamp_fast_sync is
+  component timestamp_sync is
     port (
-      CLK_I	      : in  std_logic;
-      RST_I	      : in  std_logic;    
-      TIMESTAMP_SLOW_I  : in  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
-      TIMESTAMP_FAST_O  : out std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0)
+      CLK_I	        : in  std_logic;
+      RST_I	        : in  std_logic;
+      TIMESTAMP_O         : out std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
+      TOGGLE_A            : in std_logic;
+      TSYNC_A             : in std_logic
       );
   end component;
 
 begin
-  dut0: timestamp_slow port map (
-    UCLK_I              => uclk,
-    URST_I              => rst,
-    TIMESTAMP_O         => ts_slow
+  dut0: timestamp_simple port map (
+    CLK_I              => uclk,
+    RST_I              => rst_or,
+    TIMESTAMP_O        => ts_slow,
+    TOGGLE_O           => toggle,
+    TSYNC_O            => tsync
   );
 
-  dut2: timestamp_fast_sync port map (
+  dut2: timestamp_sync port map (
     CLK_I              => clk,
     RST_I              => rst,
-    TIMESTAMP_SLOW_I   => ts_slow,
-    TIMESTAMP_FAST_O   => ts_fast
+    TIMESTAMP_O        => ts_fast,
+    TOGGLE_A           => toggle,
+    TSYNC_A            => tsync
   );
 
-
+  rst_or <= rst or tzero;
   
   rst_process : process
   begin
-    rst <= '1';
+    rst   <= '1';
+    tzero <= '0';
     wait for 20 ns;
     rst <= '0';
     wait until count=30;
-    rst <= '1';
+    tzero <= '1';
     wait for 20 ns;
-    rst <= '0';
-           
+    tzero <= '0';           
+    wait;
   end process;
 
   clk_process : process
