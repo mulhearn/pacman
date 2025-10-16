@@ -16,33 +16,26 @@ architecture behaviour of atc_registers_tb is
     port (
       CLK_I : in std_logic;
       RST_I : in std_logic;
-    
+
       S_REGBUS_RB_RUPDATE : in  std_logic;
-      S_REGBUS_RB_RADDR	: in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
-      S_REGBUS_RB_RDATA	: out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      S_REGBUS_RB_RADDR	  : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
+      S_REGBUS_RB_RDATA	  : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_RACK    : out std_logic;
       S_REGBUS_RB_WUPDATE : in  std_logic;
-      S_REGBUS_RB_WADDR	: in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
-      S_REGBUS_RB_WDATA	: in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      S_REGBUS_RB_WADDR	  : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
+      S_REGBUS_RB_WDATA	  : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_WACK    : out std_logic;
-
-      -- request update of configuration: (from CLK to UCLK)
-      UPDATE_CONFIGS_O    : out std_logic;  -- CDC
-      
-      -- request update of counts: (from UCLK to CLK)
-      UPDATE_COUNTS_O     : out std_logic;  -- CDC 
-      
-      -- poke stimuli, each with associated mask, handled expiditiously:
-      POKE_C_O            : out std_logic;  -- CDC
-      MASK_C_O            : out std_logic_vector(C_NUM_TILE-1 downto 0); -- CDC
-      POKE_D_O            : out std_logic;  -- CDC 
-      MASK_D_O            : out std_logic_vector(C_NUM_TILE-1 downto 0); -- CDC
-
-      -- The following configuration registers may be written at any time,
-      CONFIG_O            : out atc_config_t; 
-
+      CONFIG_REQ_O        : out std_logic;
+      COUNT_REQ_O         : out std_logic;
+      COUNT_CMD_O         : out std_logic_vector(C_BYTE_WIDTH-1 downto 0);
+      POKE_C_O            : out std_logic;
+      MASK_C_O            : out std_logic_vector(C_NUM_TILE-1 downto 0);
+      POKE_D_O            : out std_logic;
+      MASK_D_O            : out std_logic_vector(C_NUM_TILE-1 downto 0);
+      CONFIG_O            : out atc_config_t;
       STATUS_I            : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      TIMESTAMP_I         : in  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0)    
+      COUNT_I             : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      TIMESTAMP_I         : in  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0)
     );
   end component;
 
@@ -62,13 +55,14 @@ architecture behaviour of atc_registers_tb is
 
   signal show_output : std_logic := '0';
 
-  signal update_configs : std_logic;
-  signal update_counts  : std_logic;
+  signal cfg_req : std_logic;
+  signal cnt_req  : std_logic;
+  signal cnt_cmd        : std_logic_vector(C_BYTE_WIDTH-1 downto 0);
   signal poke_c         : std_logic;
   signal mask_c         : std_logic_vector(C_NUM_TILE-1 downto 0);
   signal poke_d         : std_logic;
   signal mask_d         : std_logic_vector(C_NUM_TILE-1 downto 0);
-  
+
 begin
   uut0: atc_registers port map (
     CLK_I               => clk,
@@ -81,13 +75,15 @@ begin
     S_REGBUS_RB_WADDR   => waddr,
     S_REGBUS_RB_WDATA   => wdata,
     S_REGBUS_RB_WACK    => wack,
-    UPDATE_CONFIGS_O    => update_configs,
-    UPDATE_COUNTS_O     => update_counts,
+    CONFIG_REQ_O        => cfg_req,
+    COUNT_REQ_O         => cnt_req,
+    COUNT_CMD_O         => cnt_cmd,
     POKE_C_O            => poke_c,
     MASK_C_O            => mask_c,
     POKE_D_O            => poke_d,
     MASK_D_O            => mask_d,
     STATUS_I            => x"1234ABCD",
+    COUNT_I             => x"00000002",
     TIMESTAMP_I         => x"AAAABBBBCCCCDDDD"
   );
 
@@ -107,7 +103,6 @@ begin
     clk <= '0';
     wait for 5 ns;
   end process;
-
 
   read_process : process
   begin
@@ -134,6 +129,12 @@ begin
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"E120";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"0000";
+    rupdate <= '0';
+    wait for 50 ns;
+    raddr   <= x"E204";
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"0000";
@@ -173,7 +174,7 @@ begin
     wupdate <= '1';
     wait for 10 ns;
     waddr   <= x"E200";
-    wdata   <= x"00000000";
+    wdata   <= x"000000AB";
     wupdate <= '1';
     wait for 10 ns;
     waddr   <= x"E0C0";
@@ -186,8 +187,7 @@ begin
     wait for 10 ns;
     waddr   <= x"0000";
     wdata   <= x"00000000";
-    wupdate <= '1';
-    
+    wupdate <= '0';
     wait;
   end process;
 
@@ -224,11 +224,13 @@ begin
       hwrite (l, wdata);
       write (l, String'(" wk:"));
       write (l, wack);
-      write (l, String'(" || ups: "));
-      write (l, update_configs);
-      write (l, update_counts);
+      write (l, String'(" || req: "));
+      write (l, cfg_req);
+      write (l, cnt_req);
       write (l, poke_c);
       write (l, poke_d);
+      write (l, String'(" 0x"));
+      hwrite(l, cnt_cmd);
       write (l, String'(" 0x"));
       hwrite(l, "00" & mask_c);
       write (l, String'(" 0x"));

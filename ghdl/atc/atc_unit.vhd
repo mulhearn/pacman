@@ -41,24 +41,57 @@ architecture behaviour of atc_unit is
       CLK_I : in std_logic;
       RST_I : in std_logic;
       S_REGBUS_RB_RUPDATE : in  std_logic;
-      S_REGBUS_RB_RADDR	: in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
-      S_REGBUS_RB_RDATA	: out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      S_REGBUS_RB_RADDR	  : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
+      S_REGBUS_RB_RDATA	  : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_RACK    : out std_logic;
       S_REGBUS_RB_WUPDATE : in  std_logic;
-      S_REGBUS_RB_WADDR	: in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
-      S_REGBUS_RB_WDATA	: in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      S_REGBUS_RB_WADDR	  : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
+      S_REGBUS_RB_WDATA	  : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_WACK    : out std_logic;
-      UPDATE_CONFIGS_O    : out std_logic;  -- CDC
-      UPDATE_COUNTS_O     : out std_logic;  -- CDC 
-      POKE_C_O            : out std_logic;  -- CDC
-      MASK_C_O            : out std_logic_vector(C_NUM_TILE-1 downto 0); -- CDC
-      POKE_D_O            : out std_logic;  -- CDC 
-      MASK_D_O            : out std_logic_vector(C_NUM_TILE-1 downto 0); -- CDC
-      CONFIG_O            : out atc_config_t; 
+      CONFIG_REQ_O        : out std_logic;
+      COUNT_REQ_O         : out std_logic;
+      COUNT_CMD_O         : out std_logic_vector(C_BYTE_WIDTH-1 downto 0);
+      POKE_C_O            : out std_logic;
+      MASK_C_O            : out std_logic_vector(C_NUM_TILE-1 downto 0);
+      POKE_D_O            : out std_logic;
+      MASK_D_O            : out std_logic_vector(C_NUM_TILE-1 downto 0);
+      CONFIG_O            : out atc_config_t;
       STATUS_I            : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      TIMESTAMP_I         : in  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0)    
+      COUNT_I             : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      TIMESTAMP_I         : in  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0)
+    );
+  end component;
+
+  component atc_bridge is
+    port (
+      CLK_A_I       : in  std_logic;
+      RST_A_I       : in  std_logic;
+      CONFIG_REQ_I  : in  std_logic;
+      CONFIG_I      : in  atc_config_t;
+      POKE_C_I      : in  std_logic;  -- CDC
+      MASK_C_I      : in  std_logic_vector(C_NUM_TILE-1 downto 0);
+      POKE_D_I      : in  std_logic;  -- CDC
+      MASK_D_I      : in  std_logic_vector(C_NUM_TILE-1 downto 0);
+      COUNT_REQ_I   : in  std_logic;
+      COUNT_CMD_I   : in  std_logic_vector(C_BYTE_WIDTH-1 downto 0);
+      COUNT_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      STATUS_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+
+      CLK_B_I       : in  std_logic;
+      RST_B_I       : in  std_logic;
+      CONFIG_O      : out atc_config_t;
+      POKE_C_O      : out std_logic;
+      MASK_C_O      : out std_logic_vector(C_NUM_TILE-1 downto 0);
+      POKE_D_O      : out std_logic;
+      MASK_D_O      : out std_logic_vector(C_NUM_TILE-1 downto 0);
+      COUNT_REQ_O   : out std_logic;
+      COUNT_CMD_O   : out std_logic_vector(C_BYTE_WIDTH-1 downto 0);
+      COUNT_I       : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
       );
   end component;
+
+
+
 
   signal clk : std_logic;
   signal rst : std_logic;
@@ -85,21 +118,22 @@ begin
   uut0: atc_registers port map (
     CLK_I               => clk,
     RST_I               => rst,
-    S_REGBUS_RB_RUPDATE =>     S_REGBUS_RB_RUPDATE,
-    S_REGBUS_RB_RADDR   =>     S_REGBUS_RB_RADDR,
-    S_REGBUS_RB_RDATA   =>     S_REGBUS_RB_RDATA,
-    S_REGBUS_RB_RACK    =>     S_REGBUS_RB_RACK,
-    S_REGBUS_RB_WUPDATE =>     S_REGBUS_RB_WUPDATE,
-    S_REGBUS_RB_WADDR   =>     S_REGBUS_RB_WADDR,
-    S_REGBUS_RB_WDATA   =>     S_REGBUS_RB_WDATA,
-    S_REGBUS_RB_WACK    =>     S_REGBUS_RB_WACK,
-    UPDATE_CONFIGS_O    => update_configs,
-    UPDATE_COUNTS_O     => update_counts,
+    S_REGBUS_RB_RUPDATE => S_REGBUS_RB_RUPDATE,
+    S_REGBUS_RB_RADDR   => S_REGBUS_RB_RADDR,
+    S_REGBUS_RB_RDATA   => S_REGBUS_RB_RDATA,
+    S_REGBUS_RB_RACK    => S_REGBUS_RB_RACK,
+    S_REGBUS_RB_WUPDATE => S_REGBUS_RB_WUPDATE,
+    S_REGBUS_RB_WADDR   => S_REGBUS_RB_WADDR,
+    S_REGBUS_RB_WDATA   => S_REGBUS_RB_WDATA,
+    S_REGBUS_RB_WACK    => S_REGBUS_RB_WACK,
+    CONFIG_REQ_O        => update_configs,
+    COUNT_REQ_O         => update_counts,
     POKE_C_O            => poke_c,
     MASK_C_O            => mask_c,
     POKE_D_O            => poke_d,
     MASK_D_O            => mask_d,
     STATUS_I            => x"1234ABCD",
+    COUNT_I             => x"0000000E",
     TIMESTAMP_I         => x"AAAABBBBCCCCDDDD"
   );
 

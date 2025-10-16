@@ -9,7 +9,7 @@ entity rising_edge_sync is
   -- Note that only values > 3 have any effect, as rising edge
   -- detection requires 3 clock-cycles minimum
   generic ( DEBOUNCE_CYCLES : integer := 4 );
-    
+
   port (
     --clock and active-high reset in receiver clock-domain
     CLK_I  : in  std_logic;
@@ -28,13 +28,13 @@ entity rising_edge_sync is
 end;
 
 architecture behavioral of rising_edge_sync is
-  signal clk    : std_logic; 
+  signal clk    : std_logic;
   signal rst    : std_logic;
 
   -- double flopping at clock domain crossing:
   signal signal_meta : std_logic; -- metastable
   signal signal_sync : std_logic; -- likely stable
-  
+
   attribute ASYNC_REG : string;
   attribute ASYNC_REG of signal_meta: signal is "TRUE";
   attribute ASYNC_REG of signal_sync: signal is "TRUE";
@@ -43,12 +43,12 @@ architecture behavioral of rising_edge_sync is
   signal signal_pipe : debounce_pipe_t(1 downto 0);
 
   signal pulse : std_logic := '0';
-    
+
 begin
   clk <= CLK_I;
   rst <= RST_I;
   UPDATE_O <= pulse;
-  
+
   -- double flop synchronization of update signal
   -- synchronize request into board domain
   signal_process : process(clk, rst)
@@ -85,7 +85,7 @@ begin
         timeout := timeout - 1;
       end if;
 
-      
+
     end if;
   end process;
 

@@ -6,78 +6,61 @@ use IEEE.std_logic_textio.all;  -- use -fsynopsys or --std=08
 use work.common.all;
 
 --  Defines a testbench (without any ports)
-entity poke_sync_tb is
-end poke_sync_tb;
+entity payload_sync_tb is
+end payload_sync_tb;
 
-architecture behaviour of poke_sync_tb is
+architecture behaviour of payload_sync_tb is
 
-  signal count    : integer := 0;
-  signal clk      : std_logic;
-  signal rst      : std_logic;
-  signal uclk     : std_logic;
+  signal count       : integer := 0;
+  signal clk         : std_logic;
+  signal rst         : std_logic;
+  signal uclk        : std_logic;
 
-  signal update      : std_logic := '0';
-  signal request     : std_logic;
   signal busy        : std_logic;
-  signal reply       : std_logic;
-  signal poke        : std_logic;
-  signal mask        : std_logic_vector(C_REG16_WIDTH-1 downto 0);
+  signal payload_src : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+  signal payload_dst : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
   signal show_output : std_logic := '0';
 
-  component update_request is
+  component payload_sync is
+    generic ( PAYLOAD_WIDTH : integer := C_RB_DATA_WIDTH );
     port (
-      CLK_I	 : in  std_logic;
-      RST_I	 : in  std_logic;
-      REQUEST_I  : in std_logic;
-      BUSY_O     : out std_logic;
-      REQUEST_O  : out std_logic;
-      REPLY_A    : in std_logic
-      );
-  end component;
-
-  component poke_sync is
-    generic ( PAYLOAD_WIDTH : integer := 16 );
-    port (
-      CLK_I	  : in  std_logic;
+      CLK_I       : in  std_logic;
       RST_I	  : in  std_logic;
-      POKE_O      : out std_logic;
+      BUSY_I	  : in  std_logic;
       PAYLOAD_O   : out std_logic_vector(PAYLOAD_WIDTH-1 downto 0);
-      REPLY_O     : out std_logic;
-      REQUEST_A   : in  std_logic;
       PAYLOAD_A   : in  std_logic_vector(PAYLOAD_WIDTH-1 downto 0)
     );
   end component;
 
 begin
-  dut0: update_request port map (
+  dut0: payload_sync port map (
     CLK_I      => clk,
     RST_I      => rst,
-    REQUEST_I  => update,
-    BUSY_O     => busy,
-    REQUEST_O  => request,
-    REPLY_A    => reply
-    );
-
-  poke0: poke_sync port map (
-    CLK_I      => uclk,
-    RST_I      => rst,
-    POKE_O     => poke,
-    PAYLOAD_O  => mask,
-    REPLY_O    => reply,
-    REQUEST_A  => request,
-    PAYLOAD_A  => x"03FF"
+    BUSY_I     => busy,
+    PAYLOAD_O  => payload_dst,
+    PAYLOAD_A  => payload_src
   );
 
   update_process : process
   begin
-    update <= '0';
-    wait for 40 ns;
-    update <= '1';
-    wait for 10 ns;
-    update <= '0';
+    busy <= '0';
+    wait for 20 ns;
+    busy <= '1';
+    wait for 80 ns;
+    payload_src <= x"1234ABCD";
+    wait for 120 ns;
+    busy <= '0';
+    wait for 20 ns;
+    busy <= '1';
+    wait for 60 ns;
+    payload_src <= x"AAAABBBB";
+    wait for 120 ns;
+    busy <= '0';
     wait;
   end process;
+
+
 
   rst_process : process
   begin
@@ -104,7 +87,6 @@ begin
     wait for 50 ns;
   end process;
 
-
   show_output_process : process
   begin
     show_output<='1';
@@ -124,16 +106,12 @@ begin
       write (l, count, left, 4);
       write (l, String'(" "));
       write (l, uclk);
-      --write (l, String'("clk: "));
-      --write (l, clk);
-      write (l, String'(" fast: update: "));
-      write (l, update);
       write (l, String'(" busy: "));
       write (l, busy);
-      write (l, String'(" slow: poke:"));
-      write (l, poke);
-      write (l, String'(" mask: "));
-      write (l, mask);
+      write (l, String'(" payload src: "));
+      hwrite (l, payload_src);
+      write (l, String'(" payload dst: "));
+      hwrite (l, payload_dst);
       if (rst = '1') then
         write (l, String'(" (RESET)"));
       end if;

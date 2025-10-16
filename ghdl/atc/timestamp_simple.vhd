@@ -21,7 +21,7 @@ architecture behavioral of timestamp_simple is
   signal counter   : unsigned(C_TIMESTAMP_WIDTH-1 downto 0) := (others => '0');
   signal toggle    : std_logic;
   signal tsync     : std_logic;
-  
+
 begin
   clk <= CLK_I;
   rst <= RST_I;
@@ -40,7 +40,7 @@ begin
       toggle  <= not toggle;
 
       counter <= counter + 1;
-      
+
     end if;
   end process;
 end;

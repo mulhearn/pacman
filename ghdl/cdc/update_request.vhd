@@ -27,11 +27,11 @@ architecture behavioral of update_request is
   signal rst        : std_logic;
   signal request    : std_logic;
   signal busy       : std_logic;
-  
+
   -- double flopping at clock domain crossing:
   signal reply_meta : std_logic; -- metastable
   signal reply_sync : std_logic; -- likely stable
-  signal reply_prev : std_logic; 
+  signal reply_prev : std_logic;
 
   attribute ASYNC_REG : string;
   attribute ASYNC_REG of reply_meta: signal is "TRUE";
@@ -51,13 +51,13 @@ begin
       reply_sync <= '0';
       reply_prev <= '0';
       busy       <= '0';
-      request    <= '0';      
+      request    <= '0';
     elsif (rising_edge(clk)) then
       reply_meta <= REPLY_A;
       reply_sync <= reply_meta;
       reply_prev <= reply_sync;
       busy       <= busy;
-      request    <= request;      
+      request    <= request;
       if (busy = '0') and (REQUEST_I = '1') then
         busy <= '1';
         request <= not request;

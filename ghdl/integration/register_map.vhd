@@ -37,10 +37,10 @@ package register_map is
   constant C_ADDR_ATC_STATUS          : integer := 16#000#; --read only
   constant C_ADDR_ATC_TIMESTAMP       : integer := 16#004#; --read only
 
-  constant C_ADDR_ATC_POKE_C          : integer := 16#0C0#; 
-  constant C_ADDR_ATC_POKE_D          : integer := 16#0D0#; 
-  
-  constant C_ADDR_ATC_UPDATE_CONFIGS  : integer := 16#100#;
+  constant C_ADDR_ATC_POKE_C          : integer := 16#0C0#;
+  constant C_ADDR_ATC_POKE_D          : integer := 16#0D0#;
+
+  constant C_ADDR_ATC_CONFIG_REQ      : integer := 16#100#;
   constant C_ADDR_ATC_CONFIG          : integer := 16#104#;
   constant C_ADDR_ATC_POLARITY        : integer := 16#108#;
   constant C_ADDR_ATC_LOGIC           : integer := 16#10C#;
@@ -51,12 +51,11 @@ package register_map is
   constant C_ADDR_ATC_DST_LOGIC_E     : integer := 16#120#;
   constant C_ADDR_ATC_DST_LOGIC_F     : integer := 16#124#;
 
-  constant C_ADDR_ATC_UPDATE_COUNTS   : integer := 16#200#; 
-  constant C_ADDR_ATC_COUNT_SELECT    : integer := 16#204#;
-  constant C_ADDR_ATC_COUNT           : integer := 16#208#; --read only
-  
-  
-  
+  constant C_ADDR_ATC_COUNT_REQ       : integer := 16#200#;
+  constant C_ADDR_ATC_COUNT           : integer := 16#204#; --read only
+
+
+
   --
   -- Registers with SCOPE=UART_TX
   --
@@ -79,7 +78,7 @@ package register_map is
   --
   -- Registers with SCOPE=UART_RX
   --
-  
+
   -- Per UART registers, with chan = 0x00-0x28, and broadcast chan=0x3B (if writable):
   constant C_ADDR_RX_UART_STATUS    : integer := 16#00#; -- Read Only
   constant C_ADDR_RX_UART_CONFIG    : integer := 16#04#;

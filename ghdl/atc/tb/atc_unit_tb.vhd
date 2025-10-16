@@ -57,7 +57,7 @@ architecture behaviour of atc_unit_tb is
   signal lemo_b   :  std_logic := '0';
 
   -- dut outputs
-  signal timestamp  : std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);  
+  signal timestamp  : std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
   signal atc_h      :  std_logic_vector(9 downto 0) := (others => '0');
   signal atc_g      :  std_logic_vector(9 downto 0) := (others => '0');
 

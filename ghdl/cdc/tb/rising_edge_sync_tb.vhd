@@ -24,7 +24,7 @@ architecture behaviour of rising_edge_sync_tb is
       );
   end component;
 
-  
+
   signal count    : integer := 0;
   signal clk      : std_logic;
   signal rst      : std_logic;
@@ -33,12 +33,12 @@ architecture behaviour of rising_edge_sync_tb is
   signal asig     : std_logic := '0';
   signal update   : std_logic := '0';
 
-  
+
   signal show_output : std_logic := '0';
-  
+
 
 begin
-  
+
   dut0: rising_edge_sync
     generic map(
       DEBOUNCE_CYCLES => 4
@@ -47,10 +47,10 @@ begin
       CLK_I  => uclk,
       RST_I  => rst,
       ASYNC_SIGNAL_I => asig,
-      POLARITY_I => '0',   
-      UPDATE_O => update  
+      POLARITY_I => '0',
+      UPDATE_O => update
     );
-  
+
   signal_process : process
   begin
     asig <= '0';
@@ -68,7 +68,7 @@ begin
     asig <= '0';
     wait;
   end process;
-  
+
   rst_process : process
   begin
     rst <= '1';

@@ -11,16 +11,16 @@ package common is
   constant C_UART_DATA_WIDTH     : integer  := 64;  --deprecate for C_UART64
   --deprecate for uart_reg16_array_t:
   type uart_small_array_t     is array (0 to 39) of std_logic_vector (15 downto 0);
-  
+
   -- maximum AXI-lite register size is 32-bits, but we provide smaller opitions:
   constant C_REG32_WIDTH         : integer  := 32;
   constant C_ADDR16_WIDTH        : integer  := 16;
   constant C_REG16_WIDTH         : integer  := 16;
   constant C_BYTE_WIDTH          : integer  := 8;
 
-  -- the UART data packet size from ASIC design is 64-bits: 
+  -- the UART data packet size from ASIC design is 64-bits:
   constant C_UART64              : integer  := 64;
-  
+
   -- maximum number of tile cards supported by firmware:
   constant C_NUM_TILE            : integer  := 10;
   -- maximum number of UART channels supported:
@@ -28,19 +28,19 @@ package common is
   -- maximum number of LEDSs supported:
   constant C_NUM_LED             : integer  := 2;
   -- number bits needed for UART channel selection:
-  constant C_UART_SELECT_WIDTH   : integer  := 6; 
-  
+  constant C_UART_SELECT_WIDTH   : integer  := 6;
+
   -- register bus data is 32 bits, address 16 bits.
   constant C_RB_ADDR_WIDTH       : integer  := C_ADDR16_WIDTH;
   constant C_RB_DATA_WIDTH       : integer  := C_REG32_WIDTH;
 
   --arrays of std_logic_vectors with array length the number of uart channels:
   type uart_reg_array_t       is array (0 to C_NUM_UART-1) of std_logic_vector (C_RB_DATA_WIDTH-1 downto 0);
-  type uart_reg16_array_t     is array (0 to C_NUM_UART-1) of std_logic_vector (C_REG16_WIDTH-1 downto 0);  
+  type uart_reg16_array_t     is array (0 to C_NUM_UART-1) of std_logic_vector (C_REG16_WIDTH-1 downto 0);
   type uart_data_array_t      is array (0 to C_NUM_UART-1) of std_logic_vector (C_UART_DATA_WIDTH-1 downto 0);
 
-  constant C_ATC_COUNT_SELECT_WIDTH : integer := 5; 
-   
+  constant C_ATC_COUNT_SELECT_WIDTH : integer := 5;
+
   -- TX unit:
   -- DMA stream width and number of beats
   constant C_TX_AXIS_WIDTH     : integer  := 64;

@@ -26,5 +26,5 @@ package atc_pkg is
     dst_poke_d  => (others => '0'),
     dst_logic_e => (others => '0'),
     dst_logic_f => (others => '0')
-  );  
+  );
 end package;

@@ -21,7 +21,7 @@ architecture behaviour of toggle_only_sync_tb is
   signal update_comb : std_logic;
 
   signal show_output : std_logic := '0';
-  
+
   component toggle_only_sync is
     port (
       CLK_I	             : in  std_logic;
@@ -47,12 +47,12 @@ begin
   begin
     toggle <= '0';
     wait for 60 ns;
-    toggle <= '1';    
+    toggle <= '1';
     wait for 220 ns;
     toggle <= '0';
     wait;
   end process;
-  
+
   rst_process : process
   begin
     rst <= '1';

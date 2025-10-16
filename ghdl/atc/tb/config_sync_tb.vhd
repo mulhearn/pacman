@@ -15,17 +15,17 @@ architecture behaviour of config_sync_tb is
   signal clk      : std_logic;
   signal rst      : std_logic;
   signal uclk     : std_logic;
-  
+
   signal update      : std_logic := '0';
   signal request     : std_logic;
   signal busy        : std_logic;
   signal reply       : std_logic;
-  
+
   signal show_output : std_logic := '0';
-  
+
   signal config      : atc_config_t;
   signal shadow      : atc_config_t;
-  
+
   component update_request is
     port (
       CLK_I	 : in  std_logic;
@@ -42,10 +42,10 @@ architecture behaviour of config_sync_tb is
       CLK_I	 : in  std_logic;
       RST_I	 : in  std_logic;
       CONFIG_A   : in  atc_config_t;
-      SHADOW_O   : out atc_config_t; 
+      SHADOW_O   : out atc_config_t;
       REPLY_O    : out std_logic;
       REQUEST_A  : in  std_logic
-    );  
+    );
   end component;
 
 begin
@@ -66,7 +66,7 @@ begin
     REPLY_O        => reply,
     REQUEST_A      => request
   );
-  
+
   update_process : process
   begin
     config.polarity <= x"CCCCDDDD";
@@ -75,7 +75,7 @@ begin
     update <= '1';
     wait for 10 ns;
     update <= '0';
-    wait for 300 ns;
+    wait for 500 ns;
     config.polarity <= x"33334444";
     wait for 10 ns;
     update <= '1';
@@ -83,7 +83,7 @@ begin
     update <= '0';
     wait;
   end process;
-  
+
   rst_process : process
   begin
     rst <= '1';
@@ -112,7 +112,7 @@ begin
   show_output_process : process
   begin
     show_output<='1';
-    wait until (count=75);
+    wait until (count=100);
     wait for 10 ns;
     show_output<='0';
     wait;

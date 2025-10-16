@@ -19,8 +19,8 @@ architecture behaviour of timestamp_tb is
   signal uclk     : std_logic;
 
   -- dut output:
-  signal ts_fast  : std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);  
-  signal ts_slow  : std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);  
+  signal ts_fast  : std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
+  signal ts_slow  : std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
   signal toggle   : std_logic;
   signal tsync    : std_logic;
 
@@ -64,7 +64,7 @@ begin
   );
 
   rst_or <= rst or tzero;
-  
+
   rst_process : process
   begin
     rst   <= '1';
@@ -74,7 +74,7 @@ begin
     wait until count=30;
     tzero <= '1';
     wait for 20 ns;
-    tzero <= '0';           
+    tzero <= '0';
     wait;
   end process;
 

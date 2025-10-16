@@ -24,7 +24,7 @@ architecture behaviour of update_tb is
   signal done        : std_logic;
 
   signal show_output : std_logic := '0';
-  
+
   component update_request is
     port (
       CLK_I	 : in  std_logic;
@@ -87,7 +87,7 @@ begin
     done <= '0';
     wait;
   end process;
-  
+
   rst_process : process
   begin
     rst <= '1';
@@ -138,7 +138,7 @@ begin
       write (l, String'(" fast: update: "));
       write (l, update_fast);
       write (l, String'(" busy: "));
-      write (l, busy);      
+      write (l, busy);
       write (l, String'(" slow: u:"));
       write (l, update_slow);
       write (l, String'(" comb: "));
