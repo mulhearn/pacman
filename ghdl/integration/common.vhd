@@ -4,6 +4,10 @@ use ieee.numeric_std.all;
 
 package common is
 
+  -- register bus data is 32 bits, address 16 bits.
+  constant C_RB_ADDR_WIDTH       : integer  := 16;
+  constant C_RB_DATA_WIDTH       : integer  := 32;
+  
   -- DEPRECATE:
   constant C_BYTE                : integer  := 8;   --deprecate for C_BYTE_WIDTH
   constant C_SMALL               : integer  := 16;  --deprecate for C_REG16
@@ -30,9 +34,6 @@ package common is
   -- number bits needed for UART channel selection:
   constant C_UART_SELECT_WIDTH   : integer  := 6;
 
-  -- register bus data is 32 bits, address 16 bits.
-  constant C_RB_ADDR_WIDTH       : integer  := C_ADDR16_WIDTH;
-  constant C_RB_DATA_WIDTH       : integer  := C_REG32_WIDTH;
 
   --arrays of std_logic_vectors with array length the number of uart channels:
   type uart_reg_array_t       is array (0 to C_NUM_UART-1) of std_logic_vector (C_RB_DATA_WIDTH-1 downto 0);
