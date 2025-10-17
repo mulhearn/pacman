@@ -7,7 +7,7 @@ package common is
   -- register bus data is 32 bits, address 16 bits.
   constant C_RB_ADDR_WIDTH       : integer  := 16;
   constant C_RB_DATA_WIDTH       : integer  := 32;
-  
+
   -- DEPRECATE:
   constant C_BYTE                : integer  := 8;   --deprecate for C_BYTE_WIDTH
   constant C_SMALL               : integer  := 16;  --deprecate for C_REG16
