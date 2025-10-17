@@ -21,8 +21,8 @@ architecture behaviour of poke_sync_tb is
   signal busy        : std_logic;
   signal reply       : std_logic;
   signal poke        : std_logic;
-  signal mask        : std_logic_vector(C_REG16_WIDTH-1 downto 0);
-
+  signal payload     : std_logic_vector(C_REG16_WIDTH-1 downto 0);
+  signal payload_req : std_logic_vector(C_REG16_WIDTH-1 downto 0);
   signal show_output : std_logic := '0';
 
   component update_request is
@@ -63,18 +63,21 @@ begin
     CLK_I      => uclk,
     RST_I      => rst,
     POKE_O     => poke,
-    PAYLOAD_O  => mask,
+    PAYLOAD_O  => payload,
     REPLY_O    => reply,
     REQUEST_A  => request,
-    PAYLOAD_A  => x"03FF"
+    PAYLOAD_A  => payload_req
   );
 
   update_process : process
   begin
+    payload_req <= x"0000";
     update <= '0';
     wait for 40 ns;
+    payload_req <= x"03FF";
     update <= '1';
     wait for 10 ns;
+    --payload_req <= x"0000";
     update <= '0';
     wait;
   end process;
@@ -132,8 +135,8 @@ begin
       write (l, busy);
       write (l, String'(" slow: poke:"));
       write (l, poke);
-      write (l, String'(" mask: "));
-      write (l, mask);
+      write (l, String'(" payload: "));
+      write (l, payload);
       if (rst = '1') then
         write (l, String'(" (RESET)"));
       end if;

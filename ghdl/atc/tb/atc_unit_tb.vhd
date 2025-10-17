@@ -82,7 +82,7 @@ begin
     H_O                 => atc_h
   );
 
-  rsst_process : process
+  rst_process : process
   begin
     rst <= '1';
     wait for 20 ns;
@@ -110,25 +110,27 @@ begin
   lemo_a_process : process
   begin
     lemo_a   <= '0';
-    wait for 10 ns;
+    wait for 200 ns;
     lemo_a   <= '1';
-    wait for 10 ns;
+    wait for 200 ns;
     lemo_a   <= '0';
-    wait for 50 ns;
+    wait for 200 ns;
   end process;
 
   lemo_b_process : process
   begin
+    lemo_b   <= '0';
+    wait for 200 ns;
     lemo_b   <= '1';
-    wait for 30 ns;
-    lemo_b  <= '0';
-    wait for 70 ns;
-    lemo_b   <= '1';
+    wait for 200 ns;
+    lemo_b   <= '0';
+    wait for 200 ns;
   end process;
+
   read_process : process
   begin
-    raddr   <= x"0000";
-    rupdate <= '0';
+    raddr   <= x"E204";
+    rupdate <= '1';
     wait;
   end process;
 
@@ -136,6 +138,50 @@ begin
   begin
     waddr   <= x"0000";
     wdata   <= x"00000000";
+    wupdate <= '0';
+    wait for 20 ns;
+    -- destination configuratin for LEMO A
+    waddr   <= x"E110";
+    wdata   <= x"03FF0011";
+    wupdate <= '1';
+    wait for 10 ns;
+    -- destination configuratin for LEMO B
+    waddr   <= x"E114";
+    wdata   <= x"00000000";
+    wupdate <= '1';
+    wait for 10 ns;
+    -- destination configuratin for POKE C
+    waddr   <= x"E118";
+    wdata   <= x"03FF0002";
+    wupdate <= '1';
+    wait for 10 ns;
+    -- destination configuratin for POKE D
+    waddr   <= x"E11C";
+    wdata   <= x"00000000";
+    wupdate <= '1';
+    wait for 10 ns;
+    -- request config update in detector clock domain:
+    waddr   <= x"E100";
+    wdata   <= x"00000000";
+    wupdate <= '1';
+    wait for 10 ns;
+    waddr   <= x"0000";
+    wdata   <= x"00000000";
+    wupdate <= '0';
+    wait for 500 ns;
+    waddr   <= x"E0C0";
+    wdata   <= x"0000000F";
+    wupdate <= '1';
+    wait for 10 ns;
+    waddr   <= x"0000";
+    wdata   <= x"00000000";
+    wupdate <= '0';
+    wait until (count=100);
+    waddr   <= x"E200";
+    wdata   <= x"00000050";
+    wupdate <= '1';
+
+
     wait;
   end process;
 

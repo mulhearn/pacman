@@ -72,5 +72,8 @@ run-testbenches: all
 	ghdl -r -fsynopsys atc_counter_tb --stop-time=5us
 
 run-dev: all
-	ghdl -r -fsynopsys atc_registers_tb --stop-time=500ns
+	ghdl -r -fsynopsys atc_unit_tb --stop-time=3500ns
+
+
+
 

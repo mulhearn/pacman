@@ -157,8 +157,8 @@ begin
       COUNT_REQ_O  <= '0';
       COUNT_CMD_O  <= (others => '0');
       POKE_C_O <= '0';
-      MASK_C_O <= (others => '0');
       POKE_D_O <= '0';
+      MASK_C_O <= (others => '0');
       MASK_D_O <= (others => '0');
 
       polarity     <= (others => '0');
@@ -174,11 +174,12 @@ begin
       wack <= '0';
       CONFIG_REQ_O <= '0';
       COUNT_REQ_O  <= '0';
-      COUNT_CMD_O <= (others => '0');
+      -- TODO:  make these registers to avoid CE
+      --COUNT_CMD_O <= (others => '0');
       POKE_C_O <= '0';
-      MASK_C_O <= (others => '0');
+      --MASK_C_O <= (others => '0');
       POKE_D_O <= '0';
-      MASK_D_O <= (others => '0');
+      --MASK_D_O <= (others => '0');
 
       if (wupdate='1') then
         scope := to_integer(unsigned(waddr(15 downto 12)));

@@ -38,5 +38,6 @@ run-testbenches: all
 	ghdl -r -fsynopsys payload_sync_tb --stop-time=1000ns
 
 run-dev: all
-	ghdl -r -fsynopsys payload_sync_tb --stop-time=1000ns
+	ghdl -r -fsynopsys poke_sync_tb --stop-time=1000ns
+
 

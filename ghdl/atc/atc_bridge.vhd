@@ -25,6 +25,8 @@ entity atc_bridge is
 
     STATUS_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
+    TIMESTAMP_O   : out std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
+
     -- Interface to clock domain B:  (asic_clk)
     CLK_B_I       : in  std_logic;
     RST_B_I       : in  std_logic;
@@ -38,7 +40,10 @@ entity atc_bridge is
     POKE_C_O      : out std_logic;
     MASK_C_O      : out std_logic_vector(C_NUM_TILE-1 downto 0);
     POKE_D_O      : out std_logic;
-    MASK_D_O      : out std_logic_vector(C_NUM_TILE-1 downto 0)
+    MASK_D_O      : out std_logic_vector(C_NUM_TILE-1 downto 0);
+
+    TIMESTAMP_TOGGLE_I : in std_logic;
+    TIMESTAMP_TSYNC_I  : in std_logic
   );
 end atc_bridge;
 
@@ -113,12 +118,29 @@ architecture behaviour of atc_bridge is
     );
   end component;
 
+  component timestamp_sync is
+    port (
+      CLK_I	        : in  std_logic;
+      RST_I	        : in  std_logic;
+      TIMESTAMP_O         : out std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
+      TOGGLE_A            : in std_logic;
+      TSYNC_A             : in std_logic
+      );
+  end component;
+
+
+
 begin
   clk_a <= CLK_A_I;
   rst_a <= RST_A_I;
 
   clk_b <= CLK_B_I;
   rst_b <= RST_B_I;
+
+  TIMESTAMP_O <= (others => '0');
+
+  --MASK_C_O <= (others => '1');
+  --MASK_D_O <= (others => '1');
 
   cfgreq0: update_request port map (
     CLK_I          => clk_a,
@@ -213,6 +235,14 @@ begin
     BUSY_I     => cnt_busy,
     PAYLOAD_O  => COUNT_O,
     PAYLOAD_A  => COUNT_I
+  );
+
+  dut2: timestamp_sync port map (
+    CLK_I              => clk_a,
+    RST_I              => rst_a,
+    TIMESTAMP_O        => TIMESTAMP_O,
+    TOGGLE_A           => TIMESTAMP_TOGGLE_I,
+    TSYNC_A            => TIMESTAMP_TSYNC_I
   );
 
   -- status register:

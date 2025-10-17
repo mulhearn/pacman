@@ -37,7 +37,7 @@ architecture behaviour of atc_mux_tb is
     DST_LOGIC_F_I  : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     G_O            : out std_logic_vector(9 downto 0) := (others => '0');
     H_O            : out std_logic_vector(9 downto 0) := (others => '0');
-    TS_O           : out std_logic
+    T_O            : out std_logic
   );
   end component;
 
@@ -56,7 +56,7 @@ architecture behaviour of atc_mux_tb is
   -- mux outputs:
   signal   h   :  std_logic_vector(9 downto 0) := (others => '0');
   signal   g   :  std_logic_vector(9 downto 0) := (others => '0');
-  signal   ts  :  std_logic;
+  signal   t  :  std_logic;
 
 
 
@@ -80,7 +80,7 @@ begin
     DST_LOGIC_F_I => x"00FF0404",
     G_O           => g,
     H_O           => h,
-    TS_O          => ts
+    T_O           => t
   );
 
   aclk_process : process
@@ -181,8 +181,8 @@ begin
 
       write  (l, String'(" output_h: "));
       write  (l, h);
-      write  (l, String'(" output_ts: "));
-      write  (l, ts);
+      write  (l, String'(" output_t: "));
+      write  (l, t);
 
       if (rst = '1') then
         write (l, String'(" (RESET)"));
