@@ -12,124 +12,154 @@
 #include "hw_access.h"
 #include "global.h"
 
-#define C_SCOPE_TIMING 0xE000
+#define C_SCOPE_ATC 0xE000
 
-#define C_ADDR_TIMING_STATUS          0x000
-#define C_ADDR_TIMING_STAMP           0x004
-#define C_ADDR_TIMING_POKE_C          0x010
-#define C_ADDR_TIMING_POKE_D          0x014
-#define C_ADDR_TIMING_START_COUNTS    0x0B0
-#define C_ADDR_TIMING_STOP_COUNTS     0x0B4
-#define C_ADDR_TIMING_RESET_COUNTS    0x0B8
 
-#define C_ADDR_TIMING_COUNT_LEMO_A_F  0x220
-#define C_ADDR_TIMING_COUNT_LEMO_B_F  0x224
-#define C_ADDR_TIMING_COUNT_LEMO_A_S  0x230
-#define C_ADDR_TIMING_COUNT_LEMO_B_S  0x234
-#define C_ADDR_TIMING_COUNT_POKE_C_S  0x238
-#define C_ADDR_TIMING_COUNT_POKE_D_S  0x23C
-#define C_ADDR_TIMING_COUNT_TS        0x24
-#define C_ADDR_TIMING_COUNT_G_FIRST   0x250
-#define C_ADDR_TIMING_COUNT_H_FIRST   0x280
+#define C_ADDR_ATC_STATUS          0x000 //read only
+#define C_ADDR_ATC_TIMESTAMP       0x004 //read only
 
-#define C_ADDR_TIMING_CONFIG_POLARITY 0x440
-#define C_ADDR_TIMING_CONFIG_TS       0x444
-#define C_ADDR_TIMING_CONFIG_G_FIRST  0x450
-#define C_ADDR_TIMING_CONFIG_H_FIRST  0x480
+#define C_ADDR_ATC_POKE_C          0x0C0
+#define C_ADDR_ATC_POKE_D          0x0D0
 
-void read_timing_registers(){
-  const unsigned BASE = AXIL_REGISTERS_BASEADDR+C_SCOPE_TIMING;
+#define C_ADDR_ATC_CONFIG_REQ      0x100
+#define C_ADDR_ATC_POLARITY        0x108
+#define C_ADDR_ATC_LOGIC           0x10C
+#define C_ADDR_ATC_DST_LEMO_A      0x110
+#define C_ADDR_ATC_DST_LEMO_B      0x114
+#define C_ADDR_ATC_DST_POKE_C      0x118
+#define C_ADDR_ATC_DST_POKE_D      0x11C
+#define C_ADDR_ATC_DST_LOGIC_E     0x120
+#define C_ADDR_ATC_DST_LOGIC_F     0x124
 
-  xil_printf("timing status---------------0x%x \r\n", Xil_In32(BASE+C_ADDR_TIMING_STATUS));
-  xil_printf("timestamp-------------------0x%x \r\n", Xil_In32(BASE+C_ADDR_TIMING_STAMP));
-  xil_printf("LEMO A count (fast)---------0x%x \r\n", Xil_In32(BASE+C_ADDR_TIMING_COUNT_LEMO_A_F));
-  xil_printf("LEMO B_count (fast)---------0x%x \r\n", Xil_In32(BASE+C_ADDR_TIMING_COUNT_LEMO_B_F));
-  xil_printf("LEMO A count (slow)---------0x%x \r\n", Xil_In32(BASE+C_ADDR_TIMING_COUNT_LEMO_A_S));
-  xil_printf("LEMO B count (slow)---------0x%x \r\n", Xil_In32(BASE+C_ADDR_TIMING_COUNT_LEMO_B_S));
-  xil_printf("poke C count----------------0x%x \r\n", Xil_In32(BASE+C_ADDR_TIMING_COUNT_POKE_C_S));
-  xil_printf("poke D count----------------0x%x \r\n", Xil_In32(BASE+C_ADDR_TIMING_COUNT_POKE_D_S));
-  xil_printf("TS count--------------------0x%x \r\n", Xil_In32(BASE+C_ADDR_TIMING_COUNT_TS));
-  for (int i=0; i<10; i++){
-    xil_printf("G count (TILE %d)----------0x%x \r\n", i,Xil_In32(BASE+C_ADDR_TIMING_COUNT_G_FIRST+4*i));
-    xil_printf("H count (TILE %d)----------0x%x \r\n", i,Xil_In32(BASE+C_ADDR_TIMING_COUNT_H_FIRST+4*i));
-  }
+#define C_ADDR_ATC_COUNT_REQ       0x200
+#define C_ADDR_ATC_COUNT           0x204 //read only
 
-  xil_printf("INPUT_POLARITY_CFG----------0x%x \r\n", Xil_In32(BASE+C_ADDR_TIMING_CONFIG_POLARITY  ));
-  xil_printf("TS_OUT_CFG------------------0x%x \r\n", Xil_In32(BASE+C_ADDR_TIMING_CONFIG_TS ));
-  for (int i=0; i<10; i++){
-    xil_printf("G_OUT_CFG_%u-----------0x%x \r\n", i,Xil_In32(BASE+C_ADDR_TIMING_CONFIG_G_FIRST+4*i));
-    xil_printf("H_OUT_CFG_%u-----------0x%x \r\n", i,Xil_In32(BASE+C_ADDR_TIMING_CONFIG_H_FIRST+4*i));
-  }
+void read_atc_registers(){
+  const unsigned BASE = AXIL_REGISTERS_BASEADDR+C_SCOPE_ATC;
+
+  xil_printf("timing status---------------0x%x \r\n", Xil_In32(BASE+C_ADDR_ATC_STATUS));
+  xil_printf("timestamp-------------------0x%x \r\n", Xil_In32(BASE+C_ADDR_ATC_TIMESTAMP));
+  xil_printf("polarity--------------------0x%x \r\n", Xil_In32(BASE+C_ADDR_ATC_POLARITY));
+  xil_printf("destination LEMO A----------0x%x \r\n", Xil_In32(BASE+C_ADDR_ATC_DST_LEMO_A));
+  xil_printf("destination LEMO B----------0x%x \r\n", Xil_In32(BASE+C_ADDR_ATC_DST_LEMO_B));
+  xil_printf("destination poke C----------0x%x \r\n", Xil_In32(BASE+C_ADDR_ATC_DST_POKE_C));
+  xil_printf("destination poke D----------0x%x \r\n", Xil_In32(BASE+C_ADDR_ATC_DST_POKE_D));
+  xil_printf("destination logic E---------0x%x \r\n", Xil_In32(BASE+C_ADDR_ATC_DST_LOGIC_E));
+  xil_printf("destination logic F---------0x%x \r\n", Xil_In32(BASE+C_ADDR_ATC_DST_LOGIC_F));
 }
 
-void toggle_timing_counts(){
-  const unsigned BASE = AXIL_REGISTERS_BASEADDR+C_SCOPE_TIMING;
-  static int mode = 0;
-  mode = (mode + 1) % 2;
-  if (mode == 0) {
-    xil_printf("stopping counts \r\n");
-    Xil_Out32(BASE+C_ADDR_TIMING_STOP_COUNTS,  0x0);
-  } else {
-    xil_printf("reseting and starting counts \r\n");
-    Xil_Out32(BASE+C_ADDR_TIMING_STOP_COUNTS,  0x0);
-    Xil_Out32(BASE+C_ADDR_TIMING_RESET_COUNTS, 0x0);
-    Xil_Out32(BASE+C_ADDR_TIMING_START_COUNTS, 0x0);
-  }
+
+#define C_ATC_BUSY_WAIT 10
+int wait_atc_busy(int timeout){
+  const unsigned BASE = AXIL_REGISTERS_BASEADDR+C_SCOPE_ATC;
+  while (timeout && ( Xil_In32(BASE+C_ADDR_ATC_STATUS) & 0xF)){ usleep(1); timeout--; }
+  return timeout;
 }
 
-void toggle_timing_config(){
-  const unsigned BASE = AXIL_REGISTERS_BASEADDR+C_SCOPE_TIMING;
+
+
+void read_atc_counts(){
+  const unsigned BASE = AXIL_REGISTERS_BASEADDR+C_SCOPE_ATC;
+  unsigned count = 0;
+
+  wait_atc_busy(C_ATC_BUSY_WAIT);
+
+  Xil_Out32(BASE+C_ADDR_ATC_COUNT_REQ, 0b01110000);
+  wait_atc_busy(C_ATC_BUSY_WAIT);
+  count = Xil_In32(BASE+C_ADDR_ATC_COUNT);
+  xil_printf("LEMO A----------------------%4d (0x%x) \r\n", count, count);
+
+  Xil_Out32(BASE+C_ADDR_ATC_COUNT_REQ, 0b01110001);
+  wait_atc_busy(C_ATC_BUSY_WAIT);
+  count = Xil_In32(BASE+C_ADDR_ATC_COUNT);
+  xil_printf("LEMO B----------------------%4d (0x%x) \r\n", count, count);
+
+  Xil_Out32(BASE+C_ADDR_ATC_COUNT_REQ, 0b01110010);
+  wait_atc_busy(C_ATC_BUSY_WAIT);
+  count = Xil_In32(BASE+C_ADDR_ATC_COUNT);
+  xil_printf("POKE C----------------------%4d (0x%x) \r\n", count, count);
+
+  Xil_Out32(BASE+C_ADDR_ATC_COUNT_REQ, 0b01110011);
+  wait_atc_busy(C_ATC_BUSY_WAIT);
+  count = Xil_In32(BASE+C_ADDR_ATC_COUNT);
+  xil_printf("POKE D----------------------%4d (0x%x) \r\n", count, count);
+
+  for (int i=0; i<10; i++){
+    Xil_Out32(BASE+C_ADDR_ATC_COUNT_REQ, 0b01010000 + i);
+    wait_atc_busy(C_ATC_BUSY_WAIT);
+    count = Xil_In32(BASE+C_ADDR_ATC_COUNT);
+    xil_printf("OUTPUT G(%d)-----------------%4d (0x%x) \r\n", i, count, count);
+  }
+
+  for (int i=0; i<10; i++){
+    Xil_Out32(BASE+C_ADDR_ATC_COUNT_REQ, 0b01100000 + i);
+    wait_atc_busy(C_ATC_BUSY_WAIT);
+    count = Xil_In32(BASE+C_ADDR_ATC_COUNT);
+    xil_printf("OUTPUT H(%d)-----------------%4d (0x%x) \r\n", i, count, count);
+  }
+
+}
+
+void toggle_atc_destinations(){
+  const unsigned BASE = AXIL_REGISTERS_BASEADDR+C_SCOPE_ATC;
 
   static int mode = 0;
   mode = (mode + 1) % 3;
   if (mode == 0) {
-    xil_printf("clearing timing config ... \r\n");
-
-    for (int i=0; i<10; i++){
-      unsigned config_g = 0x00000000;
-      unsigned config_h = 0x00000000;
-      Xil_Out32(BASE + C_ADDR_TIMING_CONFIG_G_FIRST+4*i, config_g);
-      Xil_Out32(BASE + C_ADDR_TIMING_CONFIG_H_FIRST+4*i, config_h);
-    }
-    Xil_Out32(BASE + C_ADDR_TIMING_CONFIG_POLARITY, 0x00000000);
-    Xil_Out32(BASE + C_ADDR_TIMING_CONFIG_TS,       0x00000010);
+    xil_printf("INFO:  setting all destinations to zero (no output) \r\n");
+    Xil_Out32(BASE+C_ADDR_ATC_DST_LEMO_A,  0x0);
+    Xil_Out32(BASE+C_ADDR_ATC_DST_LEMO_B,  0x0);
+    Xil_Out32(BASE+C_ADDR_ATC_DST_POKE_C,  0x0);
+    Xil_Out32(BASE+C_ADDR_ATC_DST_POKE_D,  0x0);
+    Xil_Out32(BASE+C_ADDR_ATC_DST_LOGIC_E, 0x0);
+    Xil_Out32(BASE+C_ADDR_ATC_DST_LOGIC_F, 0x0);
+    wait_atc_busy(C_ATC_BUSY_WAIT);
+    Xil_Out32(BASE+C_ADDR_ATC_CONFIG_REQ, 0x0);
+    wait_atc_busy(C_ATC_BUSY_WAIT);
   } else if (mode == 1) {
-    xil_printf("configure timing for active low on POKE C \r\n");
-    for (int i=0; i<10; i++){
-      unsigned config_g = (0x0F<<8) | 0x14;
-      unsigned config_h = (0x1F<<8) | 0x14;
-      Xil_Out32(BASE + C_ADDR_TIMING_CONFIG_G_FIRST+4*i, config_g);
-      Xil_Out32(BASE + C_ADDR_TIMING_CONFIG_H_FIRST+4*i, config_h);
-    }
-    Xil_Out32(BASE + C_ADDR_TIMING_CONFIG_POLARITY, 0x00000000);
-    Xil_Out32(BASE + C_ADDR_TIMING_CONFIG_TS,       0x00000010);
+    xil_printf("configure timing for POKE C -> G POKE D -> H \r\n");
+    Xil_Out32(BASE+C_ADDR_ATC_DST_LEMO_A,  0x0);
+    Xil_Out32(BASE+C_ADDR_ATC_DST_LEMO_B,  0x0);
+    Xil_Out32(BASE+C_ADDR_ATC_DST_POKE_C,  0x03FF0001);
+    Xil_Out32(BASE+C_ADDR_ATC_DST_POKE_D,  0x03FF0002);
+    Xil_Out32(BASE+C_ADDR_ATC_DST_LOGIC_E, 0x0);
+    Xil_Out32(BASE+C_ADDR_ATC_DST_LOGIC_F, 0x0);
+    wait_atc_busy(C_ATC_BUSY_WAIT);
+    Xil_Out32(BASE+C_ADDR_ATC_CONFIG_REQ, 0x0);
+    wait_atc_busy(C_ATC_BUSY_WAIT);
   } else {
-
-    xil_printf("configure timing for active high on POKE C \r\n");
-
-    for (int i=0; i<10; i++){
-      unsigned config_g = (0x0F<<8) | 0x04;
-      unsigned config_h = (0x1F<<8) | 0x04;
-      Xil_Out32(BASE + C_ADDR_TIMING_CONFIG_G_FIRST+4*i, config_g);
-      Xil_Out32(BASE + C_ADDR_TIMING_CONFIG_H_FIRST+4*i, config_h);
-    }
-    Xil_Out32(BASE + C_ADDR_TIMING_CONFIG_POLARITY, 0x00000000);
-    Xil_Out32(BASE + C_ADDR_TIMING_CONFIG_TS,       0x00000010);
+    xil_printf("configure timing for LEMO A -> G LEMO B -> H \r\n");
+    Xil_Out32(BASE+C_ADDR_ATC_DST_LEMO_A,  0x03FF0001);
+    Xil_Out32(BASE+C_ADDR_ATC_DST_LEMO_B,  0x03FF0002);
+    Xil_Out32(BASE+C_ADDR_ATC_DST_POKE_C,  0x0);
+    Xil_Out32(BASE+C_ADDR_ATC_DST_POKE_D,  0x0);
+    Xil_Out32(BASE+C_ADDR_ATC_DST_LOGIC_E, 0x0);
+    Xil_Out32(BASE+C_ADDR_ATC_DST_LOGIC_F, 0x0);
+    wait_atc_busy(C_ATC_BUSY_WAIT);
+    Xil_Out32(BASE+C_ADDR_ATC_CONFIG_REQ, 0x0);
+    wait_atc_busy(C_ATC_BUSY_WAIT);
   }
 }
 
-void poke_timing(){
-  const unsigned BASE = AXIL_REGISTERS_BASEADDR+C_SCOPE_TIMING;
-  Xil_Out32(BASE+C_ADDR_TIMING_POKE_C,0x0);
-  Xil_Out32(BASE+C_ADDR_TIMING_POKE_D,0x0);
+void send_poke_c(){
+  const unsigned BASE = AXIL_REGISTERS_BASEADDR+C_SCOPE_ATC;
+  wait_atc_busy(C_ATC_BUSY_WAIT);
+  Xil_Out32(BASE+C_ADDR_ATC_POKE_C,0x3FF);
+}
+
+void send_poke_d(){
+  const unsigned BASE = AXIL_REGISTERS_BASEADDR+C_SCOPE_ATC;
+  wait_atc_busy(C_ATC_BUSY_WAIT);
+  Xil_Out32(BASE+C_ADDR_ATC_POKE_D,0x3FF);
 }
 
 void timing_menu(){
-  xil_printf("Timing Unit menu:  \r\n");
+  xil_printf("ASIC timing and control (ATC) signal menu:  \r\n");
   while(1){
     xil_printf("choose an option:\r\n");
     xil_printf("(0) Exit timing menu\r\n");
-    xil_printf("(1) read timing registers (2) toggle counts (3) toggle ATC config (4) poke ATC \r\n");
+    xil_printf("(1) read ATC registers (2) read ATC counts (3) toggle ATC destinations \r\n");
+    xil_printf("(4) poke C (5) poke D \r\n");
 
     unsigned char c=inbyte();
     xil_printf("pressed:  %c\n\r", c);
@@ -137,15 +167,19 @@ void timing_menu(){
     case '0':
       return;
     case '1':
-      read_timing_registers();
+      read_atc_registers();
       break;
     case '2':
-      toggle_timing_counts();
+      read_atc_counts();
       break;
     case '3':
-      toggle_timing_config();
+      toggle_atc_destinations();
+      break;
     case '4':
-      poke_timing();
+      send_poke_c();
+      break;
+    case '5':
+      send_poke_d();
       break;
     default:
       xil_printf("invalid selection...\n\r");
