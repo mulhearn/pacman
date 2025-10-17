@@ -15,7 +15,7 @@
 #include "gpiops.h"
 #include "iic.h"
 #include "rxtx.h"
-#include "timing.h"
+#include "atc.h"
 #include "adc.h"
 
 #define EMAC_DEVICE_ID      XPAR_XEMACPS_0_DEVICE_ID
@@ -140,7 +140,7 @@ void rxtx_menu(){
     printf("(t) reset TX DMA (u) TX DMA status (v) reset RX DMA (w) RX DMA status (x) long DMA status \r\n");
     printf("(y) benchmark TX (z) benchmark RX/TX loopback \r\n");
     unsigned char c=inbyte();
-    printf("pressed:  %c\n\r", c);
+    printf("pressed:  %c\r\n", c);
     switch(c){
     case '0':
       return;
@@ -229,15 +229,52 @@ void rxtx_menu(){
       benchmark_rxtx_loopback();
       break;
     default:
-      printf("invalid selection...\n\r");
+      printf("invalid selection...\r\n");
     }
   }
 }
 
+void atc_menu(){
+  printf("ASIC timing and control (ATC) signal menu:  \r\n");
+  while(1){
+    printf("choose an option:\r\n");
+    printf("(0) Exit timing menu\r\n");
+    printf("(1) read ATC registers (2) read ATC counts (3) toggle ATC destinations \r\n");
+    printf("(4) poke C (5) poke D \r\n");
+
+    unsigned char c=inbyte();
+    printf("pressed:  %c\r\n", c);
+    switch(c){
+    case '0':
+      return;
+    case '1':
+      read_atc_registers();
+      break;
+    case '2':
+      read_atc_counts();
+      break;
+    case '3':
+      toggle_atc_destinations();
+      break;
+    case '4':
+      send_poke_c();
+      break;
+    case '5':
+      send_poke_d();
+      break;
+    default:
+      printf("invalid selection...\r\n");
+    }
+  }
+}
+
+
+
+
 int main(){
-  xil_printf("Menu-Driver Demonstration Driver For PACMAN\r\n");
-  xil_printf("Sanity number:  2\r\n");
-  xil_printf("Random Max:  0x%x Random Number:  0x%x \r\n", RAND_MAX, rand());
+  printf("Menu-Driver Demonstration Driver For PACMAN\r\n");
+  printf("Sanity number:  2\r\n");
+  printf("Random Max:  0x%x Random Number:  0x%x \r\n", RAND_MAX, rand());
 
   int status = 0;
   status |= init_gpiops();
@@ -245,17 +282,17 @@ int main(){
   mdio_init();
   init_rxtx();
   if (status != XST_SUCCESS) {
-    xil_printf("Hardware initialization has FAILED.\r\n");
+    printf("Hardware initialization has FAILED.\r\n");
     return 0;
   }
 
   while(1){
-    xil_printf("choose an option:\r\n");
-    xil_printf("(1) blink LEDs (2) read global status (3) toggle scratch (4) toggle enables (5) toggle dcache \r\n");
-    xil_printf("(6) read MAC From CPLD (7) toggle CPLD config \r\n");
-    xil_printf("(a) I2C menu (b) RX/TX menu (c) timing menu (d) ADC menu\r\n");
+    printf("choose an option:\r\n");
+    printf("(1) blink LEDs (2) read global status (3) toggle scratch (4) toggle enables (5) toggle dcache \r\n");
+    printf("(6) read MAC From CPLD (7) toggle CPLD config \r\n");
+    printf("(a) I2C menu (b) RX/TX menu (c) ATC menu (d) ADC menu\r\n");
     unsigned char c=inbyte();
-    xil_printf("pressed:  %c\n\r", c);
+    printf("pressed:  %c\r\n", c);
     switch(c){
     case '1':
       blink_leds();
@@ -285,14 +322,15 @@ int main(){
       rxtx_menu();
       break;
     case 'c':
-      timing_menu();
+      atc_menu();
       break;
     case 'd':
       adc_menu();
       break;
     default:
-      xil_printf("invalid selection...\n\r");
+      printf("invalid selection...\r\n");
     }
   }
   return 0;
 }
+

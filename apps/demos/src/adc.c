@@ -11,7 +11,6 @@
 #include "hw_access.h"
 #include "global.h"
 #include "gpiops.h"
-#include "timing.h"
 #include "adc.h"
 
 void toggle_adc_sleep(){
