@@ -213,7 +213,7 @@ begin
   G_O     <= det_g;
   H_O     <= det_h;
 
-  TIMESTAMP_O <= (others => '0');
+  TIMESTAMP_O <= sys_timestamp;
 
   atcreg0: atc_registers port map (
     CLK_I               => sys_clk,

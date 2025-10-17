@@ -137,11 +137,6 @@ begin
   clk_b <= CLK_B_I;
   rst_b <= RST_B_I;
 
-  TIMESTAMP_O <= (others => '0');
-
-  --MASK_C_O <= (others => '1');
-  --MASK_D_O <= (others => '1');
-
   cfgreq0: update_request port map (
     CLK_I          => clk_a,
     RST_I          => rst_a,
