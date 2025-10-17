@@ -20,7 +20,13 @@ static unsigned G_TX_COUNTER = 0;
 // 40 uarts x 64 bits => 20 128 bit word plus 1 128 bit header => 21*4*4 = 336 bytes (0x150)
 #define TX_BUF_BYTES 0x150
 
-//#define RX_BUF_BYTES 0x400  // Enough for single cycles, max (40 uarts + header + 3 T/S/HB) * 16 bytes = 0x2c0 bytes
+
+// Buffer sizes:
+// 1 single UART        (1+1)*24    =  48  = 0x30   <-- size MMMM=0x0001
+// 40 UART              (40+1)*24   = 984  = 0x3D8  <-- typical test pattern size
+// 40 UART + 3 Extra    (40+3+1)*24 = 1056 = 0x420  <-- max for CCCC=0x0001
+//#define RX_BUF_BYTES 0x800
+// Enough for single cycles, max (40 uarts + header + 3 T/S/HB) * 16 bytes = 0x2c0 bytes
 // Each uart rx takes 10 cycles, so for 10 cycles, the maximum buffer size is:
 //    (40 + 1 + 10*3)*16 = 0x470 (1136) bytes
 // So the buffer size below is enough for more than 140 cycles (0x8C) which you should see in settings
@@ -28,7 +34,6 @@ static unsigned G_TX_COUNTER = 0;
 //    (3*40 + 1 + 30*3)*24 = 5064 (0x13c8)
 // and the buffer size below is enough for 32 (0x20)  cycles (about 1/4 of 0x8C)
 // More directly, that is large enough for 682 words (0x2aa)
-
 #define RX_BUF_BYTES 0x4000
 
 #define TX_BUF_WORDS TX_BUF_BYTES/4
@@ -306,9 +311,9 @@ void read_rx_status(void){
 
 void read_rx_look(void){
   for (int i=0; i<40; i++){
-    unsigned cshift = (i<<8);
-    unsigned a = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_UART_LOOK_A);
-    unsigned b = axil_read_register(SCOPE_RX+cshift+C_ADDR_RX_UART_LOOK_B);
+    axil_write_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_LOOK_SELECT, i);
+    unsigned a = axil_read_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_LOOK_UA);
+    unsigned b = axil_read_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_LOOK_UB);
     printf("Channel %2d Look:  0x%08x %08x \r\n", i, b, a);
   }
 }

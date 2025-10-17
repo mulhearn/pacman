@@ -147,96 +147,120 @@ void record_iv_curves(){
 }
 
 
-// *** TIMING UNIT ***
+// *** ATC UNIT ***
 
-
-
-
-void read_timing_registers(){
-  printf("TIMING REGISTERS:\n");
-  printf("timing status-------------0x%x \n", axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_STATUS));
-  printf("timestamp-----------------0x%x \n", axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_STAMP));
-  printf("config polarity-----------0x%x \n", axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_CONFIG_POLARITY));
-  printf("config timestamp sync-----0x%x \n", axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_CONFIG_TS));
-  for (int i=0; i<10; i++)
-    printf("config tile %2d ATC G---0x%x \n", i+1, axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_CONFIG_G_FIRST+4*i));
-  for (int i=0; i<10; i++)
-    printf("config tile %2d ATC H---0x%x \n", i+1, axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_CONFIG_H_FIRST+4*i));
+void read_atc_registers(){
+  printf("timing status---------------0x%x \r\n", axil_read_register(C_SCOPE_ATC + C_ADDR_ATC_STATUS));
+  printf("timestamp-------------------0x%x \r\n", axil_read_register(C_SCOPE_ATC + C_ADDR_ATC_TIMESTAMP));
+  printf("polarity--------------------0x%x \r\n", axil_read_register(C_SCOPE_ATC + C_ADDR_ATC_POLARITY));
+  printf("destination LEMO A----------0x%x \r\n", axil_read_register(C_SCOPE_ATC + C_ADDR_ATC_DST_LEMO_A));
+  printf("destination LEMO B----------0x%x \r\n", axil_read_register(C_SCOPE_ATC + C_ADDR_ATC_DST_LEMO_B));
+  printf("destination poke C----------0x%x \r\n", axil_read_register(C_SCOPE_ATC + C_ADDR_ATC_DST_POKE_C));
+  printf("destination poke D----------0x%x \r\n", axil_read_register(C_SCOPE_ATC + C_ADDR_ATC_DST_POKE_D));
+  printf("destination logic E---------0x%x \r\n", axil_read_register(C_SCOPE_ATC + C_ADDR_ATC_DST_LOGIC_E));
+  printf("destination logic F---------0x%x \r\n", axil_read_register(C_SCOPE_ATC + C_ADDR_ATC_DST_LOGIC_F));
 }
 
-void read_timing_counts(){
-  printf("TIMING SYSTEM COUNTERS:\n");
-  printf("count LEMO A (fast) ------0x%x \n", axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_LEMO_A_F));
-  printf("count LEMO B (fast) ------0x%x \n", axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_LEMO_B_F));
-  printf("count LEMO A (slow) ------0x%x \n", axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_LEMO_A_S));
-  printf("count LEMO B (slow) ------0x%x \n", axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_LEMO_B_S));
-  printf("count POKE C (slow) ------0x%x \n", axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_POKE_C_S));
-  printf("count POKE D (slow) ------0x%x \n", axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_POKE_D_S));
-
-  printf("count timestamp sync-----0x%x \n", axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_TS));
-  for (int i=0; i<10; i++)
-    printf("count tile %2d ATC G---0x%x \n", i+1, axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_G_FIRST+4*i));
-  for (int i=0; i<10; i++)
-    printf("count tile %2d ATC H---0x%x \n", i+1, axil_read_register(C_SCOPE_TIMING+C_ADDR_TIMING_COUNT_H_FIRST+4*i));
+#define C_ATC_BUSY_WAIT 10
+int wait_atc_busy(int timeout){
+  while (timeout && ( axil_read_register(C_SCOPE_ATC+C_ADDR_ATC_STATUS) & 0xF)){ usleep(1); timeout--; }
+  return timeout;
 }
 
-void toggle_timing_input_polarity(){
-  unsigned polarity[] = {0x0, 0x3};
-  static int mode = 0;
-  mode = (mode + 1) % 2;
-  printf("INFO: setting input polarity to 0x%x \n", polarity[mode]);
-  axil_write_register(C_SCOPE_TIMING + C_ADDR_TIMING_CONFIG_POLARITY, polarity[mode]);
-}
+void read_atc_counts(){
+  const unsigned BASE = AXIL_REGISTERS_BASEADDR+C_SCOPE_ATC;
+  unsigned count = 0;
 
-void toggle_timing_ts_sync_config(){
-  unsigned config[] = {0x00, 0x10};
-  static int mode = 0;
-  mode = (mode + 1) % 2;
-  printf("INFO: setting timestamp sync config to 0x%x \n", config[mode]);
-  axil_write_register(C_SCOPE_TIMING + C_ADDR_TIMING_CONFIG_TS, config[mode]);
-}
+  wait_atc_busy(C_ATC_BUSY_WAIT);
 
-void toggle_timing_g_config(){
-  unsigned config[] = {0x0000, 0x00F14, 0x0F04};
-  static int mode = 0;
-  mode = (mode + 1) % 3;
+  axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_COUNT_REQ, 0b01110000);
+  wait_atc_busy(C_ATC_BUSY_WAIT);
+  count = axil_read_register(C_SCOPE_ATC+C_ADDR_ATC_COUNT);
+  printf("LEMO A----------------------%4d (0x%x) \r\n", count, count);
 
-  printf("INFO: setting all G config to 0x%x\n", config[mode]);
-  for (int i=0; i<10; i++)
-    axil_write_register(C_SCOPE_TIMING+C_ADDR_TIMING_CONFIG_G_FIRST+4*i, config[mode]);
-}
+  axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_COUNT_REQ, 0b01110001);
+  wait_atc_busy(C_ATC_BUSY_WAIT);
+  count = axil_read_register(C_SCOPE_ATC+C_ADDR_ATC_COUNT);
+  printf("LEMO B----------------------%4d (0x%x) \r\n", count, count);
 
-void toggle_timing_h_config(){
-  unsigned config[] = {0x0000, 0x1F18, 0x1F08};
-  static int mode = 0;
-  mode = (mode + 1) % 3;
+  axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_COUNT_REQ, 0b01110010);
+  wait_atc_busy(C_ATC_BUSY_WAIT);
+  count = axil_read_register(C_SCOPE_ATC+C_ADDR_ATC_COUNT);
+  printf("POKE C----------------------%4d (0x%x) \r\n", count, count);
 
-  printf("INFO: setting all G config to 0x%x\n", config[mode]);
-  for (int i=0; i<10; i++)
-    axil_write_register(C_SCOPE_TIMING+C_ADDR_TIMING_CONFIG_H_FIRST+4*i, config[mode]);
-}
+  axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_COUNT_REQ, 0b01110011);
+  wait_atc_busy(C_ATC_BUSY_WAIT);
+  count = axil_read_register(C_SCOPE_ATC+C_ADDR_ATC_COUNT);
+  printf("POKE D----------------------%4d (0x%x) \r\n", count, count);
 
-void toggle_timing_counts(){
-  static int mode = 0;
-  mode = (mode + 1) % 2;
-  if (mode == 0) {
-    printf("INFO: stopping counts \n");
-    axil_write_register(C_SCOPE_TIMING+C_ADDR_TIMING_STOP_COUNTS, 0x0);
-  } else {
-    printf("INFO: reseting and starting counts \r\n");
-    axil_write_register(C_SCOPE_TIMING+C_ADDR_TIMING_STOP_COUNTS, 0x0);
-    axil_write_register(C_SCOPE_TIMING+C_ADDR_TIMING_RESET_COUNTS, 0x0);
-    axil_write_register(C_SCOPE_TIMING+C_ADDR_TIMING_START_COUNTS, 0x0);
+  for (int i=0; i<10; i++){
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_COUNT_REQ, 0b01010000 + i);
+    wait_atc_busy(C_ATC_BUSY_WAIT);
+    count = axil_read_register(C_SCOPE_ATC+C_ADDR_ATC_COUNT);
+    printf("OUTPUT G(%d)-----------------%4d (0x%x) \r\n", i, count, count);
+  }
+
+  for (int i=0; i<10; i++){
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_COUNT_REQ, 0b01100000 + i);
+    wait_atc_busy(C_ATC_BUSY_WAIT);
+    count = axil_read_register(C_SCOPE_ATC+C_ADDR_ATC_COUNT);
+    printf("OUTPUT H(%d)-----------------%4d (0x%x) \r\n", i, count, count);
   }
 }
 
-void poke_timing_input_c(){
-  axil_write_register(C_SCOPE_TIMING+C_ADDR_TIMING_POKE_C, 0x0);
+void toggle_atc_destinations(){
+  const unsigned BASE = AXIL_REGISTERS_BASEADDR+C_SCOPE_ATC;
+
+  static int mode = 0;
+  mode = (mode + 1) % 3;
+  if (mode == 0) {
+    printf("INFO:  setting all destinations to zero (no output) \r\n");
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LEMO_A,  0x0);
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LEMO_B,  0x0);
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_POKE_C,  0x0);
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_POKE_D,  0x0);
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LOGIC_E, 0x0);
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LOGIC_F, 0x0);
+    wait_atc_busy(C_ATC_BUSY_WAIT);
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_CONFIG_REQ, 0x0);
+    wait_atc_busy(C_ATC_BUSY_WAIT);
+  } else if (mode == 1) {
+    printf("configure timing for POKE C -> G POKE D -> H \r\n");
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LEMO_A,  0x0);
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LEMO_B,  0x0);
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_POKE_C,  0x03FF0001);
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_POKE_D,  0x03FF0002);
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LOGIC_E, 0x0);
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LOGIC_F, 0x0);
+    wait_atc_busy(C_ATC_BUSY_WAIT);
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_CONFIG_REQ, 0x0);
+    wait_atc_busy(C_ATC_BUSY_WAIT);
+  } else {
+    printf("configure timing for LEMO A -> G LEMO B -> H \r\n");
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LEMO_A,  0x03FF0001);
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LEMO_B,  0x03FF0002);
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_POKE_C,  0x0);
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_POKE_D,  0x0);
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LOGIC_E, 0x0);
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LOGIC_F, 0x0);
+    wait_atc_busy(C_ATC_BUSY_WAIT);
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_CONFIG_REQ, 0x0);
+    wait_atc_busy(C_ATC_BUSY_WAIT);
+  }
 }
 
-void poke_timing_input_d(){
-  axil_write_register(C_SCOPE_TIMING+C_ADDR_TIMING_POKE_D, 0x0);
+void send_poke_c(){
+  const unsigned BASE = AXIL_REGISTERS_BASEADDR+C_SCOPE_ATC;
+  wait_atc_busy(C_ATC_BUSY_WAIT);
+  axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_POKE_C,0x3FF);
 }
+
+void send_poke_d(){
+  const unsigned BASE = AXIL_REGISTERS_BASEADDR+C_SCOPE_ATC;
+  wait_atc_busy(C_ATC_BUSY_WAIT);
+  axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_POKE_D,0x3FF);
+}
+
 
 
 // *** ADC UNIT ***
@@ -437,8 +461,8 @@ void set_adc_mode_to_run(){
 }
 
 void poke_timing(){
-  poke_timing_input_c();
-  poke_timing_input_d();
+  send_poke_c();
+  send_poke_d();
 }
 
 // *** MENUS ***
@@ -589,12 +613,14 @@ void rxtx_menu(){
   return;
 }
 
-void timing_menu(){
+void atc_menu(){
+  printf("ASIC timing and control (ATC) signal menu:  \r\n");
   while(1){
-    printf("TIMING MENU:  choose an option:\n");
-    printf("(0) main menu (1) read timing registers (2) toggle counter state (3) read counts \n");
-    printf("(4) toggle input polarity (5) toggle ts sync config (6) toggle G config (7) toggle H config\n");
-    printf("(8) toggle counts (9) poke C (10) poke D\n");
+    printf("choose an option:\r\n");
+    printf("(0) Exit timing menu\r\n");
+    printf("(1) read ATC registers (2) read ATC counts (3) toggle ATC destinations \r\n");
+    printf("(4) poke C (5) poke D \r\n");
+
     int input;
     scanf("%d", &input);
     printf("INFO: selected %d\n", input);
@@ -603,41 +629,27 @@ void timing_menu(){
     case 0:
       return;
     case 1:
-      read_timing_registers();
+      read_atc_registers();
       break;
     case 2:
-      toggle_timing_counts();
+      read_atc_counts();
       break;
     case 3:
-      read_timing_counts();
+      toggle_atc_destinations();
       break;
     case 4:
-      toggle_timing_input_polarity();
+      send_poke_c();
       break;
     case 5:
-      toggle_timing_ts_sync_config();
-      break;
-    case 6:
-      toggle_timing_g_config();
-      break;
-    case 7:
-      toggle_timing_h_config();
-      break;
-    case 8:
-      toggle_timing_counts();
-      break;
-    case 9:
-      poke_timing_input_c();
-      break;
-    case 10:
-      poke_timing_input_d();
+      send_poke_d();
       break;
     default:
       printf("invalid selection...\n\r");
     }
   }
-  return;
 }
+
+
 
 void adc_menu(){
   while(1){
@@ -714,7 +726,7 @@ void main_menu(){
   while(1){
     printf("MAIN MENU:  choose an option:\n");
     printf("(1) blink LEDs (2) global registers (3) toggle scratch registers\n");
-    printf("(4) power menu (5) RX/TX menu (6) timing menu (7) ADC menu \n");
+    printf("(4) power menu (5) RX/TX menu (6) ATC menu (7) ADC menu \n");
     int input;
     scanf("%d", &input);
     printf("INFO: selected %d\n", input);
@@ -736,7 +748,7 @@ void main_menu(){
       rxtx_menu();
       break;
     case 6:
-      timing_menu();
+      atc_menu();
       break;
     case 7:
       adc_menu();

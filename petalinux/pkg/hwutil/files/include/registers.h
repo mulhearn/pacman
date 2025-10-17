@@ -4,30 +4,27 @@
 #include <stdint.h>
 
 // TIMING REGISTERS:
-#define C_SCOPE_TIMING 0xE000
+#define C_SCOPE_ATC 0xE000
 
-#define C_ADDR_TIMING_STATUS          0x000
-#define C_ADDR_TIMING_STAMP           0x004
-#define C_ADDR_TIMING_POKE_C          0x010
-#define C_ADDR_TIMING_POKE_D          0x014
-#define C_ADDR_TIMING_START_COUNTS    0x0B0
-#define C_ADDR_TIMING_STOP_COUNTS     0x0B4
-#define C_ADDR_TIMING_RESET_COUNTS    0x0B8
 
-#define C_ADDR_TIMING_COUNT_LEMO_A_F  0x220
-#define C_ADDR_TIMING_COUNT_LEMO_B_F  0x224
-#define C_ADDR_TIMING_COUNT_LEMO_A_S  0x230
-#define C_ADDR_TIMING_COUNT_LEMO_B_S  0x234
-#define C_ADDR_TIMING_COUNT_POKE_C_S  0x238
-#define C_ADDR_TIMING_COUNT_POKE_D_S  0x23C
-#define C_ADDR_TIMING_COUNT_TS        0x244
-#define C_ADDR_TIMING_COUNT_G_FIRST   0x250
-#define C_ADDR_TIMING_COUNT_H_FIRST   0x280
+#define C_ADDR_ATC_STATUS          0x000 //read only
+#define C_ADDR_ATC_TIMESTAMP       0x004 //read only
 
-#define C_ADDR_TIMING_CONFIG_POLARITY 0x440
-#define C_ADDR_TIMING_CONFIG_TS       0x444
-#define C_ADDR_TIMING_CONFIG_G_FIRST  0x450
-#define C_ADDR_TIMING_CONFIG_H_FIRST  0x480
+#define C_ADDR_ATC_POKE_C          0x0C0
+#define C_ADDR_ATC_POKE_D          0x0D0
+
+#define C_ADDR_ATC_CONFIG_REQ      0x100
+#define C_ADDR_ATC_POLARITY        0x108
+#define C_ADDR_ATC_LOGIC           0x10C
+#define C_ADDR_ATC_DST_LEMO_A      0x110
+#define C_ADDR_ATC_DST_LEMO_B      0x114
+#define C_ADDR_ATC_DST_POKE_C      0x118
+#define C_ADDR_ATC_DST_POKE_D      0x11C
+#define C_ADDR_ATC_DST_LOGIC_E     0x120
+#define C_ADDR_ATC_DST_LOGIC_F     0x124
+
+#define C_ADDR_ATC_COUNT_REQ       0x200
+#define C_ADDR_ATC_COUNT           0x204 //read only
 
 // ADC registers:
 #define C_SCOPE_ADC 0xD000
@@ -40,5 +37,6 @@
 #define C_ADDR_ADC_COMMAND  0x118
 #define C_ADDR_ADC_SCRATCH  0x200
 #define C_ADDR_ADC_ROA      0x204
+
 
 #endif // __REGISTERS_H__
