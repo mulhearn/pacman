@@ -68,8 +68,10 @@ run-testbenches: all
 	ghdl -r -fsynopsys config_sync_tb --stop-time=1000ns
 	ghdl -r -fsynopsys timestamp_tb --stop-time=1000ns
 	ghdl -r -fsynopsys atc_bridge_tb --stop-time=1000ns
-	ghdl -r -fsynopsys atc_unit_tb --stop-time=3500ns
 	ghdl -r -fsynopsys atc_counter_tb --stop-time=5us
+
+run-unit-testbench: all
+	ghdl -r -fsynopsys atc_unit_tb --stop-time=3500ns
 
 run-dev: all
 	ghdl -r -fsynopsys atc_unit_tb --stop-time=3500ns
