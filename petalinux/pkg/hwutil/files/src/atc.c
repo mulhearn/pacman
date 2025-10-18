@@ -1,12 +1,4 @@
 #include <stdlib.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/ioctl.h>
-#include <sys/mman.h>
-#include <string.h>
-#include <stdint.h>
-#include <sys/time.h>
 
 #include "hw_access.h"
 #include "atc.h"
@@ -30,7 +22,6 @@ int wait_atc_busy(int timeout){
 }
 
 void read_atc_counts(){
-  const unsigned BASE = AXIL_REGISTERS_BASEADDR+C_SCOPE_ATC;
   unsigned count = 0;
 
   wait_atc_busy(C_ATC_BUSY_WAIT);
@@ -71,10 +62,9 @@ void read_atc_counts(){
 }
 
 void toggle_atc_destinations(){
-  const unsigned BASE = AXIL_REGISTERS_BASEADDR+C_SCOPE_ATC;
 
   static int mode = 0;
-  mode = (mode + 1) % 3;
+  mode = (mode + 1) % 4;
   if (mode == 0) {
     printf("INFO:  setting all destinations to zero (no output) \r\n");
     axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LEMO_A,  0x0);
@@ -97,6 +87,17 @@ void toggle_atc_destinations(){
     wait_atc_busy(C_ATC_BUSY_WAIT);
     axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_CONFIG_REQ, 0x0);
     wait_atc_busy(C_ATC_BUSY_WAIT);
+  } else if (mode == 2) {
+    printf("configure timing for POKE C -> G POKE D -> T \r\n");
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LEMO_A,  0x0);
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LEMO_B,  0x0);
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_POKE_C,  0x03FF0001);
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_POKE_D,  0x03FF0004);
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LOGIC_E, 0x0);
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LOGIC_F, 0x0);
+    wait_atc_busy(C_ATC_BUSY_WAIT);
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_CONFIG_REQ, 0x0);
+    wait_atc_busy(C_ATC_BUSY_WAIT);
   } else {
     printf("configure timing for LEMO A -> G LEMO B -> H \r\n");
     axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LEMO_A,  0x03FF0001);
@@ -112,13 +113,11 @@ void toggle_atc_destinations(){
 }
 
 void send_poke_c(){
-  const unsigned BASE = AXIL_REGISTERS_BASEADDR+C_SCOPE_ATC;
   wait_atc_busy(C_ATC_BUSY_WAIT);
   axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_POKE_C,0x3FF);
 }
 
 void send_poke_d(){
-  const unsigned BASE = AXIL_REGISTERS_BASEADDR+C_SCOPE_ATC;
   wait_atc_busy(C_ATC_BUSY_WAIT);
   axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_POKE_D,0x3FF);
 }
