@@ -9,6 +9,8 @@
 #
 
 petalinux-build -c pacman-apps -x clean
+#petalinux-build -c pacman-apps -x cleansstate
+
 petalinux-build -c pacman-apps -x build
 ls -alh build/tmp/deploy/rpm/cortexa*_neon/pacman-apps-1.0-r*.cortexa*_neon.rpm
 cp -v build/tmp/deploy/rpm/cortexa*_neon/pacman-apps-1.0-r*.cortexa*_neon.rpm pacman-apps-latest.rpm
