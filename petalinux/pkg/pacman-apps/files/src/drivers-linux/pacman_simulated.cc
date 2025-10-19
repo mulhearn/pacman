@@ -142,12 +142,12 @@ int pacman_poll_tx(){
 	  msg_done = false;
 	}
 	//printf("DEBUG:  count: %d chan: %3d tx_data: 0x%08x %08x\n", count, i, src[4+2*i+1], src[4+2*i+0]);
-	buffer[6*count + 0]=0x0044+((i+1)<<8)+(pacman_id<<24);
+	buffer[6*count + 0]=0x0044+(pacman_id<<8)+((i+1)<<16);
 	buffer[6*count + 1]=0;
-	buffer[6*count + 2]=0;
-	buffer[6*count + 3]=0;
-	buffer[6*count + 4]=src[4+2*i+0];
-	buffer[6*count + 5]=src[4+2*i+1];
+	buffer[6*count + 2]=0x44d50000;  // DEC:  12340000 0000 0000
+	buffer[6*count + 3]=0x11200c76;
+	buffer[6*count + 4]=src[2+2*i+0];
+	buffer[6*count + 5]=src[2+2*i+1];
 	count++;
 	if (count == MAX_PACKETS){
 	  // send message:
