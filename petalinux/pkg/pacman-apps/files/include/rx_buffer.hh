@@ -4,9 +4,10 @@
 #include <stdint.h>
 
 //#define RX_BUFFER_DEPTH     1024
+// TODO:  This is likely much bigger than needed with latest firmware, but leaving for now:
 #define RX_BUFFER_DEPTH     1048576
-// number of 32 bit words in tx buffer output
-#define RX_BUFFER_BYTES     32
+// number of bytes in each rx buffer  input/output word
+#define RX_BUFFER_BYTES   24
 
 void rx_buffer_init(int verbose=0);
 

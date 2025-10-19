@@ -7,7 +7,7 @@
 #define TX_BUFFER_CHAN      40
 #define TX_BUFFER_DEPTH     1024
 // number of 32 bit words in tx buffer output
-#define TX_BUFFER_BYTES     336
+#define TX_BUFFER_BYTES     328
 
 void tx_buffer_init(int verbose=0);
 

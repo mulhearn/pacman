@@ -42,7 +42,7 @@ void tx_buffer_print_output(uint32_t * src){
   printf("always zero:   0x%08x %08x\n", src[3], src[2]);
   for (int i=0; i<TX_BUFFER_CHAN; i++){
     if (((src[i/32]>>(i%32))&1)==1) {
-      printf("chan: %3d tx_data: 0x%08x %08x\n", i, src[4+2*i+1], src[4+2*i+0]);
+      printf("chan: %3d tx_data: 0x%08x %08x\n", i, src[2+2*i+1], src[2+2*i+0]);
     }
   }
 }
@@ -108,18 +108,16 @@ unsigned tx_buffer_out(uint32_t * out){
 
   out[0] = mask[0];
   out[1] = mask[1];
-  out[2] = 0;
-  out[3] = 0;
 
   for (int i=0; i<TX_BUFFER_CHAN; i++){
     if ((mask[i/32]>>(i%32))&1==1) {
       unsigned tail = G_TX_BUFFER_TAIL[i];
-      out[4+2*i+0] = G_TX_BUFFER_DATA[i][2*tail+0];
-      out[4+2*i+1] = G_TX_BUFFER_DATA[i][2*tail+1];
+      out[2+2*i+0] = G_TX_BUFFER_DATA[i][2*tail+0];
+      out[2+2*i+1] = G_TX_BUFFER_DATA[i][2*tail+1];
       G_TX_BUFFER_TAIL[i] = (tail+1) % TX_BUFFER_DEPTH;
     } else {
-      out[4+2*i+0] = 0;
-      out[4+2*i+1] = 0;
+      out[2+2*i+0] = 0;
+      out[2+2*i+1] = 0;
     }
   }
   return 1;

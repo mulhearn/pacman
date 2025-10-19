@@ -187,7 +187,7 @@ int test_tx_buffer(){
   printf("INFO:  Draining the entire buffer and checking contents.\n");
 
   // completely drain the entire buffer:
-  for (int i=0; i<TX_BUFFER_DEPTH-1; i++){
+  for (unsigned i=0; i<TX_BUFFER_DEPTH-1; i++){
     success &= (tx_buffer_out(output)==1);
 
     //printf("INFO:  printing output...\n");
@@ -196,15 +196,15 @@ int test_tx_buffer(){
     success &= (output[0] == 0xFFFFFFFF);
     //success &= (output[1] == 0x00000000);
     success &= (output[1] == 0x000000FF);
-    for (int j=0; j<TX_BUFFER_CHAN; j++){
-      int chan = j;
+    for (unsigned j=0; j<TX_BUFFER_CHAN; j++){
+      unsigned chan = j;
       if (chan<0)
 	continue;
       //printf("%d %d 0x%x\n", j, chan, output[4+2*chan]);
-      success &= ((output[4+2*chan+0]&0xFF) == j+1);
-      success &= ((output[4+2*chan+0]>>8) == i);
-      success &= ((output[4+2*chan+1]&0xFF) == 0x33);
-      success &= ((output[4+2*chan+1]>>8) == i);
+      success &= ((output[2+2*chan+0]&0xFF) == j+1);
+      success &= ((output[2+2*chan+0]>>8) == i);
+      success &= ((output[2+2*chan+1]&0xFF) == 0x33);
+      success &= ((output[2+2*chan+1]>>8) == i);
     }
   }
   // check we are empty:
@@ -230,7 +230,7 @@ int test_tx_buffer(){
 
 int test_rx_buffer(){
   int success = 1;
-  uint32_t rx_data[4];
+  uint32_t rx_data[6];
 
   printf("INFO:  ****** running rx buffer unit test. ****** \n");
   rx_buffer_init(1);
@@ -243,6 +243,8 @@ int test_rx_buffer(){
   rx_data[1]=0xBBBBBBBB;
   rx_data[2]=0xCCCCCCCC;
   rx_data[3]=0xDDDDDDDD;
+  rx_data[4]=0xEEEEEEEE;
+  rx_data[5]=0xFFFFFFFF;
 
   success &= (rx_buffer_in(rx_data)==1);
   success &= (rx_buffer_in(rx_data)==1);
@@ -333,9 +335,9 @@ int test_rx_buffer(){
 
 int main(){
   int success = 1;
-  //success &= test_pacman_message();
+  success &= test_pacman_message();
   success &= test_tx_buffer();
-  //success &= test_rx_buffer();
+  success &= test_rx_buffer();
   if (success) {
     printf("SUMMARY:  *************************************************\n");
     printf("SUMMARY:  Congratulations!  All unit tests were successful.\n");
