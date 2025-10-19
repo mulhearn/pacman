@@ -8,6 +8,5 @@ CONFIG_lrzsz
 CONFIG_phytool
 CONFIG_startup
 CONFIG_webfwu
-CONFIG_pacman-server
-CONFIG_hwutil
+CONFIG_pacman-apps
 CONFIG_zeromq
