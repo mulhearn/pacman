@@ -121,14 +121,13 @@ int pacman_poll_rx(){
     hw_ptr_t rx_buf = dma_get_buffer(nxta);
     if (xbytes > rx_trailer_bytes) {
       unsigned full_words = (xbytes - rx_trailer_bytes) / 24;
-      for (int i=0; i<full_words; i++){
-	// firmware is not yet consistent with message format, so fix here for now:
+      for (unsigned i=0; i<full_words; i++){
 	rx_data[0] = rx_buf[6*i+0];
 	rx_data[1] = rx_buf[6*i+1];
-	rx_data[2] = rx_buf[6*i+4];
-	rx_data[3] = rx_buf[6*i+5];
-	rx_data[4] = rx_buf[6*i+2];
-	rx_data[5] = rx_buf[6*i+3];
+	rx_data[2] = rx_buf[6*i+2];
+	rx_data[3] = rx_buf[6*i+3];
+	rx_data[4] = rx_buf[6*i+4];
+	rx_data[5] = rx_buf[6*i+5];
 	rx_buffer_in(rx_data);
       }
     }
@@ -143,18 +142,18 @@ int pacman_poll_rx(){
 }
 
 int pacman_poll_tx(){
-  static uint32_t output[TX_BUFFER_BYTES/4];
+  const unsigned frags = TX_BUFFER_BYTES/4; // number of u32 fragments per buffer
+  static uint32_t output[frags];
 
   const unsigned batch_size = 100;
   unsigned batch_count = 0;
   hw_addr_t nxta;
-  uint32_t rx_data[4];
 
   while((batch_count < batch_size) && dma_next_available_tx_bd(&nxta)){
     if (tx_buffer_out(output)==1){
       //tx_buffer_print_output(output);
       hw_ptr_t tx_buf = dma_get_buffer(nxta);
-      for (int i=0; i<84*4; i++)
+      for (unsigned i=0; i<frags; i++)
 	tx_buf[i] = output[i];
       dma_add_tx_bd(nxta);
       batch_count++;
