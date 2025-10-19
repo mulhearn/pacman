@@ -76,5 +76,5 @@ $(BIN_DIR)/%.elf: $(OBJ_DIR)/%.o $(LIB_DIR)/$(LIB_NAME)
 #-----------------------------------
 
 clean:
-	rm -rf $(OBJ_DIR) $(LIB_DIR) $(BIN_DIR)
+	rm -rf $(OBJ_DIR) $(LIB_DIR) $(BIN_DIR) __pycache__ pylib/__pycache__
 

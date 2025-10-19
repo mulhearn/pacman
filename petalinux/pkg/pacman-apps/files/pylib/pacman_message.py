@@ -56,43 +56,43 @@ WORD_TYPE_TABLE_INV = {v:k for k,v in WORD_TYPE_TABLE.items()}
 # Word struct formats (192-bit / 24 bytes)
 # ----------------------------------------
 
-# PING:  (MSB) 0x00000000 00000000 00000000 00000000 00000000 PP0000WW (LSB)
+# PING:  (MSB) 0x00000000 00000000 00000000 00000000 00000000 0000PPWW (LSB)
 #    W=word type P=PACMAN id
-# READ:  (MSB) 0x00000000 00000000 RRRRRRRR AAAAAAAA 00000000 PP0000WW (LSB)
+# READ:  (MSB) 0x00000000 00000000 RRRRRRRR AAAAAAAA 00000000 0000PPWW (LSB)
 #    W=word type, P=PACMAN id, A=address, R=value
-# WRITE: (MSB) 0x00000000 00000000 RRRRRRRR AAAAAAAA 00000000 PP0000WW (LSB)
-#    W=word type, P=PACMAN id, A=address, R=value
-# DATA:  (MSB) 0xDDDDDDDD DDDDDDDD TTTTTTTT TTTTTTTT 00000000 PPUUUUWW (LSB)
+# WRITE: (MSB) 0x00000000 00000000 WWWWWWWW AAAAAAAA 00000000 0000PPWW (LSB)
+#    W=word type, P=PACMAN id, A=address, W=value
+# DATA:  (MSB) 0xDDDDDDDD DDDDDDDD TTTTTTTT TTTTTTTT 00000000 UUUUPPWW (LSB)
 #    W=word type, P=PACMAN id, U=channel, T=timestamp, D=payload
-# CFG:   (MSB) 0xDDDDDDDD DDDDDDDD TTTTTTTT TTTTTTTT 00000000 PPUUUUWW (LSB)
+# CFG:   (MSB) 0xDDDDDDDD DDDDDDDD TTTTTTTT TTTTTTTT 00000000 UUUUPPWW (LSB)
 #    W=word type, U=channel, P=PACMAN id, T=timestamp, D=payload
-# SYNC:  (MSB) 0x00000000 SSSSSSSS TTTTTTTT TTTTTTTT 00000000 PPCCBBWW (LSB)
+# SYNC:  (MSB) 0x00000000 SSSSSSSS TTTTTTTT TTTTTTTT 00000000 CCBBPPWW (LSB)
 #    W=word type, B=subtype, C=clock source, P=PACMAN id, T=timestamp, S=Status
-# TRIG:  (MSB) 0xDDDDDDDD DDDDDDDD TTTTTTTT TTTTTTTT 00000000 PPGGBBWW (LSB)
+# TRIG:  (MSB) 0xDDDDDDDD DDDDDDDD TTTTTTTT TTTTTTTT 00000000 GGBBPPWW (LSB)
 #    W=word type, B=subtype, G=trig source, P=PACMAN id, T=timestamp, S=Status
-# ERR:   (MSB) 0x00000000 EEEEEEEE TTTTTTTT TTTTTTTT 00000000 PP0000WW (LSB)
+# ERR:   (MSB) 0x00000000 EEEEEEEE TTTTTTTT TTTTTTTT 00000000 000PPWW (LSB)
 #    W=word type, P=PACMAN id, T=timestamp, E=error code
 
 WORD_LEN   = 24  # 192-bit
 WORD_STRUCT_TABLE = {
-    'PING':  struct.Struct('<c23x'),       # word_type
-    'READ':  struct.Struct('<c2xB4xII8x'), # word_type, pacman, address, value
-    'WRITE': struct.Struct('<c2xB4xII8x'), # word_type, pacman, address, value
-    'DATA':  struct.Struct('<cHB4xQQ'),    # word_type, uart_channel, pacman, timestamp, payload
-    'CFG':   struct.Struct('<cHB4xQQ'),    # word_type, uart_channel, pacman, timestamp, payload
-    'SYNC':  struct.Struct('<cBBB4xQI4x'), # word_type, sync_type, clock_source, pacman, timestamp, status
-    'TRIG':  struct.Struct('<cBBB4xQ8x'),  # word_type, trigger_type, trigger_source, pacman, timestamp
-    'ERR':   struct.Struct('<c2xB4xQI4x')  # word_type, pacman, timestamp, error_code
+    'PING':  struct.Struct('<cB22x'),      # word_type, pacman
+    'READ':  struct.Struct('<cB6xII8x'),   # word_type, pacman, address, value
+    'WRITE': struct.Struct('<cB6xII8x'),   # word_type, pacman, address, value
+    'DATA':  struct.Struct('<cBH4xQQ'),    # word_type, pacman, uart_channel, timestamp, payload
+    'CFG':   struct.Struct('<cBH4xQQ'),    # word_type, pacman, uart_channel, timestamp, payload
+    'SYNC':  struct.Struct('<cBBB4xQI4x'), # word_type, pacman, sync_type, clock_source, timestamp, status
+    'TRIG':  struct.Struct('<cBBB4xQ8x'),  # word_type, pacman, trigger_type, trigger_source, timestamp
+    'ERR':   struct.Struct('<cB6xQI4x')    # word_type, pacman, timestamp, error_code
 }
 
 WORD_FIELD_TABLE = {
-    'PING':  ("word_type",),
+    'PING':  ("word_type", "pacman"),
     'READ':  ("word_type", "pacman", "addr", "value"),
     'WRITE': ("word_type", "pacman", "addr", "value"),
-    'DATA':  ("word_type", "chan", "pacman", "timestamp", "payload"),
-    'CFG':   ("word_type", "chan", "pacman", "timestamp", "payload"),
-    'SYNC':  ("word_type", "sync_type", "clk_src", "pacman", "timestamp", "status"),
-    'TRIG':  ("word_type", "trig_type", "trig_src", "pacman", "timestamp"),
+    'DATA':  ("word_type", "pacman", "chan", "timestamp", "payload"),
+    'CFG':   ("word_type", "pacman", "chan", "timestamp", "payload"),
+    'SYNC':  ("word_type", "pacman", "sync_type", "clk_src", "timestamp", "status"),
+    'TRIG':  ("word_type", "pacman", "trig_type", "trig_src", "timestamp"),
     'ERR':   ("word_type", "pacman", "timestamp", "error_code")
 }
 
@@ -100,11 +100,11 @@ WORD_FIELD_TABLE = {
 # Header struct (192-bit / 24 bytes)
 # -----------------------------
 
-# HEADER: 0xMMBBVVVV NNNNNNNN TTTTTTTT TTTTTTTT 00000000 00000000
-#    M=messsage type, B=minor version, V=major version, N=number of words, T=timestamp
+# HEADER: 0xMMAABB00 NNNNNNNN TTTTTTTT TTTTTTTT 00000000 00000000
+#    M=messsage type, A=major version, B=minor version, N=number of words, T=timestamp
 
-HEADER_STRUCT = struct.Struct('<cBHIQ8x') # message_type,
-HEADER_FIELDS = ("msg_type", "minor_version", "major_version", "n_words", "timestamp")
+HEADER_STRUCT = struct.Struct('<cBBxIQ8x') # message_type,
+HEADER_FIELDS = ("msg_type", "major_version", "minor_version", "n_words", "timestamp")
 HEADER_LEN = HEADER_STRUCT.size
 
 # -----------------------------
@@ -112,7 +112,7 @@ HEADER_LEN = HEADER_STRUCT.size
 # -----------------------------
 def pack_header(msg_type, n_words, timestamp):
     msg_type_byte = MSG_TYPE_TABLE[msg_type]
-    return HEADER_STRUCT.pack(msg_type_byte, MSG_MINOR_VERSION, MSG_MAJOR_VERSION, n_words, timestamp)
+    return HEADER_STRUCT.pack(msg_type_byte, MSG_MAJOR_VERSION, MSG_MINOR_VERSION, n_words, timestamp)
 
 def unpack_header(header_bytes):
     msg_type = MSG_TYPE_TABLE_INV[header_bytes[0:1]]
@@ -169,8 +169,9 @@ def check_uint64(name, value):
         print(f"ERROR: {name}={value} out of range for 64-bit unsigned int (0-0xFFFFFFFFFFFFFFFF)")
         raise ValueError(f"{name}={value} out of range for 64-bit unsigned int (0-0xFFFFFFFFFFFFFFFF)")
 
-def content_ping():
-    return ('PING',)
+def content_ping(*, pacman=0):
+    check_byte("pacman", pacman)
+    return ('PING', pacman)
 
 def content_read(*, addr, value=0, pacman=0):
     check_byte("pacman", pacman)
@@ -189,14 +190,14 @@ def content_data(*, channel, timestamp, payload, pacman=0):
     check_byte("channel", channel)
     check_uint64("timestamp", timestamp)
     check_uint64("payload", payload)
-    return ('DATA', channel, pacman, timestamp, payload)
+    return ('DATA', pacman, channel, timestamp, payload)
 
 def content_cfg(*, channel, timestamp, payload, pacman=0):
     check_byte("pacman", pacman)
     check_byte("channel", channel)
     check_uint64("timestamp", timestamp)
     check_uint64("payload", payload)
-    return ('CFG', channel, pacman, timestamp, payload)
+    return ('CFG', pacman, channel, timestamp, payload)
 
 def content_sync(*, sync_type, timestamp, pacman=0, clock_source=0, status=0):
     check_byte("pacman", pacman)

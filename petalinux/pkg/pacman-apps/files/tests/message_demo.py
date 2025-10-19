@@ -9,7 +9,7 @@ import time
 import pacman_message as pm
 
 def test_message(msg_bytes):
-    print(f"INFO:  raw bytes:  0x{msg_bytes.hex()}")
+    print(f"INFO:  raw bytes:  0x{msg_bytes[::-1].hex()}")
     if (pm.check_msg(msg_bytes)):
         print("INFO:  message passes consistency checks.")
         header, words = pm.unpack_msg(msg_bytes)
@@ -22,10 +22,6 @@ def test_message(msg_bytes):
     else:
         print("ERROR: messages fails consistency checks.")
     print("")
-
-
-
-
 
 def demo():
     ts = int(time.time())

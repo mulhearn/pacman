@@ -12,14 +12,10 @@ SRC_URI = " \
    file://src \
    file://include \
    file://Makefile \
+   file://pylib \
    file://utils \
    file://tests \
 "
-
-#INITSCRIPT_NAME = "pacman_server"
-#INITSCRIPT_PARAMS = "start 99 S ."
-#INITSCRIPT_NAME = "pacman_server;pacman_gpio_init"
-#INITSCRIPT_PARAMS = "start 99 S .;start 98 S ."
 
 S = "${WORKDIR}"
 homedir = "/home/root"
@@ -43,6 +39,10 @@ do_install() {
 	# Install home directory:
 	install -d ${D}${homedir}
 
+	# Install pylib
+	install -d ${D}${homedir}/pylib
+	install -m 0755 ${S}/pylib/* ${D}${homedir}/pylib/
+
 	# Install utility scripts
 	install -d ${D}${homedir}/utils
 	install -m 0755 ${S}/utils/* ${D}${homedir}/utils/
@@ -57,7 +57,9 @@ do_install() {
 	install -m 0755 ${S}/utils/pacman_gpio_init.sh ${D}${sysconfdir}/init.d/pacman_gpio_init
 	# expected by legacy users here as well:
 	install -m 0755 ${S}/utils/pacman_server.sh ${D}${bindir}/pacman_server
+
 }
+
 
 # run on target, post install:
 pkg_postinst_ontarget:${PN} () {
@@ -72,6 +74,7 @@ pkg_postinst_ontarget:${PN} () {
 }
 
 FILES:${PN} += "${sysconfdir}/*"
+FILES:${PN} += "${homedir}/pylib/*"
 FILES:${PN} += "${homedir}/utils/*"
 FILES:${PN} += "${homedir}/tests/*"
 FILES:${PN} += "${bindir}/*"

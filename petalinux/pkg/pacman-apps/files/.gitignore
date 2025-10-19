@@ -3,3 +3,4 @@
 /obj
 /lib
 /__pycache__
+pylib/__pycache__
