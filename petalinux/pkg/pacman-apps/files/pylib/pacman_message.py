@@ -103,16 +103,16 @@ WORD_FIELD_TABLE = {
 # HEADER: 0xMMAABB00 NNNNNNNN TTTTTTTT TTTTTTTT 00000000 00000000
 #    M=messsage type, A=major version, B=minor version, N=number of words, T=timestamp
 
-HEADER_STRUCT = struct.Struct('<cBBxIQ8x') # message_type,
-HEADER_FIELDS = ("msg_type", "major_version", "minor_version", "n_words", "timestamp")
+HEADER_STRUCT = struct.Struct('<cBBBIQ8x') # message_type,
+HEADER_FIELDS = ("msg_type", "pacman", "major_version", "minor_version", "n_words", "timestamp")
 HEADER_LEN = HEADER_STRUCT.size
 
 # -----------------------------
 # Header functions
 # -----------------------------
-def pack_header(msg_type, n_words, timestamp):
+def pack_header(msg_type, n_words, timestamp, pacman=0):
     msg_type_byte = MSG_TYPE_TABLE[msg_type]
-    return HEADER_STRUCT.pack(msg_type_byte, MSG_MAJOR_VERSION, MSG_MINOR_VERSION, n_words, timestamp)
+    return HEADER_STRUCT.pack(msg_type_byte, pacman, MSG_MAJOR_VERSION, MSG_MINOR_VERSION, n_words, timestamp)
 
 def unpack_header(header_bytes):
     msg_type = MSG_TYPE_TABLE_INV[header_bytes[0:1]]
@@ -222,7 +222,7 @@ def content_err(*, error_code, pacman=0, timestamp=0):
 
 def print_header(header):
     parsed = parse_header(header)
-    print("msg_type: {msg_type} version: {major_version}.{minor_version} n_words: {n_words} timestamp: {timestamp}".format(**parsed))
+    print("msg_type: {msg_type} pacman: {pacman} version: {major_version}.{minor_version} n_words: {n_words} timestamp: {timestamp}".format(**parsed))
     return
 
 def print_word(word):

@@ -36,73 +36,73 @@ def demo():
 
 
     # -----------------------------
-    # Step 3: REQ / READ
+    # Step 2: REQ / READ
     # -----------------------------
-    print("Step 3: Send REQ/READ")
+    print("Step 2: Send REQ/READ")
     words = [pm.content_read(addr=0x0010)]  # addr=0x01, placeholder val
     msg_bytes = pm.pack_msg('REQ', words, ts)
     test_message(msg_bytes)
 
     # -----------------------------
-    # Step 4: REP / READ
+    # Step 3: REP / READ
     # -----------------------------
-    print("Step 4: Send REP/READ")
+    print("Step 3: Send REP/READ")
     words = [pm.content_read(addr=0x0010, value=0x1234)]
     msg_bytes = pm.pack_msg('REP', words, ts)
     test_message(msg_bytes)
 
     # -----------------------------
-    # Step 5: REQ / WRITE
+    # Step 4: REQ / WRITE
     # -----------------------------
-    print("Step 5: Send REQ/WRITE")
+    print("Step 4: Send REQ/WRITE")
     words = [pm.content_write(addr=0x0010, value=0xABCD)]
     msg_bytes = pm.pack_msg('REQ', words, ts)
     test_message(msg_bytes)
 
     # -----------------------------
-    # Step 6: REP / WRITE
+    # Step 5: REP / WRITE
     # -----------------------------
-    print("Step 6: Send REP/WRITE")
+    print("Step 5: Send REP/WRITE")
     words = [pm.content_write(addr=0x0010, value=0xABCD, pacman=2)]
     msg_bytes = pm.pack_msg('REP', words, ts)
     test_message(msg_bytes)
 
     # -----------------------------
-    # Step 7: DATA / DATA
+    # Step 6: DATA / DATA
     # -----------------------------
-    print("Step 7: Send DATA/DATA")
+    print("Step 6: Send DATA/DATA")
     words = [pm.content_data(channel=3, timestamp=ts, payload=0x1234ABCD, pacman=2)]
     msg_bytes = pm.pack_msg('DATA', words, ts)
     test_message(msg_bytes)
 
     # -----------------------------
-    # Step 8: DATA / CFG
+    # Step 7: DATA / CFG
     # -----------------------------
-    print("Step 8: Send DATA/CFG")
+    print("Step 7: Send DATA/CFG")
     words = [pm.content_cfg(channel=3, timestamp=ts, payload=0x1234ABCD, pacman=2)]
     msg_bytes = pm.pack_msg('DATA', words, ts)
     test_message(msg_bytes)
 
     # -----------------------------
-    # Step 9: DATA / SYNC
+    # Step 8: DATA / SYNC
     # -----------------------------
-    print("Step 9: Send DATA/SYNC")
+    print("Step 8: Send DATA/SYNC")
     words = [pm.content_sync(sync_type=0x53, timestamp=ts, pacman=2)]
     msg_bytes = pm.pack_msg('DATA', words, ts)
     test_message(msg_bytes)
 
     # -----------------------------
-    # Step 10: DATA / TRIG
+    # Step 9: DATA / TRIG
     # -----------------------------
-    print("Step 10: Send DATA/TRIG")
+    print("Step 9: Send DATA/TRIG")
     words = [pm.content_trig(trig_type=3, timestamp=ts)]
     msg_bytes = pm.pack_msg('DATA', words, ts)
     test_message(msg_bytes)
 
     # -----------------------------
-    # Step 11: REP / ERR
+    # Step 10: REP / ERR
     # -----------------------------
-    print("Step 11: Send REP/ERR")
+    print("Step 10: Send REP/ERR")
     words = [pm.content_err(error_code=0xEEEE, timestamp=ts)]
     msg_bytes = pm.pack_msg('REP', words, ts)
     test_message(msg_bytes)

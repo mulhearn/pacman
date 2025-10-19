@@ -71,31 +71,6 @@ int pacman_init(int verbose){
   }
   G_PACMAN_AXIL[0x3B04>>2] = 0x05281602;
 
-
-  if (verbose){
-    printf("INFO:  Setting timing input signal polarity to active high\n");
-  }
-  G_PACMAN_AXIL[0xE440>>2] = 0x00000000;
-
-  if (verbose){
-    printf("INFO:  Setting TS polarity to active low so that timestamp increments\n");
-  }
-  G_PACMAN_AXIL[0xE444>>2] = 0x00000010;
-
-  if (verbose){
-    printf("INFO:  Setting ative low RESET length to 255, triggered by register POKE_C \n");
-  }
-  G_PACMAN_AXIL[0xE450>>2] = 0xFF14;
-  G_PACMAN_AXIL[0xE454>>2] = 0xFF14;
-  G_PACMAN_AXIL[0xE458>>2] = 0xFF14;
-  G_PACMAN_AXIL[0xE45C>>2] = 0xFF14;
-  G_PACMAN_AXIL[0xE460>>2] = 0xFF14;
-  G_PACMAN_AXIL[0xE464>>2] = 0xFF14;
-  G_PACMAN_AXIL[0xE468>>2] = 0xFF14;
-  G_PACMAN_AXIL[0xE46C>>2] = 0xFF14;
-  G_PACMAN_AXIL[0xE470>>2] = 0xFF14;
-  G_PACMAN_AXIL[0xE474>>2] = 0xFF14;
-
   // duplicate (harmless) effort here while merging new driver code into PACMAN server.
   init_axil_driver();
 
