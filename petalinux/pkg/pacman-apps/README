@@ -1,0 +1,9 @@
+PACMAN PetaLinux Package 
+
+This is the PACMAN PetaLinux Package which includes:
+
+ linux drivers for PACMAN
+ pacman_cmdserver and pacman_dataserver applications
+ pacman_menu
+ utililty scripts
+
