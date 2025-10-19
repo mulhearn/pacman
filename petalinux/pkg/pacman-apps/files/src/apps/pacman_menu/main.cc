@@ -155,7 +155,10 @@ void power_menu(){
     printf("(4) write IV curves to file\n");
 
     int input;
-    scanf("%d", &input);
+    if (scanf("%d", &input) != 1){
+      printf("ERROR: invalid input.\n");
+      continue;
+    }
     printf("INFO: selected %d\n", input);
 
     switch(input){
@@ -197,7 +200,10 @@ void rxtx_menu(){
     printf("(45) benchmark TX (46) benchmark RX/TX loopback \r\n");
 
     int input;
-    scanf("%d", &input);
+    if (scanf("%d", &input) != 1){
+      printf("ERROR: invalid input.\n");
+      continue;
+    }
     printf("INFO: selected %d\n", input);
 
     switch(input){
@@ -303,7 +309,10 @@ void atc_menu(){
     printf("(4) poke C (5) poke D \r\n");
 
     int input;
-    scanf("%d", &input);
+    if (scanf("%d", &input) != 1){
+      printf("ERROR: invalid input.\n");
+      continue;
+    }
     printf("INFO: selected %d\n", input);
 
     switch(input){
@@ -336,7 +345,11 @@ void main_menu(){
     printf("(1) blink LEDs (2) global registers (3) toggle scratch registers\n");
     printf("(4) power menu (5) RX/TX menu (6) ATC menu \n");
     int input;
-    scanf("%d", &input);
+    if (scanf("%d", &input) != 1){
+      printf("ERROR: invalid input.\n");
+      continue;
+    }
+
     printf("INFO: selected %d\n", input);
 
     switch(input){

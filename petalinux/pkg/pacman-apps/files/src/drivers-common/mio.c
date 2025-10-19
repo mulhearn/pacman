@@ -44,7 +44,12 @@ void      write_mio(int pin, uint32_t value){
     G_MIO_STATUS |= 1;
     return;
   }
-  write(fd, vbuf, strlen(vbuf));
+  int n = write(fd, vbuf, strlen(vbuf));
+  if (n < 0){
+    G_MIO_STATUS |= 2;
+    close(fd);
+    return;
+  }
   close(fd);
 }
 
