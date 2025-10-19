@@ -73,7 +73,7 @@ unsigned tx_buffer_in(unsigned char chan, uint32_t * tx_data){
     else
       return 0;
 
-    for (int i=0; i<replay; i++){
+    for (unsigned i=0; i<replay; i++){
       for (unsigned char c=0; c<TX_BUFFER_CHAN; c++){
 	tx_buffer_in(c, tx_data);
       }
@@ -110,7 +110,7 @@ unsigned tx_buffer_out(uint32_t * out){
   out[1] = mask[1];
 
   for (int i=0; i<TX_BUFFER_CHAN; i++){
-    if ((mask[i/32]>>(i%32))&1==1) {
+    if ((mask[i/32]>>(i%32))&1) {
       unsigned tail = G_TX_BUFFER_TAIL[i];
       out[2+2*i+0] = G_TX_BUFFER_DATA[i][2*tail+0];
       out[2+2*i+1] = G_TX_BUFFER_DATA[i][2*tail+1];

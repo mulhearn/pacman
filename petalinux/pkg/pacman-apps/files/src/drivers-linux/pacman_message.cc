@@ -107,7 +107,7 @@ void print_word(const pacman_word_t* word, const char * prefix = "") {
 void print_msg(const pacman_msg_t* msg, const char * prefix) {
   printf("%sheader:  ",prefix);
   print_header(&msg->header);
-  for (int i=0; i<msg->header.n_words; i++){
+  for (unsigned i=0; i<msg->header.n_words; i++){
     printf("%sword %3d: ",prefix, i);
     print_word(&msg->words[i]);
   }
