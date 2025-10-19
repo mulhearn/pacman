@@ -16,33 +16,28 @@ SRC_URI = " \
    file://tests \
 "
 
-INITSCRIPT_NAME = "pacman_server"
-INITSCRIPT_PARAMS = "start 99 S ."
+#INITSCRIPT_NAME = "pacman_server"
+#INITSCRIPT_PARAMS = "start 99 S ."
+#INITSCRIPT_NAME = "pacman_server;pacman_gpio_init"
+#INITSCRIPT_PARAMS = "start 99 S .;start 98 S ."
 
 S = "${WORKDIR}"
 homedir = "/home/root"
 
-inherit update-rc.d
+#inherit update-rc.d
 
 do_compile() {
 	oe_runmake
 }
 
 do_install() {
-
 	# Install bin directory:
 	install -d ${D}${bindir}
 
-	# Install app binaries (ELFs)
-	for elf in $(find ${WORKDIR}/bin -name "*.elf"); do
-	    app=$(basename "$elf")
-	    install -m 0755 "$elf" "${D}${bindir}/$app"
-	done
-
-	# Install app binaries (ELFs)
-	for elf in $(find ${WORKDIR}/bin -name "*.elf"); do
-	    app=$(basename $elf)
-	    install -m 0755 $elf ${D}${bindir}/$app
+	# Install app binaries (strip .elf extension)
+	for elf in $(find ${S}/bin -name "*.elf"); do
+	    app=$(basename "${elf}" .elf)
+	    install -m 0755 "${elf}" "${D}${bindir}/${app}"
 	done
 
 	# Install home directory:
@@ -50,16 +45,30 @@ do_install() {
 
 	# Install utility scripts
 	install -d ${D}${homedir}/utils
-	cp -a ${WORKDIR}/utils/* ${D}${homedir}/utils/
+	install -m 0755 ${S}/utils/* ${D}${homedir}/utils/
 
 	# Install test scripts
 	install -d ${D}${homedir}/tests
-	cp -a ${WORKDIR}/tests/* ${D}${homedir}/tests/
+	install -m 0755 ${S}/tests/* ${D}${homedir}/tests/
 
-	# Install init script:
+	# Install init scripts:
 	install -d ${D}${sysconfdir}/init.d
-	install -m 0755 ${WORKDIR}/utils/pacman_server.sh ${D}${sysconfdir}/init.d/pacman_server
-	install -m 0755 ${WORKDIR}/utils/pacman_server.sh ${D}${bindir}/pacman_server
+	install -m 0755 ${S}/utils/pacman_server.sh ${D}${sysconfdir}/init.d/pacman_server
+	install -m 0755 ${S}/utils/pacman_gpio_init.sh ${D}${sysconfdir}/init.d/pacman_gpio_init
+	# expected by legacy users here as well:
+	install -m 0755 ${S}/utils/pacman_server.sh ${D}${bindir}/pacman_server
+}
+
+# run on target, post install:
+pkg_postinst_ontarget:${PN} () {
+    echo "Registering pacman init scripts..."
+
+    if [ -x /etc/init.d/pacman_gpio_init ]; then
+        update-rc.d pacman_gpio_init defaults
+    fi
+    if [ -x /etc/init.d/pacman_server ]; then
+        update-rc.d pacman_server defaults
+    fi
 }
 
 FILES:${PN} += "${sysconfdir}/*"
