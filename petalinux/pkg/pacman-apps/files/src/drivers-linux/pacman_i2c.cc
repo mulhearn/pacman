@@ -118,7 +118,7 @@ int i2c_rw(uint8_t addr, uint8_t reg, uint8_t* buf, uint32_t nbytes) {
     }
     #if VERBOSE
     printf("i2c_rw: addr 0x%02x reg 0x%02x read: ",addr,reg);
-    for (int i = 0; i < nbytes; i++) printf("0x%02x ",buf[i]);
+    for (unsigned i = 0; i < nbytes; i++) printf("0x%02x ",buf[i]);
     printf("\n");
     #endif
     return nbytes;
@@ -138,7 +138,7 @@ int i2c_recv(uint8_t addr, uint8_t reg, uint8_t* buf, uint32_t nbytes) {
     }
     #if VERBOSE
     printf("i2c_recv: addr x%02x reg x%02x read: ",addr,reg);
-    for (int i = 0; i < nbytes; i++) printf("x%02x ",buf[i]);
+    for (unsigned i = 0; i < nbytes; i++) printf("x%02x ",buf[i]);
     printf("\n");
     #endif
     return nbytes;
@@ -154,7 +154,7 @@ int i2c_recv(uint8_t addr, uint8_t* buf, uint32_t nbytes) {
     }
     #if VERBOSE
     printf("i2c_recv: addr x%02x read: ",addr);
-    for (int i = 0; i < nbytes; i++) printf("x%02x ",buf[i]);
+    for (unsigned i = 0; i < nbytes; i++) printf("x%02x ",buf[i]);
     printf("\n");
     #endif
     return nbytes;
@@ -170,20 +170,28 @@ uint32_t i2c_direct_read(uint32_t lower){
   uint32_t addr   = i2c_expert[2];
   uint32_t reg    = i2c_expert[3];
   uint32_t nbytes = i2c_expert[4];
+  uint8_t  buf[nbytes];
+  ssize_t  ret = 0;
+
   #if VERBOSE
   printf("i2c_direct_read:  mode: %d enable: %d\n", mode, enable);
   printf("i2c_direct_read:  hw addr: 0x%x reg: 0x%x nbytes: %d\n", addr, reg, nbytes);
   #endif
   if (enable!=1) return 0;
   if (nbytes>4) return 0;
-  uint8_t buf[nbytes];
-  // Can enable other versions as needed via mode...
-  if (i2c_recv(addr, reg, buf, nbytes)!=nbytes){
-    printf("**ERROR** i2c_direct_read:  Failed to direct read I2C register.\n");
+
+  ret = i2c_recv(addr, reg, buf, nbytes);
+  if (ret < 0) {
+    printf("**ERROR** i2c_direct_read: I2C read failed with error %ld.\n", ret);
     return 0;
   }
+  if (((size_t) ret) != nbytes) {
+    printf("**ERROR** i2c_direct_read: I2C read incomplete (%ld / %u bytes).\n", ret, nbytes);
+    return 0;
+  }
+
   uint32_t val = 0;
-  for (int i=0 ; i< nbytes; i++){
+  for (unsigned i=0 ; i< nbytes; i++){
     val = (val<<8) | buf[i];
   }
   return val;
@@ -202,10 +210,10 @@ uint32_t i2c_direct_write(uint32_t lower, uint32_t val){
   #endif
   if (enable!=1) return 0;
   if (nbytes>4) return 0;
-  uint8_t buf[nbytes];
-  int ret = i2c_set(addr, reg, val, nbytes);
-  if (ret != nbytes+1){
-    printf("**ERROR** i2c_direct_write: i2c_set returned %d when expecting %d\n", ret, nbytes+1);
+  ssize_t ret = i2c_set(addr, reg, val, nbytes);
+
+  if ((ret < 0) || (((size_t) ret) != nbytes+1)){
+    printf("**ERROR** i2c_direct_write: i2c_set returned %ld when expecting %u\n", ret, nbytes+1);
     return 0;
   }
   return 1;
@@ -277,7 +285,7 @@ uint32_t i2c_mon_vdda(uint32_t lower){
   }
 
   uint32_t val = 0;
-  for (int i=0 ; i< nbytes; i++){
+  for (unsigned i=0 ; i< nbytes; i++){
     val = (val<<8) | buf[i];
   }
   return full_scale*val/0xFFFF;
@@ -313,7 +321,7 @@ uint32_t i2c_mon_vddd(uint32_t lower){
   }
 
   uint32_t val = 0;
-  for (int i=0 ; i< nbytes; i++){
+  for (unsigned i=0 ; i< nbytes; i++){
     val = (val<<8) | buf[i];
   }
   return full_scale*val/0xFFFF;
@@ -349,7 +357,7 @@ uint32_t i2c_mon_idda(uint32_t lower){
   }
 
   uint32_t val = 0;
-  for (int i=0 ; i< nbytes; i++){
+  for (unsigned i=0 ; i< nbytes; i++){
     val = (val<<8) | buf[i];
   }
   return full_scale*val/0xFFFF;
@@ -387,7 +395,7 @@ uint32_t i2c_mon_iddd(uint32_t lower){
   }
 
   uint32_t val = 0;
-  for (int i=0 ; i< nbytes; i++){
+  for (unsigned i=0 ; i< nbytes; i++){
     val = (val<<8) | buf[i];
   }
   return full_scale*val/0xFFFF;
