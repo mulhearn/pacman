@@ -43,13 +43,16 @@ extern "C" {
 
 #define C_ADDR_TX_UART_STATUS   0x00
 #define C_ADDR_TX_UART_CONFIG   0x04
-#define C_ADDR_TX_UART_LOOK_A   0x10
-#define C_ADDR_TX_UART_LOOK_B   0x14
 #define C_ADDR_TX_UART_STARTS   0x20
 #define C_ADDR_TX_UART_BEATS    0x24
-#define C_ADDR_TX_UART_CHAN     0x50
-#define C_ADDR_TX_BUFFER_STATUS 0xA0
-#define C_ADDR_TX_ZERO_CNTS     0xB8
+
+#define C_ADDR_TX_LOOK_SELECT   0xA0
+#define C_ADDR_TX_LOOK_UA       0xA4
+#define C_ADDR_TX_LOOK_UB       0xA8
+#define C_ADDR_TX_BUFFER_STATUS 0xB0
+#define C_ADDR_TX_ZERO_CNTS     0xF8
+
+
 
 // pacman-server hooks:
 void init_rxtx(void);
