@@ -17,9 +17,12 @@ static unsigned G_TX_COUNTER = 0;
 #define TX_BD_BASEADDR       0x20000000
 #define RX_BD_BASEADDR       0x21000000
 
-// 40 uarts x 64 bits => 20 128 bit word plus 1 128 bit header => 21*4*4 = 336 bytes (0x150)
-#define TX_BUF_BYTES 0x150
-
+// 40 uarts x 64 bits + 1-64 bit header => 328 bits = 0x148
+// Note: DMA driver will alighn buffer *spacing* to 0x150
+#define TX_PACKET_BYTES 0x148
+#define TX_HEADER_BYTES 8
+#define TX_PAYLOAD_U32_WORDS ((TX_PACKET_BYTES - TX_HEADER_BYTES)/4)
+#define TX_HEADER_U32_WORDS  (TX_HEADER_BYTES/4)
 
 // Buffer sizes:
 // 1 single UART        (1+1)*24    =  48  = 0x30   <-- size MMMM=0x0001
@@ -36,8 +39,6 @@ static unsigned G_TX_COUNTER = 0;
 // More directly, that is large enough for 682 words (0x2aa)
 #define RX_BUF_BYTES 0x4000
 
-#define TX_BUF_WORDS TX_BUF_BYTES/4
-
 #define TX_BATCH_NEXTDESC_ADDR       0x20100000
 #define RX_BATCH_NEXTDESC_ADDR       0x20100004
 
@@ -48,7 +49,7 @@ void init_rxtx(void){
 
 void init_tx_descriptor_ring_mode(int ring_size){
   printf("INFO:  initializing TX BD ring:\r\n");
-  dma_init_bd_ring(TX_BD_BASEADDR, ring_size, TX_BUF_BYTES, DMA_BD_CONTROL_SOF | DMA_BD_CONTROL_EOF, DMA_BD_STATUS_COMPLETE);
+  dma_init_bd_ring(TX_BD_BASEADDR, ring_size, TX_PACKET_BYTES, DMA_BD_CONTROL_SOF | DMA_BD_CONTROL_EOF, DMA_BD_STATUS_COMPLETE);
 
   dma_write_tx_curdesc(TX_BD_BASEADDR);
   dma_write_tx_taildesc(TX_BD_BASEADDR);
@@ -128,18 +129,15 @@ void single_tx(void){
   dma_write_batch_tx_taildesc(nxta);
 
   hw_ptr_t tx_buf = dma_get_buffer(nxta);
-  unsigned words = TX_BUF_WORDS;
 
   tx_buf[0]= tx_mask_a;
   tx_buf[1]= tx_mask_b;
-  tx_buf[2]=0x00000000;
-  tx_buf[3]=0x00000000;
 
-  for (int i=0; i<(words-4); i++)
-    tx_buf[i+4] = 0xB000F000 + i + (G_TX_COUNTER<<16);
+  for (int i=0; i<TX_PAYLOAD_U32_WORDS; i++)
+    tx_buf[i+TX_HEADER_U32_WORDS] = 0xB000F000 + i + (G_TX_COUNTER<<16);
   G_TX_COUNTER++;
 
-  HW_FLUSH_DCACHE(tx_buf, words*4);
+  HW_FLUSH_DCACHE(tx_buf, TX_PACKET_BYTES);
   dma_clear_tx_ioc();
   dma_clear_bd_status(nxta);
   dma_write_tx_taildesc(nxta);
@@ -164,7 +162,6 @@ void single_rx(void){
 }
 
 void batch_tx(void){
-  unsigned words = TX_BUF_WORDS;
   unsigned count = 0;
   hw_addr_t nxta;
 
@@ -174,12 +171,10 @@ void batch_tx(void){
 
     tx_buf[0]= tx_mask_a;
     tx_buf[1]= tx_mask_b;
-    tx_buf[2]=0x00000000;
-    tx_buf[3]=0x00000000;
 
-    for (int i=0; i<(words-4); i++)
-      tx_buf[i+4] = 0xB000F000 + i + (G_TX_COUNTER<<16);
-    HW_FLUSH_DCACHE(tx_buf, words*4);
+    for (int i=0; i<TX_PAYLOAD_U32_WORDS; i++)
+      tx_buf[i+TX_HEADER_U32_WORDS] = 0xB000F000 + i + (G_TX_COUNTER<<16);
+    HW_FLUSH_DCACHE(tx_buf, TX_PACKET_BYTES);
 
     dma_add_tx_bd(nxta);
     count++;
@@ -377,7 +372,6 @@ void benchmark_tx(void){
   const unsigned packets    = 10000; // DMA packets to send
   const unsigned uarts      = 40;
   const unsigned batch_size = 100;
-  const unsigned words      = TX_BUF_WORDS; // words in TX buffer (= 1 DMA packet)
 
   unsigned tx_sent = 0;
 
@@ -393,13 +387,11 @@ void benchmark_tx(void){
 
       tx_buf[0]= tx_mask_a;
       tx_buf[1]= tx_mask_b;
-      tx_buf[2]=0x00000000;
-      tx_buf[3]=0x00000000;
 
-      for (int i=0; i<(words-4); i++)
-	tx_buf[i+4] = rand();
+      for (int i=0; i<TX_PAYLOAD_U32_WORDS; i++)
+	tx_buf[i+TX_HEADER_U32_WORDS] = rand();
 
-      HW_FLUSH_DCACHE(tx_buf, words*4);
+      HW_FLUSH_DCACHE(tx_buf, TX_PACKET_BYTES);
 
       dma_add_tx_bd(nxta);
       batch_count++;
@@ -460,13 +452,11 @@ void benchmark_rxtx_loopback(void){
 
 	tx_buf[0]= tx_mask_a;
 	tx_buf[1]= tx_mask_b;
-	tx_buf[2]=0x00000000;
-	tx_buf[3]=0x00000000;
 
-	//for (int i=0; i<(words-4); i++)
-	//  tx_buf[i+4] = rand();
+	//for (int i=0; i<TX_PAYLOAD_U32_WORDS; i++)
+	//  tx_buf[i+TX_HEADER_U32_WORDS] = rand();
 
-	HW_FLUSH_DCACHE(tx_buf, words*4);
+	HW_FLUSH_DCACHE(tx_buf, TX_PACKET_BYTES);
 
 	dma_add_tx_bd(nxta);
 	batch_count++;
@@ -528,4 +518,3 @@ void benchmark_rxtx_loopback(void){
 
 
 }
-
