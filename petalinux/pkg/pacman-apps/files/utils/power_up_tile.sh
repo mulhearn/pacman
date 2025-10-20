@@ -18,16 +18,13 @@ VDDD_DAC_WRITE_ADDR=$(( 0x24020 + $TILE-1 ))
 ANALOG_PWR_EN_ADDR=0x00000014
 ANALOG_PWR_EN_VALUE=1 # enable larpix power
 
-# set tile enable bit
-TILE_EN_ADDR=0x00000010
-TILE_EN_READ_RESP=$($PACMAN_UTIL --read $TILE_EN_ADDR | grep 'READ')
-TILE_EN_VALUE=$(python -c "print(int(\
-\"\"\"${TILE_EN_READ_RESP}\"\"\".split()[-1].split('x')[-1].strip('\''),16) \
-| (1 << (${TILE}-1)))")
+# set tile enable set address
+TILE_EN_SET_ADDR=0x0000A108
+TILE_EN_VALUE=$((1 << (${TILE}-1)))
 
 # write registers
 $PACMAN_UTIL \
     --write $VDDA_DAC_WRITE_ADDR $VDDA_DAC_VALUE \
     --write $VDDD_DAC_WRITE_ADDR $VDDD_DAC_VALUE \
     --write $ANALOG_PWR_EN_ADDR $ANALOG_PWR_EN_VALUE \
-    --write $TILE_EN_ADDR $TILE_EN_VALUE
+    --write $TILE_EN_SET_ADDR $TILE_EN_VALUE

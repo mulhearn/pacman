@@ -29,12 +29,31 @@ int pacman_vspace_write(uint32_t addr, uint32_t value){
 
   unsigned tmp = 0;
   switch(addr){
-  case 0x0010:
+  case 0xA100: // TILE POWER ENABLE:
+    tmp = pacman_read(0xF010);
+    tmp &= 0xFFF0FFFF;
+    if (value&0x1)
+      tmp |= 0x00010000;
+    return pacman_write(0xF010, tmp);
+  case 0xA104: // TILE ENABLE
     tmp = pacman_read(0xF010);
     tmp &= 0xFFFF0000;
     tmp |= (value & 0x03FF);
     return pacman_write(0xF010, tmp);
-  case 0x0014:
+  case 0xA108: // TILE ENABLE_SET
+    tmp = pacman_read(0xF010);
+    tmp |= (value & 0x03FF);
+    return pacman_write(0xF010, tmp);
+  case 0xA10C: // TILE ENABLE_CLEAR
+    tmp = pacman_read(0xF010);
+    tmp &= ~(value & 0x03FF);
+    return pacman_write(0xF010, tmp);
+  case 0x0010: // TILE ENABLES:
+    tmp = pacman_read(0xF010);
+    tmp &= 0xFFFF0000;
+    tmp |= (value & 0x03FF);
+    return pacman_write(0xF010, tmp);
+  case 0x0014: // ANALOG POWER ENABLE:
     tmp = pacman_read(0xF010);
     tmp &= 0xFFF0FFFF;
     if (value&0x1)
@@ -50,7 +69,7 @@ int pacman_vspace_write(uint32_t addr, uint32_t value){
     // this is a request to send a sync pulse:
     if ((value&0x4)!=0){
       // use Poke C register (mapped to SYNC pulse in config)
-      return pacman_write(0xE010, 0x0);
+      return pacman_write(0xE0C0, 0x0);
     }
     return EXIT_SUCCESS;
   case 0x1014:

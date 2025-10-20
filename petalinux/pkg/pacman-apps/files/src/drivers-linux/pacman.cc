@@ -17,7 +17,6 @@
 #include "dma.h"
 #include "rxtx.h"
 
-
 volatile uint32_t * G_PACMAN_AXIL = NULL;
 
 //PACMAN SERVER Scratch Registers (Accessible at PACMAN_SERVER_VIRTUAL_START + (0, 1)
@@ -63,13 +62,38 @@ int pacman_init(int verbose){
     printf("INFO:  Setting number of cycles per DMA package to 31 (0x1F) as appropriate for DMA buffer length.\n");
     printf("INFO:  Enabling Trigger, Sync, and Heartbeat words in the RX unit.\n");
   }
-  G_PACMAN_AXIL[0x7FA4>>2] = 0x001F;
-  G_PACMAN_AXIL[0x7FA8>>2] = 0x0003;
+  G_PACMAN_AXIL[0x7FB4>>2] = 0x001F;
+  G_PACMAN_AXIL[0x7FB8>>2] = 0x0003;
 
   if (verbose){
     printf("INFO:  Limiting TX bandwidth to 1/2 of nominal UART rate (1/4 maximum) \n");
   }
   G_PACMAN_AXIL[0x3B04>>2] = 0x05281602;
+
+  if (verbose){
+    printf("INFO:  Setting both G and H output to active low \n");
+    printf("INFO:  POKE_C -> G+T (1 clock cycle) \n");
+    printf("INFO:  POKE_D -> G   (256 clock cycle) \n");
+    printf("INFO:  LEMO_A -> H+T (1 clock cycle) \n");
+    printf("INFO:  LEMO_B -> H+T (1 clock cycle) \n");
+  }
+  //polarity configuration: 0xE104
+  // 0x0HHHGGGI H=H output mask(10 bits) G=G output mask (10 bits) I = input mask (2 bits)
+  G_PACMAN_AXIL[0xE104>>2] = 0x03FF3FF0;
+
+  //destination configurations:
+  // 0x0MMMDDDO M=tile enables, D=duration O=output enables (1 = G, 2 = H, 4 = T)
+  //LEMO A destination configuration:
+  G_PACMAN_AXIL[0xE110>>2] = 0x03FF0016;
+  //LEMO B destination configuration:
+  G_PACMAN_AXIL[0xE114>>2] = 0x03FF0016;
+  //POKE C destination configuration:
+  G_PACMAN_AXIL[0xE118>>2] = 0x03FF0015;
+  //POKE D destination configuration:
+  G_PACMAN_AXIL[0xE11C>>2] = 0x03FF1001;
+
+  //Request ATC configuration update:
+  G_PACMAN_AXIL[0xE100>>2] = 0x0;
 
   // duplicate (harmless) effort here while merging new driver code into PACMAN server.
   init_axil_driver();
