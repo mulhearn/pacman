@@ -325,18 +325,17 @@ void read_tx_status(void){
     unsigned config = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_UART_CONFIG);
     unsigned starts = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_UART_STARTS);
     unsigned beats = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_UART_BEATS);
-    unsigned nchan  = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_UART_CHAN);
-    printf("%2d:  chan: %2d config: 0x%08x status: 0x%08x starts: %d beats: %d\r\n",i, nchan, config, status, starts, beats);
+    printf("%2d: config: 0x%08x status: 0x%08x starts: %d beats: %d\r\n",i, config, status, starts, beats);
   }
   printf("rx buffer status----------- 0x%x    \r\n", axil_read_register(SCOPE_TX+0x3F00+C_ADDR_TX_BUFFER_STATUS));
 }
 
 void read_tx_look(void){
   for (int i=0; i<40; i++){
-    unsigned cshift = (i<<8);
-    unsigned a = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_UART_LOOK_A);
-    unsigned b = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_UART_LOOK_B);
-    printf("Channel %2d Look:  0x%08x %08x\r\n", i, b, a);
+    axil_write_register(SCOPE_TX+UART_GLOBAL+C_ADDR_TX_LOOK_SELECT, i);
+    unsigned a = axil_read_register(SCOPE_TX+UART_GLOBAL+C_ADDR_TX_LOOK_UA);
+    unsigned b = axil_read_register(SCOPE_TX+UART_GLOBAL+C_ADDR_TX_LOOK_UB);
+    printf("Channel %2d Look:  0x%08x %08x \r\n", i, b, a);
   }
 }
 
@@ -437,7 +436,7 @@ void benchmark_rxtx_loopback(void){
   const unsigned uarts       = 40;    // *** assuming all 40 uarts enabled ***
   const unsigned uart_bytes  = 24;    // 192-bits per uart channel
   const unsigned batch_size  = 100;
-  //const unsigned words       = TX_BUF_WORDS; // words in TX buffer (= 1 DMA packet)
+  const unsigned words       = TX_BUF_WORDS; // words in TX buffer (= 1 DMA packet)
   const unsigned rx_expected = uarts * uart_bytes * tx_packets;
   const unsigned rx_trailer_bytes = 24; // Each DMA RX packet has a two 192-bit word trailer
 
