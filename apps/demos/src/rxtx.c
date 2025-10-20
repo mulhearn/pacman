@@ -436,7 +436,6 @@ void benchmark_rxtx_loopback(void){
   const unsigned uarts       = 40;    // *** assuming all 40 uarts enabled ***
   const unsigned uart_bytes  = 24;    // 192-bits per uart channel
   const unsigned batch_size  = 100;
-  const unsigned words       = TX_BUF_WORDS; // words in TX buffer (= 1 DMA packet)
   const unsigned rx_expected = uarts * uart_bytes * tx_packets;
   const unsigned rx_trailer_bytes = 24; // Each DMA RX packet has a two 192-bit word trailer
 
