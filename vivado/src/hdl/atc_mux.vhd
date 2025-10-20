@@ -99,11 +99,16 @@ begin
     sel_t(i) <= config(i)(2);
   end generate;
 
+
+
   -- extend input signal
+  gen_input_ext : for j in 0 to 5 generate
+    input_ext(j) <= '1' when cnt(j) > 0 else '0';
+  end generate;
+
   process (clk, rst)
   begin
     if rst = '1' then
-      input_ext <= (others => '0');
       for j in 0 to 5 loop
         cnt(j) <= (others => '0');
       end loop;
@@ -120,14 +125,9 @@ begin
       for j in 0 to 5 loop
 
         if update_vec(j) = '1' then
-          input_ext(j) <= '1';
           cnt(j) <= unsigned( config(j)(15 downto 4) );
-        elsif input_ext(j) = '1' then
-          if cnt(j) = 0 then
-            input_ext(j) <= '0';
-          else
-            cnt(j) <= cnt(j) - 1;
-          end if;
+        elsif cnt(j) > 0 then
+          cnt(j) <= cnt(j) - 1;
         end if;
       end loop;
     end if;
