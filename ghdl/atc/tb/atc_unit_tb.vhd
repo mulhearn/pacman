@@ -141,6 +141,11 @@ begin
     wdata   <= x"00000000";
     wupdate <= '0';
     wait for 20 ns;
+    -- polarity configuration
+    waddr   <= x"E108";
+    wdata   <= x"03FF0000";
+    wupdate <= '1';
+    wait for 10 ns;
     -- destination configuratin for LEMO A
     waddr   <= x"E110";
     wdata   <= x"03FF0011";

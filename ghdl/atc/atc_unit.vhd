@@ -156,8 +156,15 @@ architecture behaviour of atc_unit is
     );
   end component;
 
-
-
+  component nchan_inverter is
+    port (
+      CLK_I      : in  std_logic;
+      RST_I      : in  std_logic;
+      SIG_I      : in  std_logic_vector(C_NUM_TILE-1 downto 0);
+      POLARITY_I : in  std_logic_vector(C_NUM_TILE-1 downto 0);
+      SIG_O      : out std_logic_vector(C_NUM_TILE-1 downto 0)
+      );
+  end component;
 
   -- system clock domain:
   signal sys_clk        : std_logic;
@@ -208,10 +215,6 @@ begin
   det_clk <= UCLK_I;
   det_rst <= RST_I;  -- TODO:  make deassertion synchronous in det_clk domain
   UCLK_O  <= UCLK_I;
-
-  -- TODO:  add polarity
-  G_O     <= det_g;
-  H_O     <= det_h;
 
   TIMESTAMP_O <= sys_timestamp;
 
@@ -336,6 +339,22 @@ begin
     --TIMESTAMP_O        => det_timestamp,  -- not yet used...
     TOGGLE_O           => det_toggle,
     TSYNC_O            => det_tsync
+    );
+
+  ginv0: nchan_inverter port map (
+    CLK_I	=> det_clk,
+    RST_I 	=> det_rst,
+    SIG_I	=> det_g,
+    POLARITY_I  => det_cfg.polarity(13 downto 4),
+    SIG_O	=> G_O
+  );
+
+  hinv0: nchan_inverter port map (
+    CLK_I	=> det_clk,
+    RST_I 	=> det_rst,
+    SIG_I	=> det_h,
+    POLARITY_I  => det_cfg.polarity(25 downto 16),
+    SIG_O	=> H_O
   );
 
 

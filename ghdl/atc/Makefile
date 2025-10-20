@@ -12,6 +12,7 @@ modules-a:
 	ghdl -a ../cdc/payload_sync.vhd
 	ghdl -a atc_pkg.vhd
 	ghdl -a counter.vhd
+	ghdl -a nchan_inverter.vhd
 	ghdl -a atc_registers.vhd
 	ghdl -a config_sync.vhd
 	ghdl -a timestamp_simple.vhd
@@ -30,6 +31,7 @@ modules-e:
 	ghdl -e poke_sync
 	ghdl -e payload_sync
 	ghdl -e counter
+	ghdl -e nchan_inverter
 	ghdl -e atc_registers
 	ghdl -e config_sync
 	ghdl -e timestamp_simple
@@ -43,6 +45,8 @@ testbenches:
 	echo "*** testbench analysis and elaboration ***"
 	ghdl -a -fsynopsys tb/counter_tb.vhd
 	ghdl -e -fsynopsys counter_tb
+	ghdl -a -fsynopsys tb/nchan_inverter_tb.vhd
+	ghdl -e -fsynopsys nchan_inverter_tb
 	ghdl -a -fsynopsys tb/atc_registers_tb.vhd
 	ghdl -e -fsynopsys atc_registers_tb
 	ghdl -a -fsynopsys tb/atc_registers_tb.vhd
@@ -63,6 +67,7 @@ testbenches:
 
 run-testbenches: all
 	ghdl -r -fsynopsys counter_tb --stop-time=1000ns
+	ghdl -r -fsynopsys nchan_inverter_tb --stop-time=3500ns
 	ghdl -r -fsynopsys atc_registers_tb --stop-time=500ns
 	ghdl -r -fsynopsys atc_mux_tb --stop-time=1000ns
 	ghdl -r -fsynopsys config_sync_tb --stop-time=1000ns
