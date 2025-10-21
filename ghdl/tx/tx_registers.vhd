@@ -65,17 +65,25 @@ architecture behavioral of tx_registers is
 
   -- input data for registers:
   signal look       : std_logic_vector(C_UART_DATA_WIDTH-1 downto 0);
-  signal status     : uart_reg_array_t;
+  signal ustatus     : uart_reg_array_t;
   signal bstatus    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
   -- registered controlled configuration per UART channel
   signal config   : uart_reg_array_t := (others => (others => '0'));
   -- zero all counters:
   signal zero_counters : std_logic := '0';
-  -- count of TX starts:
-  signal starts   : uart_reg_array_t := (others => (others => '0'));
-  -- count of TX starts:
-  signal beats    : uart_reg_array_t := (others => (others => '0'));
+
+  -- UART status condition counts
+  -- don't care about latency, so heavily registered:
+  -- combintorial stage:
+  signal starts_next  : uart_counter_array_t := (others => (others => '0'));
+  signal beats_next   : uart_counter_array_t := (others => (others => '0'));
+  -- first register stage:
+  signal starts_rega  : uart_counter_array_t := (others => (others => '0'));
+  signal beats_rega   : uart_counter_array_t := (others => (others => '0'));
+  -- second register stage:
+  signal starts_regb  : uart_counter_array_t := (others => (others => '0'));
+  signal beats_regb   : uart_counter_array_t := (others => (others => '0'));
 
   signal look_select : std_logic_vector(C_SELECT_WIDTH-1 downto 0)  := (others => '0');
 
@@ -99,11 +107,11 @@ begin
   begin
     if (rst='1') then
       look       <= (others => '0');
-      status     <= (others => (others => '0'));
+      ustatus     <= (others => (others => '0'));
       bstatus    <= (others => '0');
     elsif (rising_edge(clk)) then
       look       <= LOOK_UART_DATA_I;
-      status     <= UART_STATUS_I;
+      ustatus     <= UART_STATUS_I;
       bstatus    <= BUFFER_STATUS_I;
     end if;
   end process;
@@ -144,16 +152,18 @@ begin
             -- UART channel registers:
             if (chan < C_NUM_UART) then
               if (reg=C_ADDR_TX_UART_STATUS) then
-                rdata <= status(chan);
+                rdata <= ustatus(chan);
                 rack  <= '1';
               elsif (reg=C_ADDR_TX_UART_CONFIG) then
                 rdata <= config(chan);
                 rack  <= '1';
               elsif (reg=C_ADDR_TX_UART_STARTS) then
-                rdata <= starts(chan);
+                rdata <= (others => '0');
+                rdata(C_COUNT_BITS-1 downto 0) <= std_logic_vector(starts_regb(chan));
                 rack  <= '1';
               elsif (reg=C_ADDR_TX_UART_BEATS) then
-                rdata <= beats(chan);
+                rdata <= (others => '0');
+                rdata(C_COUNT_BITS-1 downto 0) <= std_logic_vector(beats_regb(chan));
                 rack  <= '1';
               end if;
             -- global (to TX) registers:
@@ -239,34 +249,58 @@ begin
     end if;
   end process;
 
-  -- Count TX starts from status register, zero on reset or zero_counters signal.
-  process(clk, rst)
-    type uart_int_array_t is array (0 to C_NUM_UART-1) of integer range 0 to 16#FFFFFF#;
-    variable istarts : uart_int_array_t := (others => 0);
-    variable ibeats  : uart_int_array_t := (others => 0);
+  process(rst, ustatus, zero_counters, starts_rega, beats_rega)
+    variable valid  : std_logic;
+    variable ready  : std_logic;
+    variable start  : std_logic;
   begin
-    if (rst = '1') then
-      istarts := (others => 0);
-      ibeats := (others => 0);
+    if (rst='1') or (zero_counters = '1') then
+      starts_next   <= (others => (others => '0'));
+      beats_next    <= (others => (others => '0'));
     else
-      if (rising_edge(clk)) then
-        for i in 0 to C_NUM_UART-1 loop
-          if (zero_counters = '1') then
-            istarts(i) := 0;
-            ibeats(i) := 0;
-          else
-            if (status(i)(3) = '1') then
-              istarts(i) := (istarts(i) + 1) mod 16#FFFFFF#;
-            end if;
-            if ((status(i)(1) = '1') and (status(i)(2) = '1')) then
-              ibeats(i) := (ibeats(i) + 1) mod 16#FFFFFF#;
-            end if;
-          end if;
-          starts(i) <= std_logic_vector(to_unsigned(istarts(i),starts(i)'length));
-          beats(i) <= std_logic_vector(to_unsigned(ibeats(i),beats(i)'length));
-        end loop;
-      end if;
+      gen_next: for i in 0 to C_NUM_UART-1 loop
+        -- extract status bits for clarity
+        valid  := ustatus(i)(1);
+        ready  := ustatus(i)(2);
+        start  := ustatus(i)(3);
+
+        -- starts count increments if starts=1
+        if (start = '1') and (starts_rega(i) < C_COUNT_MAX) then
+          starts_next(i) <= starts_rega(i) + 1;
+        else
+          starts_next(i) <= starts_rega(i);
+        end if;
+
+        -- beats count increments when valid=1 and ready=1:
+        if (valid = '1') and (ready = '1') and (beats_rega(i) < C_COUNT_MAX) then
+          beats_next(i) <= beats_rega(i) + 1;
+        else
+          beats_next(i) <= beats_rega(i);
+        end if;
+      end loop;
     end if;
   end process;
-end;
 
+  -- registers for status counts:
+  -- latency is not an issue, so there are two stages:
+  process(clk, rst)
+  begin
+    if rst = '1' then
+      starts_rega   <= (others => (others => '0'));
+      beats_rega    <= (others => (others => '0'));
+
+      starts_regb   <= (others => (others => '0'));
+      beats_regb    <= (others => (others => '0'));
+    elsif rising_edge(clk) then
+      -- First register stage: next -> rega
+      starts_rega   <= starts_next;
+      beats_rega    <= beats_next;
+
+      -- Second register stage: rega -> regb
+      starts_regb   <= starts_rega;
+      beats_regb    <= beats_rega;
+    end if;
+  end process;
+
+
+end;

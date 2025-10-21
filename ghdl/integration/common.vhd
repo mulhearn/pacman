@@ -63,15 +63,13 @@ package common is
   type rx_timestamp_array_t   is array (0 to C_RX_NUM_CHAN-1) of std_logic_vector (C_TIMESTAMP_WIDTH-1 downto 0);
 
 
-
   --arrays of std_logic_vectors with array length the number of tiles:
   type ATC_array              is array (0 to C_NUM_TILE-1) of std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
-
-
--- uart counter arrays that roll over at C_COUNT_MAX:
-  constant C_COUNT_MAX : integer := 16#10000#;
-  type uart_counter_array_t is array (0 to C_NUM_UART-1) of integer range 0 to C_COUNT_MAX;
+  -- uart counter arrays (16 bit) that saturate at 0xFFFF:
+  constant C_COUNT_BITS : integer := 16;
+  constant C_COUNT_MAX  : unsigned := x"FFFF";
+  type uart_counter_array_t is array (0 to C_NUM_UART-1) of unsigned(C_COUNT_BITS-1 downto 0);
 
   -- default TX / RX config register (can be set per UART channel)
   constant C_DEFAULT_TX_UART_CONFIG : integer := 16#00001602#;
