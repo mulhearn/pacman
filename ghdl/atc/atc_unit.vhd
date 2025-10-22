@@ -36,6 +36,15 @@ entity atc_unit is
 end atc_unit;
 
 architecture behaviour of atc_unit is
+
+  component rst_sync is
+    port (
+      CLK_I  : in   std_logic;
+      RST_A  : in   std_logic;
+      RST_O  : out  std_logic
+    );
+  end component;
+
   component atc_registers is
     port (
       CLK_I : in std_logic;
@@ -213,10 +222,16 @@ begin
   sys_clk <= ACLK;
   sys_rst <= RST_I;
   det_clk <= UCLK_I;
-  det_rst <= RST_I;  -- TODO:  make deassertion synchronous in det_clk domain
   UCLK_O  <= UCLK_I;
 
   TIMESTAMP_O <= sys_timestamp;
+
+  dut0: rst_sync
+    port map (
+      CLK_I  => det_clk,
+      RST_A  => sys_rst,
+      RST_O  => det_rst
+    );
 
   atcreg0: atc_registers port map (
     CLK_I               => sys_clk,

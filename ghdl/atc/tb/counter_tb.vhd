@@ -46,10 +46,6 @@ begin
     COUNT_O     => cnt
   );
 
-
-
-
-
   areset_process : process
   begin
     rst <= '1';
@@ -61,9 +57,9 @@ begin
   clk_process : process
   begin
     count <= count + 1;
-    clk <= '0';
-    wait for 5 ns;
     clk <= '1';
+    wait for 5 ns;
+    clk <= '0';
     wait for 5 ns;
   end process;
 
@@ -82,11 +78,13 @@ begin
     count_clear <= '0';
     wait;
   end process;
+
   update_process : process
   begin
-    wait for 1 ns;
+    wait for 0 ns;
     update_in <= '0';
     wait for 30 ns;
+    wait for 1 ns;
     update_in <= '1';
     wait for 10 ns;
     update_in <= '0';

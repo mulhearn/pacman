@@ -4,6 +4,7 @@ modules-a:
 	echo "*** modules analysis ***"
 	ghdl -a ../integration/common.vhd
 	ghdl -a ../integration/register_map.vhd
+	ghdl -a ../cdc/rst_sync.vhd
 	ghdl -a ../cdc/rising_edge_sync.vhd
 	ghdl -a ../cdc/toggle_only_sync.vhd
 	ghdl -a ../cdc/update_request.vhd
@@ -24,6 +25,7 @@ modules-a:
 
 modules-e:
 	echo "*** module elaboration ***"
+	ghdl -e rst_sync
 	ghdl -e rising_edge_sync
 	ghdl -e toggle_only_sync
 	ghdl -e update_request
