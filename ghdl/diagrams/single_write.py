@@ -19,7 +19,7 @@ TSTART  = 10
 TFINISH = 45
      
 
-aclk_t, aclk_v              = td.get_time_series_single_bit(vcd, "global_registers_tb.aclk", TSTART, TFINISH)
+clk_t, clk_v              = td.get_time_series_single_bit(vcd, "global_registers_tb.clk", TSTART, TFINISH)
 wupdate_t, wupdate_v        = td.get_time_series_single_bit(vcd, "global_registers_tb.wupdate", TSTART, TFINISH)
 wack_t, wack_v              = td.get_time_series_single_bit(vcd, "global_registers_tb.wack", TSTART, TFINISH)
 
@@ -27,7 +27,7 @@ waddr_t, waddr_vup, waddr_vdn, waddr_lt, waddr_lv = td.get_time_series_bus(vcd, 
 wdata_t, wdata_vup, wdata_vdn, wdata_lt, wdata_lv = td.get_time_series_bus(vcd, "global_registers_tb.wdata[31:0]", TSTART, TFINISH, 1)
 
 plt.figure(figsize=(8,4))
-plt.plot(aclk_t, aclk_v+10, "k-")
+plt.plot(clk_t, clk_v+10, "k-")
 plt.plot(wupdate_t, wupdate_v+8, "k-")
 plt.plot(waddr_t, waddr_vup+6,  "k-")
 plt.plot(waddr_t, waddr_vdn+6,  "k-")

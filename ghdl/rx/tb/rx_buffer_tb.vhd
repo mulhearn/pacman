@@ -53,6 +53,7 @@ architecture behaviour of rx_buffer_tb is
   signal uready   : std_logic_vector(C_RX_NUM_CHAN-1 downto 0);
 
   -- single out single bits/bytes for illustration:
+  signal tlk      : std_logic_vector(7 downto 0);
   signal uva      : std_logic := '0';
   signal uvb      : std_logic := '0';
   signal uvc      : std_logic := '0';
@@ -64,14 +65,18 @@ architecture behaviour of rx_buffer_tb is
   signal show_output : std_logic := '0';
 begin
 
-  uva <= uvalid(8);
-  uvb <= uvalid(9);
-  uvc <= uvalid(10);
-  ura <= uready(8);
-  urb <= uready(9);
-  urc <= uready(10);
+  tlk <= tdata(7 downto 0);
+  uva <= uvalid(2);
+  uvb <= uvalid(5);
+  uvc <= uvalid(8);
+  ura <= uready(2);
+  urb <= uready(5);
+  urc <= uready(8);
   ulast <= status(7);
 
+
+
+  
   uut: rx_buffer port map (
     CLK_I           => clk,
     RST_I           => rst,
@@ -125,7 +130,7 @@ begin
     if (init='1') then
       -- 44 RX channels (40 UARTS plus 4 extra for e.g. SYNC words)
       --uvalid <= x"00000000001";
-      uvalid <= x"00000000700";
+      uvalid <= x"00000000124";
       --uvalid <= x"0FFFFFFFFFF";
       init := '0';
     end if;
@@ -144,15 +149,15 @@ begin
       header <= x"0000000000000144";
       frag_a <= x"0000000001598762";
       frag_b <= x"000000002244BBBB";
-    elsif (to_integer(unsigned(chan_select)) = 1) then
+    elsif (to_integer(unsigned(chan_select)) = 2) then
       header <= x"0000000000000244";
       frag_a <= x"0000000001598762";
       frag_b <= x"000000002244BBBB";
-    elsif (to_integer(unsigned(chan_select)) = 8) then
-      header <= x"0000000000000944";
+    elsif (to_integer(unsigned(chan_select)) = 5) then
+      header <= x"0000000000000943";
       frag_a <= x"0000000001598762";
       frag_b <= x"000000002244BBBB";
-    elsif (to_integer(unsigned(chan_select)) = 9) then
+    elsif (to_integer(unsigned(chan_select)) = 8) then
       header <= x"0000000000000A44";
       frag_a <= x"0000000001598762";
       frag_b <= x"000000002244BBBB";

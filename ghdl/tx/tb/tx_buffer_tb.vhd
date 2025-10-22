@@ -43,10 +43,29 @@ architecture behaviour of tx_buffer_tb is
 
   signal status   : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
-  signal odata    : uart_data_array_t;
-  signal ovalid   : std_logic_vector(C_NUM_UART-1 downto 0);
-  signal oready   : std_logic_vector(C_NUM_UART-1 downto 0);
+  signal udata    : uart_data_array_t;
+  signal uvalid   : std_logic_vector(C_NUM_UART-1 downto 0);
+  signal uready   : std_logic_vector(C_NUM_UART-1 downto 0);
+
+
+  -- pick off single bits for timing diagrams
+
+  signal uvalid_a : std_logic;
+  signal uvalid_b : std_logic;
+  signal uvalid_c : std_logic;
+  signal uready_a : std_logic;
+  signal uready_b : std_logic;
+  signal uready_c : std_logic;
+
+
 begin
+  uvalid_a <= uvalid(0);
+  uvalid_b <= uvalid(8); 
+  uvalid_c <= uvalid(16); 
+  uready_a <= uready(0); 
+  uready_b <= uready(8);  
+  uready_c <= uready(16); 
+
   uut: tx_buffer port map (
     CLK_I           => clk,
     RST_I           => rst,
@@ -55,9 +74,9 @@ begin
     S_AXIS_TREADY   => tready,
     S_AXIS_TKEEP    => (others=>'1'),
     S_AXIS_TLAST    => tlast,
-    DATA_O          => odata,
-    VALID_O         => ovalid,
-    READY_I         => oready,
+    DATA_O          => udata,
+    VALID_O         => uvalid,
+    READY_I         => uready,
     DEBUG_O        => status
   );
 
@@ -71,14 +90,20 @@ begin
 
   ready_process : process
   begin
-    oready <= (others => '0');
+    uready <= (others => '0');
     wait for 1 ns;
-    wait for 520 ns;
-    oready <= x"00000000FF";
+    wait for 460 ns;
+    uready <= x"00000000FF";
     wait for 10 ns;
-    oready <= x"FFFFFFFF00";
+    uready <= x"0000000000";
+    wait for 20 ns;
+    uready <= x"000000FF00";
     wait for 10 ns;
-    oready <= x"0000000000";
+    uready <= x"0000000000";
+    wait for 20 ns;
+    uready <= x"FFFFFF0000";
+    wait for 10 ns;
+    uready <= x"0000000000";
     wait;
   end process;
 
@@ -219,15 +244,15 @@ begin
     write (l, String'(" ltast: "));
     write (l, tlast);
     write (l, String'("|| ov 0x"));
-    hwrite (l, ovalid);
-    write (l, String'("|| odata 0x 0:"));
-    hwrite (l, odata(0)(11 downto 0));
+    hwrite (l, uvalid);
+    write (l, String'("|| udata 0x 0:"));
+    hwrite (l, udata(0)(11 downto 0));
     write (l, String'(" 1:"));
-    hwrite (l, odata(1)(11 downto 0));
+    hwrite (l, udata(1)(11 downto 0));
     write (l, String'(" 38:"));
-    hwrite (l, odata(38)(11 downto 0));
+    hwrite (l, udata(38)(11 downto 0));
     write (l, String'(" 39:"));
-    hwrite (l, odata(39)(11 downto 0));
+    hwrite (l, udata(39)(11 downto 0));
 
     if (rst = '1') then
       write (l, String'(" (RESET)"));
