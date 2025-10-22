@@ -23,41 +23,62 @@ entity counter is
 end;
 
 architecture behavioral of counter is
-signal clk              : std_logic;
-signal rst              : std_logic;
-signal running          : std_logic;
-signal update_in        : std_logic;
-signal update_z         : std_logic := '0';
-constant COUNT_MAX      : unsigned(31 downto 0) := to_unsigned(100000000 - 1, C_RB_DATA_WIDTH);
+
+  signal run_reg      : std_logic;
+  signal increment_reg: std_logic;
+  signal clear_reg    : std_logic;
+
+  signal count_next   : unsigned(C_COUNT_BITS-1 downto 0);
+  signal count_rega   : unsigned(C_COUNT_BITS-1 downto 0);
+  signal count_regb   : unsigned(C_COUNT_BITS-1 downto 0);
+
 begin
 
-clk            <= CLK_I;
-rst            <= RST_I;
-update_in      <= INCREMENT_I;
-
-process(clk, rst)
-  variable count : unsigned(31 downto 0) := (others => '0');
-begin
-  if rst = '1' then
-    update_z    <= '0';
-    count       := (others => '0');
-    COUNT_O <= std_logic_vector(count);
-  elsif rising_edge(clk) then
-    update_z <= update_in;
-
-    if  CLEAR_I  = '1' then
-      count := (others => '0');
-    elsif (RUN_I = '1') and (update_in = '1' and update_z = '0') then
-      if count < COUNT_MAX then
-        count := count + 1;
-      end if;
+  -- Register inputs
+  process(CLK_I, RST_I)
+  begin
+    if RST_I = '1' then
+      run_reg       <= '0';
+      increment_reg <= '0';
+      clear_reg     <= '0';
+    elsif rising_edge(CLK_I) then
+      run_reg       <= RUN_I;
+      increment_reg <= INCREMENT_I;
+      clear_reg     <= CLEAR_I;
     end if;
-    COUNT_O <= std_logic_vector(count);
-  end if;
-end process;
+  end process;
+
+  -- Combinatorial next value
+  process(run_reg, increment_reg, clear_reg, count_rega)
+  begin
+    if clear_reg = '1' then
+      count_next <= (others => '0');
+    elsif run_reg = '1' and increment_reg = '1' then
+      if count_rega < C_COUNT_MAX then
+        count_next <= count_rega + 1;
+      else
+        count_next <= count_rega;  -- saturate at max
+      end if;
+    else
+      count_next <= count_rega;
+    end if;
+  end process;
+
+  -- Two-stage registered outputs
+  process(CLK_I, RST_I)
+  begin
+    if RST_I = '1' then
+      count_rega <= (others => '0');
+      count_regb <= (others => '0');
+    elsif rising_edge(CLK_I) then
+      count_rega <= count_next;
+      count_regb <= count_rega;
+    end if;
+  end process;
+
+  -- Output zero-extended to full bus width
+  COUNT_O <= (C_RB_DATA_WIDTH-1 downto C_COUNT_BITS => '0') & std_logic_vector(count_regb);
+
+end behavioral;
 
 
-
-
-
-end;
