@@ -80,8 +80,8 @@ void toggle_atc_destinations(){
     printf("configure timing for POKE C -> G POKE D -> H \r\n");
     axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LEMO_A,  0x0);
     axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LEMO_B,  0x0);
-    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_POKE_C,  0x03FF0001);
-    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_POKE_D,  0x03FF0002);
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_POKE_C,  0x03FF0011);
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_POKE_D,  0x03FF0012);
     axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LOGIC_E, 0x0);
     axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LOGIC_F, 0x0);
     wait_atc_busy(C_ATC_BUSY_WAIT);
@@ -91,8 +91,8 @@ void toggle_atc_destinations(){
     printf("configure timing for POKE C -> G POKE D -> T \r\n");
     axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LEMO_A,  0x0);
     axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LEMO_B,  0x0);
-    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_POKE_C,  0x03FF0001);
-    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_POKE_D,  0x03FF0004);
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_POKE_C,  0x03FF0011);
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_POKE_D,  0x03FF0014);
     axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LOGIC_E, 0x0);
     axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LOGIC_F, 0x0);
     wait_atc_busy(C_ATC_BUSY_WAIT);
@@ -100,8 +100,8 @@ void toggle_atc_destinations(){
     wait_atc_busy(C_ATC_BUSY_WAIT);
   } else {
     printf("configure timing for LEMO A -> G LEMO B -> H \r\n");
-    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LEMO_A,  0x03FF0001);
-    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LEMO_B,  0x03FF0002);
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LEMO_A,  0x03FF0011);
+    axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LEMO_B,  0x03FF0012);
     axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_POKE_C,  0x0);
     axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_POKE_D,  0x0);
     axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LOGIC_E, 0x0);
