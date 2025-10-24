@@ -36,16 +36,6 @@ def parse_msg(msg_bytes):
     """
     return pm.unpack_msg(msg_bytes)
 
-def print_msg(msg_bytes):
-    """
-    Pretty-print a message using pm.print_header and pm.print_word.
-    msg_bytes may be a full message; we unpack then print header and words.
-    """
-    header, words = parse_msg(msg_bytes)
-    pm.print_header(header)
-    for w in words:
-        pm.print_word(w)
-
 def log_msg(msg_bytes, log_path, log_data):
     """
     Log read/write (and optionally data) messages to a file in a simple plain-text format.
@@ -107,13 +97,13 @@ def main(**kwargs):
             if not args:
                 continue
             # only handle supported commands
-            if command not in ('ping','write','read','tx','rx','listen'):
+            if command not in ('ping','write','read','tx','rx','listen','string'):
                 continue
 
             # choose server/socket
             server = None
             socket = None
-            if command in ('ping','write','read','tx'):
+            if command in ('ping','write','read','tx','string'):
                 server = 'CMD_SERVER'
                 socket = cmd_socket
             elif command == 'rx':
@@ -143,7 +133,7 @@ def main(**kwargs):
                     # if negative, run indefinitely
                     while nmsg < 0 or msg_counter < nmsg:
                         msg = socket.recv()
-                        print_msg(msg)
+                        pm.print_msg(msg)
                         log_msg(msg, log_path, kwargs.get('log_data', False))
                         msg_counter += 1
                         if _VERBOSE:
@@ -186,12 +176,19 @@ def main(**kwargs):
                         pm_words.append(pm.content_data(channel=channel, timestamp=0, payload=payload, pacman=0))
                     msg_bytes = format_msg_req_from_words(pm_words)
 
+                elif command == 'string':
+                    # args is a list of single-element lists; take the first element
+                    s = args[0]
+                    print("DEBUG: sending string...", s)
+
+                    msg_bytes = pm.pack_string_msg(s, timestamp=int(time.time()), pacman=0)
+
                 if msg_bytes:
                     # print and send the request, then wait for reply
-                    print_msg(msg_bytes)
+                    pm.print_msg(msg_bytes)
                     socket.send(msg_bytes)
                     reply = socket.recv()
-                    print_msg(reply)
+                    pm.print_msg(reply)
 
             if _VERBOSE:
                 print(f'disconnect from {server} @ {connection}...')
@@ -258,13 +255,15 @@ if __name__ == '__main__':
                         help='log read and write requests to LOGFILE')
     parser.add_argument('--log_data', action='store_true',
                         help='include TX/RX in LOGFILE')
+    parser.add_argument('--string', nargs=1, type=str,
+                        help='send a variable-length string to the PACMAN command server')
 
     args = parser.parse_args()
 
     _VERBOSE = args.verbose
 
     # ensure at least one action
-    if not any([bool(getattr(args,key)) for key in ('rx','ping','write','read','tx','listen')]):
+    if not any([bool(getattr(args,key)) for key in ('string','rx','ping','write','read','tx','listen')]):
         parser.print_help()
         sys.exit(0)
     else:

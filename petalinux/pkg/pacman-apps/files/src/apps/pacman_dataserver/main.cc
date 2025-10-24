@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
     // -----------------------------
     // Preallocated message buffer
     // -----------------------------
-    static char msg_buffer[HEADER_LEN + MAX_BATCH*WORD_LEN];
+    static char msg_buffer[HEADER_BYTES + MAX_BATCH*WORD_BYTES];
     zmq_msg_t pub_msg;
 
     uint64_t total_words = 0;
@@ -98,7 +98,7 @@ int main(int argc, char* argv[]) {
 
             // Copy words from RX buffer into message buffer
             for (uint32_t i = 0; i < batch_words; i++) {
-                pacman_word_t* w = (pacman_word_t*)(msg_buffer + HEADER_LEN + i*WORD_LEN);
+                pacman_word_t* w = (pacman_word_t*)(msg_buffer + HEADER_BYTES + i*WORD_BYTES);
                 if (rx_buffer_out((uint32_t*)w) == 0) {
                     printf("ERROR: rx_buffer_out failed unexpectedly\n");
                     batch_words = 0;
@@ -108,12 +108,12 @@ int main(int argc, char* argv[]) {
             }
 
             // Initialize header
-            write_header_data((pacman_header_t*)msg_buffer, batch_words);
+            write_header_data((pacman_header_t*)msg_buffer, batch_words*WORD_BYTES);
 
             // Send message with zero-copy
             msg_ready = false;
             if (zmq_msg_init_data(&pub_msg, msg_buffer,
-                                  HEADER_LEN + batch_words*WORD_LEN,
+                                  HEADER_BYTES + batch_words*WORD_BYTES,
                                   clear_msg, NULL) != 0) {
                 perror("ERROR: zmq_msg_init_data failed");
                 batch_words = 0;

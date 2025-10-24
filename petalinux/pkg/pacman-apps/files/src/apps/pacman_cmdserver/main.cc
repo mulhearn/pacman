@@ -6,6 +6,7 @@
 #include "pacman.hh"
 #include "pacman_vspace.hh"
 #include "pacman_message.hh"
+#include "pacman_highlevel_interface.hh"
 
 #define REP_SOCKET_BINDING "tcp://*:5555"
 #define ECHO_SOCKET_BINDING "tcp://*:5554"
@@ -19,7 +20,7 @@ void handle_read(pacman_word_t * req_word, pacman_word_t * rep_word){
   uint32_t addr = req_word->read.addr;
   printf("INFO:  handling read request for address 0x%08x\n", addr);
   uint32_t value = pacman_vspace_read(addr);
-  uint8_t pacman_id = pacman_vspace_get_pacman_id();
+  uint8_t pacman_id = get_pacman_id();
   write_word_read(rep_word, pacman_id, addr, value);
 }
 
@@ -28,7 +29,7 @@ void handle_write(pacman_word_t * req_word, pacman_word_t * rep_word){
   uint32_t value = req_word->read.value;
   printf("INFO:  handling write request for address 0x%08x and value 0x%08x\n", addr, value);
   pacman_vspace_write(addr, value);
-  uint8_t pacman_id = pacman_vspace_get_pacman_id();
+  uint8_t pacman_id = get_pacman_id();
   write_word_write(rep_word, pacman_id, addr, value);
 }
 
@@ -36,7 +37,7 @@ void handle_data(pacman_word_t * req_word, pacman_word_t * rep_word){
   uint8_t  chan    = req_word->data.chan;
   uint64_t payload = req_word->data.payload;
   printf("INFO:  handling TX request for chan %5d payload 0%016lx\n", chan, payload);
-  uint8_t pacman_id = pacman_vspace_get_pacman_id();
+  uint8_t pacman_id = get_pacman_id();
   if (chan > 0) {
     tx_buffer_in(chan-1, reinterpret_cast<uint32_t *>(&payload));
   }
@@ -47,6 +48,7 @@ void handle_unknown(pacman_word_t * req_word, pacman_word_t * rep_word){
   printf("ERROR:  invalid request received, replying with error \n");
   write_word_err(rep_word, 0, 0, 0xEEEE);
 }
+
 
 int main(int argc, char* argv[]){
     printf("INFO:  Starting pacman_cmdserver...\n");
@@ -99,9 +101,41 @@ int main(int argc, char* argv[]){
       pacman_msg_t* msg = reinterpret_cast<pacman_msg_t*>(zmq_msg_data(&req_msg));
       print_msg(msg, "INFO:  ");
 
+      if (is_string_msg(msg)){
+	const char* req_str = reinterpret_cast<const char*>(msg->raw);
+	size_t req_len = msg->header.n_bytes;
+	size_t rep_len = pacman_highlevel_command
+	  (req_str, req_len, reinterpret_cast<char*>(rep_msg.raw), sizeof(rep_msg.raw));
+
+
+
+	// fill header
+	memset(&rep_msg.header, 0, sizeof(rep_msg.header));
+	rep_msg.header.msg_type      = MSG_TYPE_STRING;
+	rep_msg.header.pacman        = 0;
+	rep_msg.header.version_major = MSG_VERSION_MAJOR;
+	rep_msg.header.version_minor = MSG_VERSION_MINOR;
+	rep_msg.header.n_bytes       = rep_len;
+	rep_msg.header.timestamp     = msg->header.timestamp;
+
+	// send reply:
+	zmq_msg_t zmq_rep;
+	zmq_msg_init_data(&zmq_rep,
+			  &rep_msg,
+			  HEADER_BYTES + rep_len,
+			  [](void* /*data*/, void* /*hint*/) { /* do nothing */ },
+			  nullptr
+			  );
+	zmq_msg_send(&zmq_rep, rep_socket, 0);
+	zmq_msg_close(&zmq_rep);
+	zmq_msg_close(&req_msg);
+	continue;
+      }
+
       // Start a reply message with the same number of words as the request:
-      uint16_t n_words = msg->header.n_words;
-      write_header_rep(&rep_msg.header, n_words, msg->header.timestamp);
+      uint16_t n_bytes = msg->header.n_bytes;
+      uint16_t n_words = n_bytes/WORD_BYTES;
+      write_header_rep(&rep_msg.header, n_bytes, msg->header.timestamp);
 
       // Handle each word in the request one at a time:
       for (int i=0; i<n_words; i++){
@@ -132,7 +166,7 @@ int main(int argc, char* argv[]){
       zmq_msg_init_data(
 			&zmq_rep,
 			&rep_msg,                      // pointer to preallocated buffer
-			HEADER_LEN + n_words*WORD_LEN, // header + 1 word
+			HEADER_BYTES + n_bytes, // header + 1 word
 			[](void* /*data*/, void* /*hint*/) { /* do nothing */ },
 			nullptr
 			);

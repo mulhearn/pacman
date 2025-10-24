@@ -6,8 +6,8 @@
 #define MSG_VERSION_MAJOR 1
 #define MSG_VERSION_MINOR 0
 
-#define WORD_LEN 24
-#define HEADER_LEN 24
+#define WORD_BYTES 24
+#define HEADER_BYTES 24
 #define MAX_WORDS 16000  // configurable, matches dataserver/publisher max
 
 // -----------------------------
@@ -16,18 +16,19 @@
 #define MSG_TYPE_REQ  '?'
 #define MSG_TYPE_REP  '!'
 #define MSG_TYPE_DATA 'D'
+#define MSG_TYPE_STRING 'S'
 
 typedef struct {
   uint8_t  msg_type;      // 0
   uint8_t  pacman;        // 1
   uint8_t  version_major; // 2
   uint8_t  version_minor; // 3
-  uint32_t n_words;       // 4–7
+  uint32_t n_bytes;       // 4–7
   uint64_t timestamp;     // 8–15
   uint64_t _pad;         // 16–23
 } pacman_header_t;
 
-static_assert(sizeof(pacman_header_t) == HEADER_LEN, "Header must be 24 bytes");
+static_assert(sizeof(pacman_header_t) == HEADER_BYTES, "Header must be 24 bytes");
 
 // -----------------------------
 // Word structs
@@ -49,13 +50,13 @@ typedef struct { uint8_t word_type; uint8_t pacman; uint8_t sync_type; uint8_t c
 typedef struct { uint8_t word_type; uint8_t pacman; uint8_t trig_type; uint8_t trig_src; uint8_t _pad[4]; uint64_t timestamp; uint8_t _pad2[8]; } pacman_word_trig_t;
 typedef struct { uint8_t word_type; uint8_t pacman; uint8_t _pad[6]; uint64_t timestamp; uint32_t error_code; uint8_t _pad2[4]; } pacman_word_err_t;
 
-static_assert(sizeof(pacman_word_ping_t)  == WORD_LEN, "PING word must be 24 bytes");
-static_assert(sizeof(pacman_word_read_t)  == WORD_LEN, "READ word must be 24 bytes");
-static_assert(sizeof(pacman_word_write_t) == WORD_LEN, "WRITE word must be 24 bytes");
-static_assert(sizeof(pacman_word_data_t)  == WORD_LEN, "DATA word must be 24 bytes");
-static_assert(sizeof(pacman_word_sync_t)  == WORD_LEN, "SYNC word must be 24 bytes");
-static_assert(sizeof(pacman_word_trig_t)  == WORD_LEN, "TRIG word must be 24 bytes");
-static_assert(sizeof(pacman_word_err_t)   == WORD_LEN, "ERR word must be 24 bytes");
+static_assert(sizeof(pacman_word_ping_t)  == WORD_BYTES, "PING word must be 24 bytes");
+static_assert(sizeof(pacman_word_read_t)  == WORD_BYTES, "READ word must be 24 bytes");
+static_assert(sizeof(pacman_word_write_t) == WORD_BYTES, "WRITE word must be 24 bytes");
+static_assert(sizeof(pacman_word_data_t)  == WORD_BYTES, "DATA word must be 24 bytes");
+static_assert(sizeof(pacman_word_sync_t)  == WORD_BYTES, "SYNC word must be 24 bytes");
+static_assert(sizeof(pacman_word_trig_t)  == WORD_BYTES, "TRIG word must be 24 bytes");
+static_assert(sizeof(pacman_word_err_t)   == WORD_BYTES, "ERR word must be 24 bytes");
 
 // -----------------------------
 // Word union for in-place access
@@ -68,51 +69,53 @@ typedef union {
   pacman_word_sync_t  sync;
   pacman_word_trig_t  trig;
   pacman_word_err_t   err;
-  uint8_t raw[WORD_LEN]; // raw byte access
+  uint8_t raw[WORD_BYTES]; // raw byte access
 } pacman_word_t;
 
-static_assert(sizeof(pacman_word_t) == WORD_LEN, "PACMAN word must be 24 bytes");
+static_assert(sizeof(pacman_word_t) == WORD_BYTES, "PACMAN word must be 24 bytes");
 
 // -----------------------------
 // Full message struct with preallocated buffer
 // -----------------------------
 typedef struct {
     pacman_header_t header;
-    pacman_word_t   words[MAX_WORDS]; // zero-copy, in-place field access
+    union {
+      pacman_word_t words[MAX_WORDS];          // word access
+      uint8_t       raw[MAX_WORDS * WORD_BYTES]; // alternate raw byte access
+    };
 } pacman_msg_t;
 
-static_assert(sizeof(pacman_msg_t) == HEADER_LEN + MAX_WORDS * WORD_LEN, "PACMAN message total size");
-
+static_assert(sizeof(pacman_msg_t) == HEADER_BYTES + MAX_WORDS * WORD_BYTES, "PACMAN message total size");
 
 // helpers to populate words in-place
 
-inline void write_header_req(pacman_header_t* h, uint16_t n_words = 0, uint64_t timestamp = 0, uint8_t pacman = 0) {
+inline void write_header_req(pacman_header_t* h, uint16_t n_bytes = 0, uint64_t timestamp = 0, uint8_t pacman = 0) {
     memset(h, 0, sizeof(*h));
     h->msg_type      = MSG_TYPE_REQ;
     h->pacman        = pacman;
     h->version_major = MSG_VERSION_MAJOR;
     h->version_minor = MSG_VERSION_MINOR;
-    h->n_words       = n_words;
+    h->n_bytes       = n_bytes;
     h->timestamp     = timestamp;
 }
 
-inline void write_header_rep(pacman_header_t* h, uint16_t n_words = 0, uint64_t timestamp = 0, uint8_t pacman = 0) {
+inline void write_header_rep(pacman_header_t* h, uint16_t n_bytes = 0, uint64_t timestamp = 0, uint8_t pacman = 0) {
     memset(h, 0, sizeof(*h));
     h->msg_type      = MSG_TYPE_REP;
     h->pacman        = pacman;
     h->version_major = MSG_VERSION_MAJOR;
     h->version_minor = MSG_VERSION_MINOR;
-    h->n_words       = n_words;
+    h->n_bytes       = n_bytes;
     h->timestamp     = timestamp;
 }
 
-inline void write_header_data(pacman_header_t* h, uint16_t n_words = 0, uint64_t timestamp = 0, uint8_t pacman = 0) {
+inline void write_header_data(pacman_header_t* h, uint16_t n_bytes = 0, uint64_t timestamp = 0, uint8_t pacman = 0) {
     memset(h, 0, sizeof(*h));
     h->msg_type      = MSG_TYPE_DATA;
     h->pacman        = pacman;
     h->version_major = MSG_VERSION_MAJOR;
     h->version_minor = MSG_VERSION_MINOR;
-    h->n_words       = n_words;
+    h->n_bytes       = n_bytes;
     h->timestamp     = timestamp;
 }
 
@@ -184,3 +187,30 @@ void print_msg(const pacman_msg_t* msg, const char * prefix = "");
 // Helper macros to access words
 // -----------------------------
 //#define PACMAN_WORD(msg, idx) ((msg)->words[(idx)])
+
+
+// check if a message is a string
+inline bool is_string_msg(const pacman_msg_t* msg) {
+    return msg->header.msg_type == MSG_TYPE_STRING;
+}
+
+
+// pack a variable-length string
+inline void pack_string_msg(pacman_msg_t* msg, const char* str, uint32_t len, uint64_t timestamp=0, uint8_t pacman=0) {
+    memset(&msg->header, 0, sizeof(msg->header));
+    msg->header.msg_type      = MSG_TYPE_STRING;
+    msg->header.pacman        = pacman;
+    msg->header.version_major = MSG_VERSION_MAJOR;
+    msg->header.version_minor = MSG_VERSION_MINOR;
+    msg->header.n_bytes       = len;
+    msg->header.timestamp     = timestamp;
+    memcpy(msg->raw, str, len);  // raw access aligns with Python
+}
+
+// unpack a string from a message
+inline void unpack_string_msg(const pacman_msg_t* msg, char* out, uint32_t max_len) {
+    uint32_t n = msg->header.n_bytes;
+    if (n > max_len) n = max_len;
+    memcpy(out, msg->raw, n);
+    out[n] = '\0';
+}

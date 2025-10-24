@@ -15,15 +15,18 @@ MSG_MINOR_VERSION = 0
 # -----------------------------
 # Message type constants
 # -----------------------------
-MSG_TYPE_REQ  = b'?'
-MSG_TYPE_REP  = b'!'
-MSG_TYPE_DATA = b'D'
+MSG_TYPE_REQ    = b'?'
+MSG_TYPE_REP    = b'!'
+MSG_TYPE_DATA   = b'D'
+MSG_TYPE_STRING = b'S'
 
 MSG_TYPE_TABLE = {
     'REQ': MSG_TYPE_REQ,
     'REP': MSG_TYPE_REP,
-    'DATA': MSG_TYPE_DATA
+    'DATA': MSG_TYPE_DATA,
+    'STRING': MSG_TYPE_STRING
 }
+
 
 MSG_TYPE_TABLE_INV = {v:k for k,v in MSG_TYPE_TABLE.items()}
 
@@ -73,7 +76,7 @@ WORD_TYPE_TABLE_INV = {v:k for k,v in WORD_TYPE_TABLE.items()}
 # ERR:   (MSB) 0x00000000 EEEEEEEE TTTTTTTT TTTTTTTT 00000000 000PPWW (LSB)
 #    W=word type, P=PACMAN id, T=timestamp, E=error code
 
-WORD_LEN   = 24  # 192-bit
+WORD_BYTES   = 24  # 192-bit
 WORD_STRUCT_TABLE = {
     'PING':  struct.Struct('<cB22x'),      # word_type, pacman
     'READ':  struct.Struct('<cB6xII8x'),   # word_type, pacman, address, value
@@ -104,15 +107,15 @@ WORD_FIELD_TABLE = {
 #    M=messsage type, A=major version, B=minor version, N=number of words, T=timestamp
 
 HEADER_STRUCT = struct.Struct('<cBBBIQ8x') # message_type,
-HEADER_FIELDS = ("msg_type", "pacman", "major_version", "minor_version", "n_words", "timestamp")
+HEADER_FIELDS = ("msg_type", "pacman", "major_version", "minor_version", "n_bytes", "timestamp")
 HEADER_LEN = HEADER_STRUCT.size
 
 # -----------------------------
 # Header functions
 # -----------------------------
-def pack_header(msg_type, n_words, timestamp, pacman=0):
+def pack_header(msg_type, n_bytes, timestamp, pacman=0):
     msg_type_byte = MSG_TYPE_TABLE[msg_type]
-    return HEADER_STRUCT.pack(msg_type_byte, pacman, MSG_MAJOR_VERSION, MSG_MINOR_VERSION, n_words, timestamp)
+    return HEADER_STRUCT.pack(msg_type_byte, pacman, MSG_MAJOR_VERSION, MSG_MINOR_VERSION, n_bytes, timestamp)
 
 def unpack_header(header_bytes):
     msg_type = MSG_TYPE_TABLE_INV[header_bytes[0:1]]
@@ -141,8 +144,8 @@ def parse_word(word):
 # Message functions
 # -----------------------------
 def pack_msg(msg_type, msg_words, timestamp):
-    n_words = len(msg_words)
-    header_bytes = pack_header(msg_type, n_words, timestamp)
+    n_bytes = len(msg_words) * WORD_BYTES
+    header_bytes = pack_header(msg_type, n_bytes, timestamp)
     body_bytes = b''.join([pack_word(*w) for w in msg_words])
     return header_bytes + body_bytes
 
@@ -150,8 +153,8 @@ def pack_msg(msg_type, msg_words, timestamp):
 def unpack_msg(msg_bytes):
     header = unpack_header(msg_bytes[:HEADER_LEN])
     words = []
-    for i in range(HEADER_LEN, len(msg_bytes), WORD_LEN):
-        words.append(unpack_word(msg_bytes[i:i+WORD_LEN]))
+    for i in range(HEADER_LEN, len(msg_bytes), WORD_BYTES):
+        words.append(unpack_word(msg_bytes[i:i+WORD_BYTES]))
     return header, words
 
 def check_byte(name, value):
@@ -222,7 +225,7 @@ def content_err(*, error_code, pacman=0, timestamp=0):
 
 def print_header(header):
     parsed = parse_header(header)
-    print("msg_type: {msg_type} pacman: {pacman} version: {major_version}.{minor_version} n_words: {n_words} timestamp: {timestamp}".format(**parsed))
+    print("msg_type: {msg_type} pacman: {pacman} version: {major_version}.{minor_version} n_bytes: {n_bytes} timestamp: {timestamp}".format(**parsed))
     return
 
 def print_word(word):
@@ -262,8 +265,8 @@ def check_msg(msg_bytes):
         header = unpack_header(msg_bytes[:HEADER_LEN])
         parsed = parse_header(header)
 
-        n_words = parsed["n_words"]
-        expected_len = HEADER_LEN + n_words * WORD_LEN
+        n_bytes = parsed["n_bytes"]
+        expected_len = HEADER_LEN + n_bytes
         if len(msg_bytes) != expected_len:
             raise ValueError(f"length mismatch: expected {expected_len}, got {len(msg_bytes)}")
 
@@ -280,8 +283,8 @@ def check_msg(msg_bytes):
         return False
 
     # --- unpack and print words ---
-    for i in range(HEADER_LEN, len(msg_bytes), WORD_LEN):
-        chunk = msg_bytes[i:i+WORD_LEN]
+    for i in range(HEADER_LEN, len(msg_bytes), WORD_BYTES):
+        chunk = msg_bytes[i:i+WORD_BYTES]
         try:
             # check word type first
             raw_word_type = chunk[0:1]
@@ -291,9 +294,53 @@ def check_msg(msg_bytes):
             word = unpack_word(chunk)
 
         except (struct.error, ValueError, KeyError) as e:
-            print(f"ERROR: WORD:  at word {(i - HEADER_LEN)//WORD_LEN} {e}")
+            print(f"ERROR: WORD:  at word {(i - HEADER_LEN)//WORD_BYTES} {e}")
             print(f"ERROR: raw word bytes: 0x{chunk.hex()}")
             return False
 
     # All checks passed
     return True
+
+
+# -----------------------------
+# String message type
+# -----------------------------
+
+# --- check if a message is a variable-length string ---
+def is_string_msg(msg_bytes):
+    return msg_bytes[0:1] == MSG_TYPE_STRING
+
+# --- pack a single string into a message ---
+def pack_string_msg(s, timestamp=0, pacman=0):
+    b = s.encode('utf-8')  # convert to bytes
+    n_bytes = len(b)
+    header_bytes = pack_header('STRING', n_bytes, timestamp, pacman)
+    return header_bytes + b
+
+# --- unpack a single string message ---
+def unpack_string_msg(msg_bytes):
+    header = unpack_header(msg_bytes[:HEADER_LEN])
+    n_bytes = header[4]  # header tuple: (msg_type, pacman, major, minor, n_bytes, timestamp)
+    s_bytes = msg_bytes[HEADER_LEN:HEADER_LEN + n_bytes]
+    s = s_bytes.decode('utf-8')
+    return header, s
+
+def print_msg(msg_bytes):
+    # Unpack the header first
+    header = unpack_header(msg_bytes[:HEADER_LEN])
+    print_header(header)
+
+    # Check message type
+    msg_type = header[0]
+    if msg_type == 'STRING':
+        # Extract string payload
+        n_bytes = header[4]  # n_bytes field
+        s_bytes = msg_bytes[HEADER_LEN:HEADER_LEN + n_bytes]
+        s = s_bytes.decode('utf-8', errors='replace')  # replace bad characters
+        print(f"string payload: {s}")
+    else:
+        # Word-based message: iterate over words
+        for i in range(HEADER_LEN, len(msg_bytes), WORD_BYTES):
+            word_chunk = msg_bytes[i:i+WORD_BYTES]
+            word = unpack_word(word_chunk)
+            print_word(word)

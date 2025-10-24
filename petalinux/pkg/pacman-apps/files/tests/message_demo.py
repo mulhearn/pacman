@@ -107,6 +107,25 @@ def demo():
     msg_bytes = pm.pack_msg('REP', words, ts)
     test_message(msg_bytes)
 
+    # -----------------------------
+    # Step 11: STRING message
+    # -----------------------------
+    print("Step 11: Send STRING message")
+    test_str = "Hello PACMAN!"
+    msg_bytes = pm.pack_string_msg(test_str, timestamp=ts, pacman=1)
+
+    pm.print_msg(msg_bytes)
+
+    # check message type
+    if pm.is_string_msg(msg_bytes):
+        print("INFO: detected STRING message type")
+        header, s = pm.unpack_string_msg(msg_bytes)
+        print("INFO:  parsed header: ", pm.parse_header(header))
+        print("INFO:  unpacked string: ", s)
+    else:
+        print("ERROR: failed to detect STRING message type")
+    print("")
+
     # cause some intentional failures:
     # print("DEBUG: intentional failures follow:")
     # test_message(msg_bytes[0:24])

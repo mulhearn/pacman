@@ -11,6 +11,5 @@ int pacman_vspace_write(uint32_t addr, uint32_t value);
 
 uint32_t pacman_vspace_read(uint32_t addr, int * status = NULL);
 
-uint8_t pacman_vspace_get_pacman_id();
 
 #endif

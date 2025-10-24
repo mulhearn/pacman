@@ -6,7 +6,7 @@
 // Allowed sets
 // -----------------------------
 static const char valid_msg_types[] = {
-  MSG_TYPE_REQ, MSG_TYPE_REP, MSG_TYPE_DATA
+  MSG_TYPE_REQ, MSG_TYPE_REP, MSG_TYPE_DATA, MSG_TYPE_STRING
 };
 
 static const char valid_word_types[] = {
@@ -35,7 +35,7 @@ bool check_msg(const pacman_msg_t* msg) {
         return false;
     }
 
-    uint16_t n_words = msg->header.n_words;
+    uint16_t n_bytes = msg->header.n_bytes;
 
     // --- validate header msg_type ---
     char mt = msg->header.msg_type;
@@ -44,9 +44,20 @@ bool check_msg(const pacman_msg_t* msg) {
       return false;
     }
 
+    if (mt == MSG_TYPE_STRING) {
+      // For strings, no per-word check is needed
+      if (n_bytes > MAX_WORDS * WORD_BYTES) {
+	printf("ERROR: string length %u exceeds maximum\n", n_bytes);
+	return false;
+      }
+      return true;
+    }
+
+
+    uint16_t n_words = msg->header.n_bytes / WORD_BYTES;
     // Sanity check number of words
     if (n_words > MAX_WORDS) {
-        printf("ERROR: n_words=%u exceeds MAX_WORDS=%u\n", n_words, MAX_WORDS);
+        printf("ERROR: n_bytes=%u exceeds MAX_WORDS=%u\n", n_bytes, MAX_WORDS);
         return false;
     }
 
@@ -68,7 +79,7 @@ bool check_msg(const pacman_msg_t* msg) {
 }
 
 void print_header(const pacman_header_t* header, const char * prefix = "") {
-  printf("version %d.%d n_words: %d ",header->version_major, header->version_minor, header->n_words);
+  printf("version %d.%d n_bytes: %d ",header->version_major, header->version_minor, header->n_bytes);
   printf("timestamp:  %" PRIu64 "\n", header->timestamp);
 }
 
@@ -107,8 +118,20 @@ void print_word(const pacman_word_t* word, const char * prefix = "") {
 void print_msg(const pacman_msg_t* msg, const char * prefix) {
   printf("%sheader:  ",prefix);
   print_header(&msg->header);
-  for (unsigned i=0; i<msg->header.n_words; i++){
-    printf("%sword %3d: ",prefix, i);
-    print_word(&msg->words[i]);
+
+  if (msg->header.msg_type == MSG_TYPE_STRING) {
+    printf("%sstring payload (%u bytes): ", prefix, msg->header.n_bytes);
+    for (uint32_t i = 0; i < msg->header.n_bytes; ++i) {
+      putchar(msg->raw[i]);
+    }
+    putchar('\n');
+    return;
+  }
+
+
+  uint32_t n_words = msg->header.n_bytes / WORD_BYTES;
+  for (uint32_t i = 0; i < n_words; ++i) {
+    printf("%sword %3u: ", prefix, i);
+    print_word(&msg->words[i], prefix);
   }
 }

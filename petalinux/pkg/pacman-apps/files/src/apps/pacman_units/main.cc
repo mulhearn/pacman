@@ -95,6 +95,26 @@ int test_pacman_message(){
   write_word_err(&msg.words[0], 2, ts, 0xEEEE);
   success &= test_message(&msg);
 
+  printf("INFO:  Step 10: STRING message\n");
+  const char* test_str = "Hello PACMAN!";
+  size_t str_len = strlen(test_str);
+
+  // Clear message and write header
+  memset(&msg, 0, sizeof(msg));
+  msg.header.msg_type = MSG_TYPE_STRING;
+  msg.header.pacman = 1;
+  msg.header.version_major = MSG_VERSION_MAJOR;
+  msg.header.version_minor = MSG_VERSION_MINOR;
+  msg.header.n_bytes = str_len;
+  msg.header.timestamp = ts;
+
+  // Copy string bytes into the raw union buffer
+  memcpy(msg.words[0].raw, test_str, str_len);
+
+  // Test
+  success &= test_message(&msg);
+
+
   printf("SUMMARY:  PACMAN message unit test SUCCESS.\n");
   return success;
 }
