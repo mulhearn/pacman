@@ -17,9 +17,9 @@ use work.version_info_pkg.all;
 
 entity global_registers is
   port (
-    -- clock and reset
-    ACLK	        : in std_logic;
-    ARESETN	        : in std_logic;  -- ACTIVE LOW
+    -- clock and active-high reset
+    CLK_I	        : in std_logic;
+    RST_I	        : in std_logic;
 
     -- register bus (REGBUS) interface
     S_REGBUS_RB_RUPDATE : in  std_logic;
@@ -45,7 +45,7 @@ entity global_registers is
 end;
 
 architecture behavioral of global_registers is
-  -- clock and reset:
+  -- clock and active-high reset:
   signal clk      : std_logic;
   signal rst      : std_logic;
 
@@ -67,9 +67,9 @@ architecture behavioral of global_registers is
   signal led_config      : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)   := (others => '0');
 
 begin
-  -- connect signals to inputs and outputs:
-  clk <= ACLK;
-  rst <= not ARESETN;
+  clk <= CLK_I;
+  rst <= RST_I;
+
   rupdate  <= S_REGBUS_RB_RUPDATE;
   raddr    <= S_REGBUS_RB_RADDR;
   S_REGBUS_RB_RDATA <= rdata;
