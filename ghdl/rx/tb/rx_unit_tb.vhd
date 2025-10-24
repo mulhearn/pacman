@@ -13,8 +13,8 @@ end rx_unit_tb;
 architecture behaviour of rx_unit_tb is
   component rx_unit is
     port (
-      M_AXIS_ACLK            : in std_logic;
-      M_AXIS_ARESETN         : in std_logic;
+      ACLK                   : in std_logic;
+      RST_I                  : in std_logic;
       M_AXIS_TDATA           : out std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
       M_AXIS_TVALID          : out std_logic;
       M_AXIS_TREADY          : in std_logic;
@@ -31,7 +31,7 @@ architecture behaviour of rx_unit_tb is
       S_REGBUS_RB_WDATA      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_WACK       : out std_logic;
 
-      TIMESTAMP_I            : in  std_logic_vector(31 downto 0);
+      TIMESTAMP_I            : in  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
       FIFO_COUNT_I           : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
       PISO_I                 : in  std_logic_vector(C_NUM_UART-1 downto 0);
@@ -39,16 +39,16 @@ architecture behaviour of rx_unit_tb is
       );
   end component;
 
-  signal timestamp : std_logic_vector(31 downto 0);
-  signal count    : integer := 0;
-  signal aclk     : std_logic;
-  signal aresetn  : std_logic;
-  signal uclk     : std_logic;
+  signal timestamp : std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0) := (others => '0');
+  signal count     : integer := 0;
+  signal clk       : std_logic;
+  signal rst       : std_logic;
+  signal uclk      : std_logic;
 
-  signal tdata    : std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0);
-  signal tvalid   : std_logic;
-  signal tready   : std_logic := '0';
-  signal tlast    : std_logic;
+  signal tdata     : std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0) := (others => '0');
+  signal tvalid    : std_logic;
+  signal tready    : std_logic := '0';
+  signal tlast     : std_logic;
 
   -- read signals:
   signal raddr    : std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0) := (others => '0');
@@ -71,8 +71,8 @@ architecture behaviour of rx_unit_tb is
 
 begin
   uut: rx_unit port map (
-    M_AXIS_ACLK     => aclk,
-    M_AXIS_ARESETN  => aresetn,
+    ACLK            => clk,
+    RST_I           => rst,
     M_AXIS_TDATA    => tdata,
     M_AXIS_TVALID   => tvalid,
     M_AXIS_TREADY   => tready,
@@ -91,28 +91,31 @@ begin
     LOOPBACK_I          => (others => '1')
   );
 
-  aclk_process : process
+  clk_process : process
   begin
     count <= count + 1;
-    aclk <= '1';
+    clk <= '1';
     wait for 5 ns;
-    aclk <= '0';
+    clk <= '0';
     wait for 5 ns;
   end process;
 
   timestamp_process : process
   begin
-    timestamp <= x"00000000";
-    wait until count=1100;
-    timestamp <= x"00000ABC";
+    timestamp <= x"0000000000000123";
+    --choose valid just in time, or one frag too late...
+    --test protection against mid-word valid.
+    --wait until count=958;
+    wait until count=959;
+    timestamp <= x"0000000000000ABC";
     wait;
   end process;
 
-  aresetn_process : process
+  rst_process : process
   begin
-    aresetn <= '0';
+    rst <= '1';
     wait for 10 ns;
-    aresetn <= '1';
+    rst <= '0';
     wait;
   end process;
 
@@ -131,13 +134,17 @@ begin
     rupdate <= '0';
     wait for 1 ns;
     wait for 30 ns;
+    -- uart status
     raddr   <= x"4000";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"7FA0";
+    raddr   <= x"7FB0";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"7FA4";
+    raddr   <= x"7FB4";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"7FB8";
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"4004";
@@ -155,19 +162,13 @@ begin
     raddr   <= x"4000";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"7FA0";
+    raddr   <= x"7FB0";
     rupdate <= '1';
     wait for 30 ns;
-    raddr   <= x"4010";
+    raddr   <= x"7FA4";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"4014";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"4018";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"401C";
+    raddr   <= x"7FA8";
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"4020";
@@ -182,10 +183,10 @@ begin
     raddr   <= x"402C";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"7FC0";
+    raddr   <= x"7FF0";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"7FC4";
+    raddr   <= x"7FF4";
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"0000";
@@ -202,17 +203,25 @@ begin
     wupdate <= '0';
     wait for 1 ns;
     wait for 20 ns;
+    -- broadcasting RX config:
     waddr   <= x"7B04";
     wdata   <= x"00001001";
     wupdate <= '1';
     wait for 10 ns;
-    waddr   <= x"7FA4";
-    --wdata   <= x"00030001";
+    -- setting buffer config:
+    waddr   <= x"7FB4";
+    wdata   <= x"00000001";
+    --wdata   <= x"000A0000";
+    wupdate <= '1';
+    wait for 10 ns;
+    -- setting buffer enables:
+    waddr   <= x"7FB8";
+    --wdata   <= x"00000003";
     wdata   <= x"00000000";
     wupdate <= '1';
     wait for 10 ns;
-    waddr   <= x"7FA8";
-    wdata   <= x"00000000";
+    waddr   <= x"7FBC";
+    wdata <= x"000000AB";
     wupdate <= '1';
     wait for 10 ns;
     waddr   <= x"7FC0";
@@ -221,6 +230,10 @@ begin
     wait for 10 ns;
     waddr   <= x"7FC4";
     wdata   <= x"00000ABC";
+    wupdate <= '1';
+    wait for 10 ns;
+    waddr   <= x"7FC8";
+    wdata <= x"43434445";
     wupdate <= '1';
     wait for 10 ns;
     waddr   <= x"0000";
@@ -252,14 +265,12 @@ begin
       hwrite (l, wdata);
       write (l, String'(" wk:"));
       write (l, wack);
-      if (aresetn = '0') then
+      if (rst = '1') then
         write (l, String'(" (RESET)"));
       end if;
       writeline(output, l);
     end if;
   end process;
-
-
 
   axis_process : process
   begin
@@ -272,7 +283,7 @@ begin
     show_axis_output<='0';
     wait until (count=740);
     show_axis_output<='1';
-    wait until (count=1610);
+    wait until (count=3000);
     wait for 10 ns;
     show_axis_output<='0';
     wait;
@@ -292,7 +303,6 @@ begin
         --write (l, aclk);
         write (l, String'("|| tdata: 0x"));
         hwrite (l, tdata);
-        write (l, String'("..."));
         write (l, String'(" tval: "));
         write (l, tvalid);
         write (l, String'(" trdy: "));
@@ -306,7 +316,7 @@ begin
         if (tlast = '1') then
           write (l, String'(" *** "));
         end if;
-        if (aresetn = '0') then
+        if (rst = '1') then
           write (l, String'(" (RESET)"));
         end if;
         writeline(output, l);
@@ -314,8 +324,7 @@ begin
     end if;
   end process;
 
-  piso(39 downto 32) <= (others => '0');
-  piso(31 downto 0)  <= (others => rx);
+  piso(39 downto 0)  <= (others => rx);
 
   rx_process : process
     variable i      : integer := 0;

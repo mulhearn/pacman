@@ -1,4 +1,4 @@
-all: modules-a modules-e testbenches hardware
+all: modules-a modules-e testbenches
 
 
 modules-a:
@@ -34,12 +34,11 @@ hardware:
 	ghdl -e axis_read_demo
 	ghdl -a -fsynopsys hw/axis_read_demo_tb.vhd
 	ghdl -e -fsynopsys axis_read_demo_tb
-
-run-units:
+run-testbenches:
 	ghdl -r -fsynopsys axil_to_regbus_tb --stop-time=350ns
 	ghdl -r -fsynopsys axis_write_tb --stop-time=300ns
 	ghdl -r -fsynopsys axis_read_tb --stop-time=300ns
-run-demos:
+run-hardware:
 	ghdl -r -fsynopsys regbus_demo_tb --stop-time=350ns
 	ghdl -r -fsynopsys axis_write_demo_tb --stop-time=350ns
 	ghdl -r -fsynopsys axis_read_demo_tb --stop-time=350ns

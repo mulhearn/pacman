@@ -13,8 +13,8 @@ end tx_registers_tb;
 architecture behaviour of tx_registers_tb is
   component tx_registers is
     port (
-      ACLK	        : in std_logic;
-      ARESETN	        : in std_logic;
+      CLK_I	             : in std_logic;
+      RST_I	             : in std_logic;
 
       S_REGBUS_RB_RADDR	     : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
       S_REGBUS_RB_RDATA	     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
@@ -26,17 +26,17 @@ architecture behaviour of tx_registers_tb is
       S_REGBUS_RB_WDATA	     : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_WACK       : out std_logic;
 
-      UART_LOOK_I                 : in uart_tx_data_array_t;
-      UART_STATUS_I               : in uart_reg_array_t;
-      UART_CONFIG_O               : out uart_reg_array_t;
-
-      BUFFER_STATUS_I    	  : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+      UART_STATUS_I          : in uart_reg_array_t;
+      UART_CONFIG_O          : out uart_reg_array_t;
+      BUFFER_STATUS_I        : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      LOOK_SELECT_O       : out std_logic_vector(C_SELECT_WIDTH-1 downto 0);
+      LOOK_UART_DATA_I    : in std_logic_vector(C_RX_AXIS_WIDTH-1 downto 0)
     );
   end component;
 
   signal count    : integer := 0;
-  signal aclk     : std_logic;
-  signal aresetn  : std_logic;
+  signal clk      : std_logic;
+  signal rst      : std_logic;
   -- read signals:
   signal raddr    : std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0) := (others => '0');
   signal rupdate  : std_logic := '0';
@@ -52,8 +52,8 @@ architecture behaviour of tx_registers_tb is
 
 begin
   uut0: tx_registers port map (
-    ACLK           => aclk,
-    ARESETN        => aresetn,
+    CLK_I               => clk,
+    RST_I               => rst,
     S_REGBUS_RB_RUPDATE => rupdate,
     S_REGBUS_RB_RADDR   => raddr,
     S_REGBUS_RB_RDATA   => rdata,
@@ -62,26 +62,26 @@ begin
     S_REGBUS_RB_WADDR   => waddr,
     S_REGBUS_RB_WDATA   => wdata,
     S_REGBUS_RB_WACK    => wack,
-    UART_LOOK_I  => (others => x"DDDDDDDDCCCCCCCC"),
+    LOOK_UART_DATA_I  => x"DDDDDDDDCCCCCCCC",
     UART_STATUS_I  => (others => x"1234ABCD"),
     BUFFER_STATUS_I  => x"AABBCCDD",
     UART_CONFIG_O  => config
   );
 
-  aresetn_process : process
+  rst_process : process
   begin
-    aresetn <= '0';
+    rst <= '1';
     wait for 20 ns;
-    aresetn <= '1';
+    rst <= '0';
     wait;
   end process;
 
-  aclk_process : process
+  clk_process : process
   begin
     count <= count + 1;
-    aclk <= '1';
+    clk <= '1';
     wait for 5 ns;
-    aclk <= '0';
+    clk <= '0';
     wait for 5 ns;
   end process;
 
@@ -103,17 +103,17 @@ begin
     raddr   <= x"0000";
     rupdate <= '0';
     wait for 10 ns;
-    raddr   <= x"0018";
+    raddr   <= x"3FA0";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"001C";
+    raddr   <= x"3FA4";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"0C18";
+    raddr   <= x"3FA8";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"0C1C";
-    rupdate <= '1';
+    raddr   <= x"0000";
+    rupdate <= '0';
     wait for 10 ns;
     raddr   <= x"0000";
     rupdate <= '0';
@@ -136,19 +136,7 @@ begin
     raddr   <= x"0000";
     rupdate <= '0';
     wait for 10 ns;
-    raddr   <= x"3FA0";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"0000";
-    rupdate <= '0';
-    wait for 10 ns;
-    raddr   <= x"0C50";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"0150";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"0050";
+    raddr   <= x"3FB0";
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"0000";
@@ -175,7 +163,7 @@ begin
     wdata   <= x"00000000";
     wupdate <= '0';
     wait for 130 ns;
-    waddr   <= x"3FA8";
+    waddr   <= x"3FF8";
     wdata   <= x"00000000";
     wupdate <= '1';
     wait for 10 ns;
@@ -210,7 +198,7 @@ begin
     write (l, wack);
     write (l, String'(" || cfg(0):  0x"));
     hwrite (l, config(0));
-    if (aresetn = '0') then
+    if (rst = '1') then
       write (l, String'(" (RESET)"));
     end if;
     writeline(output, l);
@@ -238,9 +226,6 @@ begin
     writeline(output, l);
     wait until (count=31);
     write(l, String'("INFO:  Reading TX global status: (Test pattern input:  0xAABBCCDD)"));
-    writeline(output, l);
-    wait until (count=33);
-    write(l, String'("INFO:  Reading back channel number from several channels:"));
     writeline(output, l);
     wait;
   end process;

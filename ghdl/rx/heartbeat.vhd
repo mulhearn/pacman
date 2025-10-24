@@ -7,19 +7,15 @@ use work.common.all;
 -- heartbeat:  presents a periodic heartbeat on channel CHANNEL to the RX buffer
 
 entity heartbeat is
-  generic (
-    constant CHANNEL   : integer := 16#48#;  -- ASCII H
-    constant HEADER    : integer := 16#53#   -- ASCII S
-  );
   port (
-    ACLK          : in  std_logic;
-    ARESETN       : in  std_logic;
+    CLK_I         : in  std_logic;
+    RST_I         : in  std_logic;
     EN_I          : in  std_logic;
     CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    DATA_O        : out  std_logic_vector(C_RX_DATA_WIDTH-1 downto 0);
-    VALID_O       : out  std_logic;
-    READY_I       : in std_logic;
-    TIMESTAMP_I   : in  std_logic_vector(31 downto 0);
+    TIMESTAMP_O   : out  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
+    VALID_O       : out std_logic;
+    READY_I       : in  std_logic;
+    TIMESTAMP_I   : in  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
     DEBUG_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
   );
 end;
@@ -34,8 +30,8 @@ architecture behavioral of heartbeat is
   signal count      : integer;
 
 begin
-  clk <= ACLK;
-  rst   <= not ARESETN;
+  clk <= CLK_I;
+  rst <= RST_I;
 
   VALID_O <= valid;
   ready <= READY_I;
@@ -45,20 +41,17 @@ begin
     if (rst='1') then
       count <= 0;
       valid <= '0';
-      DATA_O <= (others => '0');
+      TIMESTAMP_O <= (others => '0');
     elsif (rising_edge(clk)) then
       if ((valid='1') and (ready='1')) then
+        TIMESTAMP_O <= (others => '0');
         valid <= '0';
       end if;
-
       if ((EN_I='1') and ((count+1) >= unsigned(CONFIG_I))) then
         if ((valid='0') or ((valid='1') and (ready='1'))) then
           valid <= '1';
           count <= 0;
-          DATA_O <= (others => '0');
-          DATA_O(63 downto 32) <= TIMESTAMP_I;
-          DATA_O(15 downto 8) <= std_logic_vector(to_unsigned(CHANNEL, C_BYTE));
-          DATA_O(7 downto 0)  <= std_logic_vector(to_unsigned(HEADER, C_BYTE));
+          TIMESTAMP_O <= TIMESTAMP_I;
         end if;
       else
         count <= count + 1;

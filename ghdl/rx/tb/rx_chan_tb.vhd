@@ -13,28 +13,30 @@ end rx_chan_tb;
 architecture behaviour of rx_chan_tb is
   component rx_chan is
     port (
-      ACLK          : in  std_logic;
-      ARESETN       : in  std_logic;
+      CLK_I         : in  std_logic;
+      RST_I         : in  std_logic;
       CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       STATUS_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      DATA_O        : out std_logic_vector(C_RX_DATA_WIDTH-1 downto 0);
+      DATA_O        : out  std_logic_vector(C_UART_DATA_WIDTH-1 downto 0);
+      TIMESTAMP_O   : out  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
       VALID_O       : out std_logic;
       READY_I       : in  std_logic;
       RX_I          : in  std_logic;
       LOOPBACK_I    : in  std_logic;
-      TIMESTAMP_I   : in  std_logic_vector(31 downto 0);
+      TIMESTAMP_I   : in  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
       DEBUG_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
     );
   end component;
 
   signal count      : integer := 0;
   signal tstep_ns   : integer := 10;
-  signal aclk      : std_logic;
-  signal aresetn   : std_logic;
-  signal uclk      : std_logic;
-  signal status    : std_logic_vector(31  downto 0);
-  signal data      : std_logic_vector(127 DOWNTO 0);
-  signal rx        : std_logic := '1';
+  signal clk        : std_logic;
+  signal rst        : std_logic;
+  signal uclk       : std_logic;
+  signal status     : std_logic_vector(C_RB_DATA_WIDTH-1  downto 0);
+  signal data       : std_logic_vector(C_UART_DATA_WIDTH-1 DOWNTO 0);
+  signal tstamp     : std_logic_vector(C_UART_DATA_WIDTH-1 DOWNTO 0);
+  signal rx         : std_logic := '1';
 
   signal valid     : std_logic;
   signal ready     : std_logic;
@@ -43,33 +45,34 @@ architecture behaviour of rx_chan_tb is
 
 begin
   uut: rx_chan port map (
-    ACLK        => aclk,
-    ARESETN     => aresetn,
+    CLK_I       => clk,
+    RST_I       => rst,
     CONFIG_I    => x"00011001",
     DATA_O      => data,
+    TIMESTAMP_O => tstamp,
     VALID_O     => valid,
     READY_I     => ready,
     RX_I        => '1',
     LOOPBACK_I  => rx,
-    TIMESTAMP_I => x"12345678",
+    TIMESTAMP_I => x"0000000012345678",
     DEBUG_O     => status
     --STATUS_O     => status
   );
 
-  aclk_process : process
+  clk_process : process
   begin
     count <= count + 1;
-    aclk <= '1';
+    clk <= '1';
     wait for 5 ns;
-    aclk <= '0';
+    clk <= '0';
     wait for 5 ns;
   end process;
 
-  aresetn_process : process
+  rst_process : process
   begin
-    aresetn <= '0';
+    rst <= '1';
     wait for 20 ns;
-    aresetn <= '1';
+    rst <= '0';
     wait;
   end process;
 
@@ -151,8 +154,8 @@ begin
     if (show_output='1') then
       write (l, String'("c: "));
       write (l, count, left, 5);
-      write  (l, String'("aclk: "));
-      write  (l, aclk);
+      write  (l, String'("clk: "));
+      write  (l, clk);
       write  (l, String'(" b: "));
       write (l, status(0));
       write  (l, String'(" v: "));
@@ -169,6 +172,8 @@ begin
       write (l, lost);
       write  (l, String'(" | d: 0x"));
       hwrite (l, data);
+      --write  (l, String'(" | ts: 0x"));
+      --hwrite (l, tstamp);
       write  (l, String'(" | rx: "));
       write  (l, rx);
       write  (l, String'(" | sel: "));
@@ -182,7 +187,7 @@ begin
       if (lost = '1') then
         write (l, String'(" !!! "));
       end if;
-      if (aresetn = '0') then
+      if (rst = '1') then
         write (l, String'(" (RESET)"));
       end if;
       writeline(output, l);

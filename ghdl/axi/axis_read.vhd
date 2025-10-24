@@ -11,8 +11,8 @@ entity axis_read is
   );
 
   port (
-    S_AXIS_ACLK        : in std_logic;
-    S_AXIS_ARESETN     : in std_logic;
+    CLK_I              : in std_logic;
+    RST_I              : in std_logic;
 
     S_AXIS_TDATA       : in std_logic_vector(C_AXIS_WIDTH-1 downto 0);
     S_AXIS_TVALID      : in std_logic;
@@ -39,8 +39,8 @@ architecture behavioral of axis_read is
   signal pvalid     : std_logic := '0';
   signal pready     : std_logic;
 begin
-  clk <= S_AXIS_ACLK;
-  rst <= not S_AXIS_ARESETN;
+  clk <= CLK_I;
+  rst <= RST_I;
 
   -- we are ready once parallel data is not valid:
   tready <= not pvalid;
