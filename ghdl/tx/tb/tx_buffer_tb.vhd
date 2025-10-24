@@ -60,11 +60,11 @@ architecture behaviour of tx_buffer_tb is
 
 begin
   uvalid_a <= uvalid(0);
-  uvalid_b <= uvalid(8); 
-  uvalid_c <= uvalid(16); 
-  uready_a <= uready(0); 
-  uready_b <= uready(8);  
-  uready_c <= uready(16); 
+  uvalid_b <= uvalid(8);
+  uvalid_c <= uvalid(16);
+  uready_a <= uready(0);
+  uready_b <= uready(8);
+  uready_c <= uready(16);
 
   uut: tx_buffer port map (
     CLK_I           => clk,

@@ -76,7 +76,7 @@ begin
 
 
 
-  
+
   uut: rx_buffer port map (
     CLK_I           => clk,
     RST_I           => rst,
