@@ -1,0 +1,517 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2023 Advanced Micro Devices, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2023.2 (lin64) Build 4029153 Fri Oct 13 20:13:54 MDT 2023
+| Date         : Thu Oct 23 15:02:23 2025
+| Host         : pilgrim running 64-bit Ubuntu 22.04.4 LTS
+| Command      : report_timing -max_paths 10 -sort_by slack -delay_type min -nworst 10 -input_pins -significant_digits 3 -file ../reports/worst_timing_min.txt
+| Design       : zsys_wrapper
+| Device       : 7z020-clg484
+| Speed File   : -1  PRODUCTION 1.12 2019-11-22
+| Design State : Routed
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Timing Report
+
+Slack (VIOLATED) :        -1.924ns  (arrival time - required time)
+  Source:                 zsys_i/processing_system7_0/inst/PS7_i/FCLKCLK[1]
+                            (clock source 'clk_fpga_1'  {rise@0.000ns fall@50.000ns period=100.000ns})
+  Destination:            zsys_i/tx_unit_0/U0/gtxchan0[6].txchan0/uart0/mclk_meta_reg/D
+                            (rising edge-triggered cell FDRE clocked by clk_fpga_0  {rise@0.000ns fall@5.000ns period=10.000ns})
+  Path Group:             clk_fpga_0
+  Path Type:              Hold (Min at Slow Process Corner)
+  Requirement:            0.000ns  (clk_fpga_0 rise@50.000ns - clk_fpga_1 fall@50.000ns)
+  Data Path Delay:        3.085ns  (logic 0.091ns (2.950%)  route 2.994ns (97.050%))
+  Logic Levels:           1  (BUFG=1)
+  Clock Path Skew:        3.270ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    3.270ns = ( 53.270 - 50.000 ) 
+    Source Clock Delay      (SCD):    0.000ns = ( 50.000 - 50.000 ) 
+    Clock Pessimism Removal (CPR):    -0.000ns
+  Clock Uncertainty:      1.508ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    3.015ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+  Clock Domain Crossing:  Inter clock paths are considered valid unless explicitly excluded by timing constraints such as set_clock_groups or set_false_path.
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk_fpga_1 fall edge)
+                                                     50.000    50.000 f  
+    PS7_X0Y0             PS7                          0.000    50.000 f  zsys_i/processing_system7_0/inst/PS7_i/FCLKCLK[1]
+                         net (fo=1, routed)           1.088    51.088    zsys_i/processing_system7_0/inst/FCLK_CLK_unbuffered[1]
+    BUFGCTRL_X0Y17                                                    f  zsys_i/processing_system7_0/inst/buffer_fclk_clk_1.FCLK_CLK_1_BUFG/I
+    BUFGCTRL_X0Y17       BUFG (Prop_bufg_I_O)         0.091    51.179 f  zsys_i/processing_system7_0/inst/buffer_fclk_clk_1.FCLK_CLK_1_BUFG/O
+                         net (fo=1306, routed)        1.906    53.085    zsys_i/tx_unit_0/U0/gtxchan0[6].txchan0/uart0/UCLK_I
+    SLICE_X100Y108       FDRE                                         f  zsys_i/tx_unit_0/U0/gtxchan0[6].txchan0/uart0/mclk_meta_reg/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk_fpga_0 rise edge)
+                                                     50.000    50.000 r  
+    PS7_X0Y0             PS7                          0.000    50.000 r  zsys_i/processing_system7_0/inst/PS7_i/FCLKCLK[0]
+                         net (fo=1, routed)           1.193    51.193    zsys_i/processing_system7_0/inst/FCLK_CLK_unbuffered[0]
+    BUFGCTRL_X0Y16                                                    r  zsys_i/processing_system7_0/inst/buffer_fclk_clk_0.FCLK_CLK_0_BUFG/I
+    BUFGCTRL_X0Y16       BUFG (Prop_bufg_I_O)         0.101    51.294 r  zsys_i/processing_system7_0/inst/buffer_fclk_clk_0.FCLK_CLK_0_BUFG/O
+                         net (fo=45350, routed)       1.976    53.270    zsys_i/tx_unit_0/U0/gtxchan0[6].txchan0/uart0/ACLK
+    SLICE_X100Y108       FDRE                                         r  zsys_i/tx_unit_0/U0/gtxchan0[6].txchan0/uart0/mclk_meta_reg/C
+                         clock pessimism              0.000    53.270    
+                         clock uncertainty            1.508    54.778    
+    SLICE_X100Y108       FDRE (Hold_fdre_C_D)         0.231    55.009    zsys_i/tx_unit_0/U0/gtxchan0[6].txchan0/uart0/mclk_meta_reg
+  -------------------------------------------------------------------
+                         required time                        -55.009    
+                         arrival time                          53.085    
+  -------------------------------------------------------------------
+                         slack                                 -1.924    
+
+Slack (VIOLATED) :        -1.924ns  (arrival time - required time)
+  Source:                 zsys_i/processing_system7_0/inst/PS7_i/FCLKCLK[1]
+                            (clock source 'clk_fpga_1'  {rise@0.000ns fall@50.000ns period=100.000ns})
+  Destination:            zsys_i/tx_unit_0/U0/gtxchan0[6].txchan0/uart0/mclk_meta_reg/D
+                            (rising edge-triggered cell FDRE clocked by clk_fpga_0  {rise@0.000ns fall@5.000ns period=10.000ns})
+  Path Group:             clk_fpga_0
+  Path Type:              Hold (Min at Slow Process Corner)
+  Requirement:            0.000ns  (clk_fpga_0 rise@0.000ns - clk_fpga_1 rise@0.000ns)
+  Data Path Delay:        3.085ns  (logic 0.091ns (2.950%)  route 2.994ns (97.050%))
+  Logic Levels:           1  (BUFG=1)
+  Clock Path Skew:        3.270ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    3.270ns
+    Source Clock Delay      (SCD):    0.000ns
+    Clock Pessimism Removal (CPR):    -0.000ns
+  Clock Uncertainty:      1.508ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    3.015ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+  Clock Domain Crossing:  Inter clock paths are considered valid unless explicitly excluded by timing constraints such as set_clock_groups or set_false_path.
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk_fpga_1 rise edge)
+                                                      0.000     0.000 r  
+    PS7_X0Y0             PS7                          0.000     0.000 r  zsys_i/processing_system7_0/inst/PS7_i/FCLKCLK[1]
+                         net (fo=1, routed)           1.088     1.088    zsys_i/processing_system7_0/inst/FCLK_CLK_unbuffered[1]
+    BUFGCTRL_X0Y17                                                    r  zsys_i/processing_system7_0/inst/buffer_fclk_clk_1.FCLK_CLK_1_BUFG/I
+    BUFGCTRL_X0Y17       BUFG (Prop_bufg_I_O)         0.091     1.179 r  zsys_i/processing_system7_0/inst/buffer_fclk_clk_1.FCLK_CLK_1_BUFG/O
+                         net (fo=1306, routed)        1.906     3.085    zsys_i/tx_unit_0/U0/gtxchan0[6].txchan0/uart0/UCLK_I
+    SLICE_X100Y108       FDRE                                         r  zsys_i/tx_unit_0/U0/gtxchan0[6].txchan0/uart0/mclk_meta_reg/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk_fpga_0 rise edge)
+                                                      0.000     0.000 r  
+    PS7_X0Y0             PS7                          0.000     0.000 r  zsys_i/processing_system7_0/inst/PS7_i/FCLKCLK[0]
+                         net (fo=1, routed)           1.193     1.193    zsys_i/processing_system7_0/inst/FCLK_CLK_unbuffered[0]
+    BUFGCTRL_X0Y16                                                    r  zsys_i/processing_system7_0/inst/buffer_fclk_clk_0.FCLK_CLK_0_BUFG/I
+    BUFGCTRL_X0Y16       BUFG (Prop_bufg_I_O)         0.101     1.294 r  zsys_i/processing_system7_0/inst/buffer_fclk_clk_0.FCLK_CLK_0_BUFG/O
+                         net (fo=45350, routed)       1.976     3.270    zsys_i/tx_unit_0/U0/gtxchan0[6].txchan0/uart0/ACLK
+    SLICE_X100Y108       FDRE                                         r  zsys_i/tx_unit_0/U0/gtxchan0[6].txchan0/uart0/mclk_meta_reg/C
+                         clock pessimism              0.000     3.270    
+                         clock uncertainty            1.508     4.778    
+    SLICE_X100Y108       FDRE (Hold_fdre_C_D)         0.231     5.009    zsys_i/tx_unit_0/U0/gtxchan0[6].txchan0/uart0/mclk_meta_reg
+  -------------------------------------------------------------------
+                         required time                         -5.009    
+                         arrival time                           3.085    
+  -------------------------------------------------------------------
+                         slack                                 -1.924    
+
+Slack (VIOLATED) :        -1.919ns  (arrival time - required time)
+  Source:                 zsys_i/processing_system7_0/inst/PS7_i/FCLKCLK[1]
+                            (clock source 'clk_fpga_1'  {rise@0.000ns fall@50.000ns period=100.000ns})
+  Destination:            zsys_i/tx_unit_0/U0/gtxchan0[2].txchan0/uart0/mclk_meta_reg/D
+                            (rising edge-triggered cell FDRE clocked by clk_fpga_0  {rise@0.000ns fall@5.000ns period=10.000ns})
+  Path Group:             clk_fpga_0
+  Path Type:              Hold (Min at Slow Process Corner)
+  Requirement:            0.000ns  (clk_fpga_0 rise@50.000ns - clk_fpga_1 fall@50.000ns)
+  Data Path Delay:        3.088ns  (logic 0.091ns (2.947%)  route 2.997ns (97.053%))
+  Logic Levels:           1  (BUFG=1)
+  Clock Path Skew:        3.269ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    3.269ns = ( 53.269 - 50.000 ) 
+    Source Clock Delay      (SCD):    0.000ns = ( 50.000 - 50.000 ) 
+    Clock Pessimism Removal (CPR):    -0.000ns
+  Clock Uncertainty:      1.508ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    3.015ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+  Clock Domain Crossing:  Inter clock paths are considered valid unless explicitly excluded by timing constraints such as set_clock_groups or set_false_path.
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk_fpga_1 fall edge)
+                                                     50.000    50.000 f  
+    PS7_X0Y0             PS7                          0.000    50.000 f  zsys_i/processing_system7_0/inst/PS7_i/FCLKCLK[1]
+                         net (fo=1, routed)           1.088    51.088    zsys_i/processing_system7_0/inst/FCLK_CLK_unbuffered[1]
+    BUFGCTRL_X0Y17                                                    f  zsys_i/processing_system7_0/inst/buffer_fclk_clk_1.FCLK_CLK_1_BUFG/I
+    BUFGCTRL_X0Y17       BUFG (Prop_bufg_I_O)         0.091    51.179 f  zsys_i/processing_system7_0/inst/buffer_fclk_clk_1.FCLK_CLK_1_BUFG/O
+                         net (fo=1306, routed)        1.909    53.088    zsys_i/tx_unit_0/U0/gtxchan0[2].txchan0/uart0/UCLK_I
+    SLICE_X102Y109       FDRE                                         f  zsys_i/tx_unit_0/U0/gtxchan0[2].txchan0/uart0/mclk_meta_reg/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk_fpga_0 rise edge)
+                                                     50.000    50.000 r  
+    PS7_X0Y0             PS7                          0.000    50.000 r  zsys_i/processing_system7_0/inst/PS7_i/FCLKCLK[0]
+                         net (fo=1, routed)           1.193    51.193    zsys_i/processing_system7_0/inst/FCLK_CLK_unbuffered[0]
+    BUFGCTRL_X0Y16                                                    r  zsys_i/processing_system7_0/inst/buffer_fclk_clk_0.FCLK_CLK_0_BUFG/I
+    BUFGCTRL_X0Y16       BUFG (Prop_bufg_I_O)         0.101    51.294 r  zsys_i/processing_system7_0/inst/buffer_fclk_clk_0.FCLK_CLK_0_BUFG/O
+                         net (fo=45350, routed)       1.975    53.269    zsys_i/tx_unit_0/U0/gtxchan0[2].txchan0/uart0/ACLK
+    SLICE_X102Y109       FDRE                                         r  zsys_i/tx_unit_0/U0/gtxchan0[2].txchan0/uart0/mclk_meta_reg/C
+                         clock pessimism              0.000    53.269    
+                         clock uncertainty            1.508    54.777    
+    SLICE_X102Y109       FDRE (Hold_fdre_C_D)         0.230    55.007    zsys_i/tx_unit_0/U0/gtxchan0[2].txchan0/uart0/mclk_meta_reg
+  -------------------------------------------------------------------
+                         required time                        -55.007    
+                         arrival time                          53.088    
+  -------------------------------------------------------------------
+                         slack                                 -1.919    
+
+Slack (VIOLATED) :        -1.919ns  (arrival time - required time)
+  Source:                 zsys_i/processing_system7_0/inst/PS7_i/FCLKCLK[1]
+                            (clock source 'clk_fpga_1'  {rise@0.000ns fall@50.000ns period=100.000ns})
+  Destination:            zsys_i/tx_unit_0/U0/gtxchan0[32].txchan0/uart0/mclk_meta_reg/D
+                            (rising edge-triggered cell FDRE clocked by clk_fpga_0  {rise@0.000ns fall@5.000ns period=10.000ns})
+  Path Group:             clk_fpga_0
+  Path Type:              Hold (Min at Slow Process Corner)
+  Requirement:            0.000ns  (clk_fpga_0 rise@50.000ns - clk_fpga_1 fall@50.000ns)
+  Data Path Delay:        3.084ns  (logic 0.091ns (2.951%)  route 2.993ns (97.049%))
+  Logic Levels:           1  (BUFG=1)
+  Clock Path Skew:        3.265ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    3.265ns = ( 53.265 - 50.000 ) 
+    Source Clock Delay      (SCD):    0.000ns = ( 50.000 - 50.000 ) 
+    Clock Pessimism Removal (CPR):    -0.000ns
+  Clock Uncertainty:      1.508ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    3.015ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+  Clock Domain Crossing:  Inter clock paths are considered valid unless explicitly excluded by timing constraints such as set_clock_groups or set_false_path.
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk_fpga_1 fall edge)
+                                                     50.000    50.000 f  
+    PS7_X0Y0             PS7                          0.000    50.000 f  zsys_i/processing_system7_0/inst/PS7_i/FCLKCLK[1]
+                         net (fo=1, routed)           1.088    51.088    zsys_i/processing_system7_0/inst/FCLK_CLK_unbuffered[1]
+    BUFGCTRL_X0Y17                                                    f  zsys_i/processing_system7_0/inst/buffer_fclk_clk_1.FCLK_CLK_1_BUFG/I
+    BUFGCTRL_X0Y17       BUFG (Prop_bufg_I_O)         0.091    51.179 f  zsys_i/processing_system7_0/inst/buffer_fclk_clk_1.FCLK_CLK_1_BUFG/O
+                         net (fo=1306, routed)        1.905    53.084    zsys_i/tx_unit_0/U0/gtxchan0[32].txchan0/uart0/UCLK_I
+    SLICE_X94Y113        FDRE                                         f  zsys_i/tx_unit_0/U0/gtxchan0[32].txchan0/uart0/mclk_meta_reg/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk_fpga_0 rise edge)
+                                                     50.000    50.000 r  
+    PS7_X0Y0             PS7                          0.000    50.000 r  zsys_i/processing_system7_0/inst/PS7_i/FCLKCLK[0]
+                         net (fo=1, routed)           1.193    51.193    zsys_i/processing_system7_0/inst/FCLK_CLK_unbuffered[0]
+    BUFGCTRL_X0Y16                                                    r  zsys_i/processing_system7_0/inst/buffer_fclk_clk_0.FCLK_CLK_0_BUFG/I
+    BUFGCTRL_X0Y16       BUFG (Prop_bufg_I_O)         0.101    51.294 r  zsys_i/processing_system7_0/inst/buffer_fclk_clk_0.FCLK_CLK_0_BUFG/O
+                         net (fo=45350, routed)       1.971    53.265    zsys_i/tx_unit_0/U0/gtxchan0[32].txchan0/uart0/ACLK
+    SLICE_X94Y113        FDRE                                         r  zsys_i/tx_unit_0/U0/gtxchan0[32].txchan0/uart0/mclk_meta_reg/C
+                         clock pessimism              0.000    53.265    
+                         clock uncertainty            1.508    54.773    
+    SLICE_X94Y113        FDRE (Hold_fdre_C_D)         0.230    55.003    zsys_i/tx_unit_0/U0/gtxchan0[32].txchan0/uart0/mclk_meta_reg
+  -------------------------------------------------------------------
+                         required time                        -55.003    
+                         arrival time                          53.084    
+  -------------------------------------------------------------------
+                         slack                                 -1.919    
+
+Slack (VIOLATED) :        -1.919ns  (arrival time - required time)
+  Source:                 zsys_i/processing_system7_0/inst/PS7_i/FCLKCLK[1]
+                            (clock source 'clk_fpga_1'  {rise@0.000ns fall@50.000ns period=100.000ns})
+  Destination:            zsys_i/tx_unit_0/U0/gtxchan0[2].txchan0/uart0/mclk_meta_reg/D
+                            (rising edge-triggered cell FDRE clocked by clk_fpga_0  {rise@0.000ns fall@5.000ns period=10.000ns})
+  Path Group:             clk_fpga_0
+  Path Type:              Hold (Min at Slow Process Corner)
+  Requirement:            0.000ns  (clk_fpga_0 rise@0.000ns - clk_fpga_1 rise@0.000ns)
+  Data Path Delay:        3.088ns  (logic 0.091ns (2.947%)  route 2.997ns (97.053%))
+  Logic Levels:           1  (BUFG=1)
+  Clock Path Skew:        3.269ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    3.269ns
+    Source Clock Delay      (SCD):    0.000ns
+    Clock Pessimism Removal (CPR):    -0.000ns
+  Clock Uncertainty:      1.508ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    3.015ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+  Clock Domain Crossing:  Inter clock paths are considered valid unless explicitly excluded by timing constraints such as set_clock_groups or set_false_path.
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk_fpga_1 rise edge)
+                                                      0.000     0.000 r  
+    PS7_X0Y0             PS7                          0.000     0.000 r  zsys_i/processing_system7_0/inst/PS7_i/FCLKCLK[1]
+                         net (fo=1, routed)           1.088     1.088    zsys_i/processing_system7_0/inst/FCLK_CLK_unbuffered[1]
+    BUFGCTRL_X0Y17                                                    r  zsys_i/processing_system7_0/inst/buffer_fclk_clk_1.FCLK_CLK_1_BUFG/I
+    BUFGCTRL_X0Y17       BUFG (Prop_bufg_I_O)         0.091     1.179 r  zsys_i/processing_system7_0/inst/buffer_fclk_clk_1.FCLK_CLK_1_BUFG/O
+                         net (fo=1306, routed)        1.909     3.088    zsys_i/tx_unit_0/U0/gtxchan0[2].txchan0/uart0/UCLK_I
+    SLICE_X102Y109       FDRE                                         r  zsys_i/tx_unit_0/U0/gtxchan0[2].txchan0/uart0/mclk_meta_reg/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk_fpga_0 rise edge)
+                                                      0.000     0.000 r  
+    PS7_X0Y0             PS7                          0.000     0.000 r  zsys_i/processing_system7_0/inst/PS7_i/FCLKCLK[0]
+                         net (fo=1, routed)           1.193     1.193    zsys_i/processing_system7_0/inst/FCLK_CLK_unbuffered[0]
+    BUFGCTRL_X0Y16                                                    r  zsys_i/processing_system7_0/inst/buffer_fclk_clk_0.FCLK_CLK_0_BUFG/I
+    BUFGCTRL_X0Y16       BUFG (Prop_bufg_I_O)         0.101     1.294 r  zsys_i/processing_system7_0/inst/buffer_fclk_clk_0.FCLK_CLK_0_BUFG/O
+                         net (fo=45350, routed)       1.975     3.269    zsys_i/tx_unit_0/U0/gtxchan0[2].txchan0/uart0/ACLK
+    SLICE_X102Y109       FDRE                                         r  zsys_i/tx_unit_0/U0/gtxchan0[2].txchan0/uart0/mclk_meta_reg/C
+                         clock pessimism              0.000     3.269    
+                         clock uncertainty            1.508     4.777    
+    SLICE_X102Y109       FDRE (Hold_fdre_C_D)         0.230     5.007    zsys_i/tx_unit_0/U0/gtxchan0[2].txchan0/uart0/mclk_meta_reg
+  -------------------------------------------------------------------
+                         required time                         -5.007    
+                         arrival time                           3.088    
+  -------------------------------------------------------------------
+                         slack                                 -1.919    
+
+Slack (VIOLATED) :        -1.919ns  (arrival time - required time)
+  Source:                 zsys_i/processing_system7_0/inst/PS7_i/FCLKCLK[1]
+                            (clock source 'clk_fpga_1'  {rise@0.000ns fall@50.000ns period=100.000ns})
+  Destination:            zsys_i/tx_unit_0/U0/gtxchan0[32].txchan0/uart0/mclk_meta_reg/D
+                            (rising edge-triggered cell FDRE clocked by clk_fpga_0  {rise@0.000ns fall@5.000ns period=10.000ns})
+  Path Group:             clk_fpga_0
+  Path Type:              Hold (Min at Slow Process Corner)
+  Requirement:            0.000ns  (clk_fpga_0 rise@0.000ns - clk_fpga_1 rise@0.000ns)
+  Data Path Delay:        3.084ns  (logic 0.091ns (2.951%)  route 2.993ns (97.049%))
+  Logic Levels:           1  (BUFG=1)
+  Clock Path Skew:        3.265ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    3.265ns
+    Source Clock Delay      (SCD):    0.000ns
+    Clock Pessimism Removal (CPR):    -0.000ns
+  Clock Uncertainty:      1.508ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    3.015ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+  Clock Domain Crossing:  Inter clock paths are considered valid unless explicitly excluded by timing constraints such as set_clock_groups or set_false_path.
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk_fpga_1 rise edge)
+                                                      0.000     0.000 r  
+    PS7_X0Y0             PS7                          0.000     0.000 r  zsys_i/processing_system7_0/inst/PS7_i/FCLKCLK[1]
+                         net (fo=1, routed)           1.088     1.088    zsys_i/processing_system7_0/inst/FCLK_CLK_unbuffered[1]
+    BUFGCTRL_X0Y17                                                    r  zsys_i/processing_system7_0/inst/buffer_fclk_clk_1.FCLK_CLK_1_BUFG/I
+    BUFGCTRL_X0Y17       BUFG (Prop_bufg_I_O)         0.091     1.179 r  zsys_i/processing_system7_0/inst/buffer_fclk_clk_1.FCLK_CLK_1_BUFG/O
+                         net (fo=1306, routed)        1.905     3.084    zsys_i/tx_unit_0/U0/gtxchan0[32].txchan0/uart0/UCLK_I
+    SLICE_X94Y113        FDRE                                         r  zsys_i/tx_unit_0/U0/gtxchan0[32].txchan0/uart0/mclk_meta_reg/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk_fpga_0 rise edge)
+                                                      0.000     0.000 r  
+    PS7_X0Y0             PS7                          0.000     0.000 r  zsys_i/processing_system7_0/inst/PS7_i/FCLKCLK[0]
+                         net (fo=1, routed)           1.193     1.193    zsys_i/processing_system7_0/inst/FCLK_CLK_unbuffered[0]
+    BUFGCTRL_X0Y16                                                    r  zsys_i/processing_system7_0/inst/buffer_fclk_clk_0.FCLK_CLK_0_BUFG/I
+    BUFGCTRL_X0Y16       BUFG (Prop_bufg_I_O)         0.101     1.294 r  zsys_i/processing_system7_0/inst/buffer_fclk_clk_0.FCLK_CLK_0_BUFG/O
+                         net (fo=45350, routed)       1.971     3.265    zsys_i/tx_unit_0/U0/gtxchan0[32].txchan0/uart0/ACLK
+    SLICE_X94Y113        FDRE                                         r  zsys_i/tx_unit_0/U0/gtxchan0[32].txchan0/uart0/mclk_meta_reg/C
+                         clock pessimism              0.000     3.265    
+                         clock uncertainty            1.508     4.773    
+    SLICE_X94Y113        FDRE (Hold_fdre_C_D)         0.230     5.003    zsys_i/tx_unit_0/U0/gtxchan0[32].txchan0/uart0/mclk_meta_reg
+  -------------------------------------------------------------------
+                         required time                         -5.003    
+                         arrival time                           3.084    
+  -------------------------------------------------------------------
+                         slack                                 -1.919    
+
+Slack (VIOLATED) :        -1.918ns  (arrival time - required time)
+  Source:                 zsys_i/processing_system7_0/inst/PS7_i/FCLKCLK[1]
+                            (clock source 'clk_fpga_1'  {rise@0.000ns fall@50.000ns period=100.000ns})
+  Destination:            zsys_i/tx_unit_0/U0/gtxchan0[16].txchan0/uart0/mclk_meta_reg/D
+                            (rising edge-triggered cell FDRE clocked by clk_fpga_0  {rise@0.000ns fall@5.000ns period=10.000ns})
+  Path Group:             clk_fpga_0
+  Path Type:              Hold (Min at Slow Process Corner)
+  Requirement:            0.000ns  (clk_fpga_0 rise@50.000ns - clk_fpga_1 fall@50.000ns)
+  Data Path Delay:        3.015ns  (logic 0.091ns (3.018%)  route 2.924ns (96.982%))
+  Logic Levels:           1  (BUFG=1)
+  Clock Path Skew:        3.195ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    3.195ns = ( 53.195 - 50.000 ) 
+    Source Clock Delay      (SCD):    0.000ns = ( 50.000 - 50.000 ) 
+    Clock Pessimism Removal (CPR):    -0.000ns
+  Clock Uncertainty:      1.508ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    3.015ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+  Clock Domain Crossing:  Inter clock paths are considered valid unless explicitly excluded by timing constraints such as set_clock_groups or set_false_path.
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk_fpga_1 fall edge)
+                                                     50.000    50.000 f  
+    PS7_X0Y0             PS7                          0.000    50.000 f  zsys_i/processing_system7_0/inst/PS7_i/FCLKCLK[1]
+                         net (fo=1, routed)           1.088    51.088    zsys_i/processing_system7_0/inst/FCLK_CLK_unbuffered[1]
+    BUFGCTRL_X0Y17                                                    f  zsys_i/processing_system7_0/inst/buffer_fclk_clk_1.FCLK_CLK_1_BUFG/I
+    BUFGCTRL_X0Y17       BUFG (Prop_bufg_I_O)         0.091    51.179 f  zsys_i/processing_system7_0/inst/buffer_fclk_clk_1.FCLK_CLK_1_BUFG/O
+                         net (fo=1306, routed)        1.836    53.015    zsys_i/tx_unit_0/U0/gtxchan0[16].txchan0/uart0/UCLK_I
+    SLICE_X54Y109        FDRE                                         f  zsys_i/tx_unit_0/U0/gtxchan0[16].txchan0/uart0/mclk_meta_reg/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk_fpga_0 rise edge)
+                                                     50.000    50.000 r  
+    PS7_X0Y0             PS7                          0.000    50.000 r  zsys_i/processing_system7_0/inst/PS7_i/FCLKCLK[0]
+                         net (fo=1, routed)           1.193    51.193    zsys_i/processing_system7_0/inst/FCLK_CLK_unbuffered[0]
+    BUFGCTRL_X0Y16                                                    r  zsys_i/processing_system7_0/inst/buffer_fclk_clk_0.FCLK_CLK_0_BUFG/I
+    BUFGCTRL_X0Y16       BUFG (Prop_bufg_I_O)         0.101    51.294 r  zsys_i/processing_system7_0/inst/buffer_fclk_clk_0.FCLK_CLK_0_BUFG/O
+                         net (fo=45350, routed)       1.901    53.195    zsys_i/tx_unit_0/U0/gtxchan0[16].txchan0/uart0/ACLK
+    SLICE_X54Y109        FDRE                                         r  zsys_i/tx_unit_0/U0/gtxchan0[16].txchan0/uart0/mclk_meta_reg/C
+                         clock pessimism              0.000    53.195    
+                         clock uncertainty            1.508    54.703    
+    SLICE_X54Y109        FDRE (Hold_fdre_C_D)         0.230    54.933    zsys_i/tx_unit_0/U0/gtxchan0[16].txchan0/uart0/mclk_meta_reg
+  -------------------------------------------------------------------
+                         required time                        -54.933    
+                         arrival time                          53.015    
+  -------------------------------------------------------------------
+                         slack                                 -1.918    
+
+Slack (VIOLATED) :        -1.918ns  (arrival time - required time)
+  Source:                 zsys_i/processing_system7_0/inst/PS7_i/FCLKCLK[1]
+                            (clock source 'clk_fpga_1'  {rise@0.000ns fall@50.000ns period=100.000ns})
+  Destination:            zsys_i/tx_unit_0/U0/gtxchan0[16].txchan0/uart0/mclk_meta_reg/D
+                            (rising edge-triggered cell FDRE clocked by clk_fpga_0  {rise@0.000ns fall@5.000ns period=10.000ns})
+  Path Group:             clk_fpga_0
+  Path Type:              Hold (Min at Slow Process Corner)
+  Requirement:            0.000ns  (clk_fpga_0 rise@0.000ns - clk_fpga_1 rise@0.000ns)
+  Data Path Delay:        3.015ns  (logic 0.091ns (3.018%)  route 2.924ns (96.982%))
+  Logic Levels:           1  (BUFG=1)
+  Clock Path Skew:        3.195ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    3.195ns
+    Source Clock Delay      (SCD):    0.000ns
+    Clock Pessimism Removal (CPR):    -0.000ns
+  Clock Uncertainty:      1.508ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    3.015ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+  Clock Domain Crossing:  Inter clock paths are considered valid unless explicitly excluded by timing constraints such as set_clock_groups or set_false_path.
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk_fpga_1 rise edge)
+                                                      0.000     0.000 r  
+    PS7_X0Y0             PS7                          0.000     0.000 r  zsys_i/processing_system7_0/inst/PS7_i/FCLKCLK[1]
+                         net (fo=1, routed)           1.088     1.088    zsys_i/processing_system7_0/inst/FCLK_CLK_unbuffered[1]
+    BUFGCTRL_X0Y17                                                    r  zsys_i/processing_system7_0/inst/buffer_fclk_clk_1.FCLK_CLK_1_BUFG/I
+    BUFGCTRL_X0Y17       BUFG (Prop_bufg_I_O)         0.091     1.179 r  zsys_i/processing_system7_0/inst/buffer_fclk_clk_1.FCLK_CLK_1_BUFG/O
+                         net (fo=1306, routed)        1.836     3.015    zsys_i/tx_unit_0/U0/gtxchan0[16].txchan0/uart0/UCLK_I
+    SLICE_X54Y109        FDRE                                         r  zsys_i/tx_unit_0/U0/gtxchan0[16].txchan0/uart0/mclk_meta_reg/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk_fpga_0 rise edge)
+                                                      0.000     0.000 r  
+    PS7_X0Y0             PS7                          0.000     0.000 r  zsys_i/processing_system7_0/inst/PS7_i/FCLKCLK[0]
+                         net (fo=1, routed)           1.193     1.193    zsys_i/processing_system7_0/inst/FCLK_CLK_unbuffered[0]
+    BUFGCTRL_X0Y16                                                    r  zsys_i/processing_system7_0/inst/buffer_fclk_clk_0.FCLK_CLK_0_BUFG/I
+    BUFGCTRL_X0Y16       BUFG (Prop_bufg_I_O)         0.101     1.294 r  zsys_i/processing_system7_0/inst/buffer_fclk_clk_0.FCLK_CLK_0_BUFG/O
+                         net (fo=45350, routed)       1.901     3.195    zsys_i/tx_unit_0/U0/gtxchan0[16].txchan0/uart0/ACLK
+    SLICE_X54Y109        FDRE                                         r  zsys_i/tx_unit_0/U0/gtxchan0[16].txchan0/uart0/mclk_meta_reg/C
+                         clock pessimism              0.000     3.195    
+                         clock uncertainty            1.508     4.703    
+    SLICE_X54Y109        FDRE (Hold_fdre_C_D)         0.230     4.933    zsys_i/tx_unit_0/U0/gtxchan0[16].txchan0/uart0/mclk_meta_reg
+  -------------------------------------------------------------------
+                         required time                         -4.933    
+                         arrival time                           3.015    
+  -------------------------------------------------------------------
+                         slack                                 -1.918    
+
+Slack (VIOLATED) :        -1.918ns  (arrival time - required time)
+  Source:                 zsys_i/processing_system7_0/inst/PS7_i/FCLKCLK[1]
+                            (clock source 'clk_fpga_1'  {rise@0.000ns fall@50.000ns period=100.000ns})
+  Destination:            zsys_i/tx_unit_0/U0/gtxchan0[24].txchan0/uart0/mclk_meta_reg/D
+                            (rising edge-triggered cell FDRE clocked by clk_fpga_0  {rise@0.000ns fall@5.000ns period=10.000ns})
+  Path Group:             clk_fpga_0
+  Path Type:              Hold (Min at Slow Process Corner)
+  Requirement:            0.000ns  (clk_fpga_0 rise@0.000ns - clk_fpga_1 rise@0.000ns)
+  Data Path Delay:        3.016ns  (logic 0.091ns (3.017%)  route 2.925ns (96.983%))
+  Logic Levels:           1  (BUFG=1)
+  Clock Path Skew:        3.196ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    3.196ns
+    Source Clock Delay      (SCD):    0.000ns
+    Clock Pessimism Removal (CPR):    -0.000ns
+  Clock Uncertainty:      1.508ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    3.015ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+  Clock Domain Crossing:  Inter clock paths are considered valid unless explicitly excluded by timing constraints such as set_clock_groups or set_false_path.
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk_fpga_1 rise edge)
+                                                      0.000     0.000 r  
+    PS7_X0Y0             PS7                          0.000     0.000 r  zsys_i/processing_system7_0/inst/PS7_i/FCLKCLK[1]
+                         net (fo=1, routed)           1.088     1.088    zsys_i/processing_system7_0/inst/FCLK_CLK_unbuffered[1]
+    BUFGCTRL_X0Y17                                                    r  zsys_i/processing_system7_0/inst/buffer_fclk_clk_1.FCLK_CLK_1_BUFG/I
+    BUFGCTRL_X0Y17       BUFG (Prop_bufg_I_O)         0.091     1.179 r  zsys_i/processing_system7_0/inst/buffer_fclk_clk_1.FCLK_CLK_1_BUFG/O
+                         net (fo=1306, routed)        1.837     3.016    zsys_i/tx_unit_0/U0/gtxchan0[24].txchan0/uart0/UCLK_I
+    SLICE_X58Y110        FDRE                                         r  zsys_i/tx_unit_0/U0/gtxchan0[24].txchan0/uart0/mclk_meta_reg/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk_fpga_0 rise edge)
+                                                      0.000     0.000 r  
+    PS7_X0Y0             PS7                          0.000     0.000 r  zsys_i/processing_system7_0/inst/PS7_i/FCLKCLK[0]
+                         net (fo=1, routed)           1.193     1.193    zsys_i/processing_system7_0/inst/FCLK_CLK_unbuffered[0]
+    BUFGCTRL_X0Y16                                                    r  zsys_i/processing_system7_0/inst/buffer_fclk_clk_0.FCLK_CLK_0_BUFG/I
+    BUFGCTRL_X0Y16       BUFG (Prop_bufg_I_O)         0.101     1.294 r  zsys_i/processing_system7_0/inst/buffer_fclk_clk_0.FCLK_CLK_0_BUFG/O
+                         net (fo=45350, routed)       1.902     3.196    zsys_i/tx_unit_0/U0/gtxchan0[24].txchan0/uart0/ACLK
+    SLICE_X58Y110        FDRE                                         r  zsys_i/tx_unit_0/U0/gtxchan0[24].txchan0/uart0/mclk_meta_reg/C
+                         clock pessimism              0.000     3.196    
+                         clock uncertainty            1.508     4.704    
+    SLICE_X58Y110        FDRE (Hold_fdre_C_D)         0.230     4.934    zsys_i/tx_unit_0/U0/gtxchan0[24].txchan0/uart0/mclk_meta_reg
+  -------------------------------------------------------------------
+                         required time                         -4.934    
+                         arrival time                           3.016    
+  -------------------------------------------------------------------
+                         slack                                 -1.918    
+
+Slack (VIOLATED) :        -1.918ns  (arrival time - required time)
+  Source:                 zsys_i/processing_system7_0/inst/PS7_i/FCLKCLK[1]
+                            (clock source 'clk_fpga_1'  {rise@0.000ns fall@50.000ns period=100.000ns})
+  Destination:            zsys_i/tx_unit_0/U0/gtxchan0[24].txchan0/uart0/mclk_meta_reg/D
+                            (rising edge-triggered cell FDRE clocked by clk_fpga_0  {rise@0.000ns fall@5.000ns period=10.000ns})
+  Path Group:             clk_fpga_0
+  Path Type:              Hold (Min at Slow Process Corner)
+  Requirement:            0.000ns  (clk_fpga_0 rise@50.000ns - clk_fpga_1 fall@50.000ns)
+  Data Path Delay:        3.016ns  (logic 0.091ns (3.017%)  route 2.925ns (96.983%))
+  Logic Levels:           1  (BUFG=1)
+  Clock Path Skew:        3.196ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    3.196ns = ( 53.196 - 50.000 ) 
+    Source Clock Delay      (SCD):    0.000ns = ( 50.000 - 50.000 ) 
+    Clock Pessimism Removal (CPR):    -0.000ns
+  Clock Uncertainty:      1.508ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    3.015ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+  Clock Domain Crossing:  Inter clock paths are considered valid unless explicitly excluded by timing constraints such as set_clock_groups or set_false_path.
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk_fpga_1 fall edge)
+                                                     50.000    50.000 f  
+    PS7_X0Y0             PS7                          0.000    50.000 f  zsys_i/processing_system7_0/inst/PS7_i/FCLKCLK[1]
+                         net (fo=1, routed)           1.088    51.088    zsys_i/processing_system7_0/inst/FCLK_CLK_unbuffered[1]
+    BUFGCTRL_X0Y17                                                    f  zsys_i/processing_system7_0/inst/buffer_fclk_clk_1.FCLK_CLK_1_BUFG/I
+    BUFGCTRL_X0Y17       BUFG (Prop_bufg_I_O)         0.091    51.179 f  zsys_i/processing_system7_0/inst/buffer_fclk_clk_1.FCLK_CLK_1_BUFG/O
+                         net (fo=1306, routed)        1.837    53.016    zsys_i/tx_unit_0/U0/gtxchan0[24].txchan0/uart0/UCLK_I
+    SLICE_X58Y110        FDRE                                         f  zsys_i/tx_unit_0/U0/gtxchan0[24].txchan0/uart0/mclk_meta_reg/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk_fpga_0 rise edge)
+                                                     50.000    50.000 r  
+    PS7_X0Y0             PS7                          0.000    50.000 r  zsys_i/processing_system7_0/inst/PS7_i/FCLKCLK[0]
+                         net (fo=1, routed)           1.193    51.193    zsys_i/processing_system7_0/inst/FCLK_CLK_unbuffered[0]
+    BUFGCTRL_X0Y16                                                    r  zsys_i/processing_system7_0/inst/buffer_fclk_clk_0.FCLK_CLK_0_BUFG/I
+    BUFGCTRL_X0Y16       BUFG (Prop_bufg_I_O)         0.101    51.294 r  zsys_i/processing_system7_0/inst/buffer_fclk_clk_0.FCLK_CLK_0_BUFG/O
+                         net (fo=45350, routed)       1.902    53.196    zsys_i/tx_unit_0/U0/gtxchan0[24].txchan0/uart0/ACLK
+    SLICE_X58Y110        FDRE                                         r  zsys_i/tx_unit_0/U0/gtxchan0[24].txchan0/uart0/mclk_meta_reg/C
+                         clock pessimism              0.000    53.196    
+                         clock uncertainty            1.508    54.704    
+    SLICE_X58Y110        FDRE (Hold_fdre_C_D)         0.230    54.934    zsys_i/tx_unit_0/U0/gtxchan0[24].txchan0/uart0/mclk_meta_reg
+  -------------------------------------------------------------------
+                         required time                        -54.934    
+                         arrival time                          53.016    
+  -------------------------------------------------------------------
+                         slack                                 -1.918    
+
+
+
+
