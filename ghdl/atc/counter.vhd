@@ -24,9 +24,10 @@ end;
 
 architecture behavioral of counter is
 
-  signal run_reg      : std_logic;
-  signal increment_reg: std_logic;
-  signal clear_reg    : std_logic;
+  signal run_reg        : std_logic;
+  signal increment_rega : std_logic;
+  signal increment_regb : std_logic;
+  signal clear_reg      : std_logic;
 
   signal count_next   : unsigned(C_COUNT_BITS-1 downto 0);
   signal count_rega   : unsigned(C_COUNT_BITS-1 downto 0);
@@ -38,22 +39,24 @@ begin
   process(CLK_I, RST_I)
   begin
     if RST_I = '1' then
-      run_reg       <= '0';
-      increment_reg <= '0';
-      clear_reg     <= '0';
+      run_reg        <= '0';
+      increment_rega <= '1';
+      increment_regb <= '1';
+      clear_reg      <= '0';
     elsif rising_edge(CLK_I) then
-      run_reg       <= RUN_I;
-      increment_reg <= INCREMENT_I;
-      clear_reg     <= CLEAR_I;
+      run_reg        <= RUN_I;
+      increment_rega <= INCREMENT_I;
+      increment_regb <= increment_rega;
+      clear_reg      <= CLEAR_I;
     end if;
   end process;
 
   -- Combinatorial next value
-  process(run_reg, increment_reg, clear_reg, count_rega)
+  process(run_reg, increment_rega, clear_reg, count_rega)
   begin
     if clear_reg = '1' then
       count_next <= (others => '0');
-    elsif run_reg = '1' and increment_reg = '1' then
+    elsif run_reg = '1' and increment_rega = '1' and increment_regb = '0' then
       if count_rega < C_COUNT_MAX then
         count_next <= count_rega + 1;
       else

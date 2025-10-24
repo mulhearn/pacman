@@ -129,8 +129,8 @@ begin
 
   read_process : process
   begin
-    --raddr   <= x"E204";
-    raddr   <= x"E004";
+    raddr   <= x"E204";
+    --raddr   <= x"E004";
     rupdate <= '1';
     wait;
   end process;
