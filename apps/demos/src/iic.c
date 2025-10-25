@@ -191,8 +191,6 @@ void check_iic(){
 }
 
 
-// VDDA DAC is used for postive  end of differential test DAC output
-// VDDD DAC is used for negative end of differntial test DAC output
 void set_voltages(unsigned chan, unsigned vdda_up, unsigned vdda_dn,
 		  unsigned vddd_up, unsigned vddd_dn){
   unsigned reg = 0x30 + chan;

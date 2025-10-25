@@ -17,6 +17,7 @@
 #include "rxtx.h"
 #include "atc.h"
 #include "adc.h"
+#include "asic.h"
 
 #define EMAC_DEVICE_ID      XPAR_XEMACPS_0_DEVICE_ID
 #define PHY_ADDRESS         0x1A    // Your CPLD PHY address
@@ -273,7 +274,7 @@ void atc_menu(){
 
 int main(){
   printf("Menu-Driver Demonstration Driver For PACMAN\r\n");
-  printf("Sanity number:  2\r\n");
+  printf("Sanity number:  1\r\n");
   printf("Random Max:  0x%x Random Number:  0x%x \r\n", RAND_MAX, rand());
 
   int status = 0;
@@ -290,7 +291,7 @@ int main(){
     printf("choose an option:\r\n");
     printf("(1) blink LEDs (2) read global status (3) toggle scratch (4) toggle enables (5) toggle dcache \r\n");
     printf("(6) read MAC From CPLD (7) toggle CPLD config \r\n");
-    printf("(a) I2C menu (b) RX/TX menu (c) ATC menu (d) ADC menu\r\n");
+    printf("(a) I2C menu (b) RX/TX menu (c) ATC menu (d) ADC menu (e) single ASIC menu\r\n");
     unsigned char c=inbyte();
     printf("pressed:  %c\r\n", c);
     switch(c){
@@ -326,6 +327,9 @@ int main(){
       break;
     case 'd':
       adc_menu();
+      break;
+    case 'e':
+      asic_menu();
       break;
     default:
       printf("invalid selection...\r\n");
