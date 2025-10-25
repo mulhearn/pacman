@@ -66,9 +66,15 @@ int pacman_init(int verbose){
   G_PACMAN_AXIL[0x7FB8>>2] = 0x0003;
 
   if (verbose){
-    printf("INFO:  Limiting TX bandwidth to 1/2 of nominal UART rate (1/4 maximum) \n");
+    printf("INFO:  Setting RX clock scale factor to 1 \n");
   }
-  G_PACMAN_AXIL[0x3B04>>2] = 0x05281602;
+  G_PACMAN_AXIL[0x7B04>>2] = 0x00001001;
+
+  if (verbose){
+    printf("INFO:  Limiting TX bandwidth, with clock scale factor 1 \n");
+  }
+  // G_PACMAN_AXIL[0x3B04>>2] = 0x05281602;
+  G_PACMAN_AXIL[0x3B04>>2] = 0x07BC1601;
 
   if (verbose){
     printf("INFO:  Setting both G and H output to active low \n");
@@ -83,13 +89,16 @@ int pacman_init(int verbose){
 
   //destination configurations:
   // 0x0MMMDDDO M=tile enables, D=duration O=output enables (1 = G, 2 = H, 4 = T)
-  //LEMO A destination configuration:
-  G_PACMAN_AXIL[0xE110>>2] = 0x03FF0016;
-  //LEMO B destination configuration:
-  G_PACMAN_AXIL[0xE114>>2] = 0x03FF0016;
-  //POKE C destination configuration:
-  G_PACMAN_AXIL[0xE118>>2] = 0x03FF0015;
-  //POKE D destination configuration:
+  //LEMO A destination configuration:  This is a SYNC pulse, H+T, duration 2
+  G_PACMAN_AXIL[0xE110>>2] = 0x03FF0026;
+  //LEMO B destination configuration:  This is also a SYNC pulse, H+T, duration 2
+  G_PACMAN_AXIL[0xE114>>2] = 0x03FF0026;
+  //POKE C destination configuration:  This is an INTERNAL_RESET pulse, G+T, duration 8
+  G_PACMAN_AXIL[0xE118>>2] = 0x03FF0085;
+  //POKE C destination configuration:  This is a FULL_RESET pulse, G+T, duration 1023
+  //G_PACMAN_AXIL[0xE118>>2] = 0x03FF3FF5;
+
+  //POKE D destination configuration:  This is a SYNC pulse, H+T, duration 2
   G_PACMAN_AXIL[0xE11C>>2] = 0x03FF1001;
 
   //Request ATC configuration update:
