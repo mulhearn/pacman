@@ -21,10 +21,11 @@ $(COMMON_SRCS:$(SRC_DIR)/platform/%.c=$(OBJ_DIR)/%.o) \
 $(LINUX_SRCS:$(SRC_DIR)/drivers-linux/%.cc=$(OBJ_DIR)/%.o)
 
 # Flags
-CPPFLAGS := $(INCLUDE_DIRS)
+CPPFLAGS := $(INCLUDE_DIRS) -D_LINUX
 CXXFLAGS := -Wall -O2
 CFLAGS   := -Wall -O2
-LDLIBS   := $(LIB_DIR)/$(LIB_NAME) -lzmq -lstdc++
+#LDLIBS   := $(LIB_DIR)/$(LIB_NAME) -lzmq -lstdc++
+LDLIBS   := -lzmq -lstdc++
 
 # default targets
 APP_ELFS := $(addprefix $(BIN_DIR)/,$(addsuffix .elf,$(APPS)))
