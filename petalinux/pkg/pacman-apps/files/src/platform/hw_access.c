@@ -1,7 +1,15 @@
-#include "hw_access.h"
-#include <sys/mman.h>
+#include <stdio.h>
 #include <fcntl.h>
 #include <time.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
+#include <linux/i2c-dev.h>
+#include <string.h>
+#include "hw_access.h"  // for hw_u8_t, hw_u32_t
+
+#include "hw_access.h"
+
 
 // move to header?
 #define DMA_REGISTERS_LEN      0x00010000
@@ -40,7 +48,7 @@ void init_axil_driver(){
   printf("INFO:  Running pacman firmware version %d.%d (Build: 0x%x  HW Code:  0x%x)\n", fwmajor, fwminor, fwbuild, hwcode);
 }
 
-int axil_driver_status(){ return HW_SUCCESS; }
+hw_u32_t axil_driver_status(){ return HW_SUCCESS; }
 
 void clear_axil_driver_status() {}
 
@@ -78,7 +86,7 @@ void init_dma_driver(){
   close(dh);
 }
 
-int dma_driver_status(){ return HW_SUCCESS; }
+hw_u32_t dma_driver_status(){ return HW_SUCCESS; }
 
 void clear_dma_driver_status() {}
 
@@ -129,6 +137,109 @@ hw_ptr_t dma_ptr(hw_addr_t addr){
 }
 
 //
+// I2C Interface:
+//
+
+#define I2C_DEV "/dev/i2c-0"
+#define I2C_DEBUG true
+
+static int G_IIC_FH = -1;
+static hw_u32_t G_IIC_STATUS = 0;
+
+void init_iic_driver() {
+    if (G_IIC_FH >= 0) {
+        printf("**ERROR** I2C already initialized.\n");
+        G_IIC_STATUS |= 1;
+        return;
+    }
+
+    G_IIC_FH = open(I2C_DEV, O_RDWR);
+    if (G_IIC_FH < 0) {
+        printf("**ERROR** Failed to open I2C device");
+        G_IIC_STATUS |= 2;
+        return;
+    }
+
+    // clear status flags after successful open
+    clear_iic_driver_status();
+}
+
+// report the status of the AXI-LITE interface:
+hw_u32_t iic_driver_status(){
+  return G_IIC_STATUS;
+}
+
+// report the status of the AXI-LITE interface:
+void clear_iic_driver_status(){
+  G_IIC_STATUS = 0;
+}
+
+// Write a sequence of bytes to an I2C device
+void iic_write(hw_u8_t addr, hw_u8_t reg, const hw_u8_t *data, hw_u32_t len) {
+    if (G_IIC_FH < 0) {
+        printf("**ERROR** iic_write: I2C not initialized\n");
+        G_IIC_STATUS |= 1;
+        return;
+    }
+
+    if (ioctl(G_IIC_FH, I2C_SLAVE, addr) < 0) {
+        printf("**ERROR** iic_write: Failed to set I2C address 0x%02x\n", addr);
+        G_IIC_STATUS |= 2;
+        return;
+    }
+
+    hw_u8_t buf[len + 1];
+    buf[0] = reg;
+    for (hw_u32_t i = 0; i < len; i++)
+        buf[i + 1] = data[i];
+
+    ssize_t wrote = write(G_IIC_FH, buf, len + 1);
+    if (wrote != (ssize_t)(len + 1)) {
+      printf("**ERROR** iic_write: Failed to write %u bytes to 0x%02x (return value:  %zd\n", len+1, addr, wrote);
+      G_IIC_STATUS |= 4;
+    }
+
+#if I2C_DEBUG
+    printf("iic_write: addr 0x%02x reg 0x%02x data:", addr, reg);
+    for (hw_u32_t i = 0; i < len; i++) printf(" 0x%02x", data[i]);
+    printf("\n");
+#endif
+}
+
+// Read a sequence of bytes from an I2C device
+void iic_read(hw_u8_t addr, hw_u8_t reg, hw_u8_t *data, hw_u32_t len) {
+    if (G_IIC_FH < 0) {
+        printf("**ERROR** iic_read: I2C not initialized\n");
+        G_IIC_STATUS |= 1;
+        return;
+    }
+
+    if (ioctl(G_IIC_FH, I2C_SLAVE, addr) < 0) {
+        printf("**ERROR** iic_read: Failed to set I2C address 0x%02x\n", addr);
+        G_IIC_STATUS |= 2;
+        return;
+    }
+
+    if (write(G_IIC_FH, &reg, 1) != 1) {
+        printf("**ERROR** iic_read: Failed to write register 0x%02x to 0x%02x\n", reg, addr);
+        G_IIC_STATUS |= 4;
+        return;
+    }
+
+    if (read(G_IIC_FH, data, len) != (ssize_t)len) {
+        printf("**ERROR** iic_read: Failed to read %u bytes from 0x%02x\n", len, addr);
+        G_IIC_STATUS |= 8;
+    }
+
+#if I2C_DEBUG
+    printf("iic_read: addr 0x%02x reg 0x%02x data:", addr, reg);
+    for (hw_u32_t i = 0; i < len; i++) printf(" 0x%02x", data[i]);
+    printf("\n");
+#endif
+
+}
+
+//
 // Timer:
 //
 
@@ -143,9 +254,9 @@ void stop_hw_timer(){
   clock_gettime(CLOCK_MONOTONIC, &stop);
 }
 
-unsigned hw_timer_elapsed_us(){
+hw_u32_t hw_timer_elapsed_us(){
   long seconds        = stop.tv_sec  - start.tv_sec;
   long nanoseconds    = stop.tv_nsec - start.tv_nsec;
-  unsigned elapsed_us = seconds * 1000000 + nanoseconds / 1000;
+  hw_u32_t elapsed_us = seconds * 1000000 + nanoseconds / 1000;
   return elapsed_us;
 }

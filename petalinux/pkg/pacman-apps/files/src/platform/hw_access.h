@@ -9,13 +9,14 @@
 // run unmodified on both Linux and bare-metal platforms.
 //
 // The HW interfaces that are currently supported are: AXI-Lite PACMAN
-// register access, DMA register access, and memory mapped buffers for
-// DMA.  (Soon: I2C)
+// register access, DMA register access, memory mapped buffers for
+// DMA, and I2C.
 //
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 
 // Includes:
 // For baremetal, we depart from standard library for types, printf, and sleep.
@@ -32,14 +33,30 @@ extern "C" {
 
 // Typedefs
 #ifdef _LINUX
+  typedef uint8_t  hw_u8_t;
+  typedef uint16_t hw_u16_t;
+  typedef uint32_t hw_u32_t;
   typedef uint32_t hw_addr_t;
   typedef uint32_t hw_val_t;
   typedef volatile uint32_t * hw_ptr_t;
 #else
+  typedef u8  hw_u8_t;
+  typedef u16 hw_u16_t;
+  typedef u32 hw_u32_t;
   typedef u32 hw_addr_t;
   typedef u32 hw_val_t;
   typedef volatile u32 * hw_ptr_t;
 #endif
+
+// check sizes of typedefs:
+#ifdef __cplusplus
+  #define HW_STATIC_ASSERT static_assert
+#else
+  #define HW_STATIC_ASSERT _Static_assert
+#endif
+HW_STATIC_ASSERT(sizeof(hw_u8_t)  == 1,  "unexpected hw_u8_t size");
+HW_STATIC_ASSERT(sizeof(hw_u16_t) == 2,  "unexpected hw_u16_t size");
+HW_STATIC_ASSERT(sizeof(hw_u32_t) == 4,  "unexpected hw_u32_t size");
 
 // Base addresses
 #ifdef _LINUX
@@ -64,7 +81,6 @@ extern "C" {
   #define printf xil_printf
 #endif
 
-
 #define HW_SUCCESS 0
 
 //
@@ -75,7 +91,7 @@ extern "C" {
 void init_axil_driver();
 
 // report the status of the AXI-LITE interface:
-int axil_driver_status();
+hw_u32_t axil_driver_status();
 
 // clear any errors in the AXI-LITE interface:
 void clear_axil_driver_status();
@@ -94,7 +110,7 @@ void     axil_write_register (hw_addr_t offset, hw_val_t value);
 void init_dma_driver();
 
 // report the status of the AXI-LITE driver software (not HW status!):
-int dma_driver_status();
+hw_u32_t dma_driver_status();
 
 // clear any errors in the AXI-LITE driver (not a HW reset or clear!):
 void clear_dma_driver_status();
@@ -114,16 +130,43 @@ void init_dma_buffer(hw_addr_t baseaddr, hw_addr_t size);
 hw_ptr_t dma_ptr(hw_addr_t addr);
 
 //
+// I2C Interface:
+//
+
+// initialize the AXI-LITE interface for register access:
+void init_iic_driver();
+
+// report the status of the AXI-LITE interface:
+hw_u32_t iic_driver_status();
+
+// report the status of the AXI-LITE interface:
+void clear_iic_driver_status();
+
+// Write a sequence of bytes to an I2C device.
+// addr: 7-bit device address
+// reg: register within device
+// data: pointer to hw_u8 array
+// len: number of bytes to write
+void iic_write(hw_u8_t addr, hw_u8_t reg, const hw_u8_t *data, hw_u32_t len);
+
+// Read a sequence of bytes from an I2C device.
+// addr: 7-bit device address
+// reg: register within device
+// data: pointer to hw_u8 array to receive bytes
+// len: number of bytes to read
+void iic_read(hw_u8_t addr, hw_u8_t reg, hw_u8_t *data, hw_u32_t len);
+
+//
 // timer utility:
 //
 void start_hw_timer();
 void stop_hw_timer();
-unsigned hw_timer_elapsed_us();
+hw_u32_t hw_timer_elapsed_us();
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // __HW_ACCESS_H__
+#endif // HW_ACCESS_H
 
 
