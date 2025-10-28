@@ -10,7 +10,6 @@
 
 #include "hw_access.h"
 #include "global.h"
-#include "bram.h"
 #include "dma.h"
 #include "led.h"
 #include "iic.h"
@@ -193,7 +192,7 @@ void toggle_mux(){
 
 
 void read_iic_status(){
-  printf("INFO: I2C driver status:  0x%08x\n", iic_driver_status());
+  printf("INFO: I2C driver status:  0x%08x\n", iic_platform_status());
 }
 
 // *** MENUS ***
@@ -214,13 +213,13 @@ void adc_menu(){
     case 0:
       return;
     case 1:
-      read_adc_registers();
+      adc_read_registers();
       break;
     case 2:
-      toggle_adc_sleep();
+      adc_toggle_sleep();
       break;
     case 3:
-      toggle_adc_config();
+      adc_toggle_config();
       break;
     case 4:
       toggle_test_dac();
@@ -517,9 +516,9 @@ int main(){
   printf("pacman_menu:  PACMAN Linux driver access via menu, for diagnostics and hardware checkout.\n");
   //printf("Random Max:  0x%x Random Number:  0x%x \n", RAND_MAX, rand());
 
-  init_axil_driver();
-  init_iic_driver();
-  init_bram();
+  axil_platform_init();
+  iic_platform_init();
+  bram_platform_init();
   init_rxtx();
   init_led();
 

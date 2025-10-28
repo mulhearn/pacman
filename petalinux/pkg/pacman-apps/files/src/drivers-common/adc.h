@@ -12,9 +12,14 @@ extern "C" {
 #define C_ADDR_ADC_CONFIG  0x004
 #define C_ADDR_ADC_LOOK    0x010
 
-void read_adc_registers();
-void toggle_adc_sleep();
-void toggle_adc_config();
+// ADC driver initialization:
+void adc_init();
+
+
+// menu style hooks to ADC features:
+void adc_read_registers();
+void adc_toggle_sleep();
+void adc_toggle_config();
 
 #ifdef __cplusplus
 }

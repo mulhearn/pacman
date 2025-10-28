@@ -25,8 +25,10 @@
 #define LED_2         13
 
 void init_led() {
-  //TODO: init axil once safe to re-init ...
+  // LEDs use the AXI-Lite register and GPIO interfaces from the platform layer:
+  axil_platform_init();
   gpio_platform_init();
+  // configure the LEDs controlled by MIO:
   gpio_platform_configure_pin(LED_TRENZ_RED, GPIO_DIR_OUTPUT, 0);
   gpio_platform_configure_pin(LED_1, GPIO_DIR_OUTPUT, 0);
   gpio_platform_configure_pin(LED_2, GPIO_DIR_OUTPUT, 0);
@@ -35,9 +37,9 @@ void init_led() {
 void blink_red_led() {
   printf("Blinking RED LED on Trenz Module, via MIO...\n");
   for (int i = 0; i < 20; i++) {
-    (void)gpio_platform_write(LED_TRENZ_RED, 1);
+    (void)gpio_write_pin(LED_TRENZ_RED, 1);
     usleep(50000);
-    (void)gpio_platform_write(LED_TRENZ_RED, 0);
+    (void)gpio_write_pin(LED_TRENZ_RED, 0);
     usleep(50000);
   }
 }
@@ -45,17 +47,17 @@ void blink_red_led() {
 void blink_pacman_leds() {
   printf("Blinking PACMAN LED-0, via MIO...\n");
   for (int i = 0; i < 20; i++) {
-    (void)gpio_platform_write(LED_1, 1);
+    (void)gpio_write_pin(LED_1, 1);
     usleep(50000);
-    (void)gpio_platform_write(LED_1, 0);
+    (void)gpio_write_pin(LED_1, 0);
     usleep(50000);
   }
 
   printf("Blinking PACMAN LED-1, via MIO...\n");
   for (int i = 0; i < 20; i++) {
-    (void)gpio_platform_write(LED_2, 1);
+    (void)gpio_write_pin(LED_2, 1);
     usleep(50000);
-    (void)gpio_platform_write(LED_2, 0);
+    (void)gpio_write_pin(LED_2, 0);
     usleep(50000);
   }
 

@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef HW_ACCESS_H
 #define HW_ACCESS_H
 
@@ -10,7 +12,16 @@
 //
 // The HW interfaces that are currently supported are: AXI-Lite PACMAN
 // register access, DMA register access, memory mapped buffers for
-// DMA, and I2C.
+// DMA, I2C, GPIO, and BRAM.
+//
+// Appropriate defines for cache management are included.  These are
+// no-ops (removed at precompiler stage) under Linux.
+//
+// The interface provides basic utilities such as printf and sleep,
+// via appropriate includes and defines.
+//
+// (BRAM support via this interface is untested, as current firmware
+// does not include the controller)
 //
 
 #ifdef __cplusplus
@@ -87,13 +98,16 @@ HW_STATIC_ASSERT(sizeof(hw_u32_t) == 4,  "unexpected hw_u32_t size");
 //
 
 // initialize the AXI-LITE interface for register access:
-void init_axil_driver();
+void axil_platform_init();
+
+// initialize the AXI-LITE interface for register access:
+void axil_platform_close();
 
 // report the status of the AXI-LITE interface:
-hw_u32_t axil_driver_status();
+hw_u32_t axil_platform_status();
 
 // clear any errors in the AXI-LITE interface:
-void clear_axil_driver_status();
+void axil_platform_clear_status();
 
 // read the HW registers with offset <offset> relative to the AXI-LITE base address:
 hw_val_t axil_read_register  (hw_addr_t offset);
@@ -105,47 +119,52 @@ void     axil_write_register (hw_addr_t offset, hw_val_t value);
 // DMA Registers:
 //
 
-// initialize the software driver for the AXI-LITE interface providing register access:
-void init_dma_driver();
+// initialize the platform driver for the DMA interface:
+void dma_platform_init();
 
-// report the status of the AXI-LITE driver software (not HW status!):
-hw_u32_t dma_driver_status();
+// report the status of the DMA platform driver (not HW status!):
+hw_u32_t dma_platform_status();
 
-// clear any errors in the AXI-LITE driver (not a HW reset or clear!):
-void clear_dma_driver_status();
+// clear any errors in the DMA platform driver (not a HW reset or clear!):
+void dma_platform_clear_status();
 
-// read the HW registers with offset <offset> relative to the AXI-LITE base address:
+// read the DMA registers with offset <offset> relative to the DMA base address:
 hw_val_t dma_read_register  (hw_addr_t offset);
 
-// write <value> to the HW registers with offset <offset> relative to the AXI-LITE base address:
+// write <value> to the DMA register with offset <offset> relative to the DMA base address:
 void     dma_write_register (hw_addr_t offset, hw_val_t value);
 
 //
 // DMA Buffers:
 //
 
-void init_dma_buffer(hw_addr_t baseaddr, hw_addr_t size);
+// initialize the DMA buffer
+void dma_platform_init_buffer(hw_addr_t baseaddr, hw_addr_t size);
 
+// get a pointer to the hardware address addr
 hw_ptr_t dma_ptr(hw_addr_t addr);
 
 //
 // I2C Interface:
 //
 
-// initialize the AXI-LITE interface for register access:
-void init_iic_driver();
+// initialize the I2C interface:
+void iic_platform_init();
+
+// close the I2C interface:
+void iic_platform_close();
 
 // report the status of the AXI-LITE interface:
-hw_u32_t iic_driver_status();
+hw_u32_t iic_platform_status();
 
 // report the status of the AXI-LITE interface:
-void clear_iic_driver_status();
+void iic_platform_clear_status();
 
 // Write a sequence of bytes to an I2C device.
 // addr: 7-bit device address
-// reg: register within device
+// reg: first byte (typically the register)
 // data: pointer to hw_u8 array
-// len: number of bytes to write
+// len: number of additional bytes to write (may be zero)
 void iic_write(hw_u8_t addr, hw_u8_t reg, const hw_u8_t *data, hw_u32_t len);
 
 // Read a sequence of bytes from an I2C device.
@@ -182,10 +201,10 @@ void gpio_platform_clear_status();
 void gpio_platform_configure_pin(hw_u32_t pin, gpio_dir_t dir, hw_u32_t value);
 
 // write to a pin
-void gpio_platform_write(hw_u32_t pin, hw_u32_t value);
+void gpio_write_pin(hw_u32_t pin, hw_u32_t value);
 
 // read from a pin
-hw_u32_t gpio_platform_read(hw_u32_t pin);
+hw_u32_t gpio_read_pin(hw_u32_t pin);
 
 //
 // BRAM Interface:  (Currently Unused and Untested)
@@ -198,8 +217,9 @@ void        bram_platform_write(hw_u32_t addr, hw_u32_t value);
 hw_u32_t    bram_platform_read(hw_u32_t addr);
 
 //
-// timer utility:
+// Timer utility:
 //
+// Simple microsecond timer for profiling; implemented separately per platform.
 void start_hw_timer();
 void stop_hw_timer();
 hw_u32_t hw_timer_elapsed_us();

@@ -19,8 +19,12 @@
 
 static volatile uint32_t * G_AXIL  = NULL;
 
-void init_axil_driver(){
-  clear_axil_driver_status();
+void axil_platform_init(){
+  // do nothing if already initialized:
+  if (G_AXIL != NULL)
+    return;
+
+  axil_platform_clear_status();
 
   printf("INFO:  Opening /dev/mem.\n");
   int dh = open("/dev/mem", O_RDWR|O_SYNC);
@@ -46,9 +50,11 @@ void init_axil_driver(){
   printf("INFO:  Running pacman firmware version %d.%d (Build: 0x%x  HW Code:  0x%x)\n", fwmajor, fwminor, fwbuild, hwcode);
 }
 
-hw_u32_t axil_driver_status(){ return HW_SUCCESS; }
+void axil_platform_close(){ }
 
-void clear_axil_driver_status() {}
+hw_u32_t axil_platform_status(){ return HW_SUCCESS; }
+
+void axil_platform_clear_status() {}
 
 hw_val_t axil_read_register  (hw_addr_t offset){
   return G_AXIL[offset>>2];
@@ -64,8 +70,14 @@ void     axil_write_register (hw_addr_t offset, hw_val_t value){
 
 static volatile uint32_t * G_DMA  = NULL;
 
-void init_dma_driver(){
-  clear_dma_driver_status();
+void dma_platform_init(){
+  // do nothing if already initialized:
+  if (G_DMA != NULL)
+    return;
+
+  dma_platform_clear_status();
+
+
   printf("INFO:  Opening /dev/mem.\n");
   int dh = open("/dev/mem", O_RDWR|O_SYNC);
   if (dh < 0) {
@@ -84,9 +96,12 @@ void init_dma_driver(){
   close(dh);
 }
 
-hw_u32_t dma_driver_status(){ return HW_SUCCESS; }
+void dma_platform_close(){
+}
 
-void clear_dma_driver_status() {}
+hw_u32_t dma_platform_status(){ return HW_SUCCESS; }
+
+void dma_platform_clear_status() {}
 
 hw_val_t dma_read_register  (hw_addr_t offset){
   return G_DMA[offset>>2];
@@ -104,7 +119,7 @@ static volatile uint32_t * G_BUF  = NULL;
 static hw_addr_t G_BUF_BASEADDR = 0;
 static hw_addr_t G_BUF_SIZE = 0;
 
-void init_dma_buffer(hw_addr_t baseaddr, hw_addr_t size){
+void dma_platform_init_buffer(hw_addr_t baseaddr, hw_addr_t size){
   G_BUF_BASEADDR = baseaddr;
   G_BUF_SIZE     = size;
 
@@ -144,31 +159,33 @@ hw_ptr_t dma_ptr(hw_addr_t addr){
 static int G_IIC_FH = -1;
 static hw_u32_t G_IIC_STATUS = 0;
 
-void init_iic_driver() {
-    if (G_IIC_FH >= 0) {
-        printf("**ERROR** I2C already initialized.\n");
-        G_IIC_STATUS |= 1;
-        return;
-    }
+void iic_platform_init() {
+  // do nothing if already initialized:
+  if (G_IIC_FH >= 0) {
+    return;
+  }
 
-    G_IIC_FH = open(I2C_DEV, O_RDWR);
-    if (G_IIC_FH < 0) {
-        printf("**ERROR** Failed to open I2C device");
-        G_IIC_STATUS |= 2;
-        return;
-    }
+  iic_platform_clear_status();
 
-    // clear status flags after successful open
-    clear_iic_driver_status();
+  G_IIC_FH = open(I2C_DEV, O_RDWR);
+  if (G_IIC_FH < 0) {
+    printf("**ERROR** Failed to open I2C device");
+    G_IIC_STATUS |= 2;
+    return;
+  }
+}
+
+
+void iic_platform_close() {
 }
 
 // report the status of the AXI-LITE interface:
-hw_u32_t iic_driver_status(){
+hw_u32_t iic_platform_status(){
   return G_IIC_STATUS;
 }
 
 // report the status of the AXI-LITE interface:
-void clear_iic_driver_status(){
+void iic_platform_clear_status(){
   G_IIC_STATUS = 0;
 }
 
@@ -311,7 +328,7 @@ void gpio_platform_configure_pin(hw_u32_t pin, gpio_dir_t dir, hw_u32_t value) {
     }
 }
 
-void gpio_platform_write(hw_u32_t pin, hw_u32_t value) {
+void gpio_write_pin(hw_u32_t pin, hw_u32_t value) {
     char fbuf[64];
     snprintf(fbuf, sizeof(fbuf), "/sys/class/gpio/gpio%u/value", G_MIO_FIRST_PIN + pin);
     int fd = open(fbuf, O_WRONLY);
@@ -327,7 +344,7 @@ void gpio_platform_write(hw_u32_t pin, hw_u32_t value) {
     close(fd);
 }
 
-hw_u32_t gpio_platform_read(hw_u32_t pin) {
+hw_u32_t gpio_read_pin(hw_u32_t pin) {
     char fbuf[64];
     snprintf(fbuf, sizeof(fbuf), "/sys/class/gpio/gpio%u/value", G_MIO_FIRST_PIN + pin);
     int fd = open(fbuf, O_RDONLY);

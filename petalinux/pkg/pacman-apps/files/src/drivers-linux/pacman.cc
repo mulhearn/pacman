@@ -105,7 +105,7 @@ int pacman_init(int verbose){
   G_PACMAN_AXIL[0xE100>>2] = 0x0;
 
   // duplicate (harmless) effort here while merging new driver code into PACMAN server.
-  init_axil_driver();
+  axil_platform_init();
 
   return EXIT_SUCCESS;
 }
