@@ -10,7 +10,6 @@
 
 #include "hw_access.h"
 #include "global.h"
-#include "mio.h"
 #include "bram.h"
 #include "dma.h"
 #include "led.h"
@@ -518,7 +517,6 @@ int main(){
   printf("pacman_menu:  PACMAN Linux driver access via menu, for diagnostics and hardware checkout.\n");
   //printf("Random Max:  0x%x Random Number:  0x%x \n", RAND_MAX, rand());
 
-  init_mio();
   init_axil_driver();
   init_iic_driver();
   init_bram();

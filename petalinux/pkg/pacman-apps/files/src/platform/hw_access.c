@@ -6,8 +6,6 @@
 #include <sys/mman.h>
 #include <linux/i2c-dev.h>
 #include <string.h>
-#include "hw_access.h"  // for hw_u8_t, hw_u32_t
-
 #include "hw_access.h"
 
 
@@ -237,6 +235,190 @@ void iic_read(hw_u8_t addr, hw_u8_t reg, hw_u8_t *data, hw_u32_t len) {
     printf("\n");
 #endif
 
+}
+
+
+//
+// GPIO
+//
+
+// Status flags
+static hw_u32_t G_MIO_STATUS = 0;
+
+// First MIO pin index (platform-dependent)
+static const hw_u32_t G_MIO_FIRST_PIN = 906;
+
+void gpio_platform_init() {
+    G_MIO_STATUS = 0;
+    // No extra initialization needed for sysfs GPIO
+}
+
+void gpio_platform_close() {
+    // No cleanup needed for sysfs GPIO
+}
+
+hw_u32_t gpio_platform_status() {
+    return G_MIO_STATUS;
+}
+
+void gpio_platform_clear_status() {
+    G_MIO_STATUS = 0;
+}
+
+void gpio_platform_configure_pin(hw_u32_t pin, gpio_dir_t dir, hw_u32_t value) {
+    char buf[64];
+    int fd;
+
+    // 1. Export the pin (ignore errors if already exported)
+    fd = open("/sys/class/gpio/export", O_WRONLY);
+    if (fd >= 0) {
+        snprintf(buf, sizeof(buf), "%u", G_MIO_FIRST_PIN + pin);
+	ssize_t n;
+        n=write(fd, buf, strlen(buf));
+	(void) n;
+        close(fd);
+    }
+
+    // 2. Set direction
+    snprintf(buf, sizeof(buf), "/sys/class/gpio/gpio%u/direction", G_MIO_FIRST_PIN + pin);
+    fd = open(buf, O_WRONLY);
+    if (fd < 0) {
+        G_MIO_STATUS |= 1;  // direction open failed
+        return;
+    }
+    const char *dir_str = (dir == GPIO_DIR_OUTPUT) ? "out" : "in";
+    if (write(fd, dir_str, strlen(dir_str)) != (ssize_t)strlen(dir_str)) {
+        G_MIO_STATUS |= 2;  // direction write failed
+        close(fd);
+        return;
+    }
+    close(fd);
+
+    // 3. Set initial value if output
+    if (dir == GPIO_DIR_OUTPUT) {
+        snprintf(buf, sizeof(buf), "/sys/class/gpio/gpio%u/value", G_MIO_FIRST_PIN + pin);
+        fd = open(buf, O_WRONLY);
+        if (fd < 0) {
+            G_MIO_STATUS |= 4;  // value open failed
+            return;
+        }
+        char vbuf[2];
+        snprintf(vbuf, sizeof(vbuf), "%u", value ? 1 : 0);
+        if (write(fd, vbuf, 1) != 1) {
+            G_MIO_STATUS |= 8;  // value write failed
+        }
+        close(fd);
+    }
+}
+
+void gpio_platform_write(hw_u32_t pin, hw_u32_t value) {
+    char fbuf[64];
+    snprintf(fbuf, sizeof(fbuf), "/sys/class/gpio/gpio%u/value", G_MIO_FIRST_PIN + pin);
+    int fd = open(fbuf, O_WRONLY);
+    if (fd < 0) {
+        G_MIO_STATUS |= 16;
+        return;
+    }
+    char vbuf[2];
+    snprintf(vbuf, sizeof(vbuf), "%u", value);
+    if (write(fd, vbuf, 1) != 1) {
+        G_MIO_STATUS |= 32;
+    }
+    close(fd);
+}
+
+hw_u32_t gpio_platform_read(hw_u32_t pin) {
+    char fbuf[64];
+    snprintf(fbuf, sizeof(fbuf), "/sys/class/gpio/gpio%u/value", G_MIO_FIRST_PIN + pin);
+    int fd = open(fbuf, O_RDONLY);
+    if (fd < 0) {
+        G_MIO_STATUS |= 64;
+        return 0;
+    }
+    char vbuf[2];
+    if (read(fd, vbuf, 1) != 1) {
+        G_MIO_STATUS |= 128;
+        close(fd);
+        return 0;
+    }
+    close(fd);
+    return (vbuf[0] == '0') ? 0 : 1;
+}
+
+//
+// BRAM:
+//
+
+// PACMAN AXI-Lite interface to BRAM
+#define PACMAN_BRAM_ADDR 0x42000000
+#define PACMAN_BRAM_HIGH 0x42001FFF
+#define PACMAN_BRAM_LEN  (PACMAN_BRAM_HIGH - PACMAN_BRAM_ADDR + 1)
+
+static uint32_t G_BRAM_STATUS = 0;
+static volatile uint32_t *G_BRAM = NULL;
+static int g_mem_fd = -1;
+
+uint32_t bram_platform_status() {
+    return G_BRAM_STATUS;
+}
+
+void bram_platform_clear_status() {
+    G_BRAM_STATUS = 0;
+}
+
+void bram_platform_init() {
+    if (G_BRAM != NULL) return; // already initialized
+
+    G_BRAM_STATUS = 0;
+
+    g_mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
+    if (g_mem_fd < 0) {
+        perror("ERROR: opening /dev/mem for BRAM");
+        G_BRAM_STATUS |= 1;
+        return;
+    }
+
+    G_BRAM = (volatile uint32_t *)mmap(NULL, PACMAN_BRAM_LEN,
+                                       PROT_READ | PROT_WRITE,
+                                       MAP_SHARED, g_mem_fd,
+                                       PACMAN_BRAM_ADDR);
+    if (G_BRAM == MAP_FAILED) {
+        perror("ERROR: mmap BRAM");
+        G_BRAM = NULL;
+        G_BRAM_STATUS |= 2;
+        close(g_mem_fd);
+        g_mem_fd = -1;
+        return;
+    }
+
+    printf("INFO: BRAM platform initialized (0x%X bytes at 0x%X)\n", PACMAN_BRAM_LEN, PACMAN_BRAM_ADDR);
+}
+
+void bram_platform_close() {
+    if (G_BRAM != NULL) {
+        munmap((void *)G_BRAM, PACMAN_BRAM_LEN);
+        G_BRAM = NULL;
+    }
+    if (g_mem_fd >= 0) {
+        close(g_mem_fd);
+        g_mem_fd = -1;
+    }
+}
+
+void bram_platform_write(uint32_t addr, uint32_t value) {
+    if (!G_BRAM || addr > PACMAN_BRAM_LEN) {
+        G_BRAM_STATUS |= 4; // invalid write
+        return;
+    }
+    G_BRAM[addr >> 2] = value;
+}
+
+uint32_t bram_platform_read(uint32_t addr) {
+    if (!G_BRAM || addr > PACMAN_BRAM_LEN) {
+        G_BRAM_STATUS |= 8; // invalid read
+        return 0xDEADBEEF;
+    }
+    return G_BRAM[addr >> 2];
 }
 
 //

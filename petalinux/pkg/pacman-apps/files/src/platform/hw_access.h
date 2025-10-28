@@ -17,7 +17,6 @@
 extern "C" {
 #endif
 
-
 // Includes:
 // For baremetal, we depart from standard library for types, printf, and sleep.
 #ifdef _LINUX
@@ -155,6 +154,48 @@ void iic_write(hw_u8_t addr, hw_u8_t reg, const hw_u8_t *data, hw_u32_t len);
 // data: pointer to hw_u8 array to receive bytes
 // len: number of bytes to read
 void iic_read(hw_u8_t addr, hw_u8_t reg, hw_u8_t *data, hw_u32_t len);
+
+//
+// PS GPIO (MIO) Interface:
+//
+
+typedef enum {
+    GPIO_DIR_INPUT = 0,
+    GPIO_DIR_OUTPUT = 1
+} gpio_dir_t;
+
+// initialize the GPIO platform
+// (does nothing if driver is already initialized)
+void gpio_platform_init();
+
+// close the GPIO driver
+void gpio_platform_close();
+
+// report the status of the GPIO driver
+hw_u32_t gpio_platform_status();
+
+// clear the status of the GPIO driver
+void gpio_platform_clear_status();
+
+// configure direction and initial value for one pin
+// pin: PS MIO pin index (platform-dependent numbering)
+void gpio_platform_configure_pin(hw_u32_t pin, gpio_dir_t dir, hw_u32_t value);
+
+// write to a pin
+void gpio_platform_write(hw_u32_t pin, hw_u32_t value);
+
+// read from a pin
+hw_u32_t gpio_platform_read(hw_u32_t pin);
+
+//
+// BRAM Interface:  (Currently Unused and Untested)
+//
+void        bram_platform_init();
+void        bram_platform_close();
+hw_u32_t    bram_platform_status();
+void        bram_platform_clear_status();
+void        bram_platform_write(hw_u32_t addr, hw_u32_t value);
+hw_u32_t    bram_platform_read(hw_u32_t addr);
 
 //
 // timer utility:
