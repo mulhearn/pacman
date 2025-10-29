@@ -97,34 +97,30 @@ void toggle_test_dac(){
 void monitor_power(){
   for (int i=0; i<10; i++){
     printf("TILE %2d POWER SUMMARY:\n", i+1);
-    unsigned vdda = iic_mon_vdda(i);
-    unsigned vddd = iic_mon_vddd(i);
-    unsigned idda = iic_mon_idda(i);
-    unsigned iddd = iic_mon_iddd(i);
+    unsigned vdda = iic_mon_vdda_mv(i);
+    unsigned vddd = iic_mon_vddd_mv(i);
+    unsigned idda = iic_mon_idda_ma(i);
+    unsigned iddd = iic_mon_iddd_ma(i);
 
     printf("VDDA:  voltage:  %5d mV current: %5d mA\n", vdda, idda);
-    printf("VDDD:  voltage:  %5d mV current: %5d mV\n", vddd, iddd);
+    printf("VDDD:  voltage:  %5d mV current: %5d mA\n", vddd, iddd);
   }
 
   printf("BOARD POWER SUMMARY:\n");
 
-  unsigned vxa = iic_mon_vdda(0xa);
-  unsigned vya = iic_mon_vddd(0xa);
-  unsigned ixa = iic_mon_idda(0xa);
-  unsigned iya = iic_mon_iddd(0xa);
+  unsigned vba = iic_mon_vboard_mv(0);
+  unsigned vbb = iic_mon_vboard_mv(1);
+  unsigned vbc = iic_mon_vboard_mv(2);
+  unsigned vbd = iic_mon_vboard_mv(3);
 
-  unsigned vxb = iic_mon_vdda(0xb);
-  unsigned vyb = iic_mon_vddd(0xb);
-  unsigned ixb = iic_mon_idda(0xb);
-  unsigned iyb = iic_mon_iddd(0xb);
-
-  float cyb = 4.5*iyb/20000.;
-
-  printf("Board 3V6:  voltage:  %5d mV  current:  %5d mA\n",  vxa, ixa);
-  printf("Board 3V3:  voltage:  %5d mV  current:  %5d mA\n",  vya, iya);
-  printf("Board 3V0:  voltage:  %5d mV  current:  %5d mA\n",  vxb, ixb);
-  printf("RTD Probe:  3V3:      %5d mV  current:  %.1f mA\n", vyb, cyb);
-
+  unsigned iba = iic_mon_iboard_ma(0);
+  unsigned ibb = iic_mon_iboard_ma(1);
+  unsigned ibc = iic_mon_iboard_ma(2);
+  unsigned prb = iic_mon_probe_dn();
+  printf("Board 3V6:  voltage:  %5d mV  current:  %5d mA\n",  vba, iba);
+  printf("Board 3V3:  voltage:  %5d mV  current:  %5d mA\n",  vbb, ibb);
+  printf("Board 3V0:  voltage:  %5d mV  current:  %5d mA\n",  vbc, ibc);
+  printf("RTD Probe:  3V3:      %5d mV  current:  0x%04X DN\n",   vbd, prb);
 }
 
 void record_iv_curves(){
