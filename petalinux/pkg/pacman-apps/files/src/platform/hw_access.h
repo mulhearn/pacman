@@ -68,13 +68,17 @@ HW_STATIC_ASSERT(sizeof(hw_u8_t)  == 1,  "unexpected hw_u8_t size");
 HW_STATIC_ASSERT(sizeof(hw_u16_t) == 2,  "unexpected hw_u16_t size");
 HW_STATIC_ASSERT(sizeof(hw_u32_t) == 4,  "unexpected hw_u32_t size");
 
+#define BRAM_BASEADDR           0x0
+
 // Base addresses
 #ifdef _LINUX
   #define AXIL_REGISTERS_BASEADDR 0x40000000
   #define DMA_REGISTERS_BASEADDR  0x40400000
+  //#define BRAM_BASEADDR           TBD
 #else
   #define AXIL_REGISTERS_BASEADDR XPAR_AXIL_TO_REGBUS_0_BASEADDR
   #define DMA_REGISTERS_BASEADDR  XPAR_AXI_DMA_0_BASEADDR
+  //#define BRAM_BASEADDR           XPAR_BRAM_0_BASEADDR
 #endif
 
 // Cache management macros

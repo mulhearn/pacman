@@ -1,20 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/ioctl.h>
-#include <sys/mman.h>
-#include <string.h>
-#include <stdint.h>
-#include <sys/time.h>
 
 #include "hw_access.h"
-#include "global.h"
 #include "led.h"
-
-#include <stdio.h>
-#include <unistd.h>
-#include "hw_access.h"
+#include "global.h"
 
 // -----------------------------------------------------------
 // LED control
@@ -35,7 +24,7 @@ void init_led() {
 }
 
 void blink_red_led() {
-  printf("Blinking RED LED on Trenz Module, via MIO...\n");
+  printf("Blinking RED LED on Trenz Module, via MIO...\r\n");
   for (int i = 0; i < 20; i++) {
     (void)gpio_write_pin(LED_TRENZ_RED, 1);
     usleep(50000);
@@ -45,7 +34,7 @@ void blink_red_led() {
 }
 
 void blink_pacman_leds() {
-  printf("Blinking PACMAN LED-0, via MIO...\n");
+  printf("Blinking PACMAN LED-0, via MIO...\r\n");
   for (int i = 0; i < 20; i++) {
     (void)gpio_write_pin(LED_1, 1);
     usleep(50000);
@@ -53,7 +42,7 @@ void blink_pacman_leds() {
     usleep(50000);
   }
 
-  printf("Blinking PACMAN LED-1, via MIO...\n");
+  printf("Blinking PACMAN LED-1, via MIO...\r\n");
   for (int i = 0; i < 20; i++) {
     (void)gpio_write_pin(LED_2, 1);
     usleep(50000);
@@ -61,7 +50,7 @@ void blink_pacman_leds() {
     usleep(50000);
   }
 
-  printf("Blinking PACMAN LED-2, via AXIL register...\n");
+  printf("Blinking PACMAN LED-2, via AXIL register...\r\n");
   for (int i = 0; i < 20; i++) {
     axil_write_register(SCOPE_GLOBAL + C_ADDR_GLOBAL_LEDS, 0x1);
     usleep(50000);
@@ -69,7 +58,7 @@ void blink_pacman_leds() {
     usleep(50000);
   }
 
-  printf("Blinking PACMAN LED-3, via AXIL register...\n");
+  printf("Blinking PACMAN LED-3, via AXIL register...\r\n");
   for (int i = 0; i < 20; i++) {
     axil_write_register(SCOPE_GLOBAL + C_ADDR_GLOBAL_LEDS, 0x2);
     usleep(50000);
