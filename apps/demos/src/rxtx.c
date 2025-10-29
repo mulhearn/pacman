@@ -43,8 +43,8 @@ static unsigned G_TX_COUNTER = 0;
 #define RX_BATCH_NEXTDESC_ADDR       0x20100004
 
 void init_rxtx(void){
-  init_dma_driver();
-  init_dma_buffer(DMA_BUFFER_BASEADDR, DMA_BUFFER_SIZE);
+  dma_platform_init();
+  dma_platform_init_buffer(DMA_BUFFER_BASEADDR, DMA_BUFFER_SIZE);
 }
 
 void init_tx_descriptor_ring_mode(int ring_size){
