@@ -1,0 +1,56 @@
+# ASIC setup "by hand":
+
+# VERSION 3.3 Firmware:
+
+# Power up ASIC:
+./pacman_util.py --write 0x4000F010 0x0
+./pacman_util.py --write 0x24010 58000
+./pacman_util.py --write 0x24020 28000
+./pacman_util.py --write 0x4000F010 0x10001
+
+# Setup RX/TX Config:
+./pacman_util.py --write 0x40003B04 0x05281601
+./pacman_util.py --write 0x40007B04 0x00001001
+
+# VERSION 3.4 Firmware:
+
+Use pacman_menu to power up ASICs, send long and interneral resets, etc
+(Coming soon, high-level interface...)
+
+# Use correct polarity setting (no longer needed with latest 3.4 driver)
+# ./utils/pacman_util.py --write 0xE108 0x00003FF0
+
+# TX BAUD RATE CHECK (Sends 10101 if you are checking with scope):
+./pacman_util.py --tx 1 0x5555555555555555
+
+# ASIC root chip config:
+./pacman_util.py --tx 1 0x022541391C2DE806
+./pacman_util.py --tx 1 0x022541391F01EC2E
+./pacman_util.py --tx 1 0x022541391DDFCC2E
+./pacman_util.py --tx 1 0x022541391C1FE02E
+./pacman_util.py --tx 1 0x822541391C09F82E
+./pacman_util.py --tx 1 0x822541391DDFC42E
+./pacman_util.py --tx 1 0x822541391DDFC42E
+./pacman_util.py --tx 1 0x822541391DDFC82E
+./pacman_util.py --tx 1 0x822541391DDFC82E
+./pacman_util.py --tx 1 0x022541391FDFBC2E
+./pacman_util.py --tx 1 0x822541391DDFC82E
+./pacman_util.py --tx 1 0x822541391DFFC02E
+./pacman_util.py --tx 1 0x822541391DDFC42E
+./pacman_util.py --tx 1 0x822541391DDFBC2E
+./pacman_util.py --tx 1 0x822541391DDFC82E
+./pacman_util.py --tx 1 0x022541391DDFC02E
+./pacman_util.py --tx 1 0x822541391D57F82E
+./pacman_util.py --tx 1 0x822541391D57F82E
+./pacman_util.py --tx 1 0x022541391D57FC2E
+./pacman_util.py --tx 1 0x022541391D57FC2E
+./pacman_util.py --tx 1 0x022541391C3DF42E
+./pacman_util.py --tx 1 0x822541391C01F02E
+./pacman_util.py --tx 1 0x022541391C3DF42E
+
+# Broadcast read (255) for the chip ID:
+./pacman_util.py --tx 1 0x822541391C01EBFF
+
+# EXPECTED RESPONSE:
+# 0x422541391C2DE82F  --> downstream  cfg read  chip: 0x0b (011) reg: 0x7a (122) value: 0x0b (011) (valid)
+
