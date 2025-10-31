@@ -5,6 +5,7 @@
 #include "pacman_message.hh"
 #include "tx_buffer.hh"
 #include "rx_buffer.hh"
+#include "asic.h"
 
 // Placeholder for user test function
 int test_message(pacman_msg_t* msg) {
@@ -352,12 +353,54 @@ int test_rx_buffer(){
   return 1;
 }
 
+int test_asic_util(){
+  int success = 1;
+  const unsigned MAX_NUM_WORDS = 20;
+  hw_u32_t payload[2*MAX_NUM_WORDS];
+  unsigned NUM_WORDS;
+  printf("INFO:  ****** running ASIC utility unit test. ****** \n");
 
+  NUM_WORDS = 13;
+  // set chip id to 4:
+  asic_config_write(&payload[0], 1,  122, 0xB);
+  // set various enables:
+  asic_config_write(&payload[2], 11, 123, 0xC0);
+  // i_rx 0-1
+  asic_config_write(&payload[4], 11, 243, 0x77);
+  // r_term1
+  asic_config_write(&payload[6], 11, 248, 0x07);
+  // enable POSI
+  asic_config_write(&payload[8], 11, 126, 0x2);
+  // enable tx_slices 0-3
+  asic_config_write(&payload[10], 11, 239, 0x77);
+  asic_config_write(&payload[12], 11, 240, 0x77);
+  // tx_diff 0-3
+  asic_config_write(&payload[14], 11, 241, 0x77);
+  asic_config_write(&payload[16], 11, 242, 0x77);
+  //common mode
+  asic_config_write(&payload[18], 11, 254, 0x55);
+  asic_config_write(&payload[20], 11, 255, 0x55);
+  //piso downstream:
+  asic_config_write(&payload[22], 11, 125, 0xF);
+  //piso upstream:
+  asic_config_write(&payload[24], 11, 124, 0x0);
+
+  for (unsigned i=0; i< NUM_WORDS; i++){
+    asic_print(&payload[2*i]);
+  }
+
+  for (unsigned i=0; i< NUM_WORDS; i++){
+    printf("0x%08x%08x\n",payload[2*i+1],payload[2*i]);
+  }
+
+  return success;
+}
 int main(){
   int success = 1;
   success &= test_pacman_message();
   success &= test_tx_buffer();
   success &= test_rx_buffer();
+  success &= test_asic_util();
   if (success) {
     printf("SUMMARY:  *************************************************\n");
     printf("SUMMARY:  Congratulations!  All unit tests were successful.\n");
