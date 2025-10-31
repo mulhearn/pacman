@@ -83,9 +83,9 @@ int pacman_init(int verbose){
     printf("INFO:  LEMO_A -> H+T (1 clock cycle) \n");
     printf("INFO:  LEMO_B -> H+T (1 clock cycle) \n");
   }
-  //polarity configuration: 0xE104
+  //polarity configuration: 0xE108
   // 0x0HHHGGGI H=H output mask(10 bits) G=G output mask (10 bits) I = input mask (2 bits)
-  G_PACMAN_AXIL[0xE104>>2] = 0x03FF3FF0;
+  G_PACMAN_AXIL[0xE108>>2] = 0x03FF3FF0;
 
   //destination configurations:
   // 0x0MMMDDDO M=tile enables, D=duration O=output enables (1 = G, 2 = H, 4 = T)
