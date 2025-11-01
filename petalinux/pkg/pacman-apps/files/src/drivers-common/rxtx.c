@@ -3,6 +3,7 @@
 #include "hw_access.h"
 #include "dma.h"
 #include "global.h"
+#include "asic.h"
 #include "rxtx.h"
 
 hw_val_t tx_mask_b = 0xFF;
@@ -273,11 +274,13 @@ void read_rx_status(void){
 }
 
 void read_rx_look(void){
+  hw_u32_t udata[2];
   for (int i=0; i<40; i++){
     axil_write_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_LOOK_SELECT, i);
-    unsigned a = axil_read_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_LOOK_UA);
-    unsigned b = axil_read_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_LOOK_UB);
-    printf("Channel %2d Look:  0x%08x %08x \r\n", i, b, a);
+    udata[0] = axil_read_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_LOOK_UA);
+    udata[1] = axil_read_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_LOOK_UB);
+    printf("Channel %2d Look:  0x%08x %08x ", i, udata[1], udata[0]);
+    asic_print_packet_summary(udata);
   }
 }
 
@@ -294,11 +297,13 @@ void read_tx_status(void){
 }
 
 void read_tx_look(void){
+  hw_u32_t udata[2];
   for (int i=0; i<40; i++){
     axil_write_register(SCOPE_TX+UART_GLOBAL+C_ADDR_TX_LOOK_SELECT, i);
-    unsigned a = axil_read_register(SCOPE_TX+UART_GLOBAL+C_ADDR_TX_LOOK_UA);
-    unsigned b = axil_read_register(SCOPE_TX+UART_GLOBAL+C_ADDR_TX_LOOK_UB);
-    printf("Channel %2d Look:  0x%08x %08x \r\n", i, b, a);
+    udata[0] = axil_read_register(SCOPE_TX+UART_GLOBAL+C_ADDR_TX_LOOK_UA);
+    udata[1] = axil_read_register(SCOPE_TX+UART_GLOBAL+C_ADDR_TX_LOOK_UB);
+    printf("Channel %2d Look:  0x%08x %08x ", i, udata[1], udata[0]);
+    asic_print_packet_summary(udata);
   }
 }
 

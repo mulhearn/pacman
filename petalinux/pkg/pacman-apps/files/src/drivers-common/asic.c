@@ -5,6 +5,49 @@
 #include "rxtx.h"
 #include "asic.h"
 
+static asic_version_t G_ASIC_VER = UNKNOWN;
+
+void asic_set_version(asic_version_t ver){
+  G_ASIC_VER = ver;
+}
+
+//print a summary of a 64-bit ASIC packet:
+void asic_print_packet_summary(hw_u32_t * word){
+  if (G_ASIC_VER == LARPIX_V3) {
+    unsigned wt = word[0]&0x3;
+    unsigned chip = (word[0]>>2)&0xFF;
+    if ((wt == 2) || (wt == 3)) {
+      unsigned addr   = (word[0]>>10)&0xFF;
+      unsigned value  = (word[0]>>18)&0xFF;
+      unsigned magic  = (word[0]>>26)&0x3F;
+      magic |= ((word[1]&0x03FFFFFF)<<6);
+      unsigned valid  = 1;
+      valid &= (magic == 0x89504E47);
+      unsigned downstream = (word[1]>>30)&1;
+      hw_u32_t pbit = ((word[1]>>31)&1);
+      valid &= asic_calc_parity(word);
+
+      if (valid){
+	printf("valid ");
+	if (wt == 2)
+	  printf(" cfg write ");
+	else
+	  printf(" cfg read  ");
+	if (downstream)
+	  printf("downstream ");
+	else
+	  printf("upstream   ");
+	printf("chip: 0x%02X (%03d) ", chip, chip);
+	printf("addr: 0x%02X (%03d) ", addr, addr);
+	printf("value: 0x%02X", value);
+      } else {
+	printf("*** invalid *** ");
+      }
+    }
+  }
+  printf("\r\n");
+}
+
 
 void asic_full_reset(){
   const hw_u32_t mask = 0x3FF;
@@ -31,6 +74,21 @@ void asic_internal_reset(){
   axil_write_register(0xE0C0, mask);
 
 }
+
+
+void asic_toggle_version(){
+  static int mode = 0;
+  mode = (mode + 1) % 2;
+
+  if (mode == 0) {
+    printf("setting ASIC version to unknown \r\n");
+    asic_set_version(UNKNOWN);
+  } else {
+    printf("setting ASIC version to LArPix v3 \r\n");
+    asic_set_version(LARPIX_V3);
+  }
+}
+
 
 
 void asic_toggle_power(){
@@ -166,28 +224,7 @@ void asic_print(hw_u32_t * word){
       printf("INVALID ");
     }
   }
-
-
   printf("\r\n");
-}
-
-void asic_root_chip_id(){
-  printf("INFO:  setting root chip id to 11... \r\n");
-
-  const unsigned MAX_NUM_WORDS = 20;
-  unsigned NUM_WORDS;
-  hw_u32_t payload[2*MAX_NUM_WORDS];
-
-  NUM_WORDS = 1;
-  // set chip id to 11:
-  asic_config_write(&payload[0], 1,  122, 0xB);
-
-  for (unsigned i=0; i< NUM_WORDS; i++){
-    asic_print(&payload[2*i]);
-  }
-
-  printf("INFO sending... \n");
-  asic_batch_tx(payload, NUM_WORDS);
 }
 
 void asic_config_root(){
@@ -198,7 +235,7 @@ void asic_config_root(){
   hw_u32_t payload[2*MAX_NUM_WORDS];
 
   NUM_WORDS = 1;
-  // set chip id to 4:
+  // set chip id to 11:
   asic_config_write(&payload[0], 1,  122, 0xB);
 
   for (unsigned i=0; i< NUM_WORDS; i++){

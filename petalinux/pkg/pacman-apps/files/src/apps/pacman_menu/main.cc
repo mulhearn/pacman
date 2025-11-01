@@ -469,8 +469,8 @@ void asic_menu(){
   while(1){
     printf("choose an option:\r\n");
     printf("(0) Exit timing menu\r\n");
-    printf("(1) toggle ASIC power (2) send full reset (3) send internal reset \r\n");
-    printf("(4) set root chip id (5) config root chip (6) read all registers (7) hello ASIC\r\n");
+    printf("(1) toggle ASIC version (2) toggle ASIC power (3) send full reset (4) send internal reset \r\n");
+    printf("(5) config root chip (6) read all registers (7) hello ASIC\r\n");
 
     int input;
     if (scanf("%d", &input) != 1){
@@ -483,16 +483,16 @@ void asic_menu(){
     case 0:
       return;
     case 1:
-      asic_toggle_power();
+      asic_toggle_version();
       break;
     case 2:
-      asic_full_reset();
+      asic_toggle_power();
       break;
     case 3:
-      asic_internal_reset();
+      asic_full_reset();
       break;
     case 4:
-      asic_root_chip_id();
+      asic_internal_reset();
       break;
     case 5:
       asic_config_root();
