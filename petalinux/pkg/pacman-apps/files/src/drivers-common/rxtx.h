@@ -81,6 +81,10 @@ extern "C" {
 // More directly, that is large enough for 682 words (0x2aa)
 #define RX_BUF_BYTES 0x4000
 
+#define RX_TRAILER_BYTES 24
+#define RX_WORD_BYTES    24
+
+
 #define TX_BATCH_NEXTDESC_ADDR       0x20100000
 #define RX_BATCH_NEXTDESC_ADDR       0x20100004
 
@@ -88,6 +92,9 @@ extern "C" {
 void init_rxtx(void);
 void init_tx_descriptor_ring_mode(int ring_size);
 void init_rx_descriptor_ring_mode(int ring_size);
+
+void rx_disable_uart(unsigned chan);
+void rx_enable_uart(unsigned chan);
 
 // menu hooks:
 void read_tx_status(void);

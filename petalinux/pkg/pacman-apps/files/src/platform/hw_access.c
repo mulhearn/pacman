@@ -459,3 +459,18 @@ hw_u32_t hw_timer_elapsed_us(){
   hw_u32_t elapsed_us = seconds * 1000000 + nanoseconds / 1000;
   return elapsed_us;
 }
+
+char input_choice(){
+  char c = 0, last = 0;
+
+  printf("Enter choice and press return: ");
+  fflush(stdout);
+
+  while (1) {
+    c = getchar();
+    if (c == '\n' || c == '\r')
+      return last;
+    last = c;
+    usleep(1000);
+  }
+}

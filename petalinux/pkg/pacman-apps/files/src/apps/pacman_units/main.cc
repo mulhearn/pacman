@@ -386,7 +386,7 @@ int test_asic_util(){
   asic_config_write(&payload[24], 11, 124, 0x0);
 
   for (unsigned i=0; i< NUM_WORDS; i++){
-    asic_print(&payload[2*i]);
+    asic_print_packet_summary(&payload[2*i]);
   }
 
   for (unsigned i=0; i< NUM_WORDS; i++){

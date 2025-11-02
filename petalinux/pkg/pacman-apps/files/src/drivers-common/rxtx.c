@@ -197,6 +197,26 @@ void toggle_tx_config(void){
   }
 }
 
+void rx_disable_uart(unsigned chan){
+  if (chan < 40){
+    hw_u32_t cfg = axil_read_register(SCOPE_RX+(chan<<8)+C_ADDR_RX_UART_CONFIG);
+    // for the particular config value of "11" the AND step could be skipped, but let's not:
+    cfg &= (~0x00030000);
+    cfg |=   0x00030000;
+    axil_write_register(SCOPE_RX+(chan<<8)+C_ADDR_RX_UART_CONFIG, cfg);
+  }
+}
+
+void rx_enable_uart(unsigned chan){
+  if (chan < 40){
+    hw_u32_t cfg = axil_read_register(SCOPE_RX+(chan<<8)+C_ADDR_RX_UART_CONFIG);
+    // for the particular config value of "00" the OR step could be skipped, but let's not:
+    cfg &= (~0x00030000);
+    cfg |=   0x00000000;
+    axil_write_register(SCOPE_RX+(chan<<8)+C_ADDR_RX_UART_CONFIG, cfg);
+  }
+}
+
 void toggle_rx_config(void){
   static int mode = 0;
   mode = (mode + 1) % 4;
@@ -402,7 +422,6 @@ void benchmark_rxtx_loopback(void){
   const unsigned uart_bytes  = 24;    // 192-bits per uart channel
   const unsigned batch_size  = 100;
   const unsigned rx_expected = uarts * uart_bytes * tx_packets;
-  const unsigned rx_trailer_bytes = 24; // Each DMA RX packet has a two 192-bit word trailer
 
   const unsigned timeout = 10000;
   unsigned rx_timeout = timeout;
@@ -446,8 +465,8 @@ void benchmark_rxtx_loopback(void){
       hw_addr_t nxta = 0;
       while((batch_count < batch_size) && (dma_next_available_rx_bd(&nxta))){
 	unsigned xbytes = dma_poll_bd_transferred(nxta);
-	if (xbytes > rx_trailer_bytes){
-	  rx_bytes += xbytes - rx_trailer_bytes;
+	if (xbytes > RX_TRAILER_BYTES){
+	  rx_bytes += xbytes - RX_TRAILER_BYTES;
 	} else {
 	  printf("ERROR: invalid RX packet of size %d bytes found \r\n", xbytes);
 	  return;

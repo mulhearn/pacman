@@ -18,6 +18,8 @@
 #include "adc.h"
 #include "asic.h"
 
+#include "asic_menu.h"
+
 // *** LED ***
 
 void blink_leds(){
@@ -464,51 +466,6 @@ void atc_menu(){
   }
 }
 
-void asic_menu(){
-  printf("ASIC menu:  \r\n");
-  while(1){
-    printf("choose an option:\r\n");
-    printf("(0) Exit timing menu\r\n");
-    printf("(1) toggle ASIC version (2) toggle ASIC power (3) send full reset (4) send internal reset \r\n");
-    printf("(5) config root chip (6) read all registers (7) hello ASIC\r\n");
-
-    int input;
-    if (scanf("%d", &input) != 1){
-      printf("ERROR: invalid input.\r\n");
-      continue;
-    }
-    printf("INFO: selected %d\r\n", input);
-
-    switch(input){
-    case 0:
-      return;
-    case 1:
-      asic_toggle_version();
-      break;
-    case 2:
-      asic_toggle_power();
-      break;
-    case 3:
-      asic_full_reset();
-      break;
-    case 4:
-      asic_internal_reset();
-      break;
-    case 5:
-      asic_config_root();
-      break;
-    case 6:
-      asic_read_all();
-    case 7:
-      asic_hello();
-      break;
-    default:
-      printf("invalid selection...\r\n");
-    }
-  }
-
-}
-
 void main_menu(){
   while(1){
     printf("MAIN MENU:  choose an option:\r\n");
@@ -520,6 +477,9 @@ void main_menu(){
       printf("ERROR: invalid input.\r\n");
       continue;
     }
+    int tmp;
+    while ((tmp = getchar()) != '\n' && tmp != EOF){}
+
 
     printf("INFO: selected %d\r\n", input);
 
