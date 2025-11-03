@@ -46,6 +46,7 @@ extern "C" {
   typedef uint8_t  hw_u8_t;
   typedef uint16_t hw_u16_t;
   typedef uint32_t hw_u32_t;
+  typedef uint64_t hw_u64_t;
   typedef uint32_t hw_addr_t;
   typedef uint32_t hw_val_t;
   typedef volatile uint32_t * hw_ptr_t;
@@ -53,6 +54,7 @@ extern "C" {
   typedef u8  hw_u8_t;
   typedef u16 hw_u16_t;
   typedef u32 hw_u32_t;
+  typedef u64 hw_u64_t;
   typedef u32 hw_addr_t;
   typedef u32 hw_val_t;
   typedef volatile u32 * hw_ptr_t;
@@ -228,10 +230,14 @@ void start_hw_timer();
 void stop_hw_timer();
 hw_u32_t hw_timer_elapsed_us();
 
+//
+// Menu option utility:
+//
+// return last character pressed before enter:
+char input_choice();
+
 #ifdef __cplusplus
 }
 #endif
 
 #endif // HW_ACCESS_H
-
-

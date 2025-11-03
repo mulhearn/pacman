@@ -232,3 +232,22 @@ hw_u32_t hw_timer_elapsed_us(){
   XTime elapsed_us = ((G_STOP_TIME - G_START_TIME) * 1000000ULL) / COUNTS_PER_SECOND ;
   return (unsigned) elapsed_us;
 }
+
+
+
+char input_choice(void) {
+  char c = 0, last = 0;
+  print("Enter choice and press return: ");
+
+  while (1) {
+    c = inbyte();   // blocking read from UART
+
+    if (c == '\r' || c == '\n') {
+      return last;
+    }
+
+    // echo so user sees what they typed
+    outbyte(c);
+    last = c;
+  }
+}
