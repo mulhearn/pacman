@@ -84,11 +84,13 @@ hw_u8_t asic_config_get_value (hw_u32_t * word){
 
 
 void asic_batch_tx(hw_u32_t * payload, hw_u32_t n){
+  int verbose = 0;
   unsigned count = 0;
   hw_addr_t nxta;
 
   while((count < n) && (dma_next_available_tx_bd(&nxta))){
-    printf("INFO:  working on buffer %d at HW addr 0x%08X \r\n", count, nxta);
+    if (verbose)
+      printf("INFO:  working on buffer %d at HW addr 0x%08X \r\n", count, nxta);
     hw_ptr_t tx_buf = dma_get_buffer(nxta);
 
     // UART 0 only:
@@ -107,12 +109,14 @@ void asic_batch_tx(hw_u32_t * payload, hw_u32_t n){
   }
 
   dma_clear_tx_ioc();
-  printf("INFO:  sending batch of %d TX buffers \r\n", count);
+  if (verbose)
+    printf("INFO:  sending batch of %d TX buffers \r\n", count);
   dma_tx_batch();
 
   // NOTE: the IOC fires on the first complete transfer, so this only confirms one buffer was sent
   if (dma_wait_tx_ioc(DMA_TIMEOUT) > 0){
-    printf("INFO:  batch TX yielded TX IOC flag high (SUCCESS)\r\n");
+    if (verbose)
+      printf("INFO:  batch TX yielded TX IOC flag high (SUCCESS)\r\n");
   }
 }
 

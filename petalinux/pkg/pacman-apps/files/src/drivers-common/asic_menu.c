@@ -249,6 +249,7 @@ void asic_read_rx(){
 
 void asic_loopback(){
   const unsigned MAX_REGISTERS = 16;
+  const unsigned NUM_TESTS    = 10;
 
   hw_u32_t payload[2*MAX_REGISTERS];
   hw_u8_t values[MAX_REGISTERS];
@@ -260,74 +261,77 @@ void asic_loopback(){
   unsigned dma_packets   = 0;
   unsigned count_errors  = 0;
 
-  for (unsigned i=0; i<num_chan_mask; i++){
-    values[i] = rand() & 0xFF;
-    asic_config_write(&payload[2*i], 11, addr_chan_mask+i, values[i]);
-  }
-  printf("INFO sending... \n");
-  asic_batch_tx(payload, num_chan_mask);
+  start_hw_timer();
+  for (unsigned test=0; test<NUM_TESTS; test++){
 
-  for (unsigned i=0; i<num_chan_mask; i++){
-    asic_config_read(&payload[2*i], 11, addr_chan_mask+i);
-  }
-  printf("INFO sending... \n");
-  asic_batch_tx(payload, num_chan_mask);
-
-  unsigned timeout = 1000;
-  unsigned reps    = 0;
-
-  while((timeout>0) && (reps < num_chan_mask)){
-    hw_addr_t nxta;
-    while(dma_next_available_rx_bd(&nxta)){
-      unsigned xbytes = dma_poll_bd_transferred(nxta);
-      if ( (xbytes < RX_TRAILER_BYTES) || (! dma_poll_bd_complete(nxta))){
-	printf("ERROR: incomplete buffer encountered... skipping.\r\n");
-	dma_add_rx_bd(nxta);
-	continue;
-      }
-      unsigned words = (xbytes - RX_TRAILER_BYTES) / RX_WORD_BYTES;
-      hw_ptr_t buf = dma_get_buffer(nxta);
-
-      // check DMA packet trailer:
-      hw_u32_t * trailer = (hw_u32_t *) &buf[6*words];
-      if (((trailer[0]&0xFF) != 0x4C) || (trailer[2] != words)){
-	printf("ERROR: invalid trailer detected in DMA packet... skipping.\r\n");
-	printf("DMA packet tailer: 0x%x %x 0x%x %x 0x%x %x\r\n", trailer[5], trailer[4], trailer[3], trailer[2], trailer[1], trailer[0]);
-	dma_add_rx_bd(nxta);
-	continue;
-      }
-      for (unsigned i=0; i<words; i++){
-	hw_u32_t * word = (hw_u32_t *) &buf[6*i];
-	unsigned wt   = buf[0] & 0xFF;
-	unsigned chan = (buf[0] >> 16) & 0xFFFF;
-
-	if ( (wt != 0x44) && (wt != 0x43)){
-	  continue;
-	}
-	if ( chan != 1 ){
-	  continue;
-	}
-
-	printf("expecting:  0x%02X ", values[reps]);
-	asic_print_packet_summary(&word[4]);
-	if (values[reps] != asic_config_get_value(&word[4]))
-	  count_errors++;
-	reps++;
-      }
-      dma_packets++;
-      dma_add_rx_bd(nxta);
+    for (unsigned i=0; i<num_chan_mask; i++){
+      values[i] = rand() & 0xFF;
+      asic_config_write(&payload[2*i], 11, addr_chan_mask+i, values[i]);
     }
-    usleep(1000);
-    timeout--;
+    asic_batch_tx(payload, num_chan_mask);
+
+    for (unsigned i=0; i<num_chan_mask; i++){
+      asic_config_read(&payload[2*i], 11, addr_chan_mask+i);
+    }
+    asic_batch_tx(payload, num_chan_mask);
+
+    unsigned timeout = 10000;
+    unsigned reps    = 0;
+
+    while((timeout>0) && (reps < num_chan_mask)){
+      hw_addr_t nxta;
+      while(dma_next_available_rx_bd(&nxta)){
+	unsigned xbytes = dma_poll_bd_transferred(nxta);
+	if ( (xbytes < RX_TRAILER_BYTES) || (! dma_poll_bd_complete(nxta))){
+	  printf("ERROR: incomplete buffer encountered... skipping.\r\n");
+	  dma_add_rx_bd(nxta);
+	  continue;
+	}
+	unsigned words = (xbytes - RX_TRAILER_BYTES) / RX_WORD_BYTES;
+	hw_ptr_t buf = dma_get_buffer(nxta);
+
+	// check DMA packet trailer:
+	hw_u32_t * trailer = (hw_u32_t *) &buf[6*words];
+	if (((trailer[0]&0xFF) != 0x4C) || (trailer[2] != words)){
+	  printf("ERROR: invalid trailer detected in DMA packet... skipping.\r\n");
+	  printf("DMA packet tailer: 0x%x %x 0x%x %x 0x%x %x\r\n", trailer[5], trailer[4], trailer[3], trailer[2], trailer[1], trailer[0]);
+	  dma_add_rx_bd(nxta);
+	  continue;
+	}
+	for (unsigned i=0; i<words; i++){
+	  hw_u32_t * word = (hw_u32_t *) &buf[6*i];
+	  unsigned wt   = buf[0] & 0xFF;
+	  unsigned chan = (buf[0] >> 16) & 0xFFFF;
+
+	  if ( (wt != 0x44) && (wt != 0x43)){
+	    continue;
+	  }
+	  if ( chan != 1 ){
+	    continue;
+	  }
+	  //printf("expecting:  0x%02X ", values[reps]);
+	  //asic_print_packet_summary(&word[4]);
+	  if (values[reps] != asic_config_get_value(&word[4]))
+	    count_errors++;
+	  reps++;
+	}
+	dma_packets++;
+	dma_add_rx_bd(nxta);
+      }
+      dma_rx_batch();
+      usleep(1);
+      timeout--;
+    }
+    if (timeout == 0) {
+      printf("ERROR: timeout waiting on read back.  Replies:  %d \r\n", reps);
+      stop_hw_timer();
+      return;
+    }
+    asic_packets += reps;
   }
-  asic_packets += reps;
-
-
-
-  printf("dma_packets: %d asic_packets: %d errors: %d\r\n", dma_packets, asic_packets, count_errors);
-  if (timeout == 0) {
-    printf("ERROR: timeout waiting on read back.  Replies:  %d \r\n", reps);
-  }
+  stop_hw_timer();
+  unsigned elapsed_us = hw_timer_elapsed_us();
+  printf("RESULTS:  dma_packets: %u asic_packets: %u errors: %u time: %u us\r\n", dma_packets, asic_packets, count_errors, elapsed_us);
 }
 
 
