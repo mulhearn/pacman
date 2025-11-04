@@ -1,33 +1,19 @@
 # test.py
 
-import asic_model_utils as am
-from asic_register_update import asic_register_update
-from asic_register_space import asic_register_space
+import asic
 
 def main():
-    print("Loading yaml:");
-
-    larpix_v3 = am.yaml_loader("config/larpix_v3.yml")
-    # am.pretty_print(larpix_v3)
-
-    am.verify_model(larpix_v3)
-
-    am.print_register_map(larpix_v3)
-
-    am.print_field_defaults(larpix_v3)
-    
-    return;
     
     print("Testing Updates:")
     
     # Create empty update
-    u1 = asic_register_update()
+    u1 = asic.register_update()
     print("Empty update:")
     u1.pretty_print()
 
     # Create update from list
     updates_list = [[0, 0xA], [1, 0xB], [5, 0xFF]]
-    u2 = asic_register_update(updates_list)
+    u2 = asic.register_update(updates_list)
     print("\nUpdate from list:")
     u2.pretty_print()
 

@@ -1,6 +1,6 @@
-# asic_register_update.py
+# register_update.py
 
-class asic_register_update:
+class register_update:
     """
     Represents an update to a subset of ASIC registers.
     Each item is a pair [register_index, value].
@@ -18,7 +18,7 @@ class asic_register_update:
                 self.updates.append([u[0], u[1]])
 
     def __repr__(self):
-        return f"asic_register_update({self.updates})"
+        return f"register_update({self.updates})"
 
     def pretty_print(self):
         """
@@ -32,4 +32,4 @@ class asic_register_update:
         """
         Return a new copy of this update.
         """
-        return asic_register_update([u.copy() for u in self.updates])
+        return register_update([u.copy() for u in self.updates])
