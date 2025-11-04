@@ -6,57 +6,31 @@ class test_model(unittest.TestCase):
 
     def setUp(self):
         print("")
-        self.model = asic.model.yaml_loader("config/larpix_v3.yml")
+        self.model = asic.model_from_yaml("config/larpix_v3.yml")
 
-    def test_aaa_verify(self):
+    def test_aaa_test_print(self):
+        self.model.print_register_map()
+        self.model.print_field_defaults()
+        
+        
+    def test_bbb_direct_update(self):
         print("")
-        asic.model.verify_model(self.model)
+        update = self.model.direct_update(update={"r_term[0]":0x3})
+        print(update)
+        update = self.model.direct_update(update={"r_term":0x3, "r_term[1]":0x7})
+        print(update)
+       
+        # example: call should raise ValueError
+        #with self.assertRaises(ValueError) as cm:
+        #    update = asic.direct_update(
+        #        self.asic_dict, self.field_to_reg, self.reg_to_field, update={"periodic_trigger_mask[0]":0x1})
+        # optional: check exception message
+        #self.assertIn("Missing value", str(cm.exception))
         
-    def test_bbb_print_register_map(self):
-        print("")
-        asic.utils.print_register_map(self.model)
-
-    def test_ccc_print_field_defaults(self):
-        print("")
-        asic.utils.print_field_defaults(self.model)
-
-class test_update(unittest.TestCase):
-    """tests related to asic model structure and verification"""
-
-    def test_aaa_update(self):
-        print("")
-        
-        # Create empty update
-        u1 = asic.register_update()
-        print("Empty update:")
-        u1.pretty_print()
-
-        # Create update from list
-        updates_list = [[0, 0xA], [1, 0xB], [5, 0xFF]]
-        u2 = asic.register_update(updates_list)
-        print("\nUpdate from list:")
-        u2.pretty_print()
-
-        # Test __repr__
-        print("\nrepr(u2):")
-        print(repr(u2))
-
-        # Test copy
-        u3 = u2.copy()
-        print("\nCopied update:")
-        u3.pretty_print()
-
-        # Modify original and show copy is unchanged
-        u2.updates[0][1] = 0x00
-        print("\nAfter modifying original:")
-        print("Original:")
-        u2.pretty_print()
-        print("Copy:")
-        u3.pretty_print()
-    
-        
-        
-        
+    def test_ccc_register_space(self):        
+        print("");
+        rspace = asic.register_space(self.model)
+        rspace.print_registers()
 
 if __name__ == "__main__":
     unittest.main()

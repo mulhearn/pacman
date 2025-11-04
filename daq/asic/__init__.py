@@ -1,6 +1,5 @@
-from . import model
+from .model import (model, model_from_yaml)
+from .register_space import (register_space)
 from . import utils
-from .register_update import register_update
-from .direct_update import direct_update
 
 __all__ = ["model", "utils", "register_update", "direct_update"]
