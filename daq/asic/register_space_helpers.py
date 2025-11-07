@@ -1,3 +1,4 @@
+from typing import Union
 
 
 def validate_register_space_dict(asic_dict: dict, verbose: bool = False) -> None:
@@ -292,19 +293,20 @@ def print_register_map(field_to_reg: dict[str, tuple[int, int, int, int]],
     print("-" * 60)
     print(f"Total registers: {len(reg_to_field)}")
     print(f"Total fields:    {total_fields}\n")
-    
 
-def normalize_field_dict(asic_dict: dict, field_dict: dict) -> dict[str, int]:
-    """Normalize a field dictionary by expanding array defaults and then applying specific overrides.
+def normalize_field_collection(asic_dict: dict,
+                               field_dict: Union[dict[str, int], list[str]]
+                               ) -> Union[dict[str, int], list[str]]:
+    """Normalize a field dictionary or list by expanding array defaults and applying overrides.
 
     Parameters:
-        field_dict: dict of field_name -> value
-                    e.g. {"a": 0, "a[1]": 1, "b": 5}
+        field_dict: dict of field_name -> value, or list of field_name
+                    e.g. {"a": 0, "a[1]": 1, "b": 5} or ["a", "a[1]", "b"]
         asic_dict: verified ASIC dictionary
 
     Returns:
-        normalized dict: all array elements explicitly keyed, e.g.
-        {"a[0]": 0, "a[1]": 1, "b": 5}
+        normalized dict: if input was dict
+        normalized list: if input was list
     """
     normalized = {}
 
@@ -315,6 +317,19 @@ def normalize_field_dict(asic_dict: dict, field_dict: dict) -> dict[str, int]:
         if 'array' in field:
             array_sizes[name] = field['array']
 
+    if isinstance(field_dict, list):
+        # Expand arrays and explicit elements
+        result = []
+        for fn in field_dict:
+            if fn in array_sizes:
+                n = array_sizes[fn]
+                result.extend(f"{fn}[{i}]" for i in range(n))
+            else:
+                result.append(fn)
+        return result
+
+    # --- dict case below ---
+
     # First pass: expand array defaults per element
     for fn, val in field_dict.items():
         if fn in array_sizes:
@@ -323,7 +338,7 @@ def normalize_field_dict(asic_dict: dict, field_dict: dict) -> dict[str, int]:
                 key = f"{fn}[{idx}]"
                 normalized[key] = val
 
-    # Second pass: apply explicit assignments, overriding pass one as needed:
+    # Second pass: apply explicit assignments, overriding pass one as needed
     for fn, val in field_dict.items():
         if fn not in array_sizes:
             normalized[fn] = val
@@ -331,10 +346,12 @@ def normalize_field_dict(asic_dict: dict, field_dict: dict) -> dict[str, int]:
     return normalized
 
 
-def direct_update(asic_dict: dict, field_to_reg: dict, reg_to_fields: dict ,
-                  update: dict =None, as_needed: dict =None, verbose: bool = False
-                  ) -> list[tuple[int, int]]:
-    """Build a direct register write list from the provided field updates.
+
+
+def build_register_write_list(asic_dict: dict, field_to_reg: dict, reg_to_fields: dict ,
+                     update: dict =None, as_needed: dict =None, verbose: bool = False
+                     ) -> list[tuple[int, int]]:
+    """Build a list of registers and write values to implement the provided field updates.
 
     Uses pre-built lookup tables (LUTs) from the provided ASIC model dictionary.
     All registers containing update fields are updated, and fields from as_needed
@@ -371,10 +388,10 @@ def direct_update(asic_dict: dict, field_to_reg: dict, reg_to_fields: dict ,
     if not isinstance(as_needed, dict):
         raise TypeError("as_needed must be a dict field_name->value")
 
-    update_norm  = normalize_field_dict(asic_dict, update)
+    update_norm  = normalize_field_collection(asic_dict, update)
 
     # merge but keep update values taking precedence over as_needed
-    merged_norm  = normalize_field_dict(asic_dict, as_needed)
+    merged_norm  = normalize_field_collection(asic_dict, as_needed)
     merged_norm.update(update_norm)  # update overrides as_needed where keys overlap
 
     # quick validations: every key in merged must exist in field_to_reg
@@ -385,8 +402,6 @@ def direct_update(asic_dict: dict, field_to_reg: dict, reg_to_fields: dict ,
     # Determine which registers must be written: those that contain any required field
     regs_to_write = set()
     for fn in update_norm.keys():
-        if fn not in field_to_reg:
-            raise KeyError(f"Unknown field in update: {fn}")
         reg = field_to_reg[fn][0]
         regs_to_write.add(reg)
 
@@ -424,6 +439,57 @@ def direct_update(asic_dict: dict, field_to_reg: dict, reg_to_fields: dict ,
         print(f"INFO: direct_update generated {len(reg_writes)} register writes")
 
     return reg_writes
+
+
+def build_register_read_list(asic_dict: dict, field_to_reg: dict, 
+                     refresh: list[str], verbose: bool = False
+                     ) -> list[int]:
+    """Build a list of registers to read in order to refresh the provided fields.
+
+    Uses pre-built lookup tables (LUTs) from the provided ASIC model dictionary.
+    All registers containing update fields are updated, and fields from as_needed
+    are used as needed to fill out remaining fields in updated registers.
+
+    Parameters:
+        asic_dict: verified ASIC model dictionary 
+        field_to_reg: pre-built field-to-register LUT from asic_dict
+        refresh: list[str] fields requiring a refresh
+
+    Returns:
+        list of integers indicating the registers to read
+
+    Raises:
+        TypeError for incorrect input type
+        KeyError if an update field is unknown
+    """
+    
+    if refresh is None:
+        refresh = []
+
+    if verbose:
+        print(f"INFO: build_register_read_list called with update={list(update.keys())} as_needed={list(as_needed.keys())}")
+        
+    # Defensive type checks
+    if not isinstance(refresh, list):
+        raise TypeError("update must be a list of strings")
+
+    refresh_norm  = normalize_field_collection(asic_dict, refresh)
+    
+    # quick validations: every key in refresh must exist in field_to_reg
+    for fn in refresh_norm:
+        if fn not in field_to_reg:
+            raise KeyError(f"Unknown field provided: {fn}")
+
+    # Determine which registers must be read: those that contain any required field
+    regs_to_read = set()
+    for fn in refresh_norm:
+        reg = field_to_reg[fn][0]
+        regs_to_read.add(reg)
+
+    if verbose:
+        print(f"INFO: Registers to write: {sorted(regs_to_read)}")
+        
+    return sorted(list(regs_to_read))
 
 
 def print_register_field_reset_values(asic_dict):

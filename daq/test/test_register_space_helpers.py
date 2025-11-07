@@ -1,5 +1,4 @@
 import unittest
-import asic
 
 from   asic.helpers import asic_dict_from_yaml
 
@@ -11,7 +10,8 @@ from   asic.register_space_helpers import (
     print_reg_to_field_lut,
     print_register_map,
     print_register_field_reset_values,
-    direct_update,
+    build_register_write_list,
+    build_register_read_list,
 )
 
 verbose = False
@@ -40,14 +40,24 @@ class test_register_space_helpers(unittest.TestCase):
             print_reg_to_field_lut(rtf)
             print_register_map(ftr, rtf)
 
-    def test_ddd_direct_update(self):        
+    def test_ddd_build_register_write_list(self):        
         ftr = build_field_to_reg_lut(self.asic_dict)
         rtf = build_reg_to_field_lut(ftr)
 
-        update = direct_update(self.asic_dict, ftr, rtf, update={"r_term[0]":0x3}, verbose=verbose)
+        update = build_register_write_list(self.asic_dict, ftr, rtf, update={"r_term[0]":0x3}, verbose=verbose)
         print(update)
-        update = direct_update(self.asic_dict, ftr, rtf, update={"r_term":0x3, "r_term[1]":0x7}, verbose=verbose)
+        update = build_register_write_list(self.asic_dict, ftr, rtf, update={"r_term":0x3, "r_term[1]":0x7}, verbose=verbose)
         print(update)
+
+    def test_eee_build_register_read_list(self):        
+        ftr = build_field_to_reg_lut(self.asic_dict)
+        rtf = build_reg_to_field_lut(ftr)
+
+        update = build_register_read_list(self.asic_dict, ftr, refresh=["r_term[0]"], verbose=verbose)
+        print(update)
+        update = build_register_read_list(self.asic_dict, ftr, refresh=["r_term"], verbose=verbose)
+        print(update)
+
         
 if __name__ == "__main__":
     unittest.main()

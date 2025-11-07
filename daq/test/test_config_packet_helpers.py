@@ -1,6 +1,5 @@
 # test/test_config_packet_helpers.py
 import unittest
-import asic
 
 from   asic.helpers import asic_dict_from_yaml
 
