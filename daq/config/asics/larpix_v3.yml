@@ -255,14 +255,188 @@ register_space:
       reset_value: 0b00000000
       description: MSBs of total packets generated
     
+    # No MUXing allowed yet...
     # Dropped packets
-    - name: dropped_packets
-      register: 120
-      bits: [7, 0]
-      access: ro
-      reset_value: 0b00000000
-      description: Total rejected packets
+    #- name: dropped_packets
+    #register: 120
+    #bits: [7, 0]
+    #access: ro
+    #reset_value: 0b00000000
+    #description: Total rejected packets
     
+    # ADC hold delay (16 bits across 120–121)
+    - name: adc_hold_delay
+      register_start: 120
+      array: 2           # 2 bytes (high and low)
+      bits: [7, 0]
+      footprint: 8
+      access: rw
+      reset_value: 0x0000
+      description: Number of clock cycles for ADC sampling hold; high-order bits in register 121
+    
+    # Chip ID
+    - name: chip_id
+      register: 122
+      bits: [7, 0]
+      access: rw
+      reset_value: 0x01
+      description: Unique chip ID for addressing (default 1, broadcast ID = 255)
+    
+    # Register 123 control flags
+    - name: cds_mode
+      register: 123
+      bits: [0, 0]
+      access: rw
+      reset_value: 0b0
+      description: Correlated Double-Sampling mode; 0=disabled, 1=enabled
+    
+    - name: load_config_defaults
+      register: 123
+      bits: [1, 1]
+      access: rw
+      reset_value: 0b0
+      description: Active high. Must be cleared immediately to allow further register interaction
+    
+    - name: enable_fifo_diagnostics
+      register: 123
+      bits: [2, 2]
+      access: rw
+      reset_value: 0b0
+      description: Embed FIFO counter info in output word; replaces bits [15:12] of timestamp
+    
+    - name: enable_local_fifo_diagnostics
+      register: 123
+      bits: [3, 3]
+      access: rw
+      reset_value: 0b0
+      description: Embed local FIFO usage in output packets
+    
+    - name: enable_tally
+      register: 123
+      bits: [4, 4]
+      access: rw
+      reset_value: 0b1
+      description: Embed 4 LSBs of total_packets in output packets
+    
+    - name: enable_external_trigger
+      register: 123
+      bits: [5, 5]
+      access: rw
+      reset_value: 0b0
+      description: High to enable external trigger
+    
+    - name: enable_external_sync
+      register: 123
+      bits: [6, 6]
+      access: rw
+      reset_value: 0b0
+      description: High to enable timestamp sync from external signal
+    
+    - name: enable_data_stats
+      register: 123
+      bits: [7, 7]
+      access: rw
+      reset_value: 0b1
+      description: High to record packet data (high water, dropped packets, total packets)
+    
+    # Registers 124–130 PISO/POSI/monitor/burst controls
+    - name: enable_piso_upstream
+      array: 4
+      register_start: 124
+      bits: [0, 0]
+      footprint: 1
+      access: rw
+      reset_value: 0b0
+      description: Enable different PISO links for upstream operation (FPGA input)
+    
+    - name: enable_piso_downstream
+      array: 4
+      register_start: 125
+      bits: [0, 0]
+      footprint: 1
+      access: rw
+      reset_value: 0b0000
+      description: Enable different PISO links for downstream operation (FPGA output)
+    
+    - name: enable_posi
+      array: 4
+      register_start: 126
+      bits: [0, 0]
+      footprint: 1
+      access: rw
+      reset_value: 0b0001
+      description: Enable POSI links
+    
+    - name: en_analog_monitor
+      register: 127
+      bits: [0, 0]
+      access: rw
+      reset_value: 0b0
+      description: Powers up and connects analog monitor
+    
+    - name: enable_cross_trigger
+      register: 128
+      bits: [0, 0]
+      access: rw
+      reset_value: 0b0
+      description: Enable cross trigger
+    
+    - name: enable_periodic_reset
+      register: 128
+      bits: [1, 1]
+      access: rw
+      reset_value: 0b0
+      description: Enable periodic reset (all channels simultaneously)
+    
+    - name: enable_rolling_periodic_reset
+      register: 128
+      bits: [2, 2]
+      access: rw
+      reset_value: 0b0
+      description: Enable rolling periodic reset (one channel at a time)
+    
+    - name: enable_periodic_trigger
+      register: 128
+      bits: [3, 3]
+      access: rw
+      reset_value: 0b0
+      description: Enable periodic trigger (all channels simultaneously)
+    
+    - name: enable_rolling_periodic_trigger
+      register: 128
+      bits: [4, 4]
+      access: rw
+      reset_value: 0b0
+      description: Enable rolling periodic trigger (one channel at a time)
+    
+    - name: enable_periodic_trigger_veto
+      register: 128
+      bits: [5, 5]
+      access: rw
+      reset_value: 0b1
+      description: High to veto periodic trigger if channel servicing a hit
+    
+    - name: enable_hit_veto
+      register: 128
+      bits: [6, 6]
+      access: rw
+      reset_value: 0b1
+      description: High to enforce discriminator hit before ADC hold
+    
+    - name: shadow_reset_length
+      register: 129
+      bits: [7, 0]
+      access: rw
+      reset_value: 0x00
+      description: Number of clock cycles to hold CSA reset; OR’d with reset_length (170[5:3])
+    
+    - name: adc_burst_length
+      register: 130
+      bits: [7, 0]
+      access: rw
+      reset_value: 0x00
+      description: Number of ADC conversions per channel hit
+        
     # Channel masks, one bit per channel
     - name: channel_mask
       array: 64

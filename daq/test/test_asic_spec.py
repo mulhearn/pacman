@@ -12,8 +12,8 @@ class test_asic_model(unittest.TestCase):
         self.asic_spec = asic_spec_from_yaml("config/asics/larpix_v3.yml")
 
     def test_aaa_test_print(self):
-        #self.asic_spec.print_register_map()
-        #self.asic_spec.print_field_reset_values()
+        self.asic_spec.print_register_map()
+        self.asic_spec.print_field_reset_values()
         pass
     
     def test_bbb_test_write_list(self):
