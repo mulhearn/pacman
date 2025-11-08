@@ -1,6 +1,6 @@
 import unittest
 
-from   asic.helpers import asic_dict_from_yaml
+from   asic.helpers import dict_from_yaml
 
 from   asic.register_space_helpers import (
     validate_register_space_dict,
@@ -21,7 +21,7 @@ class test_register_space_helpers(unittest.TestCase):
 
     def setUp(self):
         print("")
-        self.asic_dict = asic_dict_from_yaml("config/asics/larpix_v3.yml")
+        self.asic_dict = dict_from_yaml("config/asics/larpix_v3.yml")
         validate_register_space_dict(self.asic_dict)
         
     def test_aaa_validate(self):

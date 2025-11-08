@@ -1,7 +1,7 @@
 # test/test_config_packet_helpers.py
 import unittest
 
-from   asic.helpers import asic_dict_from_yaml
+from   asic.helpers import dict_from_yaml
 
 from   asic.config_packet_helpers import (
     validate_config_packet_dict,
@@ -20,7 +20,7 @@ class test_config_helpers(unittest.TestCase):
 
     def setUp(self):
         print("")
-        self.asic_dict = asic_dict_from_yaml("config/asics/larpix_v3.yml")
+        self.asic_dict = dict_from_yaml("config/asics/larpix_v3.yml")
         validate_config_packet_dict(self.asic_dict)
 
     def test_aaa_validate(self):

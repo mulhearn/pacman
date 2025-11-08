@@ -230,7 +230,7 @@ def asic_spec_from_yaml(path: str):
         ValueError: If the register space or configuration packet definitions
                     are invalid.
     """
-    asic_dict = helpers.asic_dict_from_yaml(path)
+    asic_dict = helpers.dict_from_yaml(path)
     reg.validate_register_space_dict(asic_dict)
     pkt.validate_config_packet_dict(asic_dict)
     return asic_spec(asic_dict)
