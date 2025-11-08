@@ -1,17 +1,6 @@
-init_io:
-  external:
-    - dn
+external:
+  - dn
 
-  parameters:
-    default:
-      rx_term_tile: 0x05
-      rx_term_root: 0x07
-    variants:
+default:
+  rx_term: 0x7
 
-  default:
-    rx_term = {rx_term_tile}
-
-  variants:
-    root_chip:
-      default:
-	rx_term[{dn}] = {rx_term_root}

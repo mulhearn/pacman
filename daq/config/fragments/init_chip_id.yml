@@ -1,13 +1,6 @@
-init_chip_id:
-  external:
-    - chip_id
+external:
+  - chip_id
 
-  parameters:
-    default:
+default:
+  chip_id: "{chip_id}"
 
-    variants:
-
-  default:
-    chip_id = {chip_id}
-
-  variants:

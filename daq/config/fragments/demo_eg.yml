@@ -1,32 +1,16 @@
-init_io:
-  required_params:
-    - up    
-    - dn
-    - chip_id
+external:
+  - up    
+  - dn
+  - chip_id
 
-  parameters:
-    default:
-      rx_term_val: 0x4
-    variants:
-      root_chip:
-        default:
-          rx_term_val: 0x6
-        larpix_v3:
-          rx_term_val: 0x7  
+default:
+  enable_uart_upstream[{up}]: 1
+  enable_uart_downstream[{dn}]: 1
+  chip_id: "{chip_id}"
+  enable_refclk: true
+  bias_dac: 32
+  trim_bits: 0xF
+  rx_term: 0x7
 
-  default:
-    enable_uart_upstream[{up}] = 1
-    enable_uart_downstream[{dn}] = 1
-    chip_id = {chip_id}
-    enable_refclk = true
-    bias_dac = 32
-    trim_bits = 0xF
-    rx_term[{up}] = {rx_term_val}
-
-  variants:
-    root_chip:
-      default:
-        root_chip = true
-        enable_refclk = false
-      larpix_v3:
-        trim_bits = 0xC
+larpix_v3:
+  trim_bits: 0xC
