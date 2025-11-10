@@ -1,0 +1,9 @@
+network:
+  - io_group: 1  
+    hostname: pacman-srv1.local
+    first_io_chan: 0x100
+    uart_mask: 0xF
+  - io_group: 2  
+    hostname: pacman-srv2.local
+    first_io_chan: 0x200
+    uart_mask: 0xFF

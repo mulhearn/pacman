@@ -2,18 +2,19 @@ import unittest
 
 from asic import asic_spec, asic_spec_from_yaml
 
-verbose = True
+verbose = False
 
 class test_asic_model(unittest.TestCase):
     """tests related to asic model structure and verification"""
 
     def setUp(self):
         print("")
-        self.asic_spec = asic_spec_from_yaml("config/asics/larpix_v3.yml")
+        self.asic_spec = asic_spec_from_yaml("config/asics/larpix_v3.yaml")
 
     def test_aaa_test_print(self):
-        self.asic_spec.print_register_map()
-        self.asic_spec.print_field_reset_values()
+        if (verbose):
+            self.asic_spec.print_register_map()
+            self.asic_spec.print_field_reset_values()
         pass
     
     def test_bbb_test_write_list(self):

@@ -1,0 +1,6 @@
+external: []
+
+default:
+  tx_slices:    0x7
+  i_tx_diff:    0x7
+  v_cm_lvds_tx: 0x5

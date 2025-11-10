@@ -1,6 +1,0 @@
-external:
-  - dn
-
-default:
-  rx_term: 0x7
-

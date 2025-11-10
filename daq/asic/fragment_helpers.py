@@ -101,8 +101,90 @@ def print_collapsed_fragment(collapsed: dict) -> None:
     fields = collapsed.get("fields", {})
     for k, v in sorted(fields.items()):
         print(f"    {k}: {v}")
-
 def evaluate_fragment(collapsed: dict, externals: dict, verbose: bool = False) -> dict:
+    """Evaluate a collapsed fragment by substituting external values.
+
+    External values may be lists, which adds additional entries to the
+    dictionary as needed. If a list is empty, the field is omitted.
+
+    Parameters:
+        collapsed: dict from collapse_fragment() with keys "fields" and "external"
+        externals: dict mapping external names to single values or lists
+        verbose: if True, print progress messages
+
+    Returns:
+        A single fully resolved dictionary with integer values
+    """
+    from copy import deepcopy
+
+    fields = deepcopy(collapsed["fields"])
+    evaluated = {}
+
+    # Normalize externals to lists (empty lists are allowed)
+    for ext in collapsed.get("external", []):
+        if ext not in externals:
+            raise ValueError(f"External '{ext}' missing from externals dict")
+        vals = externals[ext]
+        if not isinstance(vals, list):
+            externals[ext] = [vals]
+
+    for key, val in fields.items():
+        # Determine all key expansions for multi-value externals
+        keys_to_add = [key]
+        for ext in collapsed.get("external", []):
+            if f"{{{ext}}}" not in key:
+                continue  # external not used in this key → skip expansion
+            ext_vals = externals[ext]
+            if not ext_vals:
+                keys_to_add = []  # external used but empty → omit field
+                break
+            new_keys = []
+            for k in keys_to_add:
+                for v in ext_vals:
+                    new_keys.append(k.replace("{" + ext + "}", str(v)))
+            keys_to_add = new_keys
+
+        if not keys_to_add:
+            if verbose:
+                print(f"INFO: Field '{key}' omitted due to empty external(s)")
+            continue  # skip this field
+
+        # Substitute externals in value if string
+        if isinstance(val, str):
+            for ext in collapsed.get("external", []):
+                placeholder = f"{{{ext}}}"
+                if placeholder in val:
+                    ext_vals = externals[ext]
+                    if ext_vals:  # only use first value for value substitution
+                        val = val.replace(placeholder, str(ext_vals[0]))
+                    else:
+                        # if value references empty list → omit field entirely
+                        keys_to_add = []
+                        break
+            if not keys_to_add:
+                if verbose:
+                    print(f"INFO: Field '{key}' omitted due to empty external(s) in value")
+                continue
+
+        # Convert value to int after substitution
+        if isinstance(val, str):
+            val_int = int(val, 0)  # handles hex, binary, decimal
+        else:
+            val_int = val
+
+        # Store in evaluated dict
+        for k in keys_to_add:
+            evaluated[k] = val_int
+            if verbose:
+                print(f"INFO: Field '{key}' expanded to {keys_to_add} -> {val_int}")
+
+    if verbose:
+        print(f"INFO: Evaluation complete. Total fields: {len(evaluated)}")
+
+    return evaluated
+
+        
+def evaluate_fragment_old(collapsed: dict, externals: dict, verbose: bool = False) -> dict:
     """Evaluate a collapsed fragment by substituting external values.
 
     External values may be lists, which adds additional entries to the
@@ -114,18 +196,17 @@ def evaluate_fragment(collapsed: dict, externals: dict, verbose: bool = False) -
         verbose: if True, print progress messages
 
     Returns:
-        A single fully resolved dictionary
-
+        A single fully resolved dictionary with integer values
     """
     from copy import deepcopy
 
     fields = deepcopy(collapsed["fields"])
     evaluated = {}
 
+    # Normalize externals to lists
     for ext in collapsed.get("external", []):
         if ext not in externals:
             raise ValueError(f"External '{ext}' missing from externals dict")
-        # Normalize single values to list
         vals = externals[ext]
         if not isinstance(vals, list):
             externals[ext] = [vals]
@@ -148,11 +229,17 @@ def evaluate_fragment(collapsed: dict, externals: dict, verbose: bool = False) -
                 val_str = str(externals[ext][0])  # always take first for value
                 val = val.replace("{" + ext + "}", val_str)
 
-        for k in keys_to_add:
-            evaluated[k] = val
+        # Convert value to int after substitution
+        if isinstance(val, str):
+            val_int = int(val, 0)  # handles hex, binary, decimal
+        else:
+            val_int = val
 
-        if verbose:
-            print(f"INFO: Field '{key}' expanded to {keys_to_add} -> {val}")
+        # Store in evaluated dict
+        for k in keys_to_add:
+            evaluated[k] = val_int
+            if verbose:
+                print(f"INFO: Field '{key}' expanded to {keys_to_add} -> {val_int}")
 
     if verbose:
         print(f"INFO: Evaluation complete. Total fields: {len(evaluated)}")

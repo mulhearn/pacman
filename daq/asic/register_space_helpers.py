@@ -53,10 +53,13 @@ def validate_register_space_dict(asic_dict: dict, verbose: bool = False) -> None
         raise ValueError("ASIC model missing 'register_space/parameters' section")
 
     # verify required parameter keys
-    if 'num_registers' not in params:
-        raise ValueError("ASIC model missing 'num_registers' in register_space/parameters")
-    if 'reg_size' not in params:
-        raise ValueError("ASIC model missing 'reg_size' in register_space/parameters")
+    required_int_params = ['num_registers', 'reg_size', 'num_ports']
+
+    for key in required_int_params:
+        if key not in params:
+            raise ValueError(f"ASIC model missing '{key}' in register_space/parameters")
+        if not isinstance(params[key], int):
+            raise TypeError(f"'{key}' must be an int, got {type(params[key]).__name__}")
 
     # verify 'fields' exists (but it can be an empty list)
     fields = reg_space.get('fields')
@@ -467,7 +470,7 @@ def build_register_read_list(asic_dict: dict, field_to_reg: dict,
         refresh = []
 
     if verbose:
-        print(f"INFO: build_register_read_list called with update={list(update.keys())} as_needed={list(as_needed.keys())}")
+        print(f"INFO: build_register_read_list called with refresh={refresh}")
         
     # Defensive type checks
     if not isinstance(refresh, list):

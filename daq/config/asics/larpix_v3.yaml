@@ -6,6 +6,7 @@ register_space:
   parameters:
     num_registers: 256
     reg_size: 8
+    num_ports: 4
   fields:
     # Pixel-level threshold DAC, one per channel, one per register
     - name: pixel_trim_dac
@@ -576,7 +577,7 @@ register_space:
     - name: i_rx
       array: 4
       register_start: 243
-      bits: [3, 2]
+      bits: [3, 0]
       footprint: 4
       access: rw
       reset_value: 0b10
@@ -584,21 +585,21 @@ register_space:
 
     - name: i_rx_clk
       register: 245
-      bits: [3, 2]
+      bits: [3, 0]
       access: rw
       reset_value: 0b10
       description: Receiver bias current (POSI links and clocks)
 
     - name: i_rx_rst
       register: 245
-      bits: [7, 6]
+      bits: [7, 4]
       access: rw
       reset_value: 0b10
       description: Receiver bias current (POSI links and clocks)
 
     - name: i_rx_ext_trig
       register: 246
-      bits: [3, 2]
+      bits: [3, 0]
       access: rw
       reset_value: 0b10
       description: Receiver bias current (POSI links and clocks)

@@ -26,6 +26,9 @@ class asic_spec:
         self.field_to_reg = reg.build_field_to_reg_lut(self.asic_dict)
         self.reg_to_field = reg.build_reg_to_field_lut(self.field_to_reg)
 
+    def num_ports(self):
+        return self.asic_dict["register_space"]["parameters"]["num_ports"]
+
     def print_register_map(self):
         """List of registers and the location of the fields therein."""
         reg.print_register_map(self.field_to_reg, self.reg_to_field)
@@ -193,7 +196,7 @@ class asic_spec:
         
     def format_packet(self, packet: int) -> str :
         """Return a string representation of a config packet."""
-        return format_packet(self.asic_dict, packet)
+        return pkt.format_packet(self.asic_dict, packet)
 
     def print_packet(self, packet: int) -> None:
         """Print a single line summary of a config packet."""

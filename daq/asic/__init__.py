@@ -3,7 +3,12 @@ from . import helpers
 from . import register_space_helpers
 from . import config_packet_helpers
 from . import fragment_helpers
+from . import fragment_library
+from . import network_helpers
 from .asic_spec import asic_spec, asic_spec_from_yaml
+from .chip_state import chip_state
+from .hydra_strand import hydra_strand
+from .fragment_library import load_fragment_library
 
 __all__ = [
     "helpers",
@@ -12,4 +17,6 @@ __all__ = [
     "fragment_helpers",
     "asic_spec",
     "asic_spec_from_yaml",
+    "chip_state",
+    "load_fragment_library",
 ]
