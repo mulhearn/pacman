@@ -20,14 +20,26 @@ class asic_spec:
     updated values can be translated into a list of configuration
     write packets that encode the updates.
     """
-    
+
     def __init__(self, asic_dict):
         self.asic_dict = asic_dict
         self.field_to_reg = reg.build_field_to_reg_lut(self.asic_dict)
         self.reg_to_field = reg.build_reg_to_field_lut(self.field_to_reg)
+        self._num_ports = self.asic_dict["register_space"]["parameters"]["num_ports"];
+        self._port_directions = self.asic_dict["register_space"]["parameters"]["port_directions"];
+        self._port_indices = {port: i for i, port in enumerate(self._port_directions)}
 
     def num_ports(self):
-        return self.asic_dict["register_space"]["parameters"]["num_ports"]
+        return self._num_ports
+
+    def port_directions(self):
+        return self._port_directions
+
+    def port_index(self, port: str):
+        if port in self._port_indices:
+            return self._port_indices[port]
+        else:
+            raise ValueError(f"unknown port name {port}")
 
     def print_register_map(self):
         """List of registers and the location of the fields therein."""
@@ -103,7 +115,7 @@ class asic_spec:
         """
         return pkt.build_config_packet(self.asic_dict, chip, addr, value, downstream, write)
 
-        
+
     def build_config_write(self, chip: int, addr: int, value: int) -> int:
         """Construct a configuration write packet.
 
@@ -118,7 +130,7 @@ class asic_spec:
             value (int): Value to write
 
         Raises:
-            ValueError: If any provided field is too large for the intended bit range            
+            ValueError: If any provided field is too large for the intended bit range
         """
         return pkt.build_config_write(self.asic_dict, chip, addr, value)
 
@@ -136,7 +148,7 @@ class asic_spec:
 
         Raises:
             ValueError: If any provided field is too large for the intended bit range.
-        """    
+        """
         return pkt.build_config_read(self.asic_dict, chip, addr)
 
     def build_config_write_list(self, chip: int, update=None, as_needed=None) -> list[int]:
@@ -149,7 +161,7 @@ class asic_spec:
             chip (int): Chip index for the operation.
             update: dict {field_name: value}   -- fields requiring an update
             as_needed: dict {field_name: value} -- optional field
-        
+
         Returns:
             list[int] : list of config write request packets
         """
@@ -170,14 +182,14 @@ class asic_spec:
         reg_list = self.build_register_read_list(refresh=refresh)
         return [self.build_config_read(chip, addr) for addr in reg_list]
 
-    
+
     def valid_config_packet(self, packet: int,
                             write: Optional[int]=None,
                             downstream: Optional[int]=None) -> bool:
         """Check if packet is a valid configuration packet."""
         return pkt.valid_config_packet(self.asic_dict, packet, write, downstream)
 
-    
+
     def valid_config_read_response(self, packet: int) -> bool:
         """Check if packet is a valid configuration read response."""
         return valid_config_read_response(self.asic_dict, packet)
@@ -185,15 +197,15 @@ class asic_spec:
     def parse_chip_address_value(asic_dict: dict, packet: int) -> [int,int,int]:
         """Parse chip, address, and value from a valid config packet"""
         return parse_chip_address_value(self.asic_dict, packet)
-        
+
     def parse_config_packet_fields(asic_dict: dict, packet: int) -> dict:
         """Parse a packet and returns a dictionary of all of its fields."""
         return parse_config_packet_fields(self.asic_dict, packet)
-    
+
     def print_packet_detailed(self, packet: int) -> None:
         """Print a detailed description of the contents of a config packet."""
         return print_packet_detailed(self.asic_dict, packet)
-        
+
     def format_packet(self, packet: int) -> str :
         """Return a string representation of a config packet."""
         return pkt.format_packet(self.asic_dict, packet)
@@ -201,7 +213,7 @@ class asic_spec:
     def print_packet(self, packet: int) -> None:
         """Print a single line summary of a config packet."""
         pkt.print_packet(self.asic_dict, packet)
-        
+
     def get_asic_dict(self):
         """Get a copy of the ASIC dictionary."""
         return copy.deepcopy(self.asic_dict)
@@ -212,8 +224,8 @@ class asic_spec:
 
     def get_reg_to_field_lut(self):
         """Get a copy of the register-to-field look-up table."""
-        return copy.deepcopy(self.reg_to_field)  
-    
+        return copy.deepcopy(self.reg_to_field)
+
 def asic_spec_from_yaml(path: str):
     """Create an asic_spec instance from a YAML configuration file.
 
@@ -237,4 +249,3 @@ def asic_spec_from_yaml(path: str):
     reg.validate_register_space_dict(asic_dict)
     pkt.validate_config_packet_dict(asic_dict)
     return asic_spec(asic_dict)
-

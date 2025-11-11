@@ -8,6 +8,7 @@ from   asic.network_helpers import (
     parse_raw_hydra,
     print_hydra_table,
     find_root_chip,
+    find_fpga,
     find_path_to_chip,
     chip_path_to_port_path,
     assign_coordinates,
@@ -35,6 +36,8 @@ class test_fragment_helpers(unittest.TestCase):
     def test_ccc_paths(self):
         root_chip = find_root_chip(self.hydra)
         print(f"root chip:  {root_chip}")
+        fpga = find_fpga(self.hydra, self.params["ports"])
+        print(f"fpga:  {fpga}")
         path  = find_path_to_chip(self.hydra, 13, 11)
         ports = chip_path_to_port_path(self.hydra, path)
         print(path)

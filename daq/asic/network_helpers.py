@@ -176,7 +176,30 @@ def find_root_chip(parsed_hydra: dict) -> int:
     # This should never happen if network is validated
     raise RuntimeError("No root chip found in parsed Hydra network")
 
-from collections import deque
+def find_fpga(parsed_hydra: dict,  ports: list[str]) -> str:
+    """
+    Find the fpga port name (str) in the root chip.
+
+    Assumes the network has been validated: exactly one chip has a neighbor 'fpga'.
+
+    Parameters:
+        parsed_hydra: dict mapping chip_id -> {port: neighbor, ...}
+
+    Returns:
+        Port index of fpga in the root chip
+    """
+    root_chip = find_root_chip(parsed_hydra)
+    print(f"DEBUG:  root_chip:  {root_chip}")
+
+    neighbors = parsed_hydra[root_chip]
+    print(f"DEBUG:  neighbors:  {neighbors}")
+    for port, neighbor in neighbors.items():
+        if (neighbor == "fpga"):
+            return port
+
+    # This should never happen if network is validated
+    raise RuntimeError("No fpga neighbor found in parsed Hydra network")
+
 
 def find_path_to_chip(parsed_hydra: dict, target_chip: int, start_chip: int = None) -> list[int]:
     """Find a path from the start chip to the target chip.
@@ -200,7 +223,7 @@ def find_path_to_chip(parsed_hydra: dict, target_chip: int, start_chip: int = No
     """
     if (start_chip is None):
         start_chip = find_root_chip(parsed_hydra)
-    
+
     visited = set()
     queue = deque([(start_chip, [start_chip])])
     visited.add(start_chip)
@@ -332,7 +355,7 @@ def print_hydra_grid_connected(parsed_hydra: dict, params: dict) -> None:
     hpad = 3      # spaces between columns
     hnode = 3     # width of each node label, zero-padded
     vpad = 1      # vertical lines between rows
-    
+
     ports = params["ports"]
     directions = params["directions"]
     port_to_delta = {p: tuple(d) for p, d in zip(ports, directions)}

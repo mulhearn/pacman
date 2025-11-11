@@ -27,26 +27,26 @@ def validate_register_space_dict(asic_dict: dict, verbose: bool = False) -> None
 
     dict_name = asic_dict.get('name')
     if dict_name is None:
-        raise ValueError("ASIC model missing top-level name")    
+        raise ValueError("ASIC model missing top-level name")
     if verbose:
         print(f"INFO:  Checking dictionary for ASIC model {dict_name}")
-        
+
     version = asic_dict.get('version')
     if version is None:
-        raise ValueError("ASIC model missing top-level version")    
+        raise ValueError("ASIC model missing top-level version")
 
     description = asic_dict.get('description')
     if description is None:
-        raise ValueError("ASIC model missing top-level description")    
+        raise ValueError("ASIC model missing top-level description")
 
     if verbose:
         print(f"INFO:  Version: {version}")
         print(f"INFO:  Description: {description}")
-        
+
     reg_space = asic_dict.get('register_space')
     if reg_space is None:
         raise ValueError("ASIC model missing 'register_space' section")
-    
+
     # verify 'parameters' exists
     params = reg_space.get('parameters')
     if params is None:
@@ -61,6 +61,17 @@ def validate_register_space_dict(asic_dict: dict, verbose: bool = False) -> None
         if not isinstance(params[key], int):
             raise TypeError(f"'{key}' must be an int, got {type(params[key]).__name__}")
 
+    # verify required parameter keys
+    required_str_list_params = ['port_directions']
+    for key in required_str_list_params:
+        if key not in params:
+            raise ValueError(f"ASIC model missing '{key}' in register_space/parameters")
+        if not isinstance(params[key], list):
+            raise TypeError(f"'{key}' must be a list, got {type(params[key]).__name__}")
+        if not all(isinstance(x, str) for x in params[key]):
+            bad_types = {type(x).__name__ for x in params[key] if not isinstance(x, str)}
+            raise TypeError(f"'{key}' must be a list of strings, found non-string types: {bad_types}")
+
     # verify 'fields' exists (but it can be an empty list)
     fields = reg_space.get('fields')
     if fields is None:
@@ -70,7 +81,7 @@ def validate_register_space_dict(asic_dict: dict, verbose: bool = False) -> None
 
     if verbose:
         print("INFO:  register_space, parameters (including required parameters), and fields exist")
-        
+
     num_registers = params['num_registers']
     reg_size = params['reg_size']
 
@@ -116,7 +127,7 @@ def validate_register_space_dict(asic_dict: dict, verbose: bool = False) -> None
             raise ValueError(
                 f"Field {name} msb {bits[0]} exceeds register size {reg_size}"
             )
-        
+
         # Check reset values fit bit width
         width = abs(bits[0] - bits[1]) + 1
         max_val = (1 << width) - 1
@@ -361,7 +372,7 @@ def build_register_write_list(asic_dict: dict, field_to_reg: dict, reg_to_fields
     are used as needed to fill out remaining fields in updated registers.
 
     Parameters:
-        asic_dict: verified ASIC model dictionary 
+        asic_dict: verified ASIC model dictionary
         field_to_reg: pre-built field-to-register LUT from asic_dict
         reg_to_fields: pre-built register-to-field LUT from asic_dict
         update: dict {field_name: value}   -- fields requiring an update
@@ -375,7 +386,7 @@ def build_register_write_list(asic_dict: dict, field_to_reg: dict, reg_to_fields
         ValueError if a register chosen for write lacks value(s) for some fields
         ValueError if a provided value doesn't fit its declared width
     """
-    
+
     if update is None:
         update = {}
     if as_needed is None:
@@ -383,7 +394,7 @@ def build_register_write_list(asic_dict: dict, field_to_reg: dict, reg_to_fields
 
     if verbose:
         print(f"INFO: direct_update called with update={list(update.keys())} as_needed={list(as_needed.keys())}")
-        
+
 
     # Defensive type checks
     if not isinstance(update, dict):
@@ -410,7 +421,7 @@ def build_register_write_list(asic_dict: dict, field_to_reg: dict, reg_to_fields
 
     if verbose:
         print(f"INFO: Registers to write: {sorted(regs_to_write)}")
-        
+
     # Determine which fields are needed to fill the updated registers,
     # and make sure they are in merged dictionary.
 
@@ -421,7 +432,7 @@ def build_register_write_list(asic_dict: dict, field_to_reg: dict, reg_to_fields
                 raise ValueError(f"Missing value for field '{field_name}' in register {reg}")
 
     reg_size = asic_dict['register_space']['parameters']['reg_size']
-            
+
     # Build the final register values
     reg_writes: list[tuple[int, int]] = []
 
@@ -432,19 +443,19 @@ def build_register_write_list(asic_dict: dict, field_to_reg: dict, reg_to_fields
             _, width, offset,mask = field_to_reg[field_name]
             if value >= (1 << width):
                 raise ValueError(f"Value {value} too large for field '{field_name}' ({width} bits)")
-            reg_value |= (value & ((1 << width) - 1)) << offset        
+            reg_value |= (value & ((1 << width) - 1)) << offset
         if verbose:
-            print(f"INFO: Final register value: 0x{reg_value:0{reg_size//4}X}")            
+            print(f"INFO: Final register value: 0x{reg_value:0{reg_size//4}X}")
         reg_writes.append((reg, reg_value))
 
-    
+
     if verbose:
         print(f"INFO: direct_update generated {len(reg_writes)} register writes")
 
     return reg_writes
 
 
-def build_register_read_list(asic_dict: dict, field_to_reg: dict, 
+def build_register_read_list(asic_dict: dict, field_to_reg: dict,
                      refresh: list[str], verbose: bool = False
                      ) -> list[int]:
     """Build a list of registers to read in order to refresh the provided fields.
@@ -454,7 +465,7 @@ def build_register_read_list(asic_dict: dict, field_to_reg: dict,
     are used as needed to fill out remaining fields in updated registers.
 
     Parameters:
-        asic_dict: verified ASIC model dictionary 
+        asic_dict: verified ASIC model dictionary
         field_to_reg: pre-built field-to-register LUT from asic_dict
         refresh: list[str] fields requiring a refresh
 
@@ -465,19 +476,19 @@ def build_register_read_list(asic_dict: dict, field_to_reg: dict,
         TypeError for incorrect input type
         KeyError if an update field is unknown
     """
-    
+
     if refresh is None:
         refresh = []
 
     if verbose:
         print(f"INFO: build_register_read_list called with refresh={refresh}")
-        
+
     # Defensive type checks
     if not isinstance(refresh, list):
         raise TypeError("update must be a list of strings")
 
     refresh_norm  = normalize_field_collection(asic_dict, refresh)
-    
+
     # quick validations: every key in refresh must exist in field_to_reg
     for fn in refresh_norm:
         if fn not in field_to_reg:
@@ -491,7 +502,7 @@ def build_register_read_list(asic_dict: dict, field_to_reg: dict,
 
     if verbose:
         print(f"INFO: Registers to write: {sorted(regs_to_read)}")
-        
+
     return sorted(list(regs_to_read))
 
 

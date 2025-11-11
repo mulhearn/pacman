@@ -7,6 +7,7 @@ register_space:
     num_registers: 256
     reg_size: 8
     num_ports: 4
+    port_directions: ["n","w","s","e"]
   fields:
     # Pixel-level threshold DAC, one per channel, one per register
     - name: pixel_trim_dac

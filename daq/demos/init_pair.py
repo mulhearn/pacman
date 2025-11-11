@@ -16,7 +16,7 @@ verbose = True
 
 def main():
         spec = asic_spec_from_yaml("config/asics/larpix_v3.yaml")
-        raw_hydra = dict_from_yaml("config/hydra/single.yaml")
+        raw_hydra = dict_from_yaml("config/hydra/pair.yaml")
         fragment_lib = load_fragment_library("config/fragments/library.yaml", "larpix_v3")
         strand = hydra_strand(spec, raw_hydra, fragment_lib)
         
@@ -27,7 +27,9 @@ def main():
         strand.print_network_state()
         strand.reset()
         strand.init_root_chip()
-        strand.set_routing(strand.root_chip,inputs=[1],downstream=[0],upstream=[])
+        strand.set_routing(strand.root_chip,inputs=[1,3],downstream=[0],upstream=[2])
 
+        strand.init_chip(11)
+        strand.set_routing(11,inputs=[1],downstream=[0],upstream=[])
 if __name__ == "__main__":
     main()

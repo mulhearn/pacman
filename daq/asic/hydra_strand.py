@@ -5,7 +5,7 @@ from typing import Optional
 from asic.asic_spec import asic_spec
 from asic.chip_state import chip_state, network_state
 from asic.fragment_helpers import evaluate_fragment, print_evaluated_fragment, merge_fragments
-from asic.network_helpers import parse_raw_hydra, validate_raw_hydra, find_root_chip, print_hydra_grid_connected
+from asic.network_helpers import parse_raw_hydra, validate_raw_hydra, find_root_chip, find_fpga, print_hydra_grid_connected
 
 def set_reset_state(chip: chip_state, asic: asic_spec):
     """Reset an existing chip_state in place."""
@@ -41,6 +41,7 @@ class hydra_strand:
 
         # determine root chip
         self.root_chip = find_root_chip(self.network_dict)
+        self.fpga      = self.spec.port_index(find_fpga(self.network_dict, self.params["ports"]))
 
         # allocate chip_state objects
         self.chips = {}
@@ -73,6 +74,8 @@ class hydra_strand:
         print(f"root_chip:  {self.root_chip}")
         
     def print_network_state(self):
+        print(f"root chip id:     {self.root_chip}")
+        print(f"fpga port index:  {self.fpga}")
         for chip_id in self.chips:
             print(f"chip:  {chip_id}  {self.chips[chip_id].network_state}")
 
@@ -124,12 +127,9 @@ class hydra_strand:
     def init_root_chip(self):
         print(f"INFO: initializing root chip with chip_id {self.root_chip}")
         self.set_chip_id(self.root_chip)
-
-        # TODO:  get from network
-        fpga = 1
         
         external = {
-            "fpga": [fpga]
+            "fpga": [self.fpga]
         }
         evaluated = evaluate_fragment(self.fragment_lib["init_rx_root_chip"], external, verbose=True)
         print("INFO:  evaluated init_rx_root_chip fragment:")
@@ -140,4 +140,9 @@ class hydra_strand:
 
         self.init_io_chip(self.root_chip)
         
-        
+
+    def init_chip(self, chip: int):
+        print(f"INFO: initializing chip with chip_id {chip}")
+        self.set_chip_id(chip)
+        self.init_io_chip(chip)
+

@@ -38,7 +38,7 @@ class test_register_space_helpers(unittest.TestCase):
         rtf = build_reg_to_field_lut(ftr)
         if (verbose):
             print_reg_to_field_lut(rtf)
-        print_register_map(ftr, rtf)
+            print_register_map(ftr, rtf)
 
     def test_ddd_build_register_write_list(self):        
         ftr = build_field_to_reg_lut(self.asic_dict)
