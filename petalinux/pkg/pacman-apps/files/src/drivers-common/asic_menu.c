@@ -9,6 +9,18 @@
 #include "asic_menu.h"
 
 
+static int CHIP_ID = 11;
+
+void asic_toggle_chip_id(){
+  static int mode = 0;
+  mode = (mode + 1) % 5;
+
+  int chip_id_vals[] = {11,12,13,14,255};
+
+  printf("INFO:  setting chip ID to %d\r\n", chip_id_vals[mode]);
+  CHIP_ID = chip_id_vals[mode];
+}
+
 void asic_full_reset(){
   const hw_u32_t mask = 0x3FF;
   printf("INFO: sending full reset \r\n");
@@ -114,7 +126,7 @@ void asic_config_root(){
 
   NUM_WORDS = 1;
   // set chip id to 11:
-  asic_config_write(&payload[0], 1,  122, 0xB);
+  asic_config_write(&payload[0], 1,  122, CHIP_ID);
 
   for (unsigned i=0; i< NUM_WORDS; i++){
     asic_print_packet_summary(&payload[2*i]);
@@ -127,26 +139,26 @@ void asic_config_root(){
 
   NUM_WORDS = 12;
   // set various enables:
-  asic_config_write(&payload[0], 11, 123, 0xC0);
+  asic_config_write(&payload[0], CHIP_ID, 123, 0xC0);
   // i_rx 0-1
-  asic_config_write(&payload[2], 11, 243, 0x77);
+  asic_config_write(&payload[2], CHIP_ID, 243, 0x77);
   // r_term1
-  asic_config_write(&payload[4], 11, 248, 0x07);
+  asic_config_write(&payload[4], CHIP_ID, 248, 0x07);
   // enable POSI
-  asic_config_write(&payload[6], 11, 126, 0x2);
+  asic_config_write(&payload[6], CHIP_ID, 126, 0x2);
   // enable tx_slices 0-3
-  asic_config_write(&payload[8], 11, 239, 0x77);
-  asic_config_write(&payload[10], 11, 240, 0x77);
+  asic_config_write(&payload[8], CHIP_ID, 239, 0x77);
+  asic_config_write(&payload[10], CHIP_ID, 240, 0x77);
   // tx_diff 0-3
-  asic_config_write(&payload[12], 11, 241, 0x77);
-  asic_config_write(&payload[14], 11, 242, 0x77);
+  asic_config_write(&payload[12], CHIP_ID, 241, 0x77);
+  asic_config_write(&payload[14], CHIP_ID, 242, 0x77);
   //common mode
-  asic_config_write(&payload[16], 11, 254, 0x55);
-  asic_config_write(&payload[18], 11, 255, 0x55);
+  asic_config_write(&payload[16], CHIP_ID, 254, 0x55);
+  asic_config_write(&payload[18], CHIP_ID, 255, 0x55);
   //piso downstream:
-  asic_config_write(&payload[20], 11, 125, 0xF);
+  asic_config_write(&payload[20], CHIP_ID, 125, 0xF);
   //piso upstream:
-  asic_config_write(&payload[22], 11, 124, 0x0);
+  asic_config_write(&payload[22], CHIP_ID, 124, 0x0);
 
   for (unsigned i=0; i< NUM_WORDS; i++){
     asic_print_packet_summary(&payload[2*i]);
@@ -166,7 +178,7 @@ void asic_request_read_all(){
   unsigned NUM_WORDS = 256;
 
   for (unsigned i=0; i<NUM_WORDS; i++){
-    asic_config_read(&payload[2*i], 11, i);
+    asic_config_read(&payload[2*i], CHIP_ID, i);
   }
 
   for (unsigned i=0; i< NUM_WORDS; i++){
@@ -187,7 +199,7 @@ void asic_hello(){
   unsigned NUM_WORDS = 1;
 
   //piso downstream:
-  asic_config_read(&payload[0], 11, 122);
+  asic_config_read(&payload[0], CHIP_ID, 122);
 
   for (unsigned i=0; i< NUM_WORDS; i++){
     asic_print_packet_summary(&payload[2*i]);
@@ -246,13 +258,13 @@ void asic_read_rx(){
   dma_rx_batch();
 }
 
-
 void asic_loopback(){
-  const unsigned MAX_REGISTERS = 16;
-  const unsigned NUM_TESTS    = 10;
+  const unsigned MAX_REGISTERS = 8;
+  const unsigned NUM_TESTS     = 10;
+  const unsigned NUM_READS     = 10;
 
-  hw_u32_t payload[2*MAX_REGISTERS];
-  hw_u8_t values[MAX_REGISTERS];
+  hw_u32_t payload[2*NUM_READS*MAX_REGISTERS];
+  hw_u8_t  values[MAX_REGISTERS];
 
   unsigned addr_chan_mask = 131;
   unsigned num_chan_mask = 8;
@@ -266,19 +278,21 @@ void asic_loopback(){
 
     for (unsigned i=0; i<num_chan_mask; i++){
       values[i] = rand() & 0xFF;
-      asic_config_write(&payload[2*i], 11, addr_chan_mask+i, values[i]);
+      asic_config_write(&payload[2*i], CHIP_ID, addr_chan_mask+i, values[i]);
     }
     asic_batch_tx(payload, num_chan_mask);
 
-    for (unsigned i=0; i<num_chan_mask; i++){
-      asic_config_read(&payload[2*i], 11, addr_chan_mask+i);
+    for (unsigned o=0; o<NUM_READS; o++){
+      for (unsigned i=0; i<num_chan_mask; i++){
+	asic_config_read(&payload[2*num_chan_mask*o+2*i], CHIP_ID, addr_chan_mask+i);
+      }
     }
-    asic_batch_tx(payload, num_chan_mask);
+    asic_batch_tx(payload, NUM_READS*num_chan_mask);
 
-    unsigned timeout = 10000;
+    unsigned timeout = 100000;
     unsigned reps    = 0;
 
-    while((timeout>0) && (reps < num_chan_mask)){
+    while((timeout>0) && (reps < NUM_READS*num_chan_mask)){
       hw_addr_t nxta;
       while(dma_next_available_rx_bd(&nxta)){
 	unsigned xbytes = dma_poll_bd_transferred(nxta);
@@ -311,7 +325,7 @@ void asic_loopback(){
 	  }
 	  //printf("expecting:  0x%02X ", values[reps]);
 	  //asic_print_packet_summary(&word[4]);
-	  if (values[reps] != asic_config_get_value(&word[4]))
+	  if (values[reps%num_chan_mask] != asic_config_get_value(&word[4]))
 	    count_errors++;
 	  reps++;
 	}
@@ -343,7 +357,7 @@ void asic_menu(){
     printf("(v) toggle ASIC version (u) toggle RX UART enables (p) toggle ASIC power\r\n");
     printf("(f) send full reset (i) send internal reset (c) config root chip \r\n");
     printf("(a) request all registers (h) hello ASIC (r) read RX \r\n");
-    printf("(l) run ASIC loopback test \r\n");
+    printf("(l) run ASIC loopback test (d) toggle chip id \r\n");
     char input = input_choice();
     printf("INFO: selected %c\r\n", input);
 
@@ -373,6 +387,9 @@ void asic_menu(){
       break;
     case 'h':
       asic_hello();
+      break;
+    case 'd':
+      asic_toggle_chip_id();
       break;
     case 'r':
       asic_read_rx();
