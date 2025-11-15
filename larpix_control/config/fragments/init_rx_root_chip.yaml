@@ -1,0 +1,7 @@
+external:
+  - fpga
+
+default: {}
+
+larpix_v3:
+  "r_term[{fpga}]": 0x7

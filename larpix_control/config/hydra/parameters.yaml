@@ -1,0 +1,9 @@
+parameters:
+  # the maximum (inclusive) allowed chip ID in the network
+  max_chip_id: 254
+  # available ports in the network
+  ports: ["n", "w", "s", "e"]
+  # the relative location of the next chip in the grid, for each outgoing port
+  grid_deltas: {"n":[0,1], "w":[-1,0], "s":[0,-1], "e":[1,0]}
+  # mapping of output ports to input ports (symmetric here)
+  port_mapping: {"n": "s", "s": "n", "e": "w", "w": "e"}

@@ -12,3 +12,6 @@ find petalinux/pkg -type f -name '*.hh' | xargs -n1 sed --in-place 's/[[:space:]
 find petalinux/pkg -type f -name '*.bb' | xargs -n1 sed --in-place 's/[[:space:]]\+$//'
 find petalinux/pkg -type f -name '*.py' | xargs -n1 sed --in-place 's/[[:space:]]\+$//'
 find petalinux/scripts -type f -name '*.sh' | xargs -n1 sed --in-place 's/[[:space:]]\+$//'
+
+find larpix_control -type f -name '*.py' | xargs -n1 sed --in-place 's/[[:space:]]\+$//'
+find larpix_control -type f -name '*.yaml' | xargs -n1 sed --in-place 's/[[:space:]]\+$//'

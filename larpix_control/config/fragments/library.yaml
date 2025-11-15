@@ -1,0 +1,25 @@
+# config/fragment/library.yaml
+# List of chip transition fragments available.
+
+library:
+  - name: set_chip_id
+    path: config/fragments/set_chip_id.yaml
+
+  - name: init_rx_root_chip
+    path: config/fragments/init_rx_root_chip.yaml
+
+  - name: init_rx
+    path: config/fragments/init_rx.yaml
+
+  - name: init_tx
+    path: config/fragments/init_tx.yaml
+
+  - name: set_input
+    path: config/fragments/set_input.yaml
+
+  - name: set_downstream
+    path: config/fragments/set_downstream.yaml
+
+  - name: set_upstream
+    path: config/fragments/set_upstream.yaml
+

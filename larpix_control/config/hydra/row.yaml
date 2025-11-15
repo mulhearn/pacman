@@ -1,0 +1,15 @@
+#
+#
+# *011 e 012 e 013 e 014
+#
+
+chips:
+  - chip_id: 11
+    w: fpga
+    e: 12
+  - chip_id: 12
+    e: 13
+  - chip_id: 13
+    e: 14
+  - chip_id: 14
+

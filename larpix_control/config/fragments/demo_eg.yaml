@@ -1,0 +1,16 @@
+external:
+  - up
+  - dn
+  - chip_id
+
+default:
+  enable_uart_upstream[{up}]: 1
+  enable_uart_downstream[{dn}]: 1
+  chip_id: "{chip_id}"
+  enable_refclk: true
+  bias_dac: 32
+  trim_bits: 0xF
+  rx_term: 0x7
+
+larpix_v3:
+  trim_bits: 0xC

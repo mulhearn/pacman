@@ -1,0 +1,20 @@
+#
+# 013
+#  +
+# 012
+#  +
+# 011+003
+#  *
+#
+
+chips:
+  - chip_id: 11
+    w: fpga
+    n: 12
+    e: 3
+  - chip_id: 12
+    n: 13
+  - chip_id: 13
+    w: 4
+  - chip_id: 3
+  - chip_id: 4

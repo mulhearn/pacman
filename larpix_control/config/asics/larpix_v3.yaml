@@ -1,0 +1,672 @@
+name: larpix_v3
+version: 3.0
+description: LArPix version 3 ASIC
+
+# pin1 is the northwest corner of the ASIC chip
+# North: POSI0 PISO3
+# West:  POSI1 PISO0
+# South: POSI2 PISO1
+# East:  POSI3 PISO2
+
+register_space:
+  parameters:
+    num_registers: 256
+    reg_size: 8
+    num_ports: 4
+    output_directions: ["w","s","e","n"]
+    input_directions:  ["n","w","s","e"]
+  fields:
+    # Pixel-level threshold DAC, one per channel, one per register
+    - name: pixel_trim_dac
+      array: 64
+      register_start: 0
+      bits: [4, 0]
+      footprint: 8
+      access: rw
+      reset_value: 0b00000
+      description: Pixel-level threshold DAC for each channel
+
+    # Global threshold DAC
+    - name: threshold_global
+      register: 64
+      bits: [7, 0]
+      access: rw
+      reset_value: 0xFF
+      description: Global threshold DAC (all channels disabled at power up)
+
+    # CSA bypass and bypass caps
+    - name: csa_bypass_enable
+      register: 65
+      bits: [1, 1]
+      access: rw
+      reset_value: 0b0
+      description: Bypass CSA and inject signal from ADC_TEST
+
+    - name: bypass_caps_en
+      register: 65
+      bits: [2, 2]
+      access: rw
+      reset_value: 0b1
+      description: Enable internal supply bypassing
+
+    # CSA enable, 64 channels, packed 8 per register (66-73)
+    - name: csa_enable
+      array: 64
+      register_start: 66
+      bits: [0, 0]
+      footprint: 1
+      access: rw
+      reset_value: 0b0
+      description: Enable CSA per channel
+
+    # Bias currents
+    - name: ibias_tdac
+      register: 74
+      bits: [3, 0]
+      access: rw
+      reset_value: 0b1000
+      description: Threshold DAC bias current
+
+    - name: ibias_comp
+      register: 75
+      bits: [3, 0]
+      access: rw
+      reset_value: 0b1000
+      description: Discriminator bias current
+
+    - name: ibias_buffer
+      register: 76
+      bits: [3, 0]
+      access: rw
+      reset_value: 0b1000
+      description: Channel buffer bias current
+
+    - name: ibias_csa
+      register: 77
+      bits: [3, 0]
+      access: rw
+      reset_value: 0b1000
+      description: CSA bias current
+
+    - name: ibias_vref_buffer
+      register: 78
+      bits: [3, 0]
+      access: rw
+      reset_value: 0b1000
+      description: VREF buffer bias current
+
+    - name: ibias_vcm_buffer
+      register: 79
+      bits: [3, 0]
+      access: rw
+      reset_value: 0b1000
+      description: VCM buffer bias current
+
+    - name: ibias_tpulse
+      register: 80
+      bits: [3, 0]
+      access: rw
+      reset_value: 0b0101
+      description: CSA pulser bias current
+
+    - name: ref_current_trim
+      register: 81
+      bits: [4, 0]
+      access: rw
+      reset_value: 0b10000
+      description: Trim for IREF (primary reference current)
+
+    - name: vref_dac
+      register: 82
+      bits: [7, 0]
+      access: rw
+      reset_value: 0xDB
+      description: DAC to set VREF for ADC
+
+    # Register is ?? in datasheet, guessing 83
+    #- name: adc_comp_trim
+    #  register: 83
+    #  bits: [1, 0]
+    #  access: rw
+    #  reset_value: 0b10
+    #  description: ADC comparator bias
+
+    - name: adc_ibias_delay
+      register: 83
+      bits: [3, 0]
+      access: rw
+      reset_value: 0b1000
+      description: Bias for ADC delay chain
+
+    # "High nibble of register 83; shorted to current_monitor in some HW"
+    - name: adc_ibias_delay_monitor
+      register: 83
+      bits: [7, 4]
+      access: rw
+      reset_value: 0b0000
+      description: Enable ADC delay monitor
+
+    # CSA bypass select, 64 channels, packed 8 per register (84-91)
+    - name: csa_bypass_select
+      array: 64
+      register_start: 84
+      bits: [0, 0]
+      footprint: 1
+      access: rw
+      reset_value: 0b0
+      description: Select ADC channel for CSA bypass
+
+    # CSA monitor select, 64 channels, packed 8 per register (92-99)
+    - name: csa_monitor_select
+      array: 64
+      register_start: 92
+      bits: [0, 0]
+      footprint: 1
+      access: rw
+      reset_value: 0b0
+      description: Select channel for analog monitor
+
+    # CSA test pulse enable, 64 channels, packed 8 per register (100-107)
+    - name: csa_testpulse_enable
+      array: 64
+      register_start: 100
+      bits: [0, 0]
+      footprint: 1
+      access: rw
+      reset_value: 0b1
+      description: Enable CSA test pulse per channel
+
+    - name: csa_testpulse_dac
+      register: 108
+      bits: [7, 0]
+      access: rw
+      reset_value: 0b00000000
+      description: CSA test pulse amplitude
+
+    # Current monitor arrays (banks 0..3)
+    # confusing in spec sheet... needs confirmation
+    - name: current_monitor_bank
+      array: 4
+      register_start: 109
+      bits: [3, 0]
+      footprint: 4
+      access: ro
+      reset_value: 0b00000
+      description: Current monitor for each bank
+
+
+    # Voltage monitor arrays (banks 0..3)
+    # confusing in spec sheet... needs confirmation
+    - name: voltage_monitor_bank
+      array: 4
+      register_start: 111
+      bits: [3, 0]
+      footprint: 4
+      access: ro
+      reset_value: 0b000
+      description: Voltage monitor for each bank
+
+    - name: voltage_monitor_refgen
+      register: 113
+      bits: [7, 0]
+      access: ro
+      reset_value: 0b00000000
+      description: Voltage monitor for reference generation
+
+    # Digital monitor fields
+    - name: digital_monitor_enable
+      register: 114
+      bits: [0, 0]
+      access: rw
+      reset_value: 0b0
+      description: Enable digital monitor port
+
+    - name: digital_monitor_select
+      register: 114
+      bits: [4, 1]
+      access: rw
+      reset_value: 0b0000
+      description: Digital monitor signal selection
+
+    - name: digital_monitor_chan
+      register: 115
+      bits: [5, 0]
+      access: rw
+      reset_value: 0b000000
+      description: Channel to observe in digital monitor
+
+    # FIFO, packet, and trigger fields
+    - name: fifo_high_water_lsbs
+      register: 116
+      bits: [7, 0]
+      access: ro
+      reset_value: 0b00000000
+      description: LSBs of highest FIFO occupancy
+
+    - name: fifo_high_water_msbs
+      register: 117
+      bits: [2, 0]
+      access: ro
+      reset_value: 0b000
+      description: MSBs of highest FIFO occupancy
+
+    - name: total_packets_lsbs
+      register: 118
+      bits: [7, 0]
+      access: ro
+      reset_value: 0b00000000
+      description: LSBs of total packets generated
+
+    - name: total_packets_msbs
+      register: 119
+      bits: [7, 0]
+      access: ro
+      reset_value: 0b00000000
+      description: MSBs of total packets generated
+
+    # No MUXing allowed yet...
+    # Dropped packets
+    #- name: dropped_packets
+    #register: 120
+    #bits: [7, 0]
+    #access: ro
+    #reset_value: 0b00000000
+    #description: Total rejected packets
+
+    # ADC hold delay (16 bits across 120–121)
+    - name: adc_hold_delay
+      register_start: 120
+      array: 2           # 2 bytes (high and low)
+      bits: [7, 0]
+      footprint: 8
+      access: rw
+      reset_value: 0x0000
+      description: Number of clock cycles for ADC sampling hold; high-order bits in register 121
+
+    # Chip ID
+    - name: chip_id
+      register: 122
+      bits: [7, 0]
+      access: rw
+      reset_value: 0x01
+      description: Unique chip ID for addressing (default 1, broadcast ID = 255)
+
+    # Register 123 control flags
+    - name: cds_mode
+      register: 123
+      bits: [0, 0]
+      access: rw
+      reset_value: 0b0
+      description: Correlated Double-Sampling mode; 0=disabled, 1=enabled
+
+    - name: load_config_defaults
+      register: 123
+      bits: [1, 1]
+      access: rw
+      reset_value: 0b0
+      description: Active high. Must be cleared immediately to allow further register interaction
+
+    - name: enable_fifo_diagnostics
+      register: 123
+      bits: [2, 2]
+      access: rw
+      reset_value: 0b0
+      description: Embed FIFO counter info in output word; replaces bits [15:12] of timestamp
+
+    - name: enable_local_fifo_diagnostics
+      register: 123
+      bits: [3, 3]
+      access: rw
+      reset_value: 0b0
+      description: Embed local FIFO usage in output packets
+
+    - name: enable_tally
+      register: 123
+      bits: [4, 4]
+      access: rw
+      reset_value: 0b1
+      description: Embed 4 LSBs of total_packets in output packets
+
+    - name: enable_external_trigger
+      register: 123
+      bits: [5, 5]
+      access: rw
+      reset_value: 0b0
+      description: High to enable external trigger
+
+    - name: enable_external_sync
+      register: 123
+      bits: [6, 6]
+      access: rw
+      reset_value: 0b0
+      description: High to enable timestamp sync from external signal
+
+    - name: enable_data_stats
+      register: 123
+      bits: [7, 7]
+      access: rw
+      reset_value: 0b1
+      description: High to record packet data (high water, dropped packets, total packets)
+
+    # Registers 124–130 PISO/POSI/monitor/burst controls
+    - name: enable_piso_upstream
+      array: 4
+      register_start: 124
+      bits: [0, 0]
+      footprint: 1
+      access: rw
+      reset_value: 0b0
+      description: Enable different PISO links for upstream operation (FPGA input)
+
+    - name: enable_piso_downstream
+      array: 4
+      register_start: 125
+      bits: [0, 0]
+      footprint: 1
+      access: rw
+      reset_value: 0b0000
+      description: Enable different PISO links for downstream operation (FPGA output)
+
+    - name: enable_posi
+      array: 4
+      register_start: 126
+      bits: [0, 0]
+      footprint: 1
+      access: rw
+      reset_value: 0b0001
+      description: Enable POSI links
+
+    - name: en_analog_monitor
+      register: 127
+      bits: [0, 0]
+      access: rw
+      reset_value: 0b0
+      description: Powers up and connects analog monitor
+
+    - name: enable_cross_trigger
+      register: 128
+      bits: [0, 0]
+      access: rw
+      reset_value: 0b0
+      description: Enable cross trigger
+
+    - name: enable_periodic_reset
+      register: 128
+      bits: [1, 1]
+      access: rw
+      reset_value: 0b0
+      description: Enable periodic reset (all channels simultaneously)
+
+    - name: enable_rolling_periodic_reset
+      register: 128
+      bits: [2, 2]
+      access: rw
+      reset_value: 0b0
+      description: Enable rolling periodic reset (one channel at a time)
+
+    - name: enable_periodic_trigger
+      register: 128
+      bits: [3, 3]
+      access: rw
+      reset_value: 0b0
+      description: Enable periodic trigger (all channels simultaneously)
+
+    - name: enable_rolling_periodic_trigger
+      register: 128
+      bits: [4, 4]
+      access: rw
+      reset_value: 0b0
+      description: Enable rolling periodic trigger (one channel at a time)
+
+    - name: enable_periodic_trigger_veto
+      register: 128
+      bits: [5, 5]
+      access: rw
+      reset_value: 0b1
+      description: High to veto periodic trigger if channel servicing a hit
+
+    - name: enable_hit_veto
+      register: 128
+      bits: [6, 6]
+      access: rw
+      reset_value: 0b1
+      description: High to enforce discriminator hit before ADC hold
+
+    - name: shadow_reset_length
+      register: 129
+      bits: [7, 0]
+      access: rw
+      reset_value: 0x00
+      description: Number of clock cycles to hold CSA reset; OR’d with reset_length (170[5:3])
+
+    - name: adc_burst_length
+      register: 130
+      bits: [7, 0]
+      access: rw
+      reset_value: 0x00
+      description: Number of ADC conversions per channel hit
+
+    # Channel masks, one bit per channel
+    - name: channel_mask
+      array: 64
+      register_start: 131
+      bits: [0, 0]
+      footprint: 1
+      access: rw
+      reset_value: 0b1
+      description: Mask to disable individual channels
+
+    - name: external_trigger_mask
+      array: 64
+      register_start: 139
+      bits: [0, 0]
+      footprint: 1
+      access: rw
+      reset_value: 0b1
+      description: Mask to disable external trigger per channel
+
+    - name: cross_trigger_mask
+      array: 64
+      register_start: 147
+      bits: [0, 0]
+      footprint: 1
+      access: rw
+      reset_value: 0b1
+      description: Mask to disable cross trigger per channel
+
+    - name: periodic_trigger_mask
+      array: 64
+      register_start: 155
+      bits: [0, 0]
+      footprint: 1
+      access: rw
+      reset_value: 0b1
+      description: Mask to disable periodic trigger per channel
+
+    # Periodic reset and trigger cycles
+    - name: periodic_reset_cycles
+      array: 3
+      register_start: 163
+      bits: [7, 0]
+      footprint: 8
+      access: rw
+      reset_value: 0x00
+      description: Number of clock cycles between periodic resets
+
+    - name: periodic_trigger_cycles
+      array: 4
+      register_start: 166
+      bits: [7, 0]
+      footprint: 8
+      access: rw
+      reset_value: 0x00
+      description: Number of clock cycles between periodic triggers
+
+    # Dynamic reset and ADC settings
+    - name: enable_dynamic_reset
+      register: 170
+      bits: [0, 0]
+      access: rw
+      reset_value: 0b0
+      description: Enable channel reset based on ADC data
+
+    - name: enable_min_delta_adc
+      register: 170
+      bits: [1, 1]
+      access: rw
+      reset_value: 0b0
+      description: Enable channel reset when ADC values settled
+
+    - name: threshold_polarity
+      register: 170
+      bits: [2, 2]
+      access: rw
+      reset_value: 0b1
+      description: High to trigger when ADC above threshold
+
+    - name: reset_length
+      register: 170
+      bits: [5, 3]
+      access: rw
+      reset_value: 0b001
+      description: CSA reset hold cycles
+
+    - name: mark_first_packet
+      register: 170
+      bits: [6, 6]
+      access: rw
+      reset_value: 0b1
+      description: Set MSB of timestamp for first packet
+
+    - name: reset_threshold
+      register: 171
+      bits: [7, 0]
+      access: rw
+      reset_value: 0x00
+      description: Threshold value for dynamic reset
+
+    - name: min_delta_adc
+      register: 172
+      bits: [7, 0]
+      access: rw
+      reset_value: 0x00
+      description: Minimum delta in successive ADC conversions to trigger reset
+
+    - name: digital_threshold
+      array: 64
+      register_start: 173
+      bits: [7, 0]
+      footprint: 8
+      access: rw
+      reset_value: 0x00
+      description: Minimum digital value to put words into FIFO (per channel)
+
+    # TX slices (PISO links)
+    - name: tx_slices
+      array: 4
+      register_start: 239
+      bits: [3, 0]
+      footprint: 4
+      access: rw
+      reset_value: 0x8
+      description: Number of slices enabled for each PISO link
+
+    # Differential TX current
+    - name: i_tx_diff
+      array: 4
+      register_start: 241
+      bits: [3, 0]
+      footprint: 4
+      access: rw
+      reset_value: 0xC
+      description: Differential per-slice loop current for each PISO
+
+    # RX bias currents
+    - name: i_rx
+      array: 4
+      register_start: 243
+      bits: [3, 0]
+      footprint: 4
+      access: rw
+      reset_value: 0b10
+      description: Receiver bias current (POSI links and clocks)
+
+    - name: i_rx_clk
+      register: 245
+      bits: [3, 0]
+      access: rw
+      reset_value: 0b10
+      description: Receiver bias current (POSI links and clocks)
+
+    - name: i_rx_rst
+      register: 245
+      bits: [7, 4]
+      access: rw
+      reset_value: 0b10
+      description: Receiver bias current (POSI links and clocks)
+
+    - name: i_rx_ext_trig
+      register: 246
+      bits: [3, 0]
+      access: rw
+      reset_value: 0b10
+      description: Receiver bias current (POSI links and clocks)
+
+    # Termination resistors for POSI links
+    - name: r_term
+      array: 4
+      register_start: 247
+      bits: [2, 0]
+      footprint: 8
+      access: rw
+      reset_value: [0x4,0x2,0x2,0x2]
+      description: Termination resistor for each POSI link
+
+    # LVDS common-mode voltage
+    - name: v_cm_lvds_tx
+      array: 4
+      register_start: 254
+      bits: [2, 0]
+      footprint: 4
+      access: rw
+      reset_value: 0x5
+      description: LVDS common-mode voltage for each PISO link
+
+config_packet:
+  parameters:
+    total_bits: 64
+    parity_value: 1
+    magic_value: 0x89504E47
+    type_write: 0b10
+    type_read:  0b11
+  fields:
+    type:
+      bits: [1, 0]
+      description: Command type (0b10 = config write, 0b11 = config read)
+      const: {write: 0b10, read: 0b11}
+
+    chip:
+      bits: [9, 2]
+      description: Chip address (8 bits)
+
+    addr:
+      bits: [17, 10]
+      description: Register byte address (8 bits)
+
+    value:
+      bits: [25, 18]
+      description: Register data byte (8 bits, only used for write)
+
+    magic:
+      bits: [57, 26]
+      description: 32-bit magic constant (0x89504E47, same as PNG signature)
+
+    downstream:
+      bits: [62, 62]
+      description: Packet direction flag (1 = downstream, 0 = upstream)
+
+    parity:
+      bits: [63, 63]
+      description: Parity bit (ASIC requires overall parity = 1)
+
+capabilities: []

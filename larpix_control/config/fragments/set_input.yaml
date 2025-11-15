@@ -1,0 +1,8 @@
+external:
+  - input
+
+default:
+  "enable_posi": 0
+  "enable_posi[{input}]": 1
+
+
