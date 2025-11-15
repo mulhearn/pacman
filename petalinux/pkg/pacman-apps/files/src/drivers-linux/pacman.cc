@@ -1,3 +1,5 @@
+#ifndef SIMULATED_PACMAN
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/mman.h>
@@ -212,3 +214,5 @@ uint32_t pacman_read(uint32_t addr, int * status){
     *status = EXIT_SUCCESS;
   return G_PACMAN_AXIL[addr>>2];
 }
+
+#endif

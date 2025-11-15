@@ -79,3 +79,6 @@ $(BIN_DIR)/%.elf: $(OBJ_DIR)/%.o $(LIB_DIR)/$(LIB_NAME)
 clean:
 	rm -rf $(OBJ_DIR) $(LIB_DIR) $(BIN_DIR) __pycache__ pylib/__pycache__
 
+simulated-pacman:
+	echo "WARNING:  building with SIMULATED PACMAN HARDWARE"
+	$(MAKE) CXXFLAGS+=" -DSIMULATED_PACMAN"
