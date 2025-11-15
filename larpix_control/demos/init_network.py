@@ -13,7 +13,8 @@ def main():
         raw_network = common.dict_from_yaml("config/hydra/single.yaml")
         #raw_network = common.dict_from_yaml("config/hydra/pair.yaml")
         raw_params  = common.dict_from_yaml("config/hydra/parameters.yaml")
-        cfg = asic_config(pacman_io_request(), asic_spec, frag_lib, verbose=verbose)
+        io_req = pacman_io_request("config/network/single_local.yaml")
+        cfg = asic_config(io_req, asic_spec, frag_lib, verbose=verbose)
         strand = hydra_strand(raw_network, raw_params, cfg)
 
         if verbose:

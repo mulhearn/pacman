@@ -1,0 +1,7 @@
+network:
+  - io_group: 1
+    hostname: localhost
+    port: 5555
+    timeout_ms: 2000
+    first_io_chan: 0x000
+    uart_mask: 0xF
