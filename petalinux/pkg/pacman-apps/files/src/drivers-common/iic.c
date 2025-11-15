@@ -133,7 +133,7 @@ hw_u32_t iic_mon_vddd_mv(hw_u32_t chan){
 hw_u32_t iic_mon_idda_ma(hw_u32_t chan){
   if (chan >= 10) return 0; // Report only for tiles 0-9
 
-  const uint32_t full_scale = FULLSCALE_TILE_MA; 
+  const uint32_t full_scale = FULLSCALE_TILE_MA;
   uint32_t dn = iic_isense_dn(chan/2, 2*(chan%2)+PAC1944_OFFSET_VDDA);
   return full_scale * dn / 0xFFFF;
 }
@@ -141,7 +141,7 @@ hw_u32_t iic_mon_idda_ma(hw_u32_t chan){
 hw_u32_t iic_mon_iddd_ma(hw_u32_t chan){
   if (chan >= 10) return 0; // Report only for tiles 0-9
 
-  const uint32_t full_scale = FULLSCALE_TILE_MA; 
+  const uint32_t full_scale = FULLSCALE_TILE_MA;
   uint32_t dn = iic_isense_dn(chan/2, 2*(chan%2)+PAC1944_OFFSET_VDDD);
   return full_scale * dn / 0xFFFF;
 }
@@ -164,7 +164,7 @@ hw_u32_t iic_mon_iboard_ma(hw_u32_t chan){
   uint32_t full_scale = FULLSCALE_DIGITAL_MA;
   if (chan == 2)
     full_scale = FULLSCALE_ALL_TILE_MA;
-  
+
   uint32_t dn = iic_isense_dn(5, chan);
   return full_scale * dn / 0xFFFF;
 
@@ -235,9 +235,9 @@ hw_u32_t iic_mon_vddd(hw_u32_t chan) {
 
 hw_u32_t iic_mon_idda(hw_u32_t chan) {
     if (chan > 11) return 0; // Only 12 channels
-    
-    const uint32_t full_scale = FULLSCALE_TILE_MA; 
-    
+
+    const uint32_t full_scale = FULLSCALE_TILE_MA;
+
     hw_u8_t addr = ADDR_ADC_TILES + (chan / 2);
     hw_u8_t reg  = PAC1944_REG_CURR_BASE + PAC1944_OFFSET_VDDA + 2 * (chan % 2);
     hw_u8_t buf[2];
