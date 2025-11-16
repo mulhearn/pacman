@@ -14,6 +14,8 @@ static unsigned G_TX_COUNTER = 0;
 void init_rxtx(void){
   dma_platform_init();
   dma_platform_init_buffer(DMA_BUFFER_BASEADDR, DMA_BUFFER_SIZE);
+  dma_init_batch_tx_taildesc(TX_BATCH_NEXTDESC_ADDR);
+  dma_init_batch_rx_taildesc(RX_BATCH_NEXTDESC_ADDR);
 }
 
 void init_tx_descriptor_ring_mode(int ring_size){
@@ -23,7 +25,6 @@ void init_tx_descriptor_ring_mode(int ring_size){
   dma_write_tx_curdesc(TX_BD_BASEADDR);
   dma_write_tx_taildesc(TX_BD_BASEADDR);
 
-  dma_init_batch_tx_taildesc(TX_BATCH_NEXTDESC_ADDR);
   dma_write_batch_tx_taildesc(TX_BD_BASEADDR);
 
   dma_run_tx(DMA_TIMEOUT);
@@ -39,7 +40,7 @@ void init_rx_descriptor_ring_mode(int ring_size){
 
   dma_write_rx_curdesc(dma_get_next_bd_addr(RX_BD_BASEADDR));
   dma_write_rx_taildesc(RX_BD_BASEADDR);
-  dma_init_batch_rx_taildesc(RX_BATCH_NEXTDESC_ADDR);
+
   dma_write_batch_rx_taildesc(RX_BD_BASEADDR);
 
   dma_run_rx(DMA_TIMEOUT);

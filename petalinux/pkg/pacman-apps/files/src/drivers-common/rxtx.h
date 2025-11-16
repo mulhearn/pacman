@@ -56,8 +56,8 @@ extern "C" {
 #define DMA_BUFFER_BASEADDR  0x20000000
 #define DMA_BUFFER_SIZE      0x10000000  // 256 MB
 
-#define TX_BD_BASEADDR       0x20000000
-#define RX_BD_BASEADDR       0x21000000
+#define TX_BD_BASEADDR       0x21000000
+#define RX_BD_BASEADDR       0x22000000
 
 // 40 uarts x 64 bits + 1-64 bit header => 328 bits = 0x148
 // Note: DMA driver will alighn buffer *spacing* to 0x150
@@ -85,8 +85,8 @@ extern "C" {
 #define RX_WORD_BYTES    24
 
 
-#define TX_BATCH_NEXTDESC_ADDR       0x20100000
-#define RX_BATCH_NEXTDESC_ADDR       0x20100004
+#define TX_BATCH_NEXTDESC_ADDR       0x20000000
+#define RX_BATCH_NEXTDESC_ADDR       0x20000004
 
 // pacman-server hooks:
 void init_rxtx(void);
