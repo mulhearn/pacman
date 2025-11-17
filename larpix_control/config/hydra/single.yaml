@@ -1,7 +1,0 @@
-#
-# 011
-#
-
-chips:
-  - chip_id: 11
-    w: fpga

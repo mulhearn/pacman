@@ -1,6 +1,0 @@
-external:
-  - chip_id
-
-default:
-  chip_id: "{chip_id}"
-
