@@ -1,7 +1,7 @@
 # Makefile for pacman apps
 
 # apps and supporting library
-APPS     := pacman_menu pacman_units pacman_cmdserver pacman_dataserver
+APPS     := pacman_menu pacman_units pacman_cmdserver pacman_dataserver pacman_counter pacman_push
 LIB_NAME := libdrivers.a
 
 # directories
