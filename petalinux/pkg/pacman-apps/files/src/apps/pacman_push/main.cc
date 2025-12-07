@@ -1,21 +1,47 @@
 #include <cstdlib>
 #include <cstdio>
+#include <ctime>
 #include <unistd.h>
 #include <zmq.h>
 #include <cstring>
 #include <cassert>
 #include <sys/time.h>
+#include <getopt.h>
+
+#include "pacman_message.hh"
 
 #define SOCKET_A_BINDING_REQ "tcp://localhost:5555"
 
-// BUFFER SIZE:  24 + N * 24
-//#define MAX_BUFFER_SIZE 984
-#define MAX_BUFFER_SIZE 48
-uint32_t tx_buffer[MAX_BUFFER_SIZE/4];
+int main(int argc, char* argv[]) {
+    // Default parameters
+    unsigned verbose  = 0;
+    unsigned nwords   = 1;
+    unsigned n_tx     = 1000;
+    unsigned delay_us = 132;
 
-int main() {
+    int opt;
+    while ((opt = getopt(argc, argv, "v:w:n:d:")) != -1) {
+        switch(opt) {
+            case 'v': verbose   = std::atoi(optarg); break;
+            case 'w': nwords    = std::atoi(optarg); break;
+            case 'n': n_tx      = std::atoi(optarg); break;
+            case 'd': delay_us  = std::atoi(optarg); break;
+            default:
+                printf("Usage: %s [-v verbose] [-w nwords] [-n n_tx] [-d delay_us]\n", argv[0]);
+                return 1;
+        }
+    }
+
     printf("INFO: Starting ZMQ loopback demo.\n");
     printf("INFO: RAND_MAX: 0x%x\n", RAND_MAX);
+    printf("INFO: Parameters: verbose=%u nwords=%u n_tx=%u delay_us=%u\n",
+           verbose, nwords, n_tx, delay_us);
+
+    unsigned nbytes = nwords * WORD_BYTES;
+    pacman_msg_t msg_buf;
+
+    uint64_t ts = static_cast<uint64_t>(std::time(nullptr));
+    write_header_data(&msg_buf.header, nbytes, ts);
 
     // Create ZMQ context
     void* ctx = zmq_ctx_new();
@@ -39,19 +65,16 @@ int main() {
     printf("INFO: ZMQ REQ socket connected successfully...\n");
 
     // Rate-limiting setup
-    struct timeval tau = {0, 132}; // inter-send delay
+    struct timeval tau = {0, delay_us};
     struct timeval cur, target, start, end;
     gettimeofday(&cur, nullptr);
     timeradd(&cur, &tau, &target);
     start = target;
 
-    int tx_count = 0;
-    const int N = 1000;
+    unsigned tx_count = 0;
+    printf("INFO: Benchmarking %u TX/RX messages...\n", n_tx);
 
-    printf("INFO: Benchmarking %d TX/RX messages...\n", N);
-
-    while (tx_count < N) {
-        // Wait until next send time
+    while (tx_count < n_tx) {
         gettimeofday(&cur, nullptr);
         if (timercmp(&cur, &target, <)) {
             usleep(10);
@@ -60,60 +83,52 @@ int main() {
         cur = target;
         timeradd(&cur, &tau, &target);
 
-        // Poll ZMQ socket for send readiness
         zmq_pollitem_t items[1];
-        items[0].socket = req;   // ZMQ socket
-        items[0].fd = 0;         // must be 0 when polling a ZMQ socket
+        items[0].socket = req;
+        items[0].fd = 0;
         items[0].events = ZMQ_POLLOUT;
 
-        int rc_poll = zmq_poll(items, 1, 0); // 0 ms timeout
+        int rc_poll = zmq_poll(items, 1, 0);
         if (rc_poll <= 0 || !(items[0].revents & ZMQ_POLLOUT)) {
-            continue; // socket not ready
+            continue;
         }
-
-        // Prepare message
-        unsigned nbytes = MAX_BUFFER_SIZE - 24;
-        tx_buffer[0] = 0x3F; // REQUEST
-        tx_buffer[1] = nbytes;
-	unsigned nwords = nbytes/24;
 
         for (unsigned i = 0; i < nwords; i++) {
-            tx_buffer[6 + 6*i + 0] = 0x0044 + (64 << 16); // broadcast + replay
-            tx_buffer[6 + 6*i + 1] = 0;
-            tx_buffer[6 + 6*i + 2] = 0;
-            tx_buffer[6 + 6*i + 3] = 0;
-            tx_buffer[6 + 6*i + 4] = rand();
-            tx_buffer[6 + 6*i + 5] = rand();
+            uint64_t payload = (static_cast<uint64_t>(rand()) << 32) | rand();
+            write_word_data(&msg_buf.words[i], 0, 64, ts, payload);
         }
 
-        // Send message
+        if (verbose) {
+            if (check_msg(&msg_buf))
+                printf("DEBUG: valid message...\n");
+            print_msg(&msg_buf);
+        }
+
         zmq_msg_t msg;
-        rc_poll = zmq_msg_init_data(&msg, tx_buffer, MAX_BUFFER_SIZE, nullptr, nullptr);
+        rc_poll = zmq_msg_init_data(&msg, (char*)&msg_buf, HEADER_BYTES + nbytes, nullptr, nullptr);
         assert(rc_poll == 0);
         rc_poll = zmq_msg_send(&msg, req, 0);
         assert(rc_poll != -1);
         rc_poll = zmq_msg_close(&msg);
         assert(rc_poll == 0);
 
-        // Receive reply
         zmq_msg_t reply;
         zmq_msg_init(&reply);
         rc_poll = zmq_msg_recv(&reply, req, 0);
         zmq_msg_close(&reply);
-	
+
         tx_count++;
     }
 
-    // Calculate elapsed time
     gettimeofday(&end, nullptr);
     double elapsed_time = 1000.0*(end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec)/1000.0;
 
-    uint64_t data = 40 * tx_count * (MAX_BUFFER_SIZE - 24); // broadcast multiplier
+    uint64_t data = 40 * tx_count * nbytes;
     uint64_t packets = data / 24;
-    double mbps = 8.0 * data * 1000 / (elapsed_time * 1024 * 1024); // Mega bits/sec
+    double mbps = 8.0 * data * 1000 / (elapsed_time * 1024 * 1024);
     double ppms = packets / elapsed_time;
 
-    printf("INFO: tx_count: %d\n", tx_count);
+    printf("INFO: tx_count: %u\n", tx_count);
     printf("INFO: total bytes:       %lu\n", data);
     printf("INFO: total packets:     %lu\n", packets);
     printf("INFO: elapsed time (ms): %lf\n", elapsed_time);
