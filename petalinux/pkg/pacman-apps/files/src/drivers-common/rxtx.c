@@ -3,6 +3,7 @@
 #include "hw_access.h"
 #include "dma.h"
 #include "global.h"
+#include "asic.h"
 #include "rxtx.h"
 
 hw_val_t tx_mask_b = 0xFF;
@@ -10,41 +11,11 @@ hw_val_t tx_mask_a = 0xFFFFFFFF;
 
 static unsigned G_TX_COUNTER = 0;
 
-// this is reserved in system-user.dtsi and located within the HP AXI interface for DMA (0x00000000 - 0x3FFFFFFF):
-#define DMA_BUFFER_BASEADDR  0x20000000
-#define DMA_BUFFER_SIZE      0x10000000  // 256 MB
-
-#define TX_BD_BASEADDR       0x20000000
-#define RX_BD_BASEADDR       0x21000000
-
-// 40 uarts x 64 bits + 1-64 bit header => 328 bits = 0x148
-// Note: DMA driver will alighn buffer *spacing* to 0x150
-#define TX_PACKET_BYTES 0x148
-#define TX_HEADER_BYTES 8
-#define TX_PAYLOAD_U32_WORDS ((TX_PACKET_BYTES - TX_HEADER_BYTES)/4)
-#define TX_HEADER_U32_WORDS  (TX_HEADER_BYTES/4)
-
-// Buffer sizes:
-// 1 single UART        (1+1)*24    =  48  = 0x30   <-- size MMMM=0x0001
-// 40 UART              (40+1)*24   = 984  = 0x3D8  <-- typical test pattern size
-// 40 UART + 3 Extra    (40+3+1)*24 = 1056 = 0x420  <-- max for CCCC=0x0001
-//#define RX_BUF_BYTES 0x800
-// Enough for single cycles, max (40 uarts + header + 3 T/S/HB) * 16 bytes = 0x2c0 bytes
-// Each uart rx takes 10 cycles, so for 10 cycles, the maximum buffer size is:
-//    (40 + 1 + 10*3)*16 = 0x470 (1136) bytes
-// So the buffer size below is enough for more than 140 cycles (0x8C) which you should see in settings
-// Note:  when switching to 64 bit timestamps, each cycle will take three times as long, and so this becomes:
-//    (3*40 + 1 + 30*3)*24 = 5064 (0x13c8)
-// and the buffer size below is enough for 32 (0x20)  cycles (about 1/4 of 0x8C)
-// More directly, that is large enough for 682 words (0x2aa)
-#define RX_BUF_BYTES 0x4000
-
-#define TX_BATCH_NEXTDESC_ADDR       0x20100000
-#define RX_BATCH_NEXTDESC_ADDR       0x20100004
-
 void init_rxtx(void){
-  init_dma_driver();
-  init_dma_buffer(DMA_BUFFER_BASEADDR, DMA_BUFFER_SIZE);
+  dma_platform_init();
+  dma_platform_init_buffer(DMA_BUFFER_BASEADDR, DMA_BUFFER_SIZE);
+  dma_init_batch_tx_taildesc(TX_BATCH_NEXTDESC_ADDR);
+  dma_init_batch_rx_taildesc(RX_BATCH_NEXTDESC_ADDR);
 }
 
 void init_tx_descriptor_ring_mode(int ring_size){
@@ -54,7 +25,6 @@ void init_tx_descriptor_ring_mode(int ring_size){
   dma_write_tx_curdesc(TX_BD_BASEADDR);
   dma_write_tx_taildesc(TX_BD_BASEADDR);
 
-  dma_init_batch_tx_taildesc(TX_BATCH_NEXTDESC_ADDR);
   dma_write_batch_tx_taildesc(TX_BD_BASEADDR);
 
   dma_run_tx(DMA_TIMEOUT);
@@ -70,7 +40,7 @@ void init_rx_descriptor_ring_mode(int ring_size){
 
   dma_write_rx_curdesc(dma_get_next_bd_addr(RX_BD_BASEADDR));
   dma_write_rx_taildesc(RX_BD_BASEADDR);
-  dma_init_batch_rx_taildesc(RX_BATCH_NEXTDESC_ADDR);
+
   dma_write_batch_rx_taildesc(RX_BD_BASEADDR);
 
   dma_run_rx(DMA_TIMEOUT);
@@ -228,6 +198,26 @@ void toggle_tx_config(void){
   }
 }
 
+void rx_disable_uart(unsigned chan){
+  if (chan < 40){
+    hw_u32_t cfg = axil_read_register(SCOPE_RX+(chan<<8)+C_ADDR_RX_UART_CONFIG);
+    // for the particular config value of "11" the AND step could be skipped, but let's not:
+    cfg &= (~0x00030000);
+    cfg |=   0x00030000;
+    axil_write_register(SCOPE_RX+(chan<<8)+C_ADDR_RX_UART_CONFIG, cfg);
+  }
+}
+
+void rx_enable_uart(unsigned chan){
+  if (chan < 40){
+    hw_u32_t cfg = axil_read_register(SCOPE_RX+(chan<<8)+C_ADDR_RX_UART_CONFIG);
+    // for the particular config value of "00" the OR step could be skipped, but let's not:
+    cfg &= (~0x00030000);
+    cfg |=   0x00000000;
+    axil_write_register(SCOPE_RX+(chan<<8)+C_ADDR_RX_UART_CONFIG, cfg);
+  }
+}
+
 void toggle_rx_config(void){
   static int mode = 0;
   mode = (mode + 1) % 4;
@@ -270,8 +260,8 @@ void toggle_rx_buffer_enables(void){
   static int mode = 0;
   mode = (mode + 1) % 4;
 
-  unsigned config[] = {0x0, 0x3, 0x1, 0x2};
-  printf("INFO: Setting RX buffer config to 0x%08X \r\n", config[mode]);
+  unsigned config[] = {0x3, 0x0, 0x1, 0x2};
+  printf("INFO: Setting RX buffer enables to 0x%08X \r\n", config[mode]);
   axil_write_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_BUFFER_ENABLES, config[mode]);
 }
 
@@ -305,11 +295,13 @@ void read_rx_status(void){
 }
 
 void read_rx_look(void){
+  hw_u32_t udata[2];
   for (int i=0; i<40; i++){
     axil_write_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_LOOK_SELECT, i);
-    unsigned a = axil_read_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_LOOK_UA);
-    unsigned b = axil_read_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_LOOK_UB);
-    printf("Channel %2d Look:  0x%08x %08x \r\n", i, b, a);
+    udata[0] = axil_read_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_LOOK_UA);
+    udata[1] = axil_read_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_LOOK_UB);
+    printf("Channel %2d Look:  0x%08x %08x ", i, udata[1], udata[0]);
+    asic_print_packet_summary(udata);
   }
 }
 
@@ -326,11 +318,13 @@ void read_tx_status(void){
 }
 
 void read_tx_look(void){
+  hw_u32_t udata[2];
   for (int i=0; i<40; i++){
     axil_write_register(SCOPE_TX+UART_GLOBAL+C_ADDR_TX_LOOK_SELECT, i);
-    unsigned a = axil_read_register(SCOPE_TX+UART_GLOBAL+C_ADDR_TX_LOOK_UA);
-    unsigned b = axil_read_register(SCOPE_TX+UART_GLOBAL+C_ADDR_TX_LOOK_UB);
-    printf("Channel %2d Look:  0x%08x %08x \r\n", i, b, a);
+    udata[0] = axil_read_register(SCOPE_TX+UART_GLOBAL+C_ADDR_TX_LOOK_UA);
+    udata[1] = axil_read_register(SCOPE_TX+UART_GLOBAL+C_ADDR_TX_LOOK_UB);
+    printf("Channel %2d Look:  0x%08x %08x ", i, udata[1], udata[0]);
+    asic_print_packet_summary(udata);
   }
 }
 
@@ -429,7 +423,6 @@ void benchmark_rxtx_loopback(void){
   const unsigned uart_bytes  = 24;    // 192-bits per uart channel
   const unsigned batch_size  = 100;
   const unsigned rx_expected = uarts * uart_bytes * tx_packets;
-  const unsigned rx_trailer_bytes = 24; // Each DMA RX packet has a two 192-bit word trailer
 
   const unsigned timeout = 10000;
   unsigned rx_timeout = timeout;
@@ -473,8 +466,8 @@ void benchmark_rxtx_loopback(void){
       hw_addr_t nxta = 0;
       while((batch_count < batch_size) && (dma_next_available_rx_bd(&nxta))){
 	unsigned xbytes = dma_poll_bd_transferred(nxta);
-	if (xbytes > rx_trailer_bytes){
-	  rx_bytes += xbytes - rx_trailer_bytes;
+	if (xbytes > RX_TRAILER_BYTES){
+	  rx_bytes += xbytes - RX_TRAILER_BYTES;
 	} else {
 	  printf("ERROR: invalid RX packet of size %d bytes found \r\n", xbytes);
 	  return;

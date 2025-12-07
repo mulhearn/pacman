@@ -1,7 +1,7 @@
 # Makefile for pacman apps
 
 # apps and supporting library
-APPS     := pacman_menu pacman_units pacman_cmdserver pacman_dataserver
+APPS     := pacman_menu pacman_units pacman_cmdserver pacman_dataserver pacman_counter pacman_push
 LIB_NAME := libdrivers.a
 
 # directories
@@ -21,10 +21,11 @@ $(COMMON_SRCS:$(SRC_DIR)/platform/%.c=$(OBJ_DIR)/%.o) \
 $(LINUX_SRCS:$(SRC_DIR)/drivers-linux/%.cc=$(OBJ_DIR)/%.o)
 
 # Flags
-CPPFLAGS := $(INCLUDE_DIRS)
+CPPFLAGS := $(INCLUDE_DIRS) -D_LINUX
 CXXFLAGS := -Wall -O2
 CFLAGS   := -Wall -O2
-LDLIBS   := $(LIB_DIR)/$(LIB_NAME) -lzmq -lstdc++
+#LDLIBS   := $(LIB_DIR)/$(LIB_NAME) -lzmq -lstdc++
+LDLIBS   := -lzmq -lstdc++
 
 # default targets
 APP_ELFS := $(addprefix $(BIN_DIR)/,$(addsuffix .elf,$(APPS)))
@@ -78,3 +79,6 @@ $(BIN_DIR)/%.elf: $(OBJ_DIR)/%.o $(LIB_DIR)/$(LIB_NAME)
 clean:
 	rm -rf $(OBJ_DIR) $(LIB_DIR) $(BIN_DIR) __pycache__ pylib/__pycache__
 
+simulated-pacman:
+	echo "WARNING:  building with SIMULATED PACMAN HARDWARE"
+	$(MAKE) CXXFLAGS+=" -DSIMULATED_PACMAN"
