@@ -1,6 +1,10 @@
 #ifndef __ATC_H__
 #define __ATC_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 
 // ASIC Timing and Control Registers
@@ -37,5 +41,9 @@ void toggle_atc_destinations();
 void send_poke_c();
 
 void send_poke_d();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // __ATC_H__
