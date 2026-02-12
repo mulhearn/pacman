@@ -214,3 +214,16 @@ inline void unpack_string_msg(const pacman_msg_t* msg, char* out, uint32_t max_l
     memcpy(out, msg->raw, n);
     out[n] = '\0';
 }
+
+
+// -----------------------------
+// Utilities
+// -----------------------------
+
+static inline uint32_t upper_32(uint64_t word){
+  return (uint32_t) (word>>32);
+}
+
+static inline uint32_t lower_32(uint64_t word){
+  return (uint32_t) (word);
+}

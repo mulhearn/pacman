@@ -97,16 +97,20 @@ void print_word(const pacman_word_t* word, const char * prefix = "") {
     printf("type: read  pacman: %03d addr: 0x%04X value: 0x%08X", word->write.pacman, word->write.addr, word->write.value);
     break;
   case WORD_TYPE_DATA:
-    printf("type: data  pacman: %03d chan: %5d payload:  0x%016lx timestamp: %ld", word->data.pacman,  word->data.chan, word->data.payload, word->data.timestamp);
+    printf("type: data  pacman: %03d chan: %5d payload:  0x%08x%08x timestamp: 0x%08x%08x", word->data.pacman,  word->data.chan,
+	   upper_32(word->data.payload), lower_32(word->data.payload), upper_32(word->data.timestamp), lower_32(word->data.timestamp));
     break;
   case WORD_TYPE_SYNC:
-    printf("type: sync  pacman %03d type: %c src: %d timestamp: %ld status: 0x%08x", word->sync.pacman, word->sync.sync_type, word->sync.clk_src, word->sync.timestamp, word->sync.status);
+    printf("type: sync  pacman %03d type: %c src: %d timestamp: 0x%08x%08x status: 0x%08x", word->sync.pacman, word->sync.sync_type,
+	   word->sync.clk_src, upper_32(word->data.timestamp), lower_32(word->data.timestamp), word->sync.status);
     break;
   case WORD_TYPE_TRIG:
-    printf("type: trig  pacman %03d type: %d src: %d timestamp: %ld ", word->trig.pacman, word->trig.trig_type, word->trig.trig_src, word->sync.timestamp);
+    printf("type: trig  pacman %03d type: %d src: %d timestamp: 0x%08x%08x", word->trig.pacman, word->trig.trig_type, word->trig.trig_src,
+	    upper_32(word->data.timestamp), lower_32(word->data.timestamp));
     break;
   case WORD_TYPE_ERR:
-    printf("type: err   pacman %03d timestamp: %ld error_code: 0x%08x", word->err.pacman, word->err.timestamp, word->err.error_code);
+    printf("type: err   pacman %03d timestamp: 0x%08x%08x error_code: 0x%08x", word->err.pacman,
+	   upper_32(word->data.timestamp), lower_32(word->data.timestamp), word->err.error_code);
     break;
   default:
     printf("unknown ");
