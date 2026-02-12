@@ -4,8 +4,8 @@
 #include <linux/types.h>
 #include <cstdint>
 
-#define PACMAN_VSPACE_MAJOR_VERSION 3
-#define PACMAN_VSPACE_MINOR_VERSION 0
+#define PACMAN_VSPACE_REG_START 0x00100000
+#define PACMAN_VSPACE_I2C_START 0x00200000
 
 int pacman_vspace_write(uint32_t addr, uint32_t value);
 

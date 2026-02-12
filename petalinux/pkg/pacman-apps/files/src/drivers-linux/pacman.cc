@@ -39,7 +39,8 @@ int pacman_init(int verbose){
   unsigned fwminor = G_PACMAN_AXIL[0XFF14>>2];
 
   if (verbose){
-    printf("INFO:  Running pacman-server version %d.%d\n", PACMAN_SERVER_MAJOR_VERSION, PACMAN_SERVER_MINOR_VERSION);
+    printf("INFO:  Running pacman-server version %d.%d.%d\n",
+	   PACMAN_SERVER_MAJOR_VERSION, PACMAN_SERVER_MINOR_VERSION, PACMAN_SERVER_PATCH_VERSION);
     printf("INFO:  Running pacman firmware version %d.%d\n", fwmajor, fwminor);
   }
 

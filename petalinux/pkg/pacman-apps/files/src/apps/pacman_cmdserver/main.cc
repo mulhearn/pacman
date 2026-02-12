@@ -34,9 +34,13 @@ void handle_write(pacman_word_t * req_word, pacman_word_t * rep_word){
 }
 
 void handle_data(pacman_word_t * req_word, pacman_word_t * rep_word){
-  uint8_t  chan    = req_word->data.chan;
-  uint64_t payload = req_word->data.payload;
-  printf("INFO:  handling TX request for chan %5d payload 0%016lx\n", chan, payload);
+  uint8_t  chan      = req_word->data.chan;
+  uint64_t payload   = req_word->data.payload;
+
+  uint32_t payload_a = payload & 0xFFFFFFFF;
+  uint32_t payload_b = (payload>>32) & 0xFFFFFFFF;
+
+  printf("INFO:  handling TX request for chan %5d payload 0x%08x%08x \n", chan, payload_b, payload_a);
   uint8_t pacman_id = get_pacman_id();
   if (chan > 0) {
     tx_buffer_in(chan-1, reinterpret_cast<uint32_t *>(&payload));
