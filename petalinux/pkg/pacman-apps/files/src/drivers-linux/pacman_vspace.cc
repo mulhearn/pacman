@@ -86,7 +86,7 @@ uint32_t pacman_vspace_read(uint32_t addr, int * status){
   if (addr >= PACMAN_VSPACE_REG_START){
     unsigned tmp = 0;
     unsigned off = addr - PACMAN_VSPACE_REG_START;
-    printf("DEBUG: vspace_read: virtual reg write at offset 0x%x \r\n", off);
+    printf("DEBUG: vspace_read: virtual reg read at offset 0x%x \r\n", off);
 
     switch(addr){
     case 0x0000:
@@ -113,7 +113,7 @@ uint32_t pacman_vspace_read(uint32_t addr, int * status){
   }
 
   // non-virtual address:
-  printf("DEBUG: vspace_read: non-virtual reg write at address 0x%x \r\n", addr);
+  printf("DEBUG: vspace_read: non-virtual reg read at address 0x%x \r\n", addr);
   return pacman_read(addr, status);
 
 }
