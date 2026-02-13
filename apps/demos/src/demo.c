@@ -19,6 +19,9 @@
 #include "asic.h"
 #include "led.h"
 
+#include "iic_menu.h"
+#include "asic_menu.h"
+
 #define EMAC_DEVICE_ID      XPAR_XEMACPS_0_DEVICE_ID
 #define PHY_ADDRESS         0x1A    // Your CPLD PHY address
 
@@ -251,34 +254,10 @@ void atc_menu(){
   }
 }
 
-void iic_menu(){
-}
 
 void adc_menu(){
 }
 
-void asic_menu(){
-  xil_printf("ASIC Menu: \r\n");
-  while(1){
-    xil_printf("choose an option:\r\n");
-    xil_printf("(0) exit ASIC Menu \r\n");
-    xil_printf("(1) toggle ASIC power (2) ASIC hello \r\n");
-    unsigned char c=inbyte();
-    xil_printf("pressed:  %c\n\r", c);
-    switch(c){
-    case '0':
-      return;
-    case '1':
-      toggle_asic_power();
-      break;
-    case '2':
-      asic_hello();
-      break;
-    default:
-      xil_printf("invalid selection...\n\r");
-    }
-  }
-}
 
 int main(){
   printf("Menu-Driver Demonstration Driver For PACMAN\r\n");

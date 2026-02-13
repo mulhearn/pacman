@@ -84,7 +84,7 @@ hw_u32_t iic_vsense_dn(hw_u32_t addr_offset, hw_u32_t reg_offset) {
 
   // Read the output register
   iic_write(addr, reg, NULL, 0);
-  iic_read(addr, reg, buf, 2);
+  iic_read(addr, reg, buf, 2, false);
 
   uint32_t val = (buf[0] << 8) | buf[1];
   return val;
@@ -107,7 +107,7 @@ hw_u32_t iic_isense_dn(hw_u32_t addr_offset, hw_u32_t reg_offset) {
 
   // Read the output register
   iic_write(addr, reg, NULL, 0);
-  iic_read(addr, reg, buf, 2);
+  iic_read(addr, reg, buf, 2, false);
 
   uint32_t val = (buf[0] << 8) | buf[1];
   return val;
@@ -201,7 +201,7 @@ hw_u32_t iic_mon_vdda(hw_u32_t chan) {
 
     // Read the output register
     iic_write(addr, reg, NULL, 0);
-    iic_read(addr, reg, buf, 2);
+    iic_read(addr, reg, buf, 2, true);
 
     uint32_t val = (buf[0] << 8) | buf[1];
     return full_scale * val / 0xFFFF;
@@ -227,7 +227,7 @@ hw_u32_t iic_mon_vddd(hw_u32_t chan) {
 
     // Read the output register
     iic_write(addr, reg, NULL, 0);
-    iic_read(addr, reg, buf, 2);
+    iic_read(addr, reg, buf, 2, true);
 
     uint32_t val = (buf[0] << 8) | buf[1];
     return full_scale * val / 0xFFFF;
@@ -254,7 +254,7 @@ hw_u32_t iic_mon_idda(hw_u32_t chan) {
 
     // Read the output register
     iic_write(addr, reg, NULL, 0);
-    iic_read(addr, reg, buf, 2);
+    iic_read(addr, reg, buf, 2, true);
 
     uint32_t val = (buf[0] << 8) | buf[1];
     return full_scale * val / 0xFFFF;
@@ -280,7 +280,7 @@ hw_u32_t iic_mon_iddd(hw_u32_t chan) {
 
     // Read the output register
     iic_write(addr, reg, NULL, 0);
-    iic_read(addr, reg, buf, 2);
+    iic_read(addr, reg, buf, 2, true);
 
     uint32_t val = (buf[0] << 8) | buf[1];
     return full_scale * val / 0xFFFF;

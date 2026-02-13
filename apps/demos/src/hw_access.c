@@ -122,12 +122,21 @@ void iic_write(hw_u8_t addr, hw_u8_t reg, const hw_u8_t *data, hw_u32_t len) {
   while (XIicPs_BusIsBusy(&iicps)) { /* wait */ }
 }
 
-void iic_read(hw_u8_t addr, hw_u8_t reg, hw_u8_t *data, hw_u32_t len) {
+void iic_read(hw_u8_t addr, hw_u8_t reg, hw_u8_t *data, hw_u32_t len,  bool use_repeated_read) {
+
+  if (use_repeated_read)
+    XIicPs_SetOptions(&iicps, XIICPS_REP_START_OPTION);
+
+
   // Send register first
   hw_u8_t reg_buf = reg;
   int status = XIicPs_MasterSendPolled(&iicps, &reg_buf, 1, addr);
   if (status != XST_SUCCESS) {
     printf("I2C read: failed to send register 0x%x\r\n", reg);
+
+    if (use_repeated_read)
+      XIicPs_ClearOptions(&iicps, XIICPS_REP_START_OPTION);
+    
     return;
   }
 
@@ -140,7 +149,12 @@ void iic_read(hw_u8_t addr, hw_u8_t reg, hw_u8_t *data, hw_u32_t len) {
   }
 
   while (XIicPs_BusIsBusy(&iicps)) { /* wait */ }
+
+  if (use_repeated_read)
+    XIicPs_ClearOptions(&iicps, XIICPS_REP_START_OPTION);
+  
 }
+
 
 //
 // PS GPIO (MIO) Interface:
