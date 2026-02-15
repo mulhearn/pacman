@@ -105,6 +105,10 @@ typedef struct {
 
 static_assert(sizeof(pacman_msg_t) == HEADER_BYTES + MAX_WORDS * WORD_BYTES, "PACMAN message total size");
 
+static inline uint32_t total_message_size(const pacman_msg_t * msg){
+  return HEADER_BYTES + msg->header.n_bytes;
+}
+
 // helpers to populate words in-place
 
 
