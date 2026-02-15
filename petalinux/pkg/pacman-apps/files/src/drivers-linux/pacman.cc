@@ -120,7 +120,7 @@ int pacman_init_tx(int verbose, int skip_reset){
   dma_reset_tx(DMA_TIMEOUT);
   dma_reset_rx(DMA_TIMEOUT);
 
-  init_tx_descriptor_ring_mode(128);
+  init_tx_descriptor_ring_mode(512);
   return EXIT_SUCCESS;
 }
 
@@ -187,7 +187,7 @@ int pacman_poll_tx(){
 
   while((batch_count < batch_size) && dma_next_available_tx_bd(&nxta)){
     if (tx_buffer_out(output)==1){
-      //tx_buffer_print_output(output);
+      tx_buffer_print_output(output);
       hw_ptr_t tx_buf = dma_get_buffer(nxta);
       for (unsigned i=0; i<frags; i++)
 	tx_buf[i] = output[i];

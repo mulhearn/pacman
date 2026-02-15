@@ -25,15 +25,17 @@ int test_pacman_message(){
   printf("INFO:  ****** running PACMAN message unit test. *******\n");
 
   uint64_t ts = static_cast<uint64_t>(std::time(nullptr));
+  uint32_t ts_hi = upper_32(ts);
+  uint32_t ts_lo = lower_32(ts);
   pacman_msg_t msg;
 
   printf("INFO:  Step 1: REQ/PING\n");
-  write_header_req(&msg.header, 1, ts);
+  write_header_req(&msg.header, 1, ts_hi, ts_lo);
   write_word_ping(&msg.words[0]);
   success &= test_message(&msg);
 
   printf("INFO:  Step 2: REQ/PING\n");
-  write_header_rep(&msg.header, 1, ts);
+  write_header_rep(&msg.header, 1, ts_hi, ts_lo);
   write_word_ping(&msg.words[0]);
   success &= test_message(&msg);
 
@@ -42,12 +44,12 @@ int test_pacman_message(){
     return 0;
   }
   printf("INFO:  Step 3: REQ/READ\n");
-  write_header_req(&msg.header, 1, ts);
+  write_header_req(&msg.header, 1, ts_hi, ts_lo);
   write_word_read(&msg.words[0], 2, 0xFF10, 0x00000000);
   success &= test_message(&msg);
 
   printf("INFO:  Step 4: REQ/READ\n");
-  write_header_rep(&msg.header, 1, ts);
+  write_header_rep(&msg.header, 1, ts_hi, ts_lo);
   write_word_read(&msg.words[0], 2, 0xFF10, 0xAABBCCDD);
   success &= test_message(&msg);
 
@@ -57,12 +59,12 @@ int test_pacman_message(){
   }
 
   printf("INFO:  Step 5: REQ/WRITE\n");
-  write_header_req(&msg.header, 1, ts);
+  write_header_req(&msg.header, 1, ts_hi, ts_lo);
   write_word_write(&msg.words[0], 2, 0xFF14, 0x12345678);
   success &= test_message(&msg);
 
   printf("INFO:  Step 6: REQ/WRITE\n");
-  write_header_rep(&msg.header, 1, ts);
+  write_header_rep(&msg.header, 1, ts_hi, ts_lo);
   write_word_write(&msg.words[0], 2, 0xFF14, 0x12345678);
   success &= test_message(&msg);
 
@@ -72,18 +74,18 @@ int test_pacman_message(){
   }
 
   printf("INFO:  Step 7: DATA/DATA\n");
-  write_header_data(&msg.header, 1, ts);
-  write_word_data(&msg.words[0], 2, 4, ts, 0x1234567890ABCDEF);
+  write_header_data(&msg.header, 1, ts_hi, ts_lo);
+  write_word_data(&msg.words[0], 2, 4, ts_hi, ts_lo, 0x12345678, 0x90ABCDEF);
   success &= test_message(&msg);
 
   printf("INFO:  Step 8: DATA/SYNC\n");
-  write_header_data(&msg.header, 1, ts);
-  write_word_sync(&msg.words[0], 2, 'H', 0, ts, 0);
+  write_header_data(&msg.header, 1, ts_hi, ts_lo);
+  write_word_sync(&msg.words[0], 2, 'H', 0, ts_hi, ts_lo, 0);
   success &= test_message(&msg);
 
   printf("INFO:  Step 9: DATA/TRIG\n");
-  write_header_data(&msg.header, 1, ts);
-  write_word_trig(&msg.words[0], 2, 4, 1, ts);
+  write_header_data(&msg.header, 1, ts_hi, ts_lo);
+  write_word_trig(&msg.words[0], 2, 4, 1, ts_hi, ts_lo);
   success &= test_message(&msg);
 
   if (success==0){
@@ -92,8 +94,8 @@ int test_pacman_message(){
   }
 
   printf("INFO:  Step 9: DATA/ERR\n");
-  write_header_data(&msg.header, 1, ts);
-  write_word_err(&msg.words[0], 2, ts, 0xEEEE);
+  write_header_data(&msg.header, 1, ts_hi, ts_lo);
+  write_word_err(&msg.words[0], 2, ts_hi, ts_lo, 0xEEEE);
   success &= test_message(&msg);
 
   printf("INFO:  Step 10: STRING message\n");
@@ -107,7 +109,8 @@ int test_pacman_message(){
   msg.header.version_major = MSG_VERSION_MAJOR;
   msg.header.version_minor = MSG_VERSION_MINOR;
   msg.header.n_bytes = str_len;
-  msg.header.timestamp = ts;
+  msg.header.timestamp_hi = ts_hi;
+  msg.header.timestamp_lo = ts_lo;
 
   // Copy string bytes into the raw union buffer
   memcpy(msg.words[0].raw, test_str, str_len);
@@ -135,22 +138,22 @@ int test_tx_buffer(){
   for (int i=0; i<3; i++){
     tx_data[0] = 0xBBBBAA00+i;
     tx_data[1] = 0xDDDDCCCC;
-    success &= (tx_buffer_in(5, tx_data)==1);
+    success &= (tx_buffer_in(5, tx_data[1], tx_data[0])==1);
   }
   tx_data[0] = 0x11111111;
   tx_data[1] = 0x22222222;
-  tx_buffer_in(1, tx_data);
+  tx_buffer_in(1, tx_data[1], tx_data[0]);
 
   for (int i=0; i<TX_BUFFER_DEPTH-1; i++){
     tx_data[0] = 0xAAAA0000+i;
     tx_data[1] = 0xBBBB0000+i;
-    success &= (tx_buffer_in(10, tx_data)==1);
+    success &= (tx_buffer_in(10, tx_data[1], tx_data[0])==1);
   }
 
   tx_buffer_status();
 
   success &= (tx_buffer_lost()==0);
-  success &= (tx_buffer_in(10, tx_data)==0);
+  success &= (tx_buffer_in(10, tx_data[1], tx_data[0])==0);
   success &= (tx_buffer_lost()==1);
 
   success &= (tx_buffer_out(output)==1);
@@ -189,12 +192,12 @@ int test_tx_buffer(){
       tx_data[0] = (j<<8) + i+1;
       tx_data[1] = (j<<8) + 0x00000033;
       if (i >= 0)
-	success &= (tx_buffer_in(i, tx_data)==1);
+	success &= (tx_buffer_in(i, tx_data[1], tx_data[0])==1);
     }
   }
 
   // how about this wafer thin mint?
-  success &= (tx_buffer_in(20, tx_data)==0);
+  success &= (tx_buffer_in(20, tx_data[1], tx_data[0])==0);
 
   if (success==0){
     printf("ERROR:  failed filing the entire buffer.\n");

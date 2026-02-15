@@ -2,11 +2,14 @@
 #include <fcntl.h>
 #include <time.h>
 #include <unistd.h>
-#include <sys/ioctl.h>
 #include <sys/mman.h>
+#include <linux/i2c.h>
 #include <linux/i2c-dev.h>
+#include <sys/ioctl.h>
 #include <string.h>
+#include <stdbool.h>
 #include "hw_access.h"
+#include "assert.h"
 
 
 // move to header?
@@ -140,12 +143,19 @@ void dma_platform_init_buffer(hw_addr_t baseaddr, hw_addr_t size){
   close(dh);
 }
 
+
 hw_ptr_t dma_ptr(hw_addr_t addr){
-  if (addr < G_BUF_BASEADDR)
-    return NULL;
+    assert(addr >= G_BUF_BASEADDR);
+    hw_addr_t offset = addr - G_BUF_BASEADDR;
+    assert(offset < G_BUF_SIZE);
+    return &G_BUF[offset>>2];
+}
+
+hw_ptr_t dma_safe_buffer(hw_addr_t addr, hw_addr_t size){
+  assert(addr >= G_BUF_BASEADDR);
   hw_addr_t offset = addr - G_BUF_BASEADDR;
-  if (offset > G_BUF_SIZE)
-    return NULL;
+  assert(size <= G_BUF_SIZE);
+  assert(offset <= G_BUF_SIZE - size);
   return &G_BUF[offset>>2];
 }
 
@@ -253,6 +263,64 @@ void iic_read(hw_u8_t addr, hw_u8_t reg, hw_u8_t *data, hw_u32_t len) {
 #endif
 
 }
+
+//not using this yet so as not to interfere with testing in progress...
+void iic_read_future_update(hw_u8_t addr, hw_u8_t reg, hw_u8_t *data, hw_u32_t len, bool use_repeated_read)
+{
+    if (G_IIC_FH < 0) {
+        printf("**ERROR** iic_read: I2C not initialized\n");
+        G_IIC_STATUS |= 1;
+        return;
+    }
+
+    if (!use_repeated_read) {
+        // fallback: simple write() + read()
+        if (ioctl(G_IIC_FH, I2C_SLAVE, addr) < 0) {
+            printf("**ERROR** iic_read: Failed to set I2C address 0x%02x\n", addr);
+            G_IIC_STATUS |= 2;
+            return;
+        }
+        if (write(G_IIC_FH, &reg, 1) != 1) {
+            printf("**ERROR** iic_read: Failed to write register 0x%02x to 0x%02x\n", reg, addr);
+            G_IIC_STATUS |= 4;
+            return;
+        }
+        if (read(G_IIC_FH, data, len) != (ssize_t)len) {
+            printf("**ERROR** iic_read: Failed to read %u bytes from 0x%02x\n", len, addr);
+            G_IIC_STATUS |= 8;
+        }
+        return;
+    }
+
+    // repeated read via I2C_RDWR
+    struct i2c_rdwr_ioctl_data msgset;
+    struct i2c_msg msgs[2];
+
+    msgs[0].addr  = addr;
+    msgs[0].flags = 0;          // write
+    msgs[0].len   = 1;
+    msgs[0].buf   = &reg;
+
+    msgs[1].addr  = addr;
+    msgs[1].flags = I2C_M_RD;   // read
+    msgs[1].len   = len;
+    msgs[1].buf   = data;
+
+    msgset.msgs  = msgs;
+    msgset.nmsgs = 2;
+
+    if (ioctl(G_IIC_FH, I2C_RDWR, &msgset) < 0) {
+        printf("**ERROR** iic_read: repeated read failed from 0x%02x reg 0x%02x\n", addr, reg);
+        G_IIC_STATUS |= 8;
+    }
+
+#if I2C_DEBUG
+    printf("iic_read: addr 0x%02x reg 0x%02x data:", addr, reg);
+    for (hw_u32_t i = 0; i < len; i++) printf(" 0x%02x", data[i]);
+    printf("\n");
+#endif
+}
+
 
 
 //

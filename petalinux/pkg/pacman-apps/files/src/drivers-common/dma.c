@@ -534,8 +534,13 @@ void dma_init_bd_ring (hw_addr_t bd_addr, unsigned nring, hw_val_t buf_size, hw_
   for (int i = 0; i < nring; i++) {
     int inxt = (i+1) % nring;
     hw_addr_t bda = bd_addr + i * DMA_BD_BYTES;
+
     hw_addr_t nxa = bd_addr + inxt * DMA_BD_BYTES;
     hw_addr_t bfa = buf_addr + i * aligned_size;
+
+    dma_safe_buffer(bfa, buf_size);
+
+
     printf("INFO:  buffer descriptor %3d:  addr: 0x%08X nxt: 0x%08X buf: 0x%08X len:  0x%08X \r\n", i, bda, nxa, bfa, buf_size);
     dma_init_bd(bda, nxa, bfa, buf_size, bd_flags, bd_status);
   }

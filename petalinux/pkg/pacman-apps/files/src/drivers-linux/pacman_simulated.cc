@@ -131,7 +131,7 @@ int pacman_poll_tx(){
   uint32_t src[TX_BUFFER_BYTES/4];
   int count = 0;
   uint8_t pacman_id = get_pacman_id();
-
+  printf("DEBUG:  Checking TX buffer...\n");
   while (tx_buffer_out(src)){
     //printf("DEBUG:  Filling loopback buffer...\n");
     for (int i=0; i<TX_BUFFER_CHAN; i++){
@@ -141,7 +141,7 @@ int pacman_poll_tx(){
 	  while (! msg_done){ usleep(100); }
 	  msg_done = false;
 	}
-	//printf("DEBUG:  count: %d chan: %3d tx_data: 0x%08x %08x\n", count, i, src[4+2*i+1], src[4+2*i+0]);
+	printf("DEBUG:  count: %d chan: %3d tx_data: 0x%08x%08x\n", count, i, src[2+2*i+1], src[2+2*i+0]);
 	buffer[6*count + 0]=0x0044+(pacman_id<<8)+((i+1)<<16);
 	buffer[6*count + 1]=0;
 	buffer[6*count + 2]=0x44d50000;  // DEC:  12340000 0000 0000

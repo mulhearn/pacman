@@ -13,7 +13,7 @@ void tx_buffer_init(int verbose=0);
 
 void tx_buffer_status();
 
-unsigned tx_buffer_in(unsigned char chan, uint32_t * tx_data);
+unsigned tx_buffer_in(unsigned char chan, uint32_t tx_data_hi, uint32_t tx_data_lo);
 
 unsigned tx_buffer_out(uint32_t * dst);
 

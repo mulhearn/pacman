@@ -94,8 +94,9 @@ int main(int argc, char* argv[]) {
         }
 
         for (unsigned i = 0; i < nwords; i++) {
-            uint64_t payload = (static_cast<uint64_t>(rand()) << 32) | rand();
-            write_word_data(&msg_buf.words[i], 0, 64, ts, payload);
+	  uint32_t payload_hi = rand();
+	  uint32_t payload_lo = rand();
+	  write_word_data(&msg_buf.words[i], 0, 1, upper_32(ts), lower_32(ts), payload_hi, payload_lo);
         }
 
         if (verbose) {

@@ -80,7 +80,7 @@ bool check_msg(const pacman_msg_t* msg) {
 
 void print_header(const pacman_header_t* header, const char * prefix = "") {
   printf("version %d.%d n_bytes: %d ",header->version_major, header->version_minor, header->n_bytes);
-  printf("timestamp:  %" PRIu64 "\n", header->timestamp);
+  printf("timestamp:  0x%08x%08x \n", header->timestamp_hi, header->timestamp_lo);
 }
 
 void print_word(const pacman_word_t* word, const char * prefix = "") {
@@ -94,23 +94,23 @@ void print_word(const pacman_word_t* word, const char * prefix = "") {
     printf("type: read  pacman: %03d addr: 0x%04X value: 0x%08X", word->read.pacman, word->read.addr, word->read.value);
     break;
   case WORD_TYPE_WRITE:
-    printf("type: read  pacman: %03d addr: 0x%04X value: 0x%08X", word->write.pacman, word->write.addr, word->write.value);
+    printf("type: write  pacman: %03d addr: 0x%04X value: 0x%08X", word->write.pacman, word->write.addr, word->write.value);
     break;
   case WORD_TYPE_DATA:
     printf("type: data  pacman: %03d chan: %5d payload:  0x%08x%08x timestamp: 0x%08x%08x", word->data.pacman,  word->data.chan,
-	   upper_32(word->data.payload), lower_32(word->data.payload), upper_32(word->data.timestamp), lower_32(word->data.timestamp));
+	   word->data.payload_hi, word->data.payload_lo, word->data.timestamp_hi, word->data.timestamp_lo);
     break;
   case WORD_TYPE_SYNC:
-    printf("type: sync  pacman %03d type: %c src: %d timestamp: 0x%08x%08x status: 0x%08x", word->sync.pacman, word->sync.sync_type,
-	   word->sync.clk_src, upper_32(word->data.timestamp), lower_32(word->data.timestamp), word->sync.status);
+    printf("type: sync  pacman %03d type: %u src: %d timestamp: 0x%08x%08x status: 0x%08x", word->sync.pacman, word->sync.sync_type,
+	   word->sync.clk_src, word->sync.timestamp_hi, word->sync.timestamp_lo, word->sync.status);
     break;
   case WORD_TYPE_TRIG:
     printf("type: trig  pacman %03d type: %d src: %d timestamp: 0x%08x%08x", word->trig.pacman, word->trig.trig_type, word->trig.trig_src,
-	    upper_32(word->data.timestamp), lower_32(word->data.timestamp));
+	    word->trig.timestamp_hi, word->trig.timestamp_lo);
     break;
   case WORD_TYPE_ERR:
     printf("type: err   pacman %03d timestamp: 0x%08x%08x error_code: 0x%08x", word->err.pacman,
-	   upper_32(word->data.timestamp), lower_32(word->data.timestamp), word->err.error_code);
+	   word->err.timestamp_hi, word->err.timestamp_lo, word->err.error_code);
     break;
   default:
     printf("unknown ");
@@ -125,13 +125,10 @@ void print_msg(const pacman_msg_t* msg, const char * prefix) {
 
   if (msg->header.msg_type == MSG_TYPE_STRING) {
     printf("%sstring payload (%u bytes): ", prefix, msg->header.n_bytes);
-    for (uint32_t i = 0; i < msg->header.n_bytes; ++i) {
-      putchar(msg->raw[i]);
-    }
+    fwrite(msg->raw, 1, msg->header.n_bytes, stdout);
     putchar('\n');
     return;
   }
-
 
   uint32_t n_words = msg->header.n_bytes / WORD_BYTES;
   for (uint32_t i = 0; i < n_words; ++i) {
