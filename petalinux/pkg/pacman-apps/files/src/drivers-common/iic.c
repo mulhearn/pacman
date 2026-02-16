@@ -84,7 +84,7 @@ hw_u32_t iic_vsense_dn(hw_u32_t addr_offset, hw_u32_t reg_offset) {
 
   // Read the output register
   iic_write(addr, reg, NULL, 0);
-  iic_read(addr, reg, buf, 2);
+  iic_read(addr, reg, buf, 2, false);
 
   uint32_t val = (buf[0] << 8) | buf[1];
   return val;
@@ -107,7 +107,7 @@ hw_u32_t iic_isense_dn(hw_u32_t addr_offset, hw_u32_t reg_offset) {
 
   // Read the output register
   iic_write(addr, reg, NULL, 0);
-  iic_read(addr, reg, buf, 2);
+  iic_read(addr, reg, buf, 2, false);
 
   uint32_t val = (buf[0] << 8) | buf[1];
   return val;
@@ -176,115 +176,6 @@ hw_u32_t iic_mon_probe_dn(){
   return dn;
 }
 
-
-
-
-
-hw_u32_t iic_mon_vdda(hw_u32_t chan) {
-    if (chan > 11) return 0; // Only 12 channels
-
-    const uint32_t full_scale = 9000; // 9 V full scale
-
-    hw_u8_t addr = ADDR_ADC_TILES + (chan / 2);
-    hw_u8_t reg  = PAC1944_REG_VOLT_BASE + PAC1944_OFFSET_VDDA + 2 * (chan % 2);
-    hw_u8_t buf[2];
-
-    // Configure single-shot mode
-    hw_u8_t cfg[2] = { PAC1944_SINGLE_SHOT_CFG, 0x00 };
-    iic_write(addr, 1, cfg, 2);
-
-    // Refresh twice
-    iic_write(addr, 0, NULL, 0);
-    usleep(5000);
-    iic_write(addr, 0, NULL, 0);
-    usleep(5000);
-
-    // Read the output register
-    iic_write(addr, reg, NULL, 0);
-    iic_read(addr, reg, buf, 2);
-
-    uint32_t val = (buf[0] << 8) | buf[1];
-    return full_scale * val / 0xFFFF;
-}
-
-hw_u32_t iic_mon_vddd(hw_u32_t chan) {
-    if (chan > 11) return 0; // Only 12 channels
-
-    const uint32_t full_scale = 9000; // 9 V full scale
-    hw_u8_t addr = ADDR_ADC_TILES + (chan / 2);
-    hw_u8_t reg  = PAC1944_REG_VOLT_BASE + PAC1944_OFFSET_VDDD + 2 * (chan % 2);
-    hw_u8_t buf[2];
-
-    // Configure single-shot mode
-    hw_u8_t cfg[2] = { PAC1944_SINGLE_SHOT_CFG, 0x00 };
-    iic_write(addr, 1, cfg, 2);
-
-    // Refresh twice
-    iic_write(addr, 0, NULL, 0);
-    usleep(5000);
-    iic_write(addr, 0, NULL, 0);
-    usleep(5000);
-
-    // Read the output register
-    iic_write(addr, reg, NULL, 0);
-    iic_read(addr, reg, buf, 2);
-
-    uint32_t val = (buf[0] << 8) | buf[1];
-    return full_scale * val / 0xFFFF;
-}
-
-hw_u32_t iic_mon_idda(hw_u32_t chan) {
-    if (chan > 11) return 0; // Only 12 channels
-
-    const uint32_t full_scale = FULLSCALE_TILE_MA;
-
-    hw_u8_t addr = ADDR_ADC_TILES + (chan / 2);
-    hw_u8_t reg  = PAC1944_REG_CURR_BASE + PAC1944_OFFSET_VDDA + 2 * (chan % 2);
-    hw_u8_t buf[2];
-
-    // Configure single-shot mode
-    hw_u8_t cfg[2] = { PAC1944_SINGLE_SHOT_CFG, 0x00 };
-    iic_write(addr, 1, cfg, 2);
-
-    // Refresh twice
-    iic_write(addr, 0, NULL, 0);
-    usleep(5000);
-    iic_write(addr, 0, NULL, 0);
-    usleep(5000);
-
-    // Read the output register
-    iic_write(addr, reg, NULL, 0);
-    iic_read(addr, reg, buf, 2);
-
-    uint32_t val = (buf[0] << 8) | buf[1];
-    return full_scale * val / 0xFFFF;
-}
-
-hw_u32_t iic_mon_iddd(hw_u32_t chan) {
-    if (chan > 11) return 0; // Only 12 channels
-
-    const uint32_t full_scale = FULLSCALE_TILE_MA; // 100 mV / 20 mR = 5 A full scale
-    hw_u8_t addr = ADDR_ADC_TILES + (chan / 2);
-    hw_u8_t reg  = PAC1944_REG_CURR_BASE + PAC1944_OFFSET_VDDD + 2 * (chan % 2);
-    hw_u8_t buf[2];
-
-    // Configure single-shot mode
-    hw_u8_t cfg[2] = { PAC1944_SINGLE_SHOT_CFG, 0x00 };
-    iic_write(addr, 1, cfg, 2);
-
-    // Refresh twice
-    iic_write(addr, 0, NULL, 0);
-    usleep(5000);
-    iic_write(addr, 0, NULL, 0);
-    usleep(5000);
-
-    // Read the output register
-    iic_write(addr, reg, NULL, 0);
-    iic_read(addr, reg, buf, 2);
-
-    uint32_t val = (buf[0] << 8) | buf[1];
-    return full_scale * val / 0xFFFF;
-}
 
 hw_u32_t get_mux_code(hw_u32_t val){
   const hw_u32_t switch_disabled = 0x10;

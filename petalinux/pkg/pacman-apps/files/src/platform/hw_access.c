@@ -164,7 +164,7 @@ hw_ptr_t dma_safe_buffer(hw_addr_t addr, hw_addr_t size){
 //
 
 #define I2C_DEV "/dev/i2c-0"
-#define I2C_DEBUG true
+#define I2C_DEBUG false
 
 static int G_IIC_FH = -1;
 static hw_u32_t G_IIC_STATUS = 0;
@@ -232,7 +232,7 @@ void iic_write(hw_u8_t addr, hw_u8_t reg, const hw_u8_t *data, hw_u32_t len) {
 }
 
 // Read a sequence of bytes from an I2C device
-void iic_read(hw_u8_t addr, hw_u8_t reg, hw_u8_t *data, hw_u32_t len) {
+void iic_read_prev(hw_u8_t addr, hw_u8_t reg, hw_u8_t *data, hw_u32_t len) {
     if (G_IIC_FH < 0) {
         printf("**ERROR** iic_read: I2C not initialized\n");
         G_IIC_STATUS |= 1;
@@ -264,8 +264,7 @@ void iic_read(hw_u8_t addr, hw_u8_t reg, hw_u8_t *data, hw_u32_t len) {
 
 }
 
-//not using this yet so as not to interfere with testing in progress...
-void iic_read_future_update(hw_u8_t addr, hw_u8_t reg, hw_u8_t *data, hw_u32_t len, bool use_repeated_read)
+void iic_read(hw_u8_t addr, hw_u8_t reg, hw_u8_t *data, hw_u32_t len, bool use_repeated_read)
 {
     if (G_IIC_FH < 0) {
         printf("**ERROR** iic_read: I2C not initialized\n");

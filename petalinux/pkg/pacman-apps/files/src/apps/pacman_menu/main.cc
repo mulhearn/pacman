@@ -147,10 +147,10 @@ void record_iv_curves(){
       iic_set_vdda(i, vset);
       iic_set_vddd(i, vset);
       usleep(10);
-      unsigned vdda = iic_mon_vdda(i);
-      unsigned vddd = iic_mon_vddd(i);
-      unsigned idda = iic_mon_idda(i);
-      unsigned iddd = iic_mon_iddd(i);
+      unsigned vdda = iic_mon_vdda_mv(i);
+      unsigned vddd = iic_mon_vddd_mv(i);
+      unsigned idda = iic_mon_idda_ma(i);
+      unsigned iddd = iic_mon_iddd_ma(i);
       printf("INFO:  vset: 0x%04x vdda: %7d idda: %7d vddd: %7d iddd: %7d\r\n", vset, vdda, idda, vddd, iddd);
       fprintf(file, "vset: 0x%04x vdda: %7d idda: %7d vddd: %7d iddd: %7d\r\n", vset, vdda, idda, vddd, iddd);
     }
