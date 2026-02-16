@@ -1,7 +1,6 @@
 #include <stdlib.h>
 
 #include "hw_access.h"
-//#include "global.h"
 #include "iic.h"
 #include "iic_menu.h"
 
@@ -14,12 +13,12 @@ void iic_toggle_power(){
 
   printf("INFO: setting VDDD to 0x%x \r\n", vddd[mode]);
   for (int i=0; i<10; i++){
-    iic_set_vddd(i, vddd[mode]);
+    iic_set_vddd_dn(i, vddd[mode]);
   }
 
   printf("INFO: setting VDDA to 0x%x \r\n", vdda[mode]);
   for (int i=0; i<10; i++){
-    iic_set_vdda(i, vdda[mode]);
+    iic_set_vdda_dn(i, vdda[mode]);
   }
 }
 

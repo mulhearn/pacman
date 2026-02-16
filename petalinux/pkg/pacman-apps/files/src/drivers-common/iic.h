@@ -13,9 +13,12 @@ extern "C" {
 // confirm that I2C is up and running using NO-OPs
 void check_iic();
 
+// set the PACMAN HW version to use for I2C
+void iic_set_hw_version(hw_val_t major, hw_val_t minor, hw_val_t patch);
+
 // set VDDA and VDDD of channel <chan> to value <val>
-void iic_set_vdda(hw_u32_t chan, hw_u32_t val);
-void iic_set_vddd(hw_u32_t chan, hw_u32_t val);
+void iic_set_vdda_dn(hw_u32_t chan, hw_u32_t val);
+void iic_set_vddd_dn(hw_u32_t chan, hw_u32_t val);
 
 // Get monitored value of VDDA and VDDD for TILE <chan>+1 in mV
 hw_u32_t iic_mon_vdda_mv(hw_u32_t chan);
@@ -36,8 +39,6 @@ hw_u32_t iic_mon_iboard_ma(hw_u32_t chan);
 // Get monitored value of votage drop across probe in raw counts:
 hw_u32_t iic_mon_probe_dn();
 
-void iic_set_muxa(hw_u32_t val);
-void iic_set_muxb(hw_u32_t val);
 
 #ifdef __cplusplus
 }

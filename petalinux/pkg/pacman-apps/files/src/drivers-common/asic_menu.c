@@ -66,14 +66,14 @@ void asic_toggle_power(){
 
   if (mode == 0) {
     printf("setting VDDA and VDDD to zero \r\n");
-    iic_set_vdda(0, 0x0);
-    iic_set_vddd(0, 0x0);
+    iic_set_vdda_dn(0, 0x0);
+    iic_set_vddd_dn(0, 0x0);
     axil_write_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_ENABLES, 0x0);
   } else {
     printf("setting VDDA and VDDD to nominal for ASIC \r\n");
-    iic_set_vdda(0, 0xE2FF);
-    //iic_set_vddd(0, 0x6DFF);
-    iic_set_vddd(0, 0x75FF);
+    iic_set_vdda_dn(0, 0xE2FF);
+    //iic_set_vddd_dn(0, 0x6DFF);
+    iic_set_vddd_dn(0, 0x75FF);
     axil_write_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_ENABLES, 0x00010001);
   }
 }
