@@ -140,6 +140,12 @@ void dma_platform_init_buffer(hw_addr_t baseaddr, hw_addr_t size);
 // get a pointer to the hardware address addr
 hw_ptr_t dma_ptr(hw_addr_t addr);
 
+// get a pointer to the hardware address addr (asserts pointer is within allocation)
+hw_ptr_t dma_ptr(hw_addr_t addr);
+
+//get a pointer to the hardware address addr (asserts buffer is within allocation)
+hw_ptr_t dma_safe_buffer(hw_addr_t addr, hw_addr_t size);
+
 //
 // I2C Interface:
 //

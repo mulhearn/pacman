@@ -353,7 +353,7 @@ void asic_menu(){
   printf("ASIC menu:  \r\n");
   while(1){
     printf("choose an option:\r\n");
-    printf("(x) Exit timing menu\r\n");
+    printf("(x) Exit ASIC menu\r\n");
     printf("(v) toggle ASIC version (u) toggle RX UART enables (p) toggle ASIC power\r\n");
     printf("(f) send full reset (i) send internal reset (c) config root chip \r\n");
     printf("(a) request all registers (h) hello ASIC (r) read RX \r\n");

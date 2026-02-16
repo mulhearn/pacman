@@ -19,6 +19,7 @@
 #include "asic.h"
 
 #include "asic_menu.h"
+#include "iic_menu.h"
 
 // *** LED ***
 
@@ -236,7 +237,7 @@ void adc_menu(){
 
 
 
-void iic_menu(){
+void iic_menu_old(){
   while(1){
     printf("I2C MENU:  choose an option:\r\n");
     printf("(0) main menu (1) check I2C (2) toggle MUX (3) read I2C status\r\n");

@@ -47,6 +47,10 @@ hw_ptr_t dma_ptr(hw_addr_t addr){
   return (hw_ptr_t) addr;
 }
 
+hw_ptr_t dma_safe_buffer(hw_addr_t addr, hw_addr_t size){
+  return (hw_ptr_t) addr;
+}
+
 //
 // I2C Interface:
 //
