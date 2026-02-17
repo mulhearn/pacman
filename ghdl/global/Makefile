@@ -1,7 +1,8 @@
 all: modules-a modules-e testbenches
 
 modules-a:
-	ghdl -a --warn-all ../integration/version.vhd
+	ghdl -a --warn-all ../hardware/hw1v5/hardware_version.vhd
+	ghdl -a --warn-all ../integration/firmware_version.vhd
 	ghdl -a --warn-all ../integration/common.vhd
 	ghdl -a --warn-all ../integration/register_map.vhd
 	ghdl -a --warn-all ../integration/gen/version_info_pkg.vhd

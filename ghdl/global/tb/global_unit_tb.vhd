@@ -117,6 +117,15 @@ begin
     raddr   <= x"FF18";
     rupdate <= '1';
     wait for 10 ns;
+    raddr   <= x"FF20";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"FF24";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"FF28";
+    rupdate <= '1';
+    wait for 10 ns;
     raddr   <= x"0000";
     rupdate <= '0';
     wait for 10 ns;
