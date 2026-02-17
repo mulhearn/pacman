@@ -33,8 +33,8 @@
 #define ADDR_MUX_P        0b1001100  // MAX14661 for TILES 1-10
 #define ADDR_MUX_N        0b1001101  // MAX14661 for TILES 1-10
 
-#define AD5677_BASE_REG   0x30
-#define AD5677_NUM_CHAN   16
+//#define AD5677_BASE_REG   0x30
+//#define AD5677_NUM_CHAN   16
 
 #define PAC1944_REG_VOLT_BASE   0x07  // Base register for voltage channels (VDDA/VDDD)
 #define PAC1944_REG_CURR_BASE   0x0B  // Base register for current channels (IDDA/IDDD)
@@ -44,15 +44,12 @@
 // CHAN 1: VDDD N
 // CHAN 2: VDDA N+1
 // CHAN 3: VDDD N+1
+
 #define PAC1944_OFFSET_VDDA     0
 #define PAC1944_OFFSET_VDDD     1
-#define PAC1944_NUM_CHAN        4
-#define PAC1944_SINGLE_SHOT_CFG 0x85
 
 #define FULLSCALE_VSENSE_MV          9000   // 9 V full scale for TILE voltage sense
 #define FULLSCALE_TILE_MA            5000   // 5 A full scale for TIle current sense (100 mV / 20 mR)
-//#define FULLSCALE_DIGITAL_POWER_MA   20000  // 20 A full scale for current sense (100 mV /  5 mR)
-//#define FULLSCALE_TILE_POWER_MA      50000  // 50 A full scale for current sense (100 mV /  2 mR)
 
 static hw_val_t get_mv(hw_val_t dn){
   return FULLSCALE_VSENSE_MV * dn / 0xFFFF;
@@ -62,16 +59,16 @@ static hw_val_t get_ma(hw_val_t dn){
   return FULLSCALE_TILE_MA * dn / 0xFFFF;
 }
 
-void iic_hw1v5_set_vdda_dn(hw_val_t chan, hw_val_t val) {
-  if (chan >= MAX_TILE) return; // Only 10 tile channels
+void iic_hw1v5_set_vdda_dn(hw_val_t itile, hw_val_t val) {
+  if (itile >= MAX_TILE) return; // Only 10 tile channels
 
-  ad5677_set_voltage(ADDR_DAC_VDDA, chan, val);
+  ad5677_set_voltage(ADDR_DAC_VDDA, itile, val);
 }
 
-void iic_hw1v5_set_vddd_dn(hw_val_t chan, hw_val_t val) {
-  if (chan >= MAX_TILE) return; // Only 10 tile channels
+void iic_hw1v5_set_vddd_dn(hw_val_t itile, hw_val_t val) {
+  if (itile >= MAX_TILE) return; // Only 10 tile channels
 
-  ad5677_set_voltage(ADDR_DAC_VDDD, chan, val);
+  ad5677_set_voltage(ADDR_DAC_VDDD, itile, val);
 }
 
 void iic_hw1v5_set_vplus_dn( hw_val_t val) {
@@ -82,54 +79,54 @@ void iic_hw1v5_set_vminus_dn( hw_val_t val) {
   ad5677_set_voltage(ADDR_DAC_VDDD, MAX_TILE, val);
 }
 
-hw_val_t iic_hw1v5_mon_vdda_mv(hw_val_t chan) {
-  if (chan >= MAX_TILE) return 0; // Only 10 tile channels
+hw_val_t iic_hw1v5_mon_vdda_mv(hw_val_t itile) {
+  if (itile >= MAX_TILE) return 0;
 
-  hw_u8_t addr = ADDR_ADC_TILES + (chan/2);
-  hw_u8_t reg  = PAC1944_REG_VOLT_BASE + 2*(chan%2)+PAC1944_OFFSET_VDDA;
-
-  return get_mv(pac1944_adc_dn(addr, reg));
-}
-
-hw_val_t iic_hw1v5_mon_vddd_mv(hw_val_t chan) {
-  if (chan >= MAX_TILE) return 0; // Only 10 tile channels
-
-  hw_u8_t addr = ADDR_ADC_TILES + (chan/2);
-  hw_u8_t reg  = PAC1944_REG_VOLT_BASE + 2*(chan%2)+PAC1944_OFFSET_VDDD;
+  hw_u8_t addr = ADDR_ADC_TILES + (itile/2);
+  hw_u8_t reg  = PAC1944_REG_VOLT_BASE + 2*(itile%2)+PAC1944_OFFSET_VDDA;
 
   return get_mv(pac1944_adc_dn(addr, reg));
 }
 
-hw_val_t iic_hw1v5_mon_idda_ma(hw_val_t chan) {
-  if (chan >= MAX_TILE) return 0; // Only 10 tile channels
+hw_val_t iic_hw1v5_mon_vddd_mv(hw_val_t itile) {
+  if (itile >= MAX_TILE) return 0;
 
-  hw_u8_t addr = ADDR_ADC_TILES + (chan/2);
-  hw_u8_t reg  = PAC1944_REG_CURR_BASE + 2*(chan%2)+PAC1944_OFFSET_VDDA;
+  hw_u8_t addr = ADDR_ADC_TILES + (itile/2);
+  hw_u8_t reg  = PAC1944_REG_VOLT_BASE + 2*(itile%2)+PAC1944_OFFSET_VDDD;
+
+  return get_mv(pac1944_adc_dn(addr, reg));
+}
+
+hw_val_t iic_hw1v5_mon_idda_ma(hw_val_t itile) {
+  if (itile >= MAX_TILE) return 0;
+
+  hw_u8_t addr = ADDR_ADC_TILES + (itile/2);
+  hw_u8_t reg  = PAC1944_REG_CURR_BASE + 2*(itile%2)+PAC1944_OFFSET_VDDA;
 
   return get_ma(pac1944_adc_dn(addr, reg));
 }
 
-hw_val_t iic_hw1v5_mon_iddd_ma(hw_val_t chan) {
-  if (chan >= MAX_TILE) return 0; // Only 10 tile channels
+hw_val_t iic_hw1v5_mon_iddd_ma(hw_val_t itile) {
+  if (itile >= MAX_TILE) return 0;
 
-  hw_u8_t addr = ADDR_ADC_TILES + (chan/2);
-  hw_u8_t reg  = PAC1944_REG_CURR_BASE + 2*(chan%2)+PAC1944_OFFSET_VDDD;
+  hw_u8_t addr = ADDR_ADC_TILES + (itile/2);
+  hw_u8_t reg  = PAC1944_REG_CURR_BASE + 2*(itile%2)+PAC1944_OFFSET_VDDD;
 
   return get_ma(pac1944_adc_dn(addr, reg));
 }
 
 hw_val_t iic_hw1v5_mon_vboard_mv(hw_val_t chan) {
-  if (chan >= 4) return 0; // 4 channels for board power monitoring
+  if (chan >= 4) return 0; // 4 channels for board power voltage monitoring
 
   hw_u8_t addr = ADDR_ADC_TILES + 5;
-  hw_u8_t reg  = PAC1944_REG_VOLT_BASE + chan;  
+  hw_u8_t reg  = PAC1944_REG_VOLT_BASE + chan;
   return get_mv(pac1944_adc_dn(addr, reg));
 }
 
 hw_val_t iic_hw1v5_mon_iboard_ma(hw_val_t chan) {
   hw_val_t iscale[] = {20/5,20/5, 50/5};
 
-  if (chan >= 3) return 0; // 3 channels for board power monitoring
+  if (chan >= 3) return 0; // 3 channels for board power current monitoring
 
   hw_u8_t addr = ADDR_ADC_TILES + 5;
   hw_u8_t reg  = PAC1944_REG_CURR_BASE + chan;
@@ -144,26 +141,25 @@ hw_val_t iic_hw1v5_mon_probe_dn() {
   return pac1944_adc_dn(addr, reg);
 }
 
-
-void iic_hw1v5_set_mux_front_panel(hw_val_t mode){
+void iic_hw1v5_set_mux_front_panel(hw_val_t itile){
   hw_u8_t code = 0x10; // switch disabled
 
-  if ((mode >= 1) && (mode <= 10))
-    code = mode - 1;               // select TILE
-  else if (mode == 11)
-    code = 0xb;                   // select DAC
+  if (itile < 10)
+    code = itile;        // select TILE
+  else if (itile == 10)
+    code = 0xb;          // select DAC
 
   max14661_set_coma(ADDR_MUX_N, code);
   max14661_set_coma(ADDR_MUX_P, code);
 }
 
-void iic_hw1v5_set_mux_adc(hw_val_t mode){
+void iic_hw1v5_set_mux_adc(hw_val_t itile){
   hw_u8_t code = 0x10; // switch disabled
 
-  if ((mode >= 1) && (mode <= 10))
-    code = mode - 1;               // select TILE
-  else if (mode == 11)
-    code = 0xb;                   // select DAC
+  if (itile < 10)
+    code = itile;        // select TILE
+  else if (itile == 10)
+    code = 0xb;          // select DAC
 
   max14661_set_comb(ADDR_MUX_N, code);
   max14661_set_comb(ADDR_MUX_P, code);

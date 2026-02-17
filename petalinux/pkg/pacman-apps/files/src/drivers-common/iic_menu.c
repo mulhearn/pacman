@@ -4,6 +4,24 @@
 #include "iic.h"
 #include "iic_menu.h"
 
+void iic_toggle_hardware_version(){
+  static int mode = 0;
+  mode = (mode + 1) % 4;
+
+  if (mode==0){
+    printf("INFO: setting I2C HW version to latest (PACMAN 1V5)\r\n");
+    iic_set_hw_version(1,5,0);
+  } else if (mode==1){
+    printf("INFO: setting I2C HW version to PACMAN 1V4 \r\n");
+    iic_set_hw_version(1,4,0);
+  } else if (mode==2){
+    printf("INFO: setting I2C HW version to PACMAN 1V3 \r\n");
+    iic_set_hw_version(1,3,0);
+  } else {
+    printf("INFO: setting I2C HW version to disabled \r\n");
+    iic_set_hw_version(0,0,0);
+  }
+}
 
 void iic_toggle_power(){
   unsigned vddd[] = {0x00, 0x2000, 0x4000, 0x8000, 0xFFFF};
@@ -55,15 +73,15 @@ void iic_menu(){
   printf("I2C menu:  \r\n");
   while(1){
     printf("choose an option:\r\n");
-    printf("(x) Exit I2C menu (c) check I2C (p) toggle power (m) monitor power \r\n");
+    printf("(x) Exit I2C menu (v) toggle I2C HW version (c) check I2C (p) toggle power (m) monitor power \r\n");
     char input = input_choice();
     printf("INFO: selected %c\r\n", input);
 
     switch(input){
     case 'x':
       return;
-    case 'c':
-      check_iic();
+    case 'v':
+      iic_toggle_hardware_version();
       break;
     case 'p':
       iic_toggle_power();
