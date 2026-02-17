@@ -9,8 +9,8 @@ git clone https://github.com/mulhearn/pacman.git
 git clone git@github.com:mulhearn/pacman.git
 cd pacman
 source /tools/Xilinx/Vivado/2023.2/settings64.sh
-# create the project from tcl
-vivado -mode batch -source vivado/tcl/create.tcl
+# create the project from tcl, note that you specify target PACMAN HW version here (and only here):
+vivado -mode batch -source vivado/tcl/create.tcl -tclargs hw1v5
 # run systhesis, implementation, and write bit stream:
 vivado -mode batch -source vivado/tcl/runsib.tcl
 
