@@ -5,11 +5,21 @@
 # Set the reference directory for source file relative paths (by default the value is script directory path)
 set origin_dir [file dirname [info script]]/..
 
+
+# Obtain required HW version (e.g. hw1v5)
+if {[llength $argv] != 1} {
+    puts "ERROR: the hardware version must be provided via -tclargs <HW version>"
+    exit 1
+}
+
+set hw_version [lindex $argv 0]
+puts "INFO:  creating PACMAN project for hardware version: $hw_version"
+
 # Set the project name
 set proj_name "pacman-fw"
 
 # Create project
-create_project $proj_name $origin_dir/$proj_name -part xc7z010clg400-1
+create_project $proj_name $origin_dir/$proj_name -part xc7z020clg484-1
 
 # Set the directory path for the new project
 set proj_dir [get_property directory [current_project]]
@@ -21,7 +31,6 @@ set_property -name "enable_vhdl_2008" -value "1" -objects $obj
 set_property -name "ip_cache_permissions" -value "read write" -objects $obj
 set_property -name "ip_output_repo" -value "$proj_dir/$proj_name.cache/ip" -objects $obj
 set_property -name "mem.enable_memory_map_generation" -value "1" -objects $obj
-set_property -name "part" -value "xc7z020clg484-1" -objects $obj
 set_property -name "sim.central_dir" -value "$proj_dir/${proj_name}.ip_user_files" -objects $obj
 set_property -name "sim.ip.auto_export_scripts" -value "1" -objects $obj
 set_property -name "simulator_language" -value "Mixed" -objects $obj
@@ -51,16 +60,12 @@ if { $obj != {} } {
 set obj [get_filesets sources_1]
 # add all vhd files in src/hdl to project:
 set files {}
-foreach file [glob src/hdl/*.vhd src/hdl/demos/*.vhd] {lappend files [file normalize $file]}
+foreach file [glob src/hdl/*.vhd src/hdl/$hw_version/*.vhd] {lappend files [file normalize $file]}
 puts "HDL files:  $files"
 add_files -norecurse -fileset sources_1 $files
 
 source $origin_dir/tcl/version_info.tcl
 add_files -fileset sources_1 gen/hdl/version_info_pkg.vhd
-
-#update_compile_order -fileset sources_1
-
-
 
 
 # Set 'sources_1' fileset properties
@@ -68,7 +73,7 @@ set obj [get_filesets sources_1]
 set_property -name "top" -value "zsys_wrapper" -objects $obj
 
 #Create block design
-source $origin_dir/src/bd/zsys.tcl
+source $origin_dir/src/bd/$hw_version/zsys.tcl
 
 # Generate the wrapper
 set design_name [get_bd_designs]
@@ -80,19 +85,16 @@ if {[string equal [get_filesets -quiet constrs_1] ""]} {
 }
 set obj [get_filesets constrs_1]
 set files {}
-foreach file [glob src/constraints/*.xdc] {lappend files [file normalize $file]}
-puts "HDL files:  $files"
-add_files -norecurse -fileset sources_1 $files
+foreach file [glob src/constraints/*.xdc src/constraints/$hw_version/*.xdc] {lappend files [file normalize $file]}
 puts "Constraint files:  $files"
 add_files -norecurse -fileset $obj $files
 
 set file_obj [get_files -of_objects [get_filesets constrs_1]]
 set_property -name "file_type" -value "XDC" -objects $file_obj
 
-set obj [get_filesets constrs_1]
-set_property -name "target_part" -value "xc7z020clg484-1" -objects $obj
-
 # Create 'sim_1' fileset (if not found)
 if {[string equal [get_filesets -quiet sim_1] ""]} {
   create_fileset -simset sim_1
 }
+
+#update_compile_order -fileset sources_1
