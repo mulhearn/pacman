@@ -1,6 +1,8 @@
 #ifndef __RXTX_H_
 #define __RXTX_H_
 
+#include<stdbool.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -95,6 +97,7 @@ void init_rx_descriptor_ring_mode(int ring_size);
 
 void rx_disable_uart(unsigned chan);
 void rx_enable_uart(unsigned chan);
+bool rx_uart_is_enabled(unsigned chan);
 
 // menu hooks:
 void read_tx_status(void);

@@ -218,6 +218,18 @@ void rx_enable_uart(unsigned chan){
   }
 }
 
+bool rx_uart_is_enabled(unsigned chan){
+  if (chan < 40){
+    hw_u32_t cfg = axil_read_register(SCOPE_RX+(chan<<8)+C_ADDR_RX_UART_CONFIG);
+    if ((cfg&0x00020000) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+
+
 void toggle_rx_config(void){
   static int mode = 0;
   mode = (mode + 1) % 4;

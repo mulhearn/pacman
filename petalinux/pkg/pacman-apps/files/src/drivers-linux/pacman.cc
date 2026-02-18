@@ -92,17 +92,17 @@ int pacman_init(int verbose){
 
   //destination configurations:
   // 0x0MMMDDDO M=tile enables, D=duration O=output enables (1 = G, 2 = H, 4 = T)
-  //LEMO A destination configuration:  This is a SYNC pulse, H+T, duration 2
-  G_PACMAN_AXIL[0xE110>>2] = 0x03FF0026;
-  //LEMO B destination configuration:  This is also a SYNC pulse, H+T, duration 2
-  G_PACMAN_AXIL[0xE114>>2] = 0x03FF0026;
-  //POKE C destination configuration:  This is an INTERNAL_RESET pulse, G+T, duration 8
-  G_PACMAN_AXIL[0xE118>>2] = 0x03FF0085;
-  //POKE C destination configuration:  This is a FULL_RESET pulse, G+T, duration 1023
-  //G_PACMAN_AXIL[0xE118>>2] = 0x03FF3FF5;
+  //LEMO A destination configuration:  This is a SYNC pulse, H+T, duration 5
+  G_PACMAN_AXIL[0xE110>>2] = 0x03FF0056;
+  //LEMO B destination configuration:  This is a SYNC pulse, H+T, duration 5
+  G_PACMAN_AXIL[0xE114>>2] = 0x03FF0056;
+  //POKE C destination configuration:  This is an INTERNAL_RESET pulse, G, duration 24
+  G_PACMAN_AXIL[0xE118>>2] = 0x03FF0181;
+  //POKE C destination configuration:  This is a FULL_RESET pulse, G, duration 1024
+  //G_PACMAN_AXIL[0xE118>>2] 0x03FF4001;
 
   //POKE D destination configuration:  This is a SYNC pulse, H+T, duration 2
-  G_PACMAN_AXIL[0xE11C>>2] = 0x03FF1001;
+  G_PACMAN_AXIL[0xE11C>>2] = 0x03FF0056;
 
   //Request ATC configuration update:
   G_PACMAN_AXIL[0xE100>>2] = 0x0;
