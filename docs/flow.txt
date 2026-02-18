@@ -1,7 +1,6 @@
-# Basic work flows for pacman project:
+# Basic work flows for pacman project
 
-# prevent accidentally sourcing the commands in this file:
-return
+exit 0 # (in case of accidentally sourcing of this file)
 
 # building from repo:
 git clone https://github.com/mulhearn/pacman.git
@@ -9,8 +8,10 @@ git clone https://github.com/mulhearn/pacman.git
 git clone git@github.com:mulhearn/pacman.git
 cd pacman
 source /tools/Xilinx/Vivado/2023.2/settings64.sh
+
 # create the project from tcl, note that you specify target PACMAN HW version here (and only here):
 vivado -mode batch -source vivado/tcl/create.tcl -tclargs hw1v5
+
 # run systhesis, implementation, and write bit stream:
 vivado -mode batch -source vivado/tcl/runsib.tcl
 
@@ -27,7 +28,6 @@ xsct run.tcl
 xsct apps/demo/install.tcl
 cd demo
 xsct run.tcl
-
 
 # USAGE NOTE:
 # With some versions of VIVADO, xsct tool under linux hangs occassionally at:
@@ -70,6 +70,56 @@ tar -czf ../hwutil-latest.tar.gz ./
 cd ..
 rm -fr tmp
 
+# Booting without an SD card (e.g. for PACMAN 1V4 without SD card support)
+
+U-boot should find image.ub on the onboard MMC just fine as is.  You'll only need to customize the linux kernel (image.ub) by changing
+CONFIG_SUBSYSTEM_SDROOT_DEV="/dev/mmcblk0p2"
+to:
+CONFIG_SUBSYSTEM_SDROOT_DEV="/dev/mmcblk1p2"
+in project-spec/config/config.
+Then return the petalinux flow starting at config step (which will update the BOOTARGs automatically).
+
+Then *both* image.ub and boot.scr go on BOOT partition (/dev/mmcblk1p1)
+And rootfs.tar.gz on the rootfs partition (/dev/mmcblk1p2)
+See next step for how to write QSPI.
+
+# Writing QSPI from Linux (of any zipline firmware package):
+
+root@Trenz:~# cat /proc/mtd
+dev:    size   erasesize  name
+mtd0: 00500000 00010000 "qspi-boot"
+mtd1: 01400000 00010000 "qspi-kernel"
+mtd2: 00020000 00010000 "qspi-bootenv"
+mtd3: 00040000 00010000 "bootscr"
+
+root@Trenz:~# flash_erase /dev/mtd0 0 0
+Erasing 5120 Kibyte @ 0 -- 100 % complete
+root@Trenz:~# dd if=BOOT.BIN of=/dev/mtd0 bs=1M
+3+1 records in
+3+1 records out
+3667980 bytes (3.7 MB, 3.5 MiB) copied, 6.27029 s, 585 kB/s
+root@Trenz:~#
+
+root@Trenz:~# flash_erase /dev/mtd3 0 0
+Erasing 256 Kibyte @ 0 -- 100 % complete
+root@Trenz:~# dd if=boot.scr of=/dev/mtd3 bs=1M
+0+1 records in
+0+1 records out
+3473 bytes (3.5 kB, 3.4 KiB) copied, 0.00778804 s, 446 kB/s
+
+
+# Using devmem
+
+You can read HW registers directly via devmen if you know the correct
+offset.  Here is an example reading the firmware version:
+
+root@Trenz:~# /sbin/devmem 0x4000FF10
+0x00000003
+root@Trenz:~# /sbin/devmem 0x4000FF14
+0x00000004
+root@Trenz:~# /sbin/devmem 0x4000FF18
+0x00000000
+
 #
 # Other Flows (Not Checked Recently...)
 #
@@ -81,28 +131,3 @@ xsct apps/flash/install.tcl
 cd flash
 source program.sh
 # switch to QSPI boot mode (boots hello world)
-
-
-# Read out the AXI-Lite secondary address (read only registers) via devmen:
-
-# NOTE:  starting address was noted by reading the address editor in Vivado for the block diagram.
-
-root@Trenz:~# /sbin/devmem 0x40000000
-0x00000000
-root@Trenz:~# /sbin/devmem 0x40000004
-0x00000000
-root@Trenz:~# /sbin/devmem 0x40000008
-0x11111111
-root@Trenz:~# /sbin/devmem 0x4000000C
-0x22222222
-root@Trenz:~# /sbin/devmem 0x40000000 32 0xABCDFFFF
-root@Trenz:~# /sbin/devmem 0x40000004 32 0x77777777
-root@Trenz:~# /sbin/devmem 0x40000000
-0xABCDFFFF
-root@Trenz:~# /sbin/devmem 0x40000004
-0x77777777
-
-Alignment trap: devmem (681) PC=0x004911b4 Instr=0x59eb Address=0xb6f71015 FSR 0x011
-0xFFFFFFFF
-
-
