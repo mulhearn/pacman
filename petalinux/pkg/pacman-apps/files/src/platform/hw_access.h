@@ -30,10 +30,10 @@ extern "C" {
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 // For baremetal, we depart from standard library for printf and sleep.
 #ifdef _LINUX
-  #include <stdio.h>
   #include <unistd.h>
 #else
   #include "xil_printf.h"
@@ -83,9 +83,9 @@ HW_STATIC_ASSERT(sizeof(hw_u32_t) == 4,  "unexpected hw_u32_t size");
 #endif
 
 // printf mapping
-#ifndef _LINUX
-  #define printf xil_printf
-#endif
+//#ifndef _LINUX
+//  #define printf xil_printf
+//#endif
 
 #define HW_SUCCESS 0
 
