@@ -20,29 +20,34 @@ file copy -force apps/demos/src/demo.c demo/demo/src/demo.c
 
 # Copy the include and src files used by the main application:
 
-file copy apps/demos/src/hw_access.h  demo/demo/src/
-file copy apps/demos/src/iic.h        demo/demo/src/
-file copy apps/demos/src/led.h        demo/demo/src/
-file copy apps/demos/src/global.h     demo/demo/src/
-file copy apps/demos/src/dma.h        demo/demo/src/
-file copy apps/demos/src/rxtx.h       demo/demo/src/
-file copy apps/demos/src/atc.h        demo/demo/src/
-file copy apps/demos/src/adc.h        demo/demo/src/
-file copy apps/demos/src/asic.h       demo/demo/src/
-file copy apps/demos/src/iic_menu.h   demo/demo/src/
-file copy apps/demos/src/asic_menu.h  demo/demo/src/
+file copy apps/demos/src/hw_access.h    demo/demo/src/
+file copy apps/demos/src/iic_devices.h  demo/demo/src/
+file copy apps/demos/src/iic.h          demo/demo/src/
+file copy apps/demos/src/led.h          demo/demo/src/
+file copy apps/demos/src/global.h       demo/demo/src/
+file copy apps/demos/src/dma.h          demo/demo/src/
+file copy apps/demos/src/rxtx.h         demo/demo/src/
+file copy apps/demos/src/atc.h          demo/demo/src/
+file copy apps/demos/src/adc.h          demo/demo/src/
+file copy apps/demos/src/asic.h         demo/demo/src/
+file copy apps/demos/src/iic_menu.h     demo/demo/src/
+file copy apps/demos/src/asic_menu.h    demo/demo/src/
 
-file copy apps/demos/src/hw_access.c  demo/demo/src/
-file copy apps/demos/src/iic.c        demo/demo/src/
-file copy apps/demos/src/led.c        demo/demo/src/
-file copy apps/demos/src/global.c     demo/demo/src/
-file copy apps/demos/src/dma.c        demo/demo/src/
-file copy apps/demos/src/rxtx.c       demo/demo/src/
-file copy apps/demos/src/atc.c        demo/demo/src/
-file copy apps/demos/src/adc.c        demo/demo/src/
-file copy apps/demos/src/asic.c       demo/demo/src/
-file copy apps/demos/src/iic_menu.c   demo/demo/src/
-file copy apps/demos/src/asic_menu.c  demo/demo/src/
+file copy apps/demos/src/hw_access.c    demo/demo/src/
+file copy apps/demos/src/iic_devices.c  demo/demo/src/
+file copy apps/demos/src/iic_hw1v4.c    demo/demo/src/
+file copy apps/demos/src/iic_hw1v5.c    demo/demo/src/
+file copy apps/demos/src/iic.c          demo/demo/src/
+file copy apps/demos/src/led.c          demo/demo/src/
+file copy apps/demos/src/global.c       demo/demo/src/
+file copy apps/demos/src/dma.c          demo/demo/src/
+file copy apps/demos/src/rxtx.c         demo/demo/src/
+file copy apps/demos/src/atc.c          demo/demo/src/
+file copy apps/demos/src/adc.c          demo/demo/src/
+file copy apps/demos/src/asic.c         demo/demo/src/
+file copy apps/demos/src/iic_menu.c     demo/demo/src/
+file copy apps/demos/src/asic_menu.c    demo/demo/src/
+
 
 # Run the application:
 cd demo
@@ -52,4 +57,3 @@ app build demo
 #source run.tcl
 
 #cd ..
-
