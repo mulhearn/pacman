@@ -77,18 +77,18 @@ int pacman_vspace_write(uint32_t addr, uint32_t value){
     // RX enables for UARTS 1-32
     for (uint32_t i = 0; i < 32; ++i) {
       if (value & (1u << i))
-	rx_enable_uart(i);
-      else
 	rx_disable_uart(i);
+      else
+	rx_enable_uart(i);
     }
     return EXIT_SUCCESS;
   case 0x2020:
     // RX enables for UARTS 33-40
     for (uint32_t i = 0; i < 8; ++i) {
       if (value & (1u << i))
-	rx_enable_uart(32+i);
-      else
 	rx_disable_uart(32+i);
+      else
+	rx_enable_uart(32+i);
     }
     return EXIT_SUCCESS;
   }
@@ -126,7 +126,7 @@ uint32_t pacman_vspace_read(uint32_t addr, int * status){
   }
 
   tmp = 0;
-  switch(addr){
+  switch(off){
   case 0x0000:
     tmp = pacman_read(0xFF10, status);
     tmp = (tmp << 16);
@@ -145,14 +145,14 @@ uint32_t pacman_vspace_read(uint32_t addr, int * status){
       if (rx_uart_is_enabled(i))
 	tmp |= (1u << i);
     }
-    return tmp;
+    return ~tmp;
   case 0x2020:
     tmp = 0;
     for (uint32_t i = 0; i < 8; ++i) {
       if (rx_uart_is_enabled(32+i))
 	tmp |= (1u << i);
     }
-    return tmp;
+    return ~tmp;
   }
   // return 0 for registers not explicitly handled.
   return 0;
