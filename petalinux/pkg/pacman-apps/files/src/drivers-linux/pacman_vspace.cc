@@ -15,20 +15,22 @@ int pacman_vspace_write(uint32_t addr, uint32_t value){
   unsigned tmp, off;
   printf("DEBUG: vspace_write: addr 0x%x value 0x%x \r\n", addr, value);
 
+
+  if (addr < PACMAN_VSPACE_REG_START){
+    // non-virtual address:
+    printf("DEBUG: vspace_write: non-virtual reg write at offset 0x%x value 0x%x \r\n", addr, value);
+    return pacman_write(addr, value);
+  }
+  
   if (addr >= PACMAN_VSPACE_I2C_START) {
     off = addr - PACMAN_VSPACE_I2C_START;
     printf("DEBUG: vspace_write: virtual I2C write at offset 0x%x value 0x%x \r\n", off, value);
     return i2c_write(off, value);
   }
 
-  // for debugging legacy DAQ with new driver, we are treating all non-I2C registers as vitual:
-  if (addr >= PACMAN_VSPACE_REG_START){
-    off = addr - PACMAN_VSPACE_REG_START;
-    printf("DEBUG: vspace_write: virtual reg write at offset 0x%x value 0x%x \r\n", off, value);
-  } else {
-    off = addr;
-    printf("DEBUG: vspace_write: treating HW reg as virtual reg write at offset 0x%x value 0x%x \r\n", off, value);
-  }
+  // we are in the virtual register space:
+  off = addr - PACMAN_VSPACE_REG_START;
+  printf("DEBUG: vspace_write: virtual reg write at offset 0x%x value 0x%x \r\n", off, value);
 
   // ALL CHANNELS ARE ZERO REFERENCED.
   
@@ -49,13 +51,13 @@ int pacman_vspace_write(uint32_t addr, uint32_t value){
   // 0x00100304:  READ_RX_ENABLES_UPPER    (RO)
   
   // 0x00100310:  DISABLE_SINGLE_UART_RX  <UART>   (WO)
-  // 0x00100314:  ENABLE_SINGLE_UART_RX   <UART>   (WO)
+  // 0x00100314:  ENABLE_SINGLE_UART_RX   <UART>   (WO)  (UNTESTED)
   
   // 0x001003F0:  DISABLE_ALL_UART_RX     DC/0     (WO)
   // 0x001003F4:  ENABLE_ALL_UART_RX      DC/0     (WO)
 
-  // 0x00100400:  SEND_FULL_RESET      <MASK>
-  // 0x00100404:  SEND_INTERNAL_RESET  <MASK>   
+  // 0x00100410:  SEND_FULL_RESET      <MASK>
+  // 0x00100420:  SEND_INTERNAL_RESET  <MASK>   
   
   switch(off){
 
@@ -118,6 +120,14 @@ int pacman_vspace_write(uint32_t addr, uint32_t value){
       rx_enable_uart(i);
     }
     return EXIT_SUCCESS;
+  case 0x0410: 
+    // this is a request to send a internal reset to tiles in mask:
+    // poke C is configured for internal reset 
+    return pacman_write(0xE0C0, value);
+  case 0x0420:
+    // this is a request to send a full reset to tiles in mask:
+    // poke D is configured for full reset 
+    return pacman_write(0xE0D0, value);
     
   //Legacy interface:
   case 0x0010: // 0x00XX
@@ -167,10 +177,6 @@ int pacman_vspace_write(uint32_t addr, uint32_t value){
   // silently ignore anything not explicitly handled:
   return EXIT_SUCCESS;
 
-  // non-virtual address:
-  //printf("DEBUG: vspace_write: non-virtual reg write at offset 0x%x value 0x%x \r\n", addr, value);
-  //return pacman_write(addr, value);
-
 }
 
 uint32_t pacman_vspace_read(uint32_t addr, int * status){
@@ -181,55 +187,23 @@ uint32_t pacman_vspace_read(uint32_t addr, int * status){
 
   printf("DEBUG: vspace_read addr 0x%x\r\n",addr);
 
+  if (addr < PACMAN_VSPACE_REG_START){
+    // non-virtual address:
+    printf("DEBUG: vspace_read: non-virtual reg read at address 0x%x \r\n", addr);
+    return pacman_read(addr, status);
+  }
+  
   if (addr >= PACMAN_VSPACE_I2C_START) {
     off = addr - PACMAN_VSPACE_I2C_START;
     printf("DEBUG: vspace_read:  I2C read at offset 0x%x\r\n", off);
     return i2c_read(off);
   }
 
-  // for debugging legacy DAQ with new driver, we are treating all non-I2C registers as vitual:
-  if (addr >= PACMAN_VSPACE_REG_START){
-    off = addr - PACMAN_VSPACE_REG_START;
-    printf("DEBUG: vspace_read: virtual reg read at offset 0x%x \r\n", off);
-  } else {
-    off = addr;
-    printf("DEBUG: vspace_read: treating HW reg as virtual reg read at offset 0x%x \r\n", off);
-  }
+  // we are in the virtual address space:
+  off = addr - PACMAN_VSPACE_REG_START;
+  printf("DEBUG: vspace_read: virtual reg read at offset 0x%x \r\n", off);
 
-  tmp = 0;
-  switch(off){
-  case 0x0000:
-    tmp = pacman_read(0xFF10, status);
-    tmp = (tmp << 16);
-    tmp |= ((pacman_read(0xFF14, status)) & 0xFFFF);
-    return tmp;
-  case 0x0010:
-    tmp = pacman_read(0xF010, status);
-    tmp &= 0x000003FF;
-    return tmp;
-  case 0x0014:
-    tmp = pacman_read(0xF010);
-    return ((tmp & 0x00010000) != 0);
-  case 0x201C:
-    tmp = 0;
-    for (uint32_t i = 0; i < 32; ++i) {
-      if (rx_uart_is_enabled(i))
-	tmp |= (1u << i);
-    }
-    return ~tmp;
-  case 0x2020:
-    tmp = 0;
-    for (uint32_t i = 0; i < 8; ++i) {
-      if (rx_uart_is_enabled(32+i))
-	tmp |= (1u << i);
-    }
-    return ~tmp;
-  }
-  // return 0 for registers not explicitly handled.
+  // read virtual registers not yet supported.  Use pacman_menu interface to check registers.
   return 0;
-
-  // non-virtual address:
-  //printf("DEBUG: vspace_read: non-virtual reg read at address 0x%x \r\n", addr);
-  //return pacman_read(addr, status);
 
 }

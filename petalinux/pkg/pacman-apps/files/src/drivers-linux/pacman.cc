@@ -79,13 +79,6 @@ int pacman_init(int verbose){
   // G_PACMAN_AXIL[0x3B04>>2] = 0x05281602;
   G_PACMAN_AXIL[0x3B04>>2] = 0x07BC1601;
 
-  if (verbose){
-    printf("INFO:  Setting both G and H output to active low \n");
-    printf("INFO:  POKE_C -> G+T (1 clock cycle) \n");
-    printf("INFO:  POKE_D -> G   (256 clock cycle) \n");
-    printf("INFO:  LEMO_A -> H+T (1 clock cycle) \n");
-    printf("INFO:  LEMO_B -> H+T (1 clock cycle) \n");
-  }
   //polarity configuration: 0xE108
   // 0x0HHHGGGI H=H output mask(10 bits) G=G output mask (10 bits) I = input mask (2 bits)
   G_PACMAN_AXIL[0xE108>>2] = 0x03FF3FF0;
@@ -96,13 +89,14 @@ int pacman_init(int verbose){
   G_PACMAN_AXIL[0xE110>>2] = 0x03FF0056;
   //LEMO B destination configuration:  This is a SYNC pulse, H+T, duration 5
   G_PACMAN_AXIL[0xE114>>2] = 0x03FF0056;
+  
   //POKE C destination configuration:  This is an INTERNAL_RESET pulse, G, duration 24
   G_PACMAN_AXIL[0xE118>>2] = 0x03FF0181;
-  //POKE C destination configuration:  This is a FULL_RESET pulse, G, duration 1024
-  //G_PACMAN_AXIL[0xE118>>2] 0x03FF4001;
+  //POKE D destination configuration:  This is a FULL_RESET pulse, G, duration 1024
+  G_PACMAN_AXIL[0xE11C>>2] = 0x03FF4001;
 
   //POKE D destination configuration:  This is a SYNC pulse, H+T, duration 2
-  G_PACMAN_AXIL[0xE11C>>2] = 0x03FF0056;
+  //G_PACMAN_AXIL[0xE11C>>2] = 0x03FF0056;
 
   //Request ATC configuration update:
   G_PACMAN_AXIL[0xE100>>2] = 0x0;
