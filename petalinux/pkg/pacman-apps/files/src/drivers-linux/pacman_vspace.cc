@@ -30,7 +30,96 @@ int pacman_vspace_write(uint32_t addr, uint32_t value){
     printf("DEBUG: vspace_write: treating HW reg as virtual reg write at offset 0x%x value 0x%x \r\n", off, value);
   }
 
+  // ALL CHANNELS ARE ZERO REFERENCED.
+  
+  // 0x00100100:  READ_GLOBAL_TILE_POWER      (RO)
+
+  // 0x00100110:  DISABLE_GLOBAL_TILE_POWER    (WO)
+  // 0x00100114:  ENABLE_GLOBAL_TILE_POWER   (WO)
+
+  // 0x00100200:  READ_TILE_ENABLES           (RO)
+  
+  // 0x00100210:  DISABLE_SINGLE_TILE   <TILE> (WO)
+  // 0x00100214:  ENABLE_SINGLE_TILE  <TILE> (WO)
+  
+  // 0x001002F0:  DISABLE_ALL_TILE     DC/0     (WO)
+  // 0x001002F4:  ENABLE_ALL_TILE     DC/0     (WO)
+
+  // 0x00100300:  READ_RX_ENABLES_LOWER    (RO)  
+  // 0x00100304:  READ_RX_ENABLES_UPPER    (RO)
+  
+  // 0x00100310:  DISABLE_SINGLE_UART_RX  <UART>   (WO)
+  // 0x00100314:  ENABLE_SINGLE_UART_RX   <UART>   (WO)
+  
+  // 0x001003F0:  DISABLE_ALL_UART_RX     DC/0     (WO)
+  // 0x001003F4:  ENABLE_ALL_UART_RX      DC/0     (WO)
+
+  // 0x00100400:  SEND_FULL_RESET      <MASK>
+  // 0x00100404:  SEND_INTERNAL_RESET  <MASK>   
+  
   switch(off){
+
+  case 0x0110:
+    // DISABLE_GLOBAL_TILE_POWER
+    tmp  = pacman_read(0xF010);
+    tmp &= ~0x00010000;
+    return pacman_write(0xF010, tmp);
+  case 0x0114:
+    // ENABLE_GLOBAL_TILE_POWER
+    tmp = pacman_read(0xF010);
+    tmp |= 0x00010000;
+    return pacman_write(0xF010, tmp);
+
+  case 0x0210:
+    // DISABLE_SINGLE_TILE
+    if (value >= 10)
+      return EXIT_SUCCESS;
+    tmp = pacman_read(0xF010);
+    tmp &= ~(1<<value);
+    return pacman_write(0xF010, tmp);
+  case 0x0214:
+    // ENABLE_SINGLE_TILE
+    if (value >= 10)
+      return EXIT_SUCCESS;
+    tmp = pacman_read(0xF010);
+    tmp |= (1<<value);
+    return pacman_write(0xF010, tmp);
+  case 0x02F0:
+    // DISABLE_ALL_TILE
+    tmp = pacman_read(0xF010);
+    tmp &= ~0x3FF;
+    return pacman_write(0xF010, tmp);
+  case 0x02F4:
+    // ENABLE_ALL_TILE
+    tmp = pacman_read(0xF010);
+    tmp |= 0x3FF;
+    return pacman_write(0xF010, tmp);
+  case 0x0310:
+    // Disable single UART channel
+    if (value >= 40)
+      return EXIT_SUCCESS;
+    rx_disable_uart(value);
+    return EXIT_SUCCESS;
+  case 0x0314:
+    // Enable single UART channels
+    if (value >= 40)
+      return EXIT_SUCCESS;
+    rx_enable_uart(value);
+    return EXIT_SUCCESS;
+  case 0x03F0:
+    // Disable all UART channels
+    for (uint32_t i = 0; i < 40; ++i) {
+      rx_disable_uart(i);
+    }
+    return EXIT_SUCCESS;
+  case 0x03F4:
+    // Enable all UART channels
+    for (uint32_t i = 0; i < 40; ++i) {
+      rx_enable_uart(i);
+    }
+    return EXIT_SUCCESS;
+    
+  //Legacy interface:
   case 0x0010: // 0x00XX
     tmp = pacman_read(0xF010);
     tmp &= 0xFFFF0000;
@@ -42,14 +131,8 @@ int pacman_vspace_write(uint32_t addr, uint32_t value){
     if (value&0x1)
       tmp |= 0x00010000;
     return pacman_write(0xF010, tmp);
-  case 0x0018:
-    // unused
-    return EXIT_SUCCESS;
-  case 0x001C:
-    // unused
-    return EXIT_SUCCESS;
   case 0x1010: // 0x10XX
-    // this is a request to send a sync pulse:
+    // this is a request to send a reset pulse:
     if ((value&0x4)!=0){
       // use Poke C register (mapped to G output) and enable all tiles
       return pacman_write(0xE0C0, 0x3FF);
@@ -60,19 +143,7 @@ int pacman_vspace_write(uint32_t addr, uint32_t value){
     // Configure POKE C stimulus for G output, all ten tiles enabled, provided (12-bit) pulse length
     tmp = 0x03FF0001 | ((value & 0xFFF)<<4);
     return pacman_write(0xE118, tmp);
-  case 0x1018:
-    //ignoring...
-    return EXIT_SUCCESS;
-  case 0x101C:
-    // clock rate = 50 MHz / (1 + X)
-    // ignoring... already configured correctly (X=4)
-    return EXIT_SUCCESS;
-  case 0x2010: // 0x20XX
-    return EXIT_SUCCESS;
-  case 0x2014:
-    return EXIT_SUCCESS;
-  case 0x2018:
-    return EXIT_SUCCESS;
+
   case 0x201C:
     // RX enables for UARTS 1-32
     for (uint32_t i = 0; i < 32; ++i) {
