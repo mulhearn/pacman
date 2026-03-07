@@ -27,6 +27,9 @@ void check_iic();
 // set the PACMAN HW version to use for I2C
 void iic_set_hw_version(hw_val_t major, hw_val_t minor, hw_val_t patch);
 
+// report IIC version currently in use:
+hw_val_t iic_get_hw_version();
+
 // set VDDA and VDDD of channel <itile> to value <val>
 void iic_set_vdda_dn(hw_u32_t itile, hw_u32_t val);
 void iic_set_vddd_dn(hw_u32_t itile, hw_u32_t val);

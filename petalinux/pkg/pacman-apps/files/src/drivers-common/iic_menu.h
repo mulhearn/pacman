@@ -12,6 +12,7 @@ extern "C" {
 void iic_menu();
 
 // menu options:
+void iic_show_status();
 void iic_toggle_hardware_version();
 void iic_toggle_power();
 void iic_monitor_power();

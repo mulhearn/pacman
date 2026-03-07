@@ -47,7 +47,10 @@ hw_val_t iic_hw1v4_mon_vdda_mv(hw_val_t itile) {
 
   hw_u8_t addr = ADDR_ADC_VDDA + itile;
 
-  return ina220_v_adc_dn(addr);
+  hw_val_t dn = ina220_v_adc_dn(addr);
+  printf("INFO: mon vdda (ina220) dn:  0x%x\n", dn);
+  
+  return 4*dn;
 }
 
 hw_val_t iic_hw1v4_mon_idda_ma(hw_val_t itile) {
@@ -55,7 +58,12 @@ hw_val_t iic_hw1v4_mon_idda_ma(hw_val_t itile) {
 
   hw_u8_t addr = ADDR_ADC_VDDA + itile;
 
-  return ina220_v_adc_dn(addr);
+  hw_val_t dn = ina220_i_adc_dn(addr);
+  printf("INFO: mon idda (ina220) dn:  0x%x\n", dn);
+
+  if (dn & 0x8000)
+    return 0;
+  return 500*dn/1000; // mA from 10uV LSB and 20mR shunt 
 }
 
 hw_val_t iic_hw1v4_mon_vddd_mv(hw_val_t itile) {
@@ -64,7 +72,13 @@ hw_val_t iic_hw1v4_mon_vddd_mv(hw_val_t itile) {
   hw_u8_t addr = ADDR_ADC_VDDD + (itile/2);
   hw_u8_t mux  = 4 + 2*(itile%2);
 
-  return ads1219_adc_dn(addr, mux);
+  hw_val_t dn = ads1219_adc_dn(addr, mux);
+
+  if (dn & 0x800000)
+    return 0;
+  
+  printf("INFO: mon vddd (ads1219) dn:  0x%x\n", dn);
+  return 2*250*(dn>>10)/1000; // mA from 244.14 nV LSB 
 }
 
 hw_val_t iic_hw1v4_mon_iddd_ma(hw_val_t itile) {
@@ -73,7 +87,15 @@ hw_val_t iic_hw1v4_mon_iddd_ma(hw_val_t itile) {
   hw_u8_t addr = ADDR_ADC_VDDD + (itile/2);
   hw_u8_t mux  = 3 + 2*(itile%2);
 
-  return ads1219_adc_dn(addr, mux);
+  hw_val_t dn = ads1219_adc_dn(addr, mux);
+  printf("INFO: mon vddd (ads1219) dn:  0x%x\n", dn);
+
+  if (dn & 0x800000)
+    return 0;
+  
+  return 250*(dn>>10)/1000; // mA from 244.14 nV LSB 
+  // And notice that 244.14*1024/1000 = 250 
+
 }
 
 void iic_hw1v4_set_mux_front_panel(hw_val_t itile){

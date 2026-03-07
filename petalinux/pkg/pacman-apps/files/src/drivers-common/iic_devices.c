@@ -69,7 +69,10 @@ hw_val_t ina220_v_adc_dn(hw_u8_t addr){
 
   iic_read(addr, INA220_REG_V, buf, 2, false);  // TODO:  try repeated read = true, which should be default...
 
-  return (((hw_val_t) buf[0]) << 8) | buf[1];
+  hw_val_t reg = (((hw_val_t) buf[0]) << 8) | buf[1];
+  hw_val_t dn = (reg >> 3); // D0 is at bit 3
+
+  return dn;
 }
 
 hw_val_t ina220_i_adc_dn(hw_u8_t addr){
@@ -77,7 +80,10 @@ hw_val_t ina220_i_adc_dn(hw_u8_t addr){
 
   iic_read(addr, INA220_REG_I, buf, 2, false);  // TODO:  try repeated read = true, which should be default...
 
-  return (((hw_val_t) buf[0]) << 8) | buf[1];
+  hw_val_t reg = (((hw_val_t) buf[0]) << 8) | buf[1];
+  hw_val_t dn  = reg;
+  
+  return dn;
 }
 
 
@@ -97,7 +103,7 @@ hw_val_t ads1219_adc_dn(hw_u8_t addr, hw_u8_t mux){
     return 0;
   hw_u8_t cfg = (mux << ADS1219_SHIFT_MUX);
 
-  printf("INFO:  ads1219_adc_dn:  addr: 0x%x cfg: 0x%x \r\n", addr, cfg);
+  //printf("INFO:  ads1219_adc_dn:  addr: 0x%x cfg: 0x%x \r\n", addr, cfg);
   iic_write(addr, ADS1219_REG_RESET, NULL, 0);
   buf[0] = cfg;
   iic_write(addr, ADS1219_REG_CFG, buf, 1);

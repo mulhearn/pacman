@@ -62,6 +62,10 @@ void iic_set_hw_version(hw_val_t major, hw_val_t minor, hw_val_t patch){
   }
 }
 
+hw_val_t iic_get_hw_version(){
+  return current_hw;
+}
+
 void iic_set_vdda_dn(hw_u32_t itile, hw_u32_t val) {
   switch (current_hw) {
   case HW_1V5: iic_hw1v5_set_vdda_dn(itile, val); break;

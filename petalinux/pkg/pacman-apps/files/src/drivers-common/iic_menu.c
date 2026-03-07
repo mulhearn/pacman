@@ -4,6 +4,14 @@
 #include "iic.h"
 #include "iic_menu.h"
 
+
+void iic_show_status(){
+  printf("IIC status menu\n");
+  printf("HW enum:  %d\n", iic_get_hw_version());
+  printf("platform status:   %d\n", iic_platform_status());
+}
+
+
 void iic_toggle_hardware_version(){
   static int mode = 0;
   mode = (mode + 1) % 4;
@@ -73,13 +81,16 @@ void iic_menu(){
   printf("I2C menu:  \r\n");
   while(1){
     printf("choose an option:\r\n");
-    printf("(x) Exit I2C menu (v) toggle I2C HW version (c) check I2C (p) toggle power (m) monitor power \r\n");
+    printf("(x) Exit I2C menu (s) I2C status (v) toggle I2C HW version (c) check I2C (p) toggle power (m) monitor power \r\n");
     char input = input_choice();
     printf("INFO: selected %c\r\n", input);
 
     switch(input){
     case 'x':
       return;
+    case 's':
+      iic_show_status();
+      break;
     case 'v':
       iic_toggle_hardware_version();
       break;
