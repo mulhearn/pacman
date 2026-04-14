@@ -103,11 +103,11 @@ int main(int argc, char* argv[]){
   static zmq_msg_t zmq_echo;
   static zmq_msg_t zmq_rep;
 
-  
+
   // pacman messages:
   static pacman_msg_t rep_msg;
   static pacman_msg_t req_msg;
-  
+
   printf("DEBUG:  cycle 4\n");
   while (1) {
     pacman_poll_tx();
@@ -126,7 +126,7 @@ int main(int argc, char* argv[]){
     memcpy(&req_msg, zmq_msg_data(&zmq_req), nbytes_recv);
     print_msg(&req_msg, "INFO:  ");
     assert(nbytes_recv == total_message_size(&req_msg));
-    
+
     if (is_string_msg(&req_msg)){
       const char* req_str = reinterpret_cast<const char*>(req_msg.raw);
       size_t req_len = req_msg.header.n_bytes;
@@ -202,7 +202,7 @@ int main(int argc, char* argv[]){
     zmq_msg_send(&zmq_echo, echo_socket, 0);
     while (!msg_ready) { usleep(1000); }
     zmq_msg_close(&zmq_echo);
-    
+
     // sending our reply message:
     printf("INFO:  sending reply message\n");
     msg_ready = false;

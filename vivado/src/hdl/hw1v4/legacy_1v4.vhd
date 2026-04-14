@@ -16,9 +16,9 @@ entity legacy_1v4 is
     constant ADC_DATA_WIDTH     : integer :=13
   );
   port (
-    LEGACY_PISO_I               : in  std_logic_vector(C_NUM_PS_LEGACY -1 downto 0);  
+    LEGACY_PISO_I               : in  std_logic_vector(C_NUM_PS_LEGACY -1 downto 0);
     PISO_O                      : out std_logic_vector(C_NUM_PS -1 downto 0);
-    POSI_I                      : in  std_logic_vector(C_NUM_PS -1 downto 0);  
+    POSI_I                      : in  std_logic_vector(C_NUM_PS -1 downto 0);
     LEGACY_POSI_O               : out std_logic_vector(C_NUM_PS_LEGACY -1 downto 0);
     SYNCN_I                     : in  std_logic_vector(C_NUM_SYNC -1 downto 0);
     LEGACY_RSTN_O               : out std_logic;

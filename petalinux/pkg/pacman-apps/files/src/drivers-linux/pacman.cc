@@ -89,7 +89,7 @@ int pacman_init(int verbose){
   G_PACMAN_AXIL[0xE110>>2] = 0x03FF0056;
   //LEMO B destination configuration:  This is a SYNC pulse, H+T, duration 5
   G_PACMAN_AXIL[0xE114>>2] = 0x03FF0056;
-  
+
   //POKE C destination configuration:  This is an INTERNAL_RESET pulse, G, duration 24
   G_PACMAN_AXIL[0xE118>>2] = 0x03FF0181;
   //POKE D destination configuration:  This is a FULL_RESET pulse, G, duration 1024

@@ -140,7 +140,7 @@ void iic_read(hw_u8_t addr, hw_u8_t reg, hw_u8_t *data, hw_u32_t len,  bool use_
 
     if (use_repeated_read)
       XIicPs_ClearOptions(&iicps, XIICPS_REP_START_OPTION);
-    
+
     return;
   }
 
@@ -156,7 +156,7 @@ void iic_read(hw_u8_t addr, hw_u8_t reg, hw_u8_t *data, hw_u32_t len,  bool use_
 
   if (use_repeated_read)
     XIicPs_ClearOptions(&iicps, XIICPS_REP_START_OPTION);
-  
+
 }
 
 

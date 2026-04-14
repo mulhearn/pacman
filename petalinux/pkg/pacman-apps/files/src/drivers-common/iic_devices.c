@@ -82,7 +82,7 @@ hw_val_t ina220_i_adc_dn(hw_u8_t addr){
 
   hw_val_t reg = (((hw_val_t) buf[0]) << 8) | buf[1];
   hw_val_t dn  = reg;
-  
+
   return dn;
 }
 

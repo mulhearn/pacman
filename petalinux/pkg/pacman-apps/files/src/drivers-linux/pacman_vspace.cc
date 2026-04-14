@@ -21,7 +21,7 @@ int pacman_vspace_write(uint32_t addr, uint32_t value){
     printf("DEBUG: vspace_write: non-virtual reg write at offset 0x%x value 0x%x \r\n", addr, value);
     return pacman_write(addr, value);
   }
-  
+
   if (addr >= PACMAN_VSPACE_I2C_START) {
     off = addr - PACMAN_VSPACE_I2C_START;
     printf("DEBUG: vspace_write: virtual I2C write at offset 0x%x value 0x%x \r\n", off, value);
@@ -33,32 +33,32 @@ int pacman_vspace_write(uint32_t addr, uint32_t value){
   printf("DEBUG: vspace_write: virtual reg write at offset 0x%x value 0x%x \r\n", off, value);
 
   // ALL CHANNELS ARE ZERO REFERENCED.
-  
+
   // 0x00100100:  READ_GLOBAL_TILE_POWER      (RO)
 
   // 0x00100110:  DISABLE_GLOBAL_TILE_POWER    (WO)
   // 0x00100114:  ENABLE_GLOBAL_TILE_POWER   (WO)
 
   // 0x00100200:  READ_TILE_ENABLES           (RO)
-  
+
   // 0x00100210:  DISABLE_SINGLE_TILE   <TILE> (WO)
   // 0x00100214:  ENABLE_SINGLE_TILE  <TILE> (WO)
-  
+
   // 0x001002F0:  DISABLE_ALL_TILE     DC/0     (WO)
   // 0x001002F4:  ENABLE_ALL_TILE     DC/0     (WO)
 
-  // 0x00100300:  READ_RX_ENABLES_LOWER    (RO)  
+  // 0x00100300:  READ_RX_ENABLES_LOWER    (RO)
   // 0x00100304:  READ_RX_ENABLES_UPPER    (RO)
-  
+
   // 0x00100310:  DISABLE_SINGLE_UART_RX  <UART>   (WO)
   // 0x00100314:  ENABLE_SINGLE_UART_RX   <UART>   (WO)  (UNTESTED)
-  
+
   // 0x001003F0:  DISABLE_ALL_UART_RX     DC/0     (WO)
   // 0x001003F4:  ENABLE_ALL_UART_RX      DC/0     (WO)
 
   // 0x00100410:  SEND_FULL_RESET      <MASK>
-  // 0x00100420:  SEND_INTERNAL_RESET  <MASK>   
-  
+  // 0x00100420:  SEND_INTERNAL_RESET  <MASK>
+
   switch(off){
 
   case 0x0110:
@@ -120,15 +120,15 @@ int pacman_vspace_write(uint32_t addr, uint32_t value){
       rx_enable_uart(i);
     }
     return EXIT_SUCCESS;
-  case 0x0410: 
+  case 0x0410:
     // this is a request to send a internal reset to tiles in mask:
-    // poke C is configured for internal reset 
+    // poke C is configured for internal reset
     return pacman_write(0xE0C0, value);
   case 0x0420:
     // this is a request to send a full reset to tiles in mask:
-    // poke D is configured for full reset 
+    // poke D is configured for full reset
     return pacman_write(0xE0D0, value);
-    
+
   //Legacy interface:
   case 0x0010: // 0x00XX
     tmp = pacman_read(0xF010);
@@ -192,7 +192,7 @@ uint32_t pacman_vspace_read(uint32_t addr, int * status){
     printf("DEBUG: vspace_read: non-virtual reg read at address 0x%x \r\n", addr);
     return pacman_read(addr, status);
   }
-  
+
   if (addr >= PACMAN_VSPACE_I2C_START) {
     off = addr - PACMAN_VSPACE_I2C_START;
     printf("DEBUG: vspace_read:  I2C read at offset 0x%x\r\n", off);
