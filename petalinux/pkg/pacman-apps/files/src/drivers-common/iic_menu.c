@@ -7,8 +7,8 @@
 
 void iic_show_status(){
   printf("IIC status menu\n");
-  printf("HW enum:  %d\n", iic_get_hw_version());
-  printf("platform status:   %d\n", iic_platform_status());
+  printf("HW enum:  %u\n", (unsigned int) iic_get_hw_version());
+  printf("platform status:   %u\n", (unsigned int) iic_platform_status());
 }
 
 

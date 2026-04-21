@@ -58,7 +58,8 @@ void iic_set_hw_version(hw_val_t major, hw_val_t minor, hw_val_t patch){
   }
   else {
     current_hw = HW_DISABLE;
-    printf("iic_dispatch_init: unknown HW version %d.%d.%d\n", major, minor, patch);
+    printf("iic_dispatch_init: unknown HW version %u.%u.%u\n",
+	   (unsigned int) major, (unsigned int) minor, (unsigned int) patch);
   }
 }
 

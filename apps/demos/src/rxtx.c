@@ -136,7 +136,7 @@ void batch_tx(void){
   hw_addr_t nxta;
 
   while((count < 10) && (dma_next_available_tx_bd(&nxta))){
-    printf("INFO:  working on buffer %d at HW addr 0x%08X \r\n", count, nxta);
+    printf("INFO:  working on buffer %d at HW addr 0x%08X \r\n", count, (unsigned int) nxta);
     hw_ptr_t tx_buf = dma_get_buffer(nxta);
 
     tx_buf[0]= tx_mask_a;
@@ -185,15 +185,15 @@ void toggle_tx_config(void){
   mode = (mode + 1) % 3;
   if (mode==0){
     unsigned config = 0x00001602;
-    printf("INFO: No Delay.  Broadcasting tx config write 0x%08x \r\n", config);
+    printf("INFO: No Delay.  Broadcasting tx config write 0x%08x \r\n", (unsigned int) config);
     axil_write_register(SCOPE_TX+UART_BROADCAST+C_ADDR_TX_UART_CONFIG, config);
   } else if (mode==1) {
     unsigned config = 0x05281602;
-    printf("INFO: Half Speed.  Broadcasting tx config write 0x%08x \r\n", config);
+    printf("INFO: Half Speed.  Broadcasting tx config write 0x%08x \r\n", (unsigned int) config);
     axil_write_register(SCOPE_TX+UART_BROADCAST+C_ADDR_TX_UART_CONFIG, config);
   } else if (mode==2) {
     unsigned config = 0x00001601;
-    printf("INFO: Double speed.  Broadcasting tx config write 0x%08x \r\n", config);
+    printf("INFO: Double speed.  Broadcasting tx config write 0x%08x \r\n", (unsigned int) config);
     axil_write_register(SCOPE_TX+UART_BROADCAST+C_ADDR_TX_UART_CONFIG, config);
   }
 }
@@ -218,12 +218,24 @@ void rx_enable_uart(unsigned chan){
   }
 }
 
+bool rx_uart_is_enabled(unsigned chan){
+  if (chan < 40){
+    hw_u32_t cfg = axil_read_register(SCOPE_RX+(chan<<8)+C_ADDR_RX_UART_CONFIG);
+    if ((cfg&0x00020000) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+
+
 void toggle_rx_config(void){
   static int mode = 0;
   mode = (mode + 1) % 4;
   if (mode==0){
     unsigned config = 0x00001002;
-    printf("INFO: No internal loopback.  Broadcasting rx config write 0x%08x \r\n", config);
+    printf("INFO: No internal loopback.  Broadcasting rx config write 0x%08x \r\n", (unsigned int) config);
     axil_write_register(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_UART_CONFIG, config);
   } else if (mode==1) {
     unsigned config = 0x00011002;
@@ -231,15 +243,15 @@ void toggle_rx_config(void){
     axil_write_register(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_UART_CONFIG, config);
   } else if (mode==2) {
     unsigned config = 0x00011001;
-    printf("INFO: Full internal loopback at full speed.  Broadcasting rx configs write 0x%08x \r\n", config);
+    printf("INFO: Full internal loopback at full speed.  Broadcasting rx configs write 0x%08x \r\n", (unsigned int) config);
     axil_write_register(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_UART_CONFIG, config);
   } else if (mode==3) {
     unsigned config;
     config = 0x00011002;
-    printf("INFO: Tiles 2-10 use internal loopback.  Broadcasting rx configs t 0x%08x \r\n", config);
+    printf("INFO: Tiles 2-10 use internal loopback.  Broadcasting rx configs t 0x%08x \r\n", (unsigned int) config);
     axil_write_register(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_UART_CONFIG, config);
     config = 0x00001002;
-    printf("INFO: Tile 1 does not use internal loopback.  Setting Tile 1 rx config 0x%08x \r\n", config);
+    printf("INFO: Tile 1 does not use internal loopback.  Setting Tile 1 rx config 0x%08x \r\n", (unsigned int) config);
     axil_write_register(SCOPE_RX+(0<<8)+C_ADDR_RX_UART_CONFIG, config);
     axil_write_register(SCOPE_RX+(1<<8)+C_ADDR_RX_UART_CONFIG, config);
     axil_write_register(SCOPE_RX+(2<<8)+C_ADDR_RX_UART_CONFIG, config);
@@ -278,20 +290,20 @@ void read_rx_status(void){
 
     printf("%2d: ch: %2d cfg: 0x%08x status: 0x%08x s: %d b: %d u: %d l: %d\r\n",i, ichan, config, status, starts, beats, updates, lost);
   }
-  printf("rx buffer status------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_BUFFER_STATUS));
-  printf("rx buffer config------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_BUFFER_CONFIG));
-  printf("rx buffer enables-----------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_BUFFER_ENABLES));
-  printf("rx pacman id----------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_PACMAN));
-  printf("FIFO count------------------%d      \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_FIFO_CNT));
-  printf("FIFO max--------------------%d      \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_FIFO_MAX));
-  printf("heartbeat config------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_HEARTBEAT_CONFIG));
-  printf("sync config-----------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_ROLLOVER_CONFIG));
-  printf("word_type_lut---------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_WORD_TYPE_LUT));
+  printf("rx buffer status------------0x%x    \r\n", (unsigned int) axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_BUFFER_STATUS));
+  printf("rx buffer config------------0x%x    \r\n", (unsigned int) axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_BUFFER_CONFIG));
+  printf("rx buffer enables-----------0x%x    \r\n", (unsigned int) axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_BUFFER_ENABLES));
+  printf("rx pacman id----------------0x%x    \r\n", (unsigned int) axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_PACMAN));
+  printf("FIFO count------------------%d      \r\n", (unsigned int) axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_FIFO_CNT));
+  printf("FIFO max--------------------%d      \r\n", (unsigned int) axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_FIFO_MAX));
+  printf("heartbeat config------------0x%x    \r\n", (unsigned int) axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_HEARTBEAT_CONFIG));
+  printf("sync config-----------------0x%x    \r\n", (unsigned int) axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_ROLLOVER_CONFIG));
+  printf("word_type_lut---------------0x%x    \r\n", (unsigned int) axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_WORD_TYPE_LUT));
 
-  printf("heartbeat header------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_HEARTBEAT_HEADER));
-  printf("rollover header-------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_ROLLOVER_HEADER));
-  //printf("trigger header--------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_TRIG_HEADER));
-  printf("end of packet header--------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_EOP_HEADER));
+  printf("heartbeat header------------0x%x    \r\n", (unsigned int) axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_HEARTBEAT_HEADER));
+  printf("rollover header-------------0x%x    \r\n", (unsigned int) axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_ROLLOVER_HEADER));
+  //printf("trigger header--------------0x%x    \r\n", (unsigned int) axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_TRIG_HEADER));
+  printf("end of packet header--------0x%x    \r\n", (unsigned int) axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_EOP_HEADER));
 }
 
 void read_rx_look(void){
@@ -300,7 +312,7 @@ void read_rx_look(void){
     axil_write_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_LOOK_SELECT, i);
     udata[0] = axil_read_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_LOOK_UA);
     udata[1] = axil_read_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_LOOK_UB);
-    printf("Channel %2d Look:  0x%08x %08x ", i, udata[1], udata[0]);
+    printf("Channel %2d Look:  0x%08x %08x ", i, (unsigned int) udata[1], (unsigned int) udata[0]);
     asic_print_packet_summary(udata);
   }
 }
@@ -312,9 +324,10 @@ void read_tx_status(void){
     unsigned config = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_UART_CONFIG);
     unsigned starts = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_UART_STARTS);
     unsigned beats = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_UART_BEATS);
-    printf("%2d: config: 0x%08x status: 0x%08x starts: %d beats: %d\r\n",i, config, status, starts, beats);
+    printf("%2d: config: 0x%08x status: 0x%08x starts: %d beats: %d\r\n",i,
+	   (unsigned int) config, (unsigned int) status, starts, beats);
   }
-  printf("rx buffer status----------- 0x%x    \r\n", axil_read_register(SCOPE_TX+0x3F00+C_ADDR_TX_BUFFER_STATUS));
+  printf("rx buffer status----------- 0x%x    \r\n", (unsigned int) axil_read_register(SCOPE_TX+0x3F00+C_ADDR_TX_BUFFER_STATUS));
 }
 
 void read_tx_look(void){
@@ -323,7 +336,7 @@ void read_tx_look(void){
     axil_write_register(SCOPE_TX+UART_GLOBAL+C_ADDR_TX_LOOK_SELECT, i);
     udata[0] = axil_read_register(SCOPE_TX+UART_GLOBAL+C_ADDR_TX_LOOK_UA);
     udata[1] = axil_read_register(SCOPE_TX+UART_GLOBAL+C_ADDR_TX_LOOK_UB);
-    printf("Channel %2d Look:  0x%08x %08x ", i, udata[1], udata[0]);
+    printf("Channel %2d Look:  0x%08x %08x ", i, (unsigned int) udata[1], (unsigned int) udata[0]);
     asic_print_packet_summary(udata);
   }
 }
@@ -348,7 +361,7 @@ void toggle_tx_mask(void){
     tx_mask_b = 0xFF;
     tx_mask_a = 0xFFFFFFFF;
   }
-  printf("RX mask:  0x%08x %08x \r\n", tx_mask_b, tx_mask_a);
+  printf("RX mask:  0x%08x %08x \r\n", (unsigned int) tx_mask_b, (unsigned int) tx_mask_a);
 }
 
 void zero_rxtx_counts(void){
@@ -400,7 +413,7 @@ void benchmark_tx(void){
 
   unsigned elapsed_us = hw_timer_elapsed_us();
 
-  printf("INFO:  elapsed microseconds:    %d (0x%x)\r\n", elapsed_us, elapsed_us);
+  printf("INFO:  elapsed microseconds:    %d (0x%x)\r\n", elapsed_us, (unsigned int) elapsed_us);
   printf("INFO:  tx payloads per packet:  %d\r\n", uarts);
   printf("INFO:  packets:                 %d\r\n", packets);
 

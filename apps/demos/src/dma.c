@@ -45,19 +45,19 @@ void dma_show_long_status(void){
 }
 
 void print_dma_control(hw_val_t value) {
-    printf("DMA Control: 0x%08x [", value);
-    if (value & DMACR_RUNSTOP)     printf(" RUN");
-    if (value & DMACR_RESET)       printf(" RESET");
-    if (value & DMACR_KEYHOLE)     printf(" KEYHOLE");
-    if (value & DMACR_CYCLIC_BD)   printf(" CYCLIC");
-    if (value & DMACR_IOC_IRQ_EN)  printf(" IOC_IRQ_EN");
-    if (value & DMACR_DLY_IRQ_EN)  printf(" DLY_IRQ_EN");
-    if (value & DMACR_ERR_IRQ_EN)  printf(" ERR_IRQ_EN");
-    printf(" ]\r\n");
+  printf("DMA Control: 0x%08x [", (unsigned int) value);
+  if (value & DMACR_RUNSTOP)     printf(" RUN");
+  if (value & DMACR_RESET)       printf(" RESET");
+  if (value & DMACR_KEYHOLE)     printf(" KEYHOLE");
+  if (value & DMACR_CYCLIC_BD)   printf(" CYCLIC");
+  if (value & DMACR_IOC_IRQ_EN)  printf(" IOC_IRQ_EN");
+  if (value & DMACR_DLY_IRQ_EN)  printf(" DLY_IRQ_EN");
+  if (value & DMACR_ERR_IRQ_EN)  printf(" ERR_IRQ_EN");
+  printf(" ]\r\n");
 }
 
 void print_dma_status(hw_val_t value) {
-  printf("DMA Status: 0x%08x [", value);
+  printf("DMA Status: 0x%08x [", (unsigned int) value);
   if (value & DMASR_HALTED)      printf(" HALTED");
   if (value & DMASR_IDLE)        printf(" IDLE");
   if (value & DMASR_SGINCLD)     printf(" SG");
@@ -74,43 +74,43 @@ void print_dma_status(hw_val_t value) {
 }
 
 void print_dma_status_long(hw_val_t value) {
-    printf("DMA Status Register: 0x%08x\r\n", value);
-    printf("  HALTED      : %s\r\n", (value & DMASR_HALTED) ? "Yes" : "No");
-    printf("  IDLE        : %s\r\n", (value & DMASR_IDLE) ? "Yes" : "No");
-    printf("  SG Included : %s\r\n", (value & DMASR_SGINCLD) ? "Yes" : "No");
+  printf("DMA Status Register: 0x%08x\r\n", (unsigned int) value);
+  printf("  HALTED      : %s\r\n", (value & DMASR_HALTED) ? "Yes" : "No");
+  printf("  IDLE        : %s\r\n", (value & DMASR_IDLE) ? "Yes" : "No");
+  printf("  SG Included : %s\r\n", (value & DMASR_SGINCLD) ? "Yes" : "No");
 
-    printf("  DMA Errors  : INT=%d, SEC=%d, DEC=%d\r\n",
-        !!(value & DMASR_DMA_INT_ERR),
-        !!(value & DMASR_DMA_SEC_ERR),
-        !!(value & DMASR_DMA_DEC_ERR));
+  printf("  DMA Errors  : INT=%d, SEC=%d, DEC=%d\r\n",
+	 !!(value & DMASR_DMA_INT_ERR),
+	 !!(value & DMASR_DMA_SEC_ERR),
+	 !!(value & DMASR_DMA_DEC_ERR));
 
-    printf("  SG Errors   : INT=%d, SEC=%d, DEC=%d\r\n",
-        !!(value & DMASR_SG_INT_ERR),
-        !!(value & DMASR_SG_SEC_ERR),
-        !!(value & DMASR_SG_DEC_ERR));
+  printf("  SG Errors   : INT=%d, SEC=%d, DEC=%d\r\n",
+	 !!(value & DMASR_SG_INT_ERR),
+	 !!(value & DMASR_SG_SEC_ERR),
+	 !!(value & DMASR_SG_DEC_ERR));
 
-    printf("  IRQ Flags   : IOC=%d, DLY=%d, ERR=%d\r\n",
-        !!(value & DMASR_IOC_IRQ),
-        !!(value & DMASR_DLY_IRQ),
-        !!(value & DMASR_ERR_IRQ));
-    printf("  IRQ Threshold Status: %d\r\n", (value & DMASR_IRQ_THRESHOLD_MASK) >> DMASR_IRQ_THRESHOLD_SHIFT);
-    printf("  IRQ Delay Status    : %d\r\n", (value & DMASR_IRQ_DELAY_MASK) >> DMASR_IRQ_DELAY_SHIFT);
+  printf("  IRQ Flags   : IOC=%d, DLY=%d, ERR=%d\r\n",
+	 !!(value & DMASR_IOC_IRQ),
+	 !!(value & DMASR_DLY_IRQ),
+	 !!(value & DMASR_ERR_IRQ));
+  printf("  IRQ Threshold Status: %u\r\n", (unsigned int) (value & DMASR_IRQ_THRESHOLD_MASK) >> DMASR_IRQ_THRESHOLD_SHIFT);
+  printf("  IRQ Delay Status    : %u\r\n", (unsigned int) (value & DMASR_IRQ_DELAY_MASK) >> DMASR_IRQ_DELAY_SHIFT);
 }
 
 void print_dma_control_long(hw_val_t value) {
-    printf("DMA Control Register: 0x%08x\r\n", value);
-    printf("  RUN/STOP     : %s\r\n", (value & DMACR_RUNSTOP) ? "Running" : "Stopped");
-    printf("  RESET        : %s\r\n", (value & DMACR_RESET) ? "Asserted" : "Inactive");
-    printf("  KEYHOLE      : %s\r\n", (value & DMACR_KEYHOLE) ? "Enabled" : "Disabled");
-    printf("  CYCLIC BD    : %s\r\n", (value & DMACR_CYCLIC_BD) ? "Enabled" : "Disabled");
+  printf("DMA Control Register: 0x%08x\r\n", (unsigned int) value);
+  printf("  RUN/STOP     : %s\r\n", (value & DMACR_RUNSTOP) ? "Running" : "Stopped");
+  printf("  RESET        : %s\r\n", (value & DMACR_RESET) ? "Asserted" : "Inactive");
+  printf("  KEYHOLE      : %s\r\n", (value & DMACR_KEYHOLE) ? "Enabled" : "Disabled");
+  printf("  CYCLIC BD    : %s\r\n", (value & DMACR_CYCLIC_BD) ? "Enabled" : "Disabled");
 
-    printf("  IRQ Enables  : IOC=%d, DLY=%d, ERR=%d\r\n",
-        !!(value & DMACR_IOC_IRQ_EN),
-        !!(value & DMACR_DLY_IRQ_EN),
-        !!(value & DMACR_ERR_IRQ_EN));
+  printf("  IRQ Enables  : IOC=%d, DLY=%d, ERR=%d\r\n",
+	 !!(value & DMACR_IOC_IRQ_EN),
+	 !!(value & DMACR_DLY_IRQ_EN),
+	 !!(value & DMACR_ERR_IRQ_EN));
 
-    printf("  IRQ Threshold: %d\r\n", (value & DMACR_IRQ_THRESHOLD_MASK) >> DMACR_IRQ_THRESHOLD_SHIFT);
-    printf("  IRQ Delay    : %d\r\n", (value & DMACR_IRQ_DELAY_MASK) >> DMACR_IRQ_DELAY_SHIFT);
+  printf("  IRQ Threshold: %u\r\n", (unsigned int) ((value & DMACR_IRQ_THRESHOLD_MASK) >> DMACR_IRQ_THRESHOLD_SHIFT));
+  printf("  IRQ Delay    : %u\r\n", (unsigned int) ((value & DMACR_IRQ_DELAY_MASK) >> DMACR_IRQ_DELAY_SHIFT));
 }
 
 
@@ -287,7 +287,7 @@ void dma_write_tx_curdesc(hw_addr_t bd_addr){
   }
 
   if (VERBOSE)
-    printf("INFO:  setting TX current buffer descriptor HW address to 0x%08x\r\n", bd_addr);
+    printf("INFO:  setting TX current buffer descriptor HW address to 0x%08x\r\n", (unsigned int) bd_addr);
   dma_write_register(MM2S_CURDESC, bd_addr);
 }
 void dma_write_rx_curdesc(hw_addr_t bd_addr){
@@ -297,20 +297,20 @@ void dma_write_rx_curdesc(hw_addr_t bd_addr){
   }
 
   if (VERBOSE)
-    printf("INFO:  setting RX current buffer descriptor HW address to 0x%08x\r\n", bd_addr);
+    printf("INFO:  setting RX current buffer descriptor HW address to 0x%08x\r\n",  (unsigned int) bd_addr);
   dma_write_register(S2MM_CURDESC, bd_addr);
 }
 
 void dma_write_tx_taildesc(hw_addr_t bd_addr){
   if (VERBOSE)
-    printf("INFO:  setting TX tail buffer descriptor address to 0x%08x\r\n", bd_addr);
+    printf("INFO:  setting TX tail buffer descriptor address to 0x%08x\r\n",  (unsigned int) bd_addr);
 
   dma_write_register(MM2S_TAILDESC, bd_addr);
 }
 
 void dma_write_rx_taildesc(hw_addr_t bd_addr){
   if (VERBOSE)
-    printf("INFO:  setting RX tail buffer descriptor address to 0x%08x\r\n", bd_addr);
+    printf("INFO:  setting RX tail buffer descriptor address to 0x%08x\r\n",  (unsigned int) bd_addr);
 
   dma_write_register(S2MM_TAILDESC, bd_addr);
 }
@@ -484,7 +484,7 @@ unsigned dma_count_bd_ring(hw_addr_t bd_addr){
 
   do {
     if (!dma_valid_bd(cur_addr)){
-      printf("ERROR: invalid BD detected at depth %d with HW address 0x%08X \r\n", count, cur_addr);
+      printf("ERROR: invalid BD detected at depth %d with HW address 0x%08X \r\n", count, (unsigned int) cur_addr);
       return 0;
     }
     if (count >= DMA_MAX_BD_RING_SIZE) {
@@ -524,12 +524,12 @@ void dma_init_bd_ring (hw_addr_t bd_addr, unsigned nring, hw_val_t buf_size, hw_
   const hw_addr_t align_mask = DMA_BUFFER_ALIGN_BYTES-1;
 
   hw_addr_t aligned_size  = (align_mask + buf_size) & ~align_mask;
-  printf("INFO:  size of each buffer: 0x%08X, aligned size:  0x%08X\r\n", buf_size, aligned_size);
+  printf("INFO:  size of each buffer: 0x%08X, aligned size:  0x%08X\r\n", (unsigned int) buf_size, (unsigned int) aligned_size);
 
   hw_addr_t buf_addr       = bd_addr + nring*DMA_BD_BYTES;
-  printf("INFO:  first free address above BDs:     0x%08X\r\n", buf_addr);
+  printf("INFO:  first free address above BDs:     0x%08X\r\n", (unsigned int) buf_addr);
   buf_addr = (align_mask + buf_addr) & ~ align_mask; // this bit alignment using the 2^n - 1 trick
-  printf("INFO:  aligned start of buffer:          0x%08X\r\n", buf_addr);
+  printf("INFO:  aligned start of buffer:          0x%08X\r\n", (unsigned int) buf_addr);
 
   for (int i = 0; i < nring; i++) {
     int inxt = (i+1) % nring;
@@ -541,12 +541,11 @@ void dma_init_bd_ring (hw_addr_t bd_addr, unsigned nring, hw_val_t buf_size, hw_
     dma_safe_buffer(bfa, buf_size);
 
 
-    printf("INFO:  buffer descriptor %3d:  addr: 0x%08X nxt: 0x%08X buf: 0x%08X len:  0x%08X \r\n", i, bda, nxa, bfa, buf_size);
+    printf("INFO:  buffer descriptor %3d:  addr: 0x%08X nxt: 0x%08X buf: 0x%08X len:  0x%08X \r\n", i, (unsigned int) bda, (unsigned int) nxa, (unsigned int) bfa, (unsigned int) buf_size);
     dma_init_bd(bda, nxa, bfa, buf_size, bd_flags, bd_status);
   }
-  printf("INFO:  first free address above buffer:  0x%08X\r\n", buf_addr + nring*aligned_size);
+  printf("INFO:  first free address above buffer:  0x%08X\r\n", (unsigned int) (buf_addr + nring*aligned_size));
 }
-
 
 void dma_show_bd_ring(hw_addr_t bd_addr) {
   unsigned count = 0;
@@ -567,7 +566,9 @@ void dma_show_bd_ring(hw_addr_t bd_addr) {
     hw_addr_t buf_addr = bd[DMA_BD_BUFFER_ADDRESS];
     hw_val_t control   = bd[DMA_BD_CONTROL];
     hw_val_t status    = bd[DMA_BD_STATUS];
-    printf("%4d:   0x%08X   0x%08X   0x%08X   0x%08X   0x%08X\r\n", count, cur_addr, nxt_addr, buf_addr, control, status);
+    printf("%4d:   0x%08X   0x%08X   0x%08X   0x%08X   0x%08X\r\n", count,
+	   (unsigned int) cur_addr, (unsigned int) nxt_addr, (unsigned int) buf_addr,
+	   (unsigned int) control, (unsigned int) status);
 
     cur_addr = nxt_addr;
     count++;
@@ -600,7 +601,7 @@ void dma_clear_buffer(hw_addr_t bd_addr) {
   }
 
   if (VERBOSE)
-    printf("INFO:  clearing buffer of size 0x%x (%d)\r\n", len, len);
+    printf("INFO:  clearing buffer of size 0x%x (%d)\r\n", (unsigned int) len, len);
   for (int i=0; i<len/4; i++){
     buf[i]=0;
   }
@@ -639,7 +640,7 @@ void dma_print_buffer(hw_ptr_t buf, hw_val_t len, int ncol, int max_words) {
     int ibuf = i + (ncol-1) - 2*(i%ncol);
     if ((i%ncol)==0)
       printf("%4d: ", i/ncol);
-    printf("0x%08x ", buf[ibuf]);
+    printf("0x%08x ", (unsigned int) buf[ibuf]);
     if (((i+1)%ncol)==0)
       printf("\r\n");
   }
@@ -710,11 +711,13 @@ void dma_show_transferred_ring(hw_addr_t bd_addr, int ncol, int max_words){
 
 // show the current and tail BD HW addresses for TX/RX:
 void dma_show_tx_current_tail_addrs(){
-  printf("INFO:  TX current 0x%08X tail 0x%08X batch tail 0x%08X \r\n", dma_read_tx_curdesc(), dma_read_tx_taildesc(), dma_read_batch_tx_taildesc());
+  printf("INFO:  TX current 0x%08X tail 0x%08X batch tail 0x%08X \r\n",
+	 (unsigned int) dma_read_tx_curdesc(), (unsigned int) dma_read_tx_taildesc(), (unsigned int) dma_read_batch_tx_taildesc());
 }
 
 void dma_show_rx_current_tail_addrs(){
-  printf("INFO:  RX current 0x%08X tail 0x%08X batch tail 0x%08X \r\n", dma_read_rx_curdesc(), dma_read_rx_taildesc(), dma_read_batch_rx_taildesc());
+  printf("INFO:  RX current 0x%08X tail 0x%08X batch tail 0x%08X \r\n",
+	 (unsigned int) dma_read_rx_curdesc(), (unsigned int) dma_read_rx_taildesc(), (unsigned int) dma_read_batch_rx_taildesc());
 }
 
 //
@@ -725,12 +728,12 @@ static hw_addr_t G_BATCH_TX_TAILDESC_ADDR = 0;
 static hw_addr_t G_BATCH_RX_TAILDESC_ADDR = 0;
 
 void dma_init_batch_tx_taildesc(hw_addr_t addr){
-  printf("INFO:  setting address of TX batch tail field to 0x%08X \r\n", addr);
+  printf("INFO:  setting address of TX batch tail field to 0x%08X \r\n", (unsigned int) addr);
   G_BATCH_TX_TAILDESC_ADDR = addr;
 }
 
 void dma_init_batch_rx_taildesc(hw_addr_t addr){
-  printf("INFO:  setting address of RX batch tail field to 0x%08X \r\n", addr);
+  printf("INFO:  setting address of RX batch tail field to 0x%08X \r\n", (unsigned int) addr);
   G_BATCH_RX_TAILDESC_ADDR = addr;
 }
 

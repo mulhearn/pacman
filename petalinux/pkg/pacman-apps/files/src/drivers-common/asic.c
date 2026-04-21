@@ -42,9 +42,9 @@ void asic_print_packet_summary(hw_u32_t * word){
 	  printf("downstream ");
 	else
 	  printf("upstream   ");
-	printf("chip: 0x%02X (%03d) ", chip, chip);
-	printf("addr: 0x%02X (%03d) ", addr, addr);
-	printf("value: 0x%02X", value);
+	printf("chip: 0x%02X (%03d) ", (unsigned int) chip, chip);
+	printf("addr: 0x%02X (%03d) ", (unsigned int) addr, addr);
+	printf("value: 0x%02X", (unsigned int) value);
       } else {
 	printf("*** invalid *** ");
       }
@@ -90,7 +90,7 @@ void asic_batch_tx(hw_u32_t * payload, hw_u32_t n){
 
   while((count < n) && (dma_next_available_tx_bd(&nxta))){
     if (verbose)
-      printf("INFO:  working on buffer %d at HW addr 0x%08X \r\n", count, nxta);
+      printf("INFO:  working on buffer %d at HW addr 0x%08X \r\n", count, (unsigned int) nxta);
     hw_ptr_t tx_buf = dma_get_buffer(nxta);
 
     // UART 0 only:

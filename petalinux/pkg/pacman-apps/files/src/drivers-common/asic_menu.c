@@ -233,11 +233,15 @@ void asic_read_rx(){
 
     if (((trailer[0]&0xFF) != 0x4C) || (trailer[2] != words)){
       printf("ERROR: invalid trailer detected in DMA packet... skipping.\r\n");
-      printf("DMA packet tailer: 0x%x %x 0x%x %x 0x%x %x\r\n", trailer[5], trailer[4], trailer[3], trailer[2], trailer[1], trailer[0]);
+      printf("DMA packet tailer: 0x%x %x 0x%x %x 0x%x %x\r\n",
+	     (unsigned int) trailer[5], (unsigned int) trailer[4], (unsigned int) trailer[3],
+	     (unsigned int) trailer[2], (unsigned int) trailer[1], (unsigned int) trailer[0]);
       dma_add_rx_bd(nxta);
       continue;
     } else if (verbose) {
-      printf("DMA packet tailer: 0x%x %x 0x%x %x 0x%x %x\r\n", trailer[5], trailer[4], trailer[3], trailer[2], trailer[1], trailer[0]);
+      printf("DMA packet tailer: 0x%x %x 0x%x %x 0x%x %x\r\n",
+	     (unsigned int) trailer[5], (unsigned int) trailer[4], (unsigned int) trailer[3],
+	     (unsigned int) trailer[2], (unsigned int) trailer[1], (unsigned int) trailer[0]);
     }
 
     for (unsigned i=0; i<words; i++){
@@ -246,8 +250,10 @@ void asic_read_rx(){
       if (start == 0)
 	start = timestamp;
       if (verbose)
-	printf("asic packet: 0x%x %x timestamp: 0x%x %x header: 0x%x %x\r\n", word[5], word[4], word[3], word[2], word[1], word[0]);
-      printf("elapsed t: 0x%08lx ", timestamp - start);
+	printf("asic packet: 0x%x %x timestamp: 0x%x %x header: 0x%x %x\r\n",
+	       (unsigned int) word[5], (unsigned int) word[4], (unsigned int) word[3],
+	       (unsigned int) word[2], (unsigned int) word[1], (unsigned int) word[0]);
+      printf("elapsed t: 0x%08lx ", (unsigned long) (timestamp - start));
       asic_print_packet_summary(&word[4]);
     }
     count++;
@@ -308,7 +314,9 @@ void asic_loopback(){
 	hw_u32_t * trailer = (hw_u32_t *) &buf[6*words];
 	if (((trailer[0]&0xFF) != 0x4C) || (trailer[2] != words)){
 	  printf("ERROR: invalid trailer detected in DMA packet... skipping.\r\n");
-	  printf("DMA packet tailer: 0x%x %x 0x%x %x 0x%x %x\r\n", trailer[5], trailer[4], trailer[3], trailer[2], trailer[1], trailer[0]);
+	  printf("DMA packet tailer: 0x%x %x 0x%x %x 0x%x %x\r\n",
+		 (unsigned int) trailer[5], (unsigned int) trailer[4], (unsigned int) trailer[3],
+		 (unsigned int) trailer[2], (unsigned int) trailer[1], (unsigned int) trailer[0]);
 	  dma_add_rx_bd(nxta);
 	  continue;
 	}
