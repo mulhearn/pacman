@@ -32,6 +32,7 @@ file copy apps/demos/src/adc.h          demo/demo/src/
 file copy apps/demos/src/asic.h         demo/demo/src/
 file copy apps/demos/src/iic_menu.h     demo/demo/src/
 file copy apps/demos/src/asic_menu.h    demo/demo/src/
+file copy apps/demos/src/atc_menu.h     demo/demo/src/
 
 file copy apps/demos/src/hw_access.c    demo/demo/src/
 file copy apps/demos/src/iic_devices.c  demo/demo/src/
@@ -47,7 +48,7 @@ file copy apps/demos/src/adc.c          demo/demo/src/
 file copy apps/demos/src/asic.c         demo/demo/src/
 file copy apps/demos/src/iic_menu.c     demo/demo/src/
 file copy apps/demos/src/asic_menu.c    demo/demo/src/
-
+file copy apps/demos/src/atc_menu.c     demo/demo/src/
 
 # Run the application:
 cd demo

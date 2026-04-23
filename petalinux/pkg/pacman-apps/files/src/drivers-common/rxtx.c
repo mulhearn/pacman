@@ -182,20 +182,25 @@ void benchmark_dma_rxtx_loopback();
 
 void toggle_tx_config(void){
   static int mode = 0;
-  mode = (mode + 1) % 3;
+  mode = (mode + 1) % 4;
   if (mode==0){
     unsigned config = 0x00001602;
-    printf("INFO: No Delay.  Broadcasting tx config write 0x%08x \r\n", (unsigned int) config);
+    printf("INFO: Half speed.  Broadcasting tx config write 0x%08x \r\n", (unsigned int) config);
     axil_write_register(SCOPE_TX+UART_BROADCAST+C_ADDR_TX_UART_CONFIG, config);
   } else if (mode==1) {
     unsigned config = 0x05281602;
-    printf("INFO: Half Speed.  Broadcasting tx config write 0x%08x \r\n", (unsigned int) config);
+    printf("INFO: Half Speed with max 50 percent duty cycle (delay 0x528)  Broadcasting tx config write 0x%08x \r\n", (unsigned int) config);
     axil_write_register(SCOPE_TX+UART_BROADCAST+C_ADDR_TX_UART_CONFIG, config);
   } else if (mode==2) {
     unsigned config = 0x00001601;
-    printf("INFO: Double speed.  Broadcasting tx config write 0x%08x \r\n", (unsigned int) config);
+    printf("INFO: Full speed.  Broadcasting tx config write 0x%08x \r\n", (unsigned int) config);
+    axil_write_register(SCOPE_TX+UART_BROADCAST+C_ADDR_TX_UART_CONFIG, config);
+  } else if (mode==3) {
+    unsigned config = 0x05281601;
+    printf("INFO: Full speed with max 33 percent duty (delay 0x528).  Broadcasting tx config write 0x%08x \r\n", (unsigned int) config);
     axil_write_register(SCOPE_TX+UART_BROADCAST+C_ADDR_TX_UART_CONFIG, config);
   }
+  
 }
 
 void rx_disable_uart(unsigned chan){
@@ -232,25 +237,40 @@ bool rx_uart_is_enabled(unsigned chan){
 
 void toggle_rx_config(void){
   static int mode = 0;
-  mode = (mode + 1) % 4;
+  mode = (mode + 1) % 6;
   if (mode==0){
     unsigned config = 0x00001002;
-    printf("INFO: No internal loopback.  Broadcasting rx config write 0x%08x \r\n", (unsigned int) config);
+    printf("INFO: Half speed, no internal loopback.  Broadcasting rx config write 0x%08x \r\n", (unsigned int) config);
     axil_write_register(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_UART_CONFIG, config);
   } else if (mode==1) {
     unsigned config = 0x00011002;
-    printf("INFO: Full internal loopback.  Broadcasting rx configs write 0x%08x \r\n", config);
+    printf("INFO: Half speed, full internal loopback.  Broadcasting rx configs write 0x%08x \r\n", config);
     axil_write_register(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_UART_CONFIG, config);
   } else if (mode==2) {
-    unsigned config = 0x00011001;
-    printf("INFO: Full internal loopback at full speed.  Broadcasting rx configs write 0x%08x \r\n", (unsigned int) config);
+    unsigned config = 0x00001001;
+    printf("INFO: Full speed, no internal loopback.  Broadcasting rx configs write 0x%08x \r\n", (unsigned int) config);
     axil_write_register(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_UART_CONFIG, config);
   } else if (mode==3) {
+    unsigned config = 0x00011001;
+    printf("INFO: Full speed, full internal loopback.  Broadcasting rx configs write 0x%08x \r\n", (unsigned int) config);
+    axil_write_register(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_UART_CONFIG, config);    
+  } else if (mode==4) {
     unsigned config;
     config = 0x00011002;
-    printf("INFO: Tiles 2-10 use internal loopback.  Broadcasting rx configs t 0x%08x \r\n", (unsigned int) config);
+    printf("INFO: Half speed, tiles 2-10 use internal loopback.  Broadcasting rx configs t 0x%08x \r\n", (unsigned int) config);
     axil_write_register(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_UART_CONFIG, config);
     config = 0x00001002;
+    printf("INFO: Tile 1 does not use internal loopback.  Setting Tile 1 rx config 0x%08x \r\n", (unsigned int) config);
+    axil_write_register(SCOPE_RX+(0<<8)+C_ADDR_RX_UART_CONFIG, config);
+    axil_write_register(SCOPE_RX+(1<<8)+C_ADDR_RX_UART_CONFIG, config);
+    axil_write_register(SCOPE_RX+(2<<8)+C_ADDR_RX_UART_CONFIG, config);
+    axil_write_register(SCOPE_RX+(3<<8)+C_ADDR_RX_UART_CONFIG, config);
+  } else if (mode==5) {
+    unsigned config;
+    config = 0x00011001;
+    printf("INFO: Full speed, tiles 2-10 use internal loopback.  Broadcasting rx configs t 0x%08x \r\n", (unsigned int) config);
+    axil_write_register(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_UART_CONFIG, config);
+    config = 0x00001001;
     printf("INFO: Tile 1 does not use internal loopback.  Setting Tile 1 rx config 0x%08x \r\n", (unsigned int) config);
     axil_write_register(SCOPE_RX+(0<<8)+C_ADDR_RX_UART_CONFIG, config);
     axil_write_register(SCOPE_RX+(1<<8)+C_ADDR_RX_UART_CONFIG, config);

@@ -19,6 +19,7 @@
 #include "asic.h"
 
 #include "asic_menu.h"
+#include "atc_menu.h"
 #include "iic_menu.h"
 
 // *** LED ***
@@ -401,7 +402,7 @@ void main_menu(){
     printf("MAIN MENU:  choose an option:\r\n");
     printf("(1) blink LEDs (2) global registers (3) toggle scratch registers\r\n");
     printf("(4) power menu (5) I2C menu (6) RX/TX menu (7) ATC menu (8) ADC menu \r\n");
-    printf("(9) ASIC menu \r\n");
+    printf("(9) ASIC menu (10) ATC menu \r\n");
     int input;
     if (scanf("%d", &input) != 1){
       printf("ERROR: invalid input.\r\n");
@@ -441,7 +442,10 @@ void main_menu(){
     case 9:
       asic_menu();
       break;
-    default:
+    case 10:
+      atc_menu();
+      break;
+default:
       printf("invalid selection...\r\n");
     }
   }

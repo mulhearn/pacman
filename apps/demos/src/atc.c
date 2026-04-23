@@ -3,6 +3,42 @@
 #include "hw_access.h"
 #include "atc.h"
 
+
+void set_atc_default_config(){
+  
+  //polarity configuration: a one in the channnel mask sets the corresponding I/O bit to *active* *low*
+  // 0x0HHHGGGI H=H output mask(10 bits) G=G output mask (10 bits) I = input mask (2 bits)
+  axil_write_register(C_SCOPE_ATC + C_ADDR_ATC_POLARITY, 0x03FF3FF0);
+  
+  //destination configurations:
+  // 0x0MMMDDDO M=tile enables, D=duration O=output enables (1 = G, 2 = H, 4 = T)
+  //LEMO A destination configuration:  This is a SYNC pulse, H+T, duration 5
+  axil_write_register(C_SCOPE_ATC + C_ADDR_ATC_DST_LEMO_A, 0x03FF0056);
+
+  //LEMO B destination configuration:  This is a SYNC pulse, H+T, duration 5
+  axil_write_register(C_SCOPE_ATC + C_ADDR_ATC_DST_LEMO_B, 0x03FF0056);
+  
+  //POKE C destination configuration:  This is an INTERNAL_RESET pulse, G, duration 24
+  axil_write_register(C_SCOPE_ATC + C_ADDR_ATC_DST_POKE_C, 0x03FF0181);
+  
+  //POKE D destination configuration:  This is a FULL_RESET pulse, G, duration 1024
+  axil_write_register(C_SCOPE_ATC + C_ADDR_ATC_DST_POKE_D, 0x03FF0181);
+  
+  //POKE D destination configuration:  This is a SYNC pulse, H+T, duration 2
+  //axil_write_register(C_SCOPE_ATC + C_ADDR_ATC_DST_POKE_D, 0x03FF0056);
+
+  // set registers for not-yet-implemented logical stimuli to 0:
+  axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LOGIC_E, 0x0);
+  axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_DST_LOGIC_F, 0x0);
+
+  //Request ATC configuration update:
+  wait_atc_busy(C_ATC_BUSY_WAIT);
+  axil_write_register(C_SCOPE_ATC+C_ADDR_ATC_CONFIG_REQ, 0x0);
+  wait_atc_busy(C_ATC_BUSY_WAIT);
+  
+}
+
+
 void read_atc_registers(){
   printf("timing status---------------0x%x \r\n", (unsigned int) axil_read_register(C_SCOPE_ATC + C_ADDR_ATC_STATUS));
   printf("timestamp-------------------0x%x \r\n", (unsigned int) axil_read_register(C_SCOPE_ATC + C_ADDR_ATC_TIMESTAMP));
