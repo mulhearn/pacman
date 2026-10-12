@@ -8,13 +8,15 @@ use UNISIM.Vcomponents.all;
 
 entity larpix_mclk_sel is
   generic(
-    C_ACLK_PERIOD : real := 10.000; -- ns (100MHz)
-    C_AUX_CLK_PERIOD : real := 50.000; -- ns (20MHz)
-    C_VCO_MAX_FREQ : real := 1.600; -- Ghz
-    C_PFD_MAX_FREQ : real := 0.450; -- Ghz
-    C_VCO_MIN_FREQ : real := 0.800; -- Ghz
-    C_PFD_MIN_FREQ : real := 0.019; -- Ghz
-    C_MCLK_PERIOD : real := 100.000 -- ns (10MHz)
+    -- integer generics: Vivado (2020.2) cannot pass real generics to a block-design module reference
+    -- ("Unsupported VHDL data type 'SIGNED' for float value"), so the design could not be regenerated
+    C_ACLK_PERIOD : integer := 10; -- ns (100MHz)
+    C_AUX_CLK_PERIOD : integer := 50; -- ns (20MHz)
+    C_VCO_MAX_FREQ_MHZ : integer := 1600;
+    C_PFD_MAX_FREQ_MHZ : integer := 450;
+    C_VCO_MIN_FREQ_MHZ : integer := 800;
+    C_PFD_MIN_FREQ_MHZ : integer := 19;
+    C_MCLK_PERIOD : integer := 100 -- ns (10MHz)
     );
   port (
     ACLK : in std_logic; -- default clock
@@ -37,12 +39,19 @@ end larpix_mclk_sel;
 
 architecture arch_imp of larpix_mclk_sel is
 
-  constant C_PLL0_DIV : real := CEIL(1.000 / C_ACLK_PERIOD / C_PFD_MAX_FREQ);
-  constant C_PLL1_DIV : real := CEIL(1.000 / C_AUX_CLK_PERIOD / C_PFD_MAX_FREQ);
-  constant C_CLKFBOUT0_MULT : real := CEIL(C_VCO_MIN_FREQ * C_ACLK_PERIOD * C_PLL0_DIV);
-  constant C_CLKFBOUT1_MULT : real := CEIL(C_VCO_MIN_FREQ * C_AUX_CLK_PERIOD * C_PLL1_DIV);
-  constant C_MCLK0_DIV : real := C_MCLK_PERIOD / C_ACLK_PERIOD * C_CLKFBOUT0_MULT / C_PLL0_DIV;
-  constant C_MCLK1_DIV : real := C_MCLK_PERIOD / C_AUX_CLK_PERIOD * C_CLKFBOUT1_MULT / C_PLL1_DIV;
+  -- the generics as reals, in the original units (ns, GHz)
+  constant ACLK_PERIOD : real := real(C_ACLK_PERIOD);
+  constant AUX_CLK_PERIOD : real := real(C_AUX_CLK_PERIOD);
+  constant MCLK_PERIOD : real := real(C_MCLK_PERIOD);
+  constant PFD_MAX_FREQ : real := real(C_PFD_MAX_FREQ_MHZ) / 1000.0;
+  constant VCO_MIN_FREQ : real := real(C_VCO_MIN_FREQ_MHZ) / 1000.0;
+
+  constant C_PLL0_DIV : real := CEIL(1.000 / ACLK_PERIOD / PFD_MAX_FREQ);
+  constant C_PLL1_DIV : real := CEIL(1.000 / AUX_CLK_PERIOD / PFD_MAX_FREQ);
+  constant C_CLKFBOUT0_MULT : real := CEIL(VCO_MIN_FREQ * ACLK_PERIOD * C_PLL0_DIV);
+  constant C_CLKFBOUT1_MULT : real := CEIL(VCO_MIN_FREQ * AUX_CLK_PERIOD * C_PLL1_DIV);
+  constant C_MCLK0_DIV : real := MCLK_PERIOD / ACLK_PERIOD * C_CLKFBOUT0_MULT / C_PLL0_DIV;
+  constant C_MCLK1_DIV : real := MCLK_PERIOD / AUX_CLK_PERIOD * C_CLKFBOUT1_MULT / C_PLL1_DIV;
 
   attribute ASYNC_REG : string;
   
@@ -158,7 +167,7 @@ begin
 
   -- Frequency generation for default clock
   pll0 : PLLE2_BASE generic map(
-    CLKIN1_PERIOD => C_ACLK_PERIOD,
+    CLKIN1_PERIOD => ACLK_PERIOD,
     CLKOUT0_DIVIDE => integer(C_MCLK0_DIV),
     CLKOUT0_DUTY_CYCLE => 0.5,
     CLKOUT0_PHASE => 0.0,
@@ -182,7 +191,7 @@ begin
 
   -- Frequency generation for aux clock
   pll1 : PLLE2_BASE generic map(
-    CLKIN1_PERIOD => C_AUX_CLK_PERIOD,
+    CLKIN1_PERIOD => AUX_CLK_PERIOD,
     CLKOUT0_DIVIDE => integer(C_MCLK1_DIV),
     CLKOUT0_DUTY_CYCLE => 0.5,
     CLKOUT0_PHASE => 0.0,

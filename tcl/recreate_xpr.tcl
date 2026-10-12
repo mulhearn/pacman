@@ -6846,7 +6846,7 @@ proc create_hier_cell_axi_lite_reg_space_1 { parentCell nameHier } {
    CONFIG.C_RW_REG0_DEFAULT {0x00000002} \
    CONFIG.C_RW_REG1_DEFAULT {0x00000100} \
    CONFIG.C_RW_REG2_DEFAULT {0x3B9ACA00} \
-   CONFIG.C_RW_REG3_DEFAULT {0X00000004} \
+   CONFIG.C_RW_REG3_DEFAULT {0x00000000} \
  ] $axi_lite_reg_space_0
 
   # Create instance: clk_sel, and set properties
@@ -9772,6 +9772,24 @@ proc create_hier_cell_axi_lite_reg_space { parentCell nameHier } {
 
   # Restore current instance
   current_bd_instance $oldCurInst
+
+  # AR 58038 fix: the TX subset converter's settings (dropped from this script in 2425e67) are restored here, in
+  # two steps.  Its output-side widths (M_TDATA_NUM_BYTES, M_HAS_TKEEP, M_HAS_TLAST) are propagated from the
+  # downstream block only by validate_bd_design; before that they are zero and Vivado rejects every remap, which is
+  # why the exported script (settings right after create_bd_cell) failed to source.
+  set conv [get_bd_cells /data_tx/axis_subset_converter_0]
+  set_property -dict [ list \
+   CONFIG.M_HAS_TSTRB {1} \
+   CONFIG.S_HAS_TREADY {1} \
+   CONFIG.S_TDATA_NUM_BYTES {16} \
+ ] $conv
+  validate_bd_design
+  set_property -dict [ list \
+   CONFIG.TDATA_REMAP {tdata[127:0]} \
+   CONFIG.TKEEP_REMAP {tkeep[15:0]} \
+   CONFIG.TLAST_REMAP {tlast[0]} \
+   CONFIG.TSTRB_REMAP {tkeep[15:0]} \
+ ] $conv
 
   validate_bd_design
   save_bd_design

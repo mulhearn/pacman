@@ -40,5 +40,7 @@ wait_on_run $impl_run
 launch_runs $impl_run -to_step write_bitstream -jobs $jobs
 wait_on_run $impl_run
 update_compile_order -fileset sources_1
-file copy -force ./pacman-fw/pacman-fw.runs/impl_1/zsys_wrapper.sysdef ./products/zsys_wrapper.hdf
+# Vivado 2020.2 writes no .sysdef; write the .hdf that PetaLinux 2018.3 and SDK 2018.3 need from the implemented design
+open_run $impl_run
+write_hwdef -force ./products/zsys_wrapper.hdf
 file copy -force ./pacman-fw/pacman-fw.runs/impl_1/zsys_wrapper.bit ./products/zsys_wrapper.bit

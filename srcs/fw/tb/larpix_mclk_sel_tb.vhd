@@ -18,9 +18,9 @@ end larpix_mclk_sel_tb;
 architecture arch_imp of larpix_mclk_sel_tb is
   component larpix_mclk_sel is
     generic(
-      C_ACLK_PERIOD : real := 10.000; -- ns (100MHz)
-      C_AUX_CLK_PERIOD : real := 10.000; -- ns (100MHz)
-      C_MCLK_PERIOD : real := 100.000 -- ns (10MHz)
+      C_ACLK_PERIOD : integer := 10; -- ns (100MHz)
+      C_AUX_CLK_PERIOD : integer := 10; -- ns (100MHz)
+      C_MCLK_PERIOD : integer := 100 -- ns (10MHz)
       );
     port (
       ACLK : in std_logic;
@@ -76,8 +76,8 @@ begin
   end process;
 
   larpix_mclk_sel_inst : larpix_mclk_sel generic map(
-    C_ACLK_PERIOD => 10.000,
-    C_AUX_CLK_PERIOD => 30.000
+    C_ACLK_PERIOD => 10,
+    C_AUX_CLK_PERIOD => 30
     )
     port map(
       ACLK => clk,
