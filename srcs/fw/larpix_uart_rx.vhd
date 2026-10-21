@@ -5,7 +5,7 @@ use ieee.numeric_std.all;
 entity larpix_uart_rx is
   generic (
     C_CLK_HZ : integer := 100000000;
-    C_CLKIN_HZ : integer := 10000000;
+    C_CLKIN_HZ : integer := 50000000;
     C_CHANNEL : std_logic_vector (7 downto 0) := x"FF";
     C_DATA_TYPE : std_logic_vector (7 downto 0) := x"44";
     C_LARPIX_DATA_WIDTH : integer := 64;

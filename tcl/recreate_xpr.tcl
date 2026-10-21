@@ -7368,7 +7368,7 @@ proc create_hier_cell_axi_lite_reg_space_1 { parentCell nameHier } {
    CONFIG.C_RW_REG0_DEFAULT {0x00000002} \
    CONFIG.C_RW_REG1_DEFAULT {0x00000100} \
    CONFIG.C_RW_REG2_DEFAULT {0x3B9ACA00} \
-   CONFIG.C_RW_REG3_DEFAULT {0x00000000} \
+   CONFIG.C_RW_REG3_DEFAULT {0x00000004} \
  ] $axi_lite_reg_space_0
 
   # Create instance: clk_sel, and set properties
@@ -8672,7 +8672,7 @@ proc create_hier_cell_larpix_clk { parentCell nameHier } {
    }
     set_property -dict [ list \
    CONFIG.C_AUX_CLK_PERIOD {50} \
-   CONFIG.C_MCLK_PERIOD {100} \
+   CONFIG.C_MCLK_PERIOD {10} \
  ] $larpix_mclk_sel_0
 
   # Create instance: larpix_reset_gen_0, and set properties
@@ -8706,7 +8706,7 @@ proc create_hier_cell_larpix_clk { parentCell nameHier } {
   connect_bd_net -net axi_lite_reg_space_clk_sel [get_bd_pins axi_lite_reg_space/clk_sel] [get_bd_pins larpix_mclk_sel_0/CLK_SEL]
   connect_bd_net -net axi_lite_reg_space_hb_cycles [get_bd_pins axi_lite_reg_space/hb_cycles] [get_bd_pins larpix_clk_to_axi_st_0/HB_CYCLES]
   connect_bd_net -net axi_lite_reg_space_hb_en [get_bd_pins axi_lite_reg_space/hb_en] [get_bd_pins larpix_clk_to_axi_st_0/HB_EN]
-  connect_bd_net -net axi_lite_reg_space_mclk_div -boundary_type upper [get_bd_pins axi_lite_reg_space/mclk_div]
+  connect_bd_net -net axi_lite_reg_space_mclk_div [get_bd_pins axi_lite_reg_space/mclk_div] [get_bd_pins larpix_mclk_sel_0/MCLK_COUNT]
   connect_bd_net -net axi_lite_reg_space_sw_rst_cycles [get_bd_pins axi_lite_reg_space/sw_rst_cycles] [get_bd_pins larpix_reset_gen_0/SW_RST_CYCLES]
   connect_bd_net -net axi_lite_reg_space_sw_rst_trig [get_bd_pins axi_lite_reg_space/sw_rst_trig] [get_bd_pins larpix_reset_gen_0/SW_RST_TRIG]
   connect_bd_net -net larpix_counter_0_COUNTER [get_bd_pins TIMESTAMP] [get_bd_pins axi_lite_reg_space/timestamp] [get_bd_pins larpix_clk_to_axi_st_0/TIMESTAMP] [get_bd_pins larpix_counter_0/COUNTER]
@@ -9373,7 +9373,7 @@ proc create_hier_cell_axi_lite_reg_space { parentCell nameHier } {
   # Create instance: firmware_minor_0, and set properties
   set firmware_minor_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 firmware_minor_0 ]
   set_property -dict [ list \
-   CONFIG.CONST_VAL {9} \
+   CONFIG.CONST_VAL {10} \
    CONFIG.CONST_WIDTH {32} \
  ] $firmware_minor_0
 
