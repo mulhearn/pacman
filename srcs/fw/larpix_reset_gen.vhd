@@ -10,10 +10,13 @@ entity larpix_reset_gen is
     C_HARD_RST_CYCLES : integer := 256
     );
   port (
+    FCLK : in std_logic;
     MCLK : in std_logic;
     RSTN : in std_logic; -- sync reset with mclk, issues hard reset on rst_sync_n
 
     -- sofware reset (trigger with high then low)
+    SW_RST_PHASE : in unsigned(7 downto 0);
+    SW_RST_MASK : in std_logic_vector(7 downto 0);
     SW_RST_CYCLES : in unsigned(31 downto 0);
     SW_RST_TRIG : in std_logic;
 
@@ -23,6 +26,7 @@ entity larpix_reset_gen is
     HW_HARD_RST_TRIG : in std_logic;
 
     -- output
+    RST_MASKED_N : out std_logic_vector(7 downto 0);
     RST_SYNC_N : out std_logic
     );
 end larpix_reset_gen;
@@ -35,6 +39,9 @@ architecture arch_imp of larpix_reset_gen is
   signal mst_exec_state : state := IDLE;
 
   -- internal signals
+  signal phase_cnt : unsigned(7 downto 0);
+  signal rst_sync_n_del : std_logic;
+
   signal rst_cycles : unsigned(31 downto 0);
   signal rst_sync_n_out : std_logic;
 
@@ -49,7 +56,11 @@ architecture arch_imp of larpix_reset_gen is
   signal hw_hard_rst_trig_clean : std_logic;  
   
 begin
-  RST_SYNC_N <= rst_sync_n_out;
+  RST_SYNC_N <= rst_sync_n_del;
+  
+  rmasker : for k in 0 to 7 generate
+    RST_MASKED_N(k) <= SW_RST_MASK(k) or rst_sync_n_del; -- active low, reset active when mask and pulse =0
+  end generate rmasker;
 
   glitch_rej : process (MCLK, RSTN) is
   begin
@@ -84,12 +95,31 @@ begin
       end if;
     end if;
   end process;
+
+  reset_phase : process (FCLK , RSTN) is
+  begin
+    if(RSTN = '0') then
+       phase_cnt <= SW_RST_PHASE;
+       rst_sync_n_del <= '1';
+    elsif (rising_edge (FCLK ))then
+        if (rst_sync_n_del /= rst_sync_n_out) then
+            if ( phase_cnt = 0) then
+               rst_sync_n_del <= rst_sync_n_out;
+            else 
+                phase_cnt <= phase_cnt -1;
+            end if;
+        else
+           phase_cnt <= SW_RST_PHASE ;
+        end if;
+    end if;
+    
+  end process;
   
   larpix_reset_fsm : process (MCLK, RSTN) is
   begin
     if (RSTN = '0') then
       mst_exec_state <= HW_RESET;
-      rst_sync_n_out <= '0';
+      rst_sync_n_out <= '1';
       rst_cycles <= to_unsigned(C_HARD_RST_CYCLES, rst_cycles'length) - 1;
       
     elsif (rising_edge(MCLK)) then
