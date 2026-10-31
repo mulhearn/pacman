@@ -14,6 +14,7 @@ entity larpix_reset_gen is
     RSTN : in std_logic; -- sync reset with mclk, issues hard reset on rst_sync_n
 
     -- sofware reset (trigger with high then low)
+    SW_RST_MASK : in std_logic_vector(7 downto 0);
     SW_RST_CYCLES : in unsigned(31 downto 0);
     SW_RST_TRIG : in std_logic;
 
@@ -21,8 +22,8 @@ entity larpix_reset_gen is
     HW_SYNC_TRIG : in std_logic;
     HW_STATE_RST_TRIG : in std_logic;
     HW_HARD_RST_TRIG : in std_logic;
-
     -- output
+    RST_MASKED_N : out std_logic_vector(7 downto 0);
     RST_SYNC_N : out std_logic
     );
 end larpix_reset_gen;
@@ -50,6 +51,10 @@ architecture arch_imp of larpix_reset_gen is
   
 begin
   RST_SYNC_N <= rst_sync_n_out;
+
+  rmasker : for k in 0 to 7 generate
+    RST_MASKED_N(k) <= SW_RST_MASK(k) or rst_sync_n_out; -- active low, reset active when mask and pulse =0
+  end generate rmasker;
 
   glitch_rej : process (MCLK, RSTN) is
   begin

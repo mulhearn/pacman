@@ -7,15 +7,7 @@ library UNISIM;
 use UNISIM.Vcomponents.all;
 
 entity larpix_mclk_sel is
-  generic(
-    C_ACLK_PERIOD : real := 10.000; -- ns (100MHz)
-    C_AUX_CLK_PERIOD : real := 50.000; -- ns (20MHz)
-    C_VCO_MAX_FREQ : real := 1.600; -- Ghz
-    C_PFD_MAX_FREQ : real := 0.450; -- Ghz
-    C_VCO_MIN_FREQ : real := 0.800; -- Ghz
-    C_PFD_MIN_FREQ : real := 0.019; -- Ghz
-    C_MCLK_PERIOD : real := 10.000 -- ns (100MHz)
-    );
+
   port (
     ACLK : in std_logic; -- default clock
     AUX_CLK : in std_logic; -- aux clock
@@ -38,6 +30,13 @@ end larpix_mclk_sel;
 
 architecture arch_imp of larpix_mclk_sel is
 
+  constant  C_ACLK_PERIOD : real := 10.000; -- ns (100MHz)
+  constant  C_AUX_CLK_PERIOD : real := 50.000; -- ns (20MHz)
+  constant  C_VCO_MAX_FREQ : real := 1.600; -- Ghz
+  constant  C_PFD_MAX_FREQ : real := 0.450; -- Ghz
+  constant  C_VCO_MIN_FREQ : real := 0.800; -- Ghz
+  constant  C_PFD_MIN_FREQ : real := 0.019; -- Ghz
+  constant  C_MCLK_PERIOD : real := 10.000; -- ns (100MHz)
   constant C_PLL0_DIV : real := CEIL(1.000 / C_ACLK_PERIOD / C_PFD_MAX_FREQ);
   constant C_PLL1_DIV : real := CEIL(1.000 / C_AUX_CLK_PERIOD / C_PFD_MAX_FREQ);
   constant C_CLKFBOUT0_MULT : real := CEIL(C_VCO_MIN_FREQ * C_ACLK_PERIOD * C_PLL0_DIV);
