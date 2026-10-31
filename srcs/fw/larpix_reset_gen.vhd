@@ -40,7 +40,7 @@ architecture arch_imp of larpix_reset_gen is
   signal rst_sync_n_out : std_logic;
 
   signal sw_rst_trig_srg : std_logic_vector(1 downto 0);
-  signal hw_sync_trig_srg : std_logic_vector(1 downto 0);
+  signal hw_sync_trig_srg : std_logic_vector(2 downto 0); --Armin, make edge sensitive
   signal hw_state_rst_trig_srg : std_logic_vector(1 downto 0);
   signal hw_hard_rst_trig_srg : std_logic_vector(1 downto 0);
 
@@ -60,7 +60,7 @@ begin
   begin
     if (rising_edge(MCLK)) then
       sw_rst_trig_srg <= SW_RST_TRIG & sw_rst_trig_srg(sw_rst_trig_srg'length-1);
-      hw_sync_trig_srg <= HW_SYNC_TRIG & hw_sync_trig_srg(hw_sync_trig_srg'length-1);
+      hw_sync_trig_srg <= HW_SYNC_TRIG & hw_sync_trig_srg(2 downto 1);
       hw_state_rst_trig_srg <= HW_STATE_RST_TRIG & hw_state_rst_trig_srg(hw_state_rst_trig_srg'length-1);
       hw_hard_rst_trig_srg <= HW_HARD_RST_TRIG & hw_hard_rst_trig_srg(hw_hard_rst_trig_srg'length-1);
 
@@ -70,7 +70,7 @@ begin
         sw_rst_trig_clean <= '0';
       end if;
 
-      if (hw_sync_trig_srg = "11") then
+      if (hw_sync_trig_srg = "011") then -- edge
         hw_sync_trig_clean <= '1';
       else
         hw_sync_trig_clean <= '0';
