@@ -9,8 +9,9 @@ entity axis_write is
   );
 
   port (
-    M_AXIS_ACLK        : in std_logic;
-    M_AXIS_ARESETN     : in std_logic;
+    --clock and active-high reset:
+    CLK_I              : in std_logic;
+    RST_I              : in std_logic;
 
     M_AXIS_TDATA       : out std_logic_vector(C_AXIS_WIDTH-1 downto 0);
     M_AXIS_TVALID      : out std_logic;
@@ -45,8 +46,8 @@ architecture behavioral of axis_write is
 
   signal mon_depth : std_logic_vector(1 downto 0) := (others => '0');
 begin
-  clk <= M_AXIS_ACLK;
-  rst <= not M_AXIS_ARESETN;
+  clk <= CLK_I;
+  rst <= RST_I;
 
   --constant output:
   M_AXIS_TKEEP <= (others => '1');

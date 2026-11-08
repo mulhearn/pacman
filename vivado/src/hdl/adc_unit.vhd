@@ -7,7 +7,7 @@ use work.common.all;
 entity adc_unit is
   port (
     ACLK	        : in std_logic;
-    ARESETN	        : in std_logic;
+    RST_I	        : in std_logic;
 
     -- REGBUS Ports
     S_REGBUS_RB_RUPDATE : in  std_logic;
@@ -21,12 +21,12 @@ entity adc_unit is
     S_REGBUS_RB_WACK    : out std_logic;
 
     -- BRAM
-    BRAM_EN_O           : out std_logic;
-    BRAM_DATA_O         : out std_logic_vector(BRAM_DATA_WIDTH-1 downto 0);
-    BRAM_WEN_O          : out std_logic_vector(3 downto 0);
-    BRAM_ADDR_O         : out std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
-    BRAM_CLK_O          : out std_logic;
-    BRAM_RST_O          : out std_logic;
+    --BRAM_EN_O           : out std_logic;
+    --BRAM_DATA_O         : out std_logic_vector(BRAM_DATA_WIDTH-1 downto 0);
+    --BRAM_WEN_O          : out std_logic_vector(3 downto 0);
+    --BRAM_ADDR_O         : out std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
+    --BRAM_CLK_O          : out std_logic;
+    --BRAM_RST_O          : out std_logic;
 
     -- ADC
     ADC_EN_O            : out std_logic;
@@ -37,134 +37,54 @@ entity adc_unit is
 end adc_unit;
 
 architecture behavioral of adc_unit is
-  component adc_reg is
+  component adc_registers is
     port(
-      ACLK	             : in std_logic;
-      ARESETN	             : in std_logic;
+      CLK_I	          : in std_logic;
+      RST_I	          : in std_logic;
 
-      S_REGBUS_RB_RADDR	     : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
-      S_REGBUS_RB_RDATA	     : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      S_REGBUS_RB_RUPDATE    : in  std_logic;
-      S_REGBUS_RB_RACK       : out std_logic;
+      S_REGBUS_RB_RUPDATE : in  std_logic;
+      S_REGBUS_RB_RADDR	  : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
+      S_REGBUS_RB_RDATA	  : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      S_REGBUS_RB_RACK    : out std_logic;
 
-      S_REGBUS_RB_WUPDATE    : in  std_logic;
-      S_REGBUS_RB_WADDR	     : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
-      S_REGBUS_RB_WDATA	     : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      S_REGBUS_RB_WACK       : out std_logic;
+      S_REGBUS_RB_WUPDATE : in  std_logic;
+      S_REGBUS_RB_WADDR	  : in  std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0);
+      S_REGBUS_RB_WDATA	  : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      S_REGBUS_RB_WACK    : out std_logic;
 
       CONFIG_O            : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      CLKPAR_O            : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      COMMAND_O           : out std_logic_vector(7 downto 0);
-      STATUS_I            : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      LAST_I              : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      STATE_I             : in std_logic_vector(3 downto 0);
-      LOOK_I              : in std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
+      --STATUS_I          : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      LOOK_I              : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
       );
   end component;
 
-  component adc_daq is
-    port(
-      ACLK           : in  std_logic;
-      ARESETN        : in  std_logic;
-
-      -- ADC
-      ADC_DATA_I     : in  std_logic_vector(ADC_DATA_WIDTH-1 downto 0);
-      ADC_DOF_I      : in  std_logic;
-      ADC_EN_O       : out std_logic;
-
-      -- REGISTER
-      CONFIG_I       : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      COMMAND_I      : in  std_logic_vector(7 downto 0);
-      STATE_O        : out std_logic_vector(3 downto 0);
-      STATUS_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      LAST_O         : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-
-      -- BRAM
-      BRAM_EN_O      : out std_logic;
-      BRAM_DATA_O    : out std_logic_vector(BRAM_DATA_WIDTH-1 downto 0);
-      BRAM_WEN_O     : out std_logic_vector(3 downto 0);
-      BRAM_ADDR_O    : out std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
-      BRAM_CLK_O     : out std_logic;
-      BRAM_RST_O     : out std_logic
-      );
-  end component;
-  component adc_clk_div is
-    port (
-      ACLK           : in  std_logic;
-      ARESETN        : in  std_logic;
-      CLKPAR_I       : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-
-      ADC_CLK_O      : out std_logic
-      );
-  end component;
-
-
-
-  signal config    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
-  signal command   : std_logic_vector(7 downto 0);
-  signal state     : std_logic_vector(3 downto 0);
-  signal clkpar    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
-  signal status    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
-  signal last      : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
-  signal look      : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
+  signal config    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+  signal look      : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
 begin
 
+  look(C_RB_DATA_WIDTH-1 downto ADC_DATA_WIDTH+1) <= (others => '0');
   look(ADC_DATA_WIDTH-1 downto 0) <= ADC_DATA_I;
   look(ADC_DATA_WIDTH) <= ADC_DOF_I;
 
-  registers: adc_reg port map (
-      ACLK           => ACLK,
-      ARESETN        => ARESETN,
-      S_REGBUS_RB_RUPDATE => S_REGBUS_RB_RUPDATE,
-      S_REGBUS_RB_RADDR   => S_REGBUS_RB_RADDR,
-      S_REGBUS_RB_RDATA   => S_REGBUS_RB_RDATA,
-      S_REGBUS_RB_RACK    => S_REGBUS_RB_RACK,
-      S_REGBUS_RB_WUPDATE => S_REGBUS_RB_WUPDATE,
-      S_REGBUS_RB_WADDR   => S_REGBUS_RB_WADDR,
-      S_REGBUS_RB_WDATA   => S_REGBUS_RB_WDATA,
-      S_REGBUS_RB_WACK    => S_REGBUS_RB_WACK,
+  ADC_EN_O <= config(0);
+  ADC_CLK_O <= ACLK;
 
-      CONFIG_O  => config,
-      CLKPAR_O  => clkpar,
-      COMMAND_O => command,
-      STATE_I   => state,
-      STATUS_I  => status,
-      LAST_I    => last,
-      LOOK_I    => look
-      );
+  registers: adc_registers port map (
+    CLK_I               => ACLK,
+    RST_I               => RST_I,
+    S_REGBUS_RB_RUPDATE => S_REGBUS_RB_RUPDATE,
+    S_REGBUS_RB_RADDR   => S_REGBUS_RB_RADDR,
+    S_REGBUS_RB_RDATA   => S_REGBUS_RB_RDATA,
+    S_REGBUS_RB_RACK    => S_REGBUS_RB_RACK,
+    S_REGBUS_RB_WUPDATE => S_REGBUS_RB_WUPDATE,
+    S_REGBUS_RB_WADDR   => S_REGBUS_RB_WADDR,
+    S_REGBUS_RB_WDATA   => S_REGBUS_RB_WDATA,
+    S_REGBUS_RB_WACK    => S_REGBUS_RB_WACK,
 
-  daq: adc_daq port map (
-      ACLK           => ACLK,
-      ARESETN        => ARESETN,
+    CONFIG_O  => config,
+    LOOK_I    => look
+  );
 
-      -- ADC
-      ADC_DATA_I     => ADC_DATA_I,
-      ADC_DOF_I      => ADC_DOF_I,
-      ADC_EN_O       => ADC_EN_O,
-
-      -- REGISTER
-      CONFIG_I       => config,
-      COMMAND_I      => command,
-      STATE_O        => state,
-      STATUS_O       => status,
-      LAST_O         => last,
-
-      -- BRAM
-      BRAM_EN_O      => BRAM_EN_O,
-      BRAM_DATA_O    => BRAM_DATA_O,
-      BRAM_WEN_O     => BRAM_WEN_O,
-      BRAM_ADDR_O    => BRAM_ADDR_O,
-      BRAM_CLK_O     => BRAM_CLK_O,
-      BRAM_RST_O     => BRAM_RST_O
-      );
-
-  clock_out: adc_clk_div port map (
-      ACLK       => ACLK,
-      ARESETN    => ARESETN,
-      CLKPAR_I   => clkpar,
-
-      ADC_CLK_O  => ADC_CLK_O
-      );
 
 end behavioral;

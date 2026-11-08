@@ -11,22 +11,23 @@ use work.common.all;
 -- once I have solid ASIC testing regimen, so comments are limited for
 -- this version.
 
+
 entity rx_chan is
-  generic (
-    constant CHANNEL : integer := 1;
-    constant HEADER  : integer := C_TYPE_DATA
-  );
+
   port (
-    ACLK          : in  std_logic;
-    ARESETN       : in  std_logic;
+    --clock and active-high reset
+    CLK_I          : in  std_logic;
+    RST_I       : in  std_logic;
+
     CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     STATUS_O      : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-    DATA_O        : out  std_logic_vector(C_RX_DATA_WIDTH-1 downto 0);
+    DATA_O        : out  std_logic_vector(C_UART_DATA_WIDTH-1 downto 0);
+    TIMESTAMP_O   : out  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
     VALID_O       : out  std_logic;
     READY_I       : in std_logic;
     RX_I          : in std_logic;
     LOOPBACK_I    : in std_logic;
-    TIMESTAMP_I   : in  std_logic_vector(31 downto 0);
+    TIMESTAMP_I   : in  std_logic_vector(C_TIMESTAMP_WIDTH-1 downto 0);
     DEBUG_O       : out std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
   );
 end;
@@ -46,20 +47,20 @@ architecture behavioral of rx_chan is
   end component;
 
   signal clk        : std_logic;
-  signal rst        : std_logic;
+  signal rst        : std_logic := '1';
 
   signal status     : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal status_z   : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
 
-  signal data      : std_logic_vector(C_UART_DATA_WIDTH-1 downto 0);
+  signal udata       : std_logic_vector(C_UART_DATA_WIDTH-1 downto 0) := (others => '0');
   signal valid      : std_logic;
   signal ready      : std_logic;
 
   signal rx         : std_logic:='0';
 
-  signal update    : std_logic;
-  signal busy      : std_logic;
-  signal busy_z    : std_logic;
+  signal update     : std_logic;
+  signal busy       : std_logic;
+  signal busy_z     : std_logic;
 
   signal start      : std_logic:='0';
   signal lost       : std_logic:='0';
@@ -70,13 +71,13 @@ begin
     CLKIN_RATIO => CONFIG_I(7 downto 0),
     CLKIN_PHASE => CONFIG_I(11 downto 8),
     RX          => rx,
-    data        => data,
+    data        => udata,
     data_update => update,
     busy        => busy
   );
 
-  clk <= ACLK;
-  rst   <= not ARESETN;
+  clk <= CLK_I;
+  rst <= RST_I;
 
   VALID_O <= valid;
   ready <= READY_I;
@@ -93,6 +94,7 @@ begin
   begin
     if (rst='1') then
       DATA_O <= (others => '0');
+      TIMESTAMP_O <= (others => '0');
       valid  <= '0';
       lost   <= '0';
       mode := 0;
@@ -101,11 +103,8 @@ begin
       mode := to_integer(unsigned(CONFIG_I(13 downto 12)));
       if (mode = 1) then
         if (update = '1') then
-          DATA_O <= (others => '0');
-          DATA_O(C_RX_DATA_WIDTH-1 downto C_RX_DATA_WIDTH-C_UART_DATA_WIDTH) <= data;
-          DATA_O(47 downto 16) <= TIMESTAMP_I;
-          DATA_O(15 downto 8) <= std_logic_vector(to_unsigned(CHANNEL, C_BYTE));
-          DATA_O(7 downto 0)  <= std_logic_vector(to_unsigned(HEADER, C_BYTE));
+          DATA_O <= udata;
+          TIMESTAMP_O <= TIMESTAMP_I;
           if ((valid = '1') and (ready='0')) then
             lost <= '1';
           else
@@ -113,9 +112,12 @@ begin
           end if;
         elsif (ready='1') then
           valid <= '0';
+          -- we hold DATA_O and TIMESTAMP_O until valid data replaces it, so
+          -- that most recent RX is available in the LOOK register
         end if;
       else
         DATA_O <= (others => '0');
+        TIMESTAMP_O <= (others => '0');
         valid  <= '0';
       end if;
     end if;
@@ -160,4 +162,3 @@ begin
     end if;
   end process;
 end;
-

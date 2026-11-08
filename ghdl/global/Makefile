@@ -1,17 +1,17 @@
 all: modules-a modules-e testbenches
 
 modules-a:
-	ghdl -a ../integration/version.vhd
-	ghdl -a ../integration/common.vhd
-	ghdl -a ../integration/register_map.vhd
-	ghdl -a ../integration/gen/version_info_pkg.vhd
-	ghdl -a global_registers.vhd
-	ghdl -a global_status.vhd
-	ghdl -a global_unit.vhd
+	ghdl -a --warn-all ../integration/version.vhd
+	ghdl -a --warn-all ../integration/common.vhd
+	ghdl -a --warn-all ../integration/register_map.vhd
+	ghdl -a --warn-all ../integration/gen/version_info_pkg.vhd
+	ghdl -a --warn-all global_registers.vhd
+	ghdl -a --warn-all global_status.vhd
+	ghdl -a --warn-all global_unit.vhd
 modules-e:
-	ghdl -e global_registers
-	ghdl -e global_status
-	ghdl -e global_unit
+	ghdl -e --warn-all global_registers
+	ghdl -e --warn-all global_status
+	ghdl -e --warn-all global_unit
 testbenches:
 	ghdl -a -fsynopsys tb/global_registers_tb.vhd 
 	ghdl -e -fsynopsys global_registers_tb
@@ -20,7 +20,7 @@ testbenches:
 	ghdl -a -fsynopsys tb/global_unit_tb.vhd
 	ghdl -e -fsynopsys global_unit_tb
 run-testbenches: all
-	ghdl -r -fsynopsys global_registers_tb --stop-time=220ns --vcd=../diagrams/global_registers_tb.vcd 
-	ghdl -r -fsynopsys global_status_tb --stop-time=150ns
+	ghdl -r --warn-all -fsynopsys global_registers_tb --stop-time=220ns --vcd=../diagrams/global_registers_tb.vcd 
+	ghdl -r --warn-all -fsynopsys global_status_tb --stop-time=150ns
 run-unit-testbench: all
-	ghdl -r -fsynopsys global_unit_tb --stop-time=150ns
+	ghdl -r --warn-all -fsynopsys global_unit_tb --stop-time=150ns

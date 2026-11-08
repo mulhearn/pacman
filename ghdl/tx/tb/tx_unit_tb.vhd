@@ -13,8 +13,8 @@ end tx_unit_tb;
 architecture behaviour of tx_unit_tb is
   component tx_unit is
     port (
-      S_AXIS_ACLK            : in std_logic;
-      S_AXIS_ARESETN         : in std_logic;
+      ACLK                   : in std_logic;
+      RST_I                  : in std_logic;
       UCLK_I                 : in  std_logic;
 
       S_AXIS_TDATA           : in std_logic_vector(C_TX_AXIS_WIDTH-1 downto 0);
@@ -39,8 +39,8 @@ architecture behaviour of tx_unit_tb is
   end component;
 
   signal count    : integer := 0;
-  signal aclk     : std_logic  := '0';
-  signal aresetn  : std_logic  := '0';
+  signal clk      : std_logic  := '0';
+  signal rst      : std_logic  := '0';
   signal uclk     : std_logic  := '0';
 
   signal tdata    : std_logic_vector(C_TX_AXIS_WIDTH-1 downto 0) := (others => '0');
@@ -70,8 +70,8 @@ architecture behaviour of tx_unit_tb is
 
 begin
   uut: tx_unit port map (
-    S_AXIS_ACLK     => aclk,
-    S_AXIS_ARESETN  => aresetn,
+    ACLK            => clk,
+    RST_I           => rst,
     UCLK_I          => uclk,
     S_AXIS_TDATA    => tdata,
     S_AXIS_TVALID   => tvalid,
@@ -90,20 +90,20 @@ begin
     DEBUG_O             => debug
   );
 
-  aclk_process : process
+  clk_process : process
   begin
     count <= count + 1;
-    aclk <= '1';
+    clk <= '1';
     wait for 5 ns;
-    aclk <= '0';
+    clk <= '0';
     wait for 5 ns;
   end process;
 
-  aresetn_process : process
+  rst_process : process
   begin
-    aresetn <= '0';
+    rst <= '1';
     wait for 20 ns;
-    aresetn <= '1';
+    rst <= '0';
     wait;
   end process;
 
@@ -118,7 +118,7 @@ begin
   runshow_process : process
   begin
     show_tx_output <= '0';
-    wait for 300 ns;
+    wait for 600 ns;
     show_tx_output <= '1';
     wait for 7200 ns;
     show_tx_output <= '0';
@@ -138,18 +138,14 @@ begin
     tdata(63 downto 0)    <= x"000000FFFFFFFFFF";
     tlast                 <= '0';
     wait for 10 ns;
-    for i in 0 to 19 loop
+    for i in 0 to 40-1 loop
       tvalid <= '1';
       tdata <= (others => '0');
       ibuf := 16#1111CC00# + 2*i;
       tdata(31 downto 0)    <= std_logic_vector(to_unsigned(ibuf, 32));
       ibuf := 16#1111DD00# + 2*i;
       tdata(63 downto 32)    <= std_logic_vector(to_unsigned(ibuf, 32));
-      ibuf := 16#2222CC00# + 2*i+1;
-      tdata(95 downto 64)    <= std_logic_vector(to_unsigned(ibuf, 32));
-      ibuf := 16#2222DD00# + 2*i+1;
-      tdata(127 downto 96)    <= std_logic_vector(to_unsigned(ibuf, 32));
-      if (i < 19) then
+      if (i < 40-1) then
         tlast <= '0';
       else
         tlast <= '1';
@@ -196,22 +192,13 @@ begin
     raddr   <= x"0C20";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"0018";
+    raddr   <= x"3FA0";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"001C";
+    raddr   <= x"3FA4";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"0118";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"011C";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"0C18";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"0C1C";
+    raddr   <= x"3FA8";
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"0000";
@@ -232,13 +219,13 @@ begin
     wdata   <= x"00001601";
     wupdate <= '1';
     wait for 10 ns;
+    waddr   <= x"3FA0";
+    wdata   <= x"0000000A";
+    wupdate <= '1';
+    wait for 10 ns;
     waddr   <= x"0000";
     wdata   <= x"00000000";
     wupdate <= '0';
-    --wait for 1000 ns;
-    --waddr   <= x"3FA8";
-    --wdata   <= x"00000000";
-    --wupdate <= '1';
     wait;
   end process;
 
@@ -267,7 +254,7 @@ begin
       write (l, wack);
       write (l, String'(" || debug: 0x"));
       hwrite (l, debug);
-      if (aresetn = '0') then
+      if (rst = '1') then
         write (l, String'(" (RESET)"));
       end if;
       writeline(output, l);
@@ -292,7 +279,7 @@ begin
       write (l, tready);
       write (l, String'(" ltast: "));
       write (l, tlast);
-      if (aresetn = '0') then
+      if (rst = '1') then
         write (l, String'(" (RESET)"));
       end if;
       writeline(output, l);
@@ -333,13 +320,9 @@ begin
     wait until (count=60);
     write(l, String'("INFO:  TX begins with start bit (0) on each uart channel:"));
     writeline(output, l);
-    wait until (count=70);
-    write(l, String'("INFO:  TX payload follows, with 64 bits for each uart channel:"));
-    writeline(output, l);
-    wait until (count=710);
+    wait until (count=730);
     write(l, String'("INFO:  TX ends with stop bit (1) on each uart channel:"));
     writeline(output, l);
-    wait until (count=720);
     write(l, String'("INFO:  TX output remains high until the next transmission:"));
     writeline(output, l);
     wait until (count=800);

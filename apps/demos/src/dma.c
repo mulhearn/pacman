@@ -630,9 +630,11 @@ void dma_print_buffer(hw_ptr_t buf, hw_val_t len, int ncol, int max_words) {
     words = max_words;
 
   for (int i=0; i<words; i++){
+    // putting LSBs to the right in each column:
+    int ibuf = i + (ncol-1) - 2*(i%ncol);
     if ((i%ncol)==0)
       printf("%4d: ", i/ncol);
-    printf("0x%08x ", buf[i]);
+    printf("0x%08x ", buf[ibuf]);
     if (((i+1)%ncol)==0)
       printf("\r\n");
   }
