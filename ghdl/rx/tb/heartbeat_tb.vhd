@@ -16,7 +16,7 @@ architecture behaviour of heartbeat_tb is
       ACLK          : in  std_logic;
       ARESETN       : in  std_logic;
       EN_I          : in  std_logic;
-      CYCLES_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+      CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       DATA_O        : out std_logic_vector(C_RX_DATA_WIDTH-1 downto 0);
       VALID_O       : out std_logic;
       READY_I       : in  std_logic;
@@ -47,7 +47,7 @@ begin
     ACLK        => aclk,
     ARESETN     => aresetn,
     EN_I        => '1',
-    CYCLES_I    => x"00000008",
+    CONFIG_I    => x"00000008",
     DATA_O      => data,
     VALID_O     => valid,
     READY_I     => ready,

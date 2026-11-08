@@ -63,11 +63,25 @@ unsigned tx_buffer_lost(){
 
 unsigned tx_buffer_in(unsigned char chan, uint32_t * tx_data){
 
-  // ignoring broadcast for now
-  if (chan > TX_BUFFER_CHAN)
-    return 0;
-  unsigned head = G_TX_BUFFER_HEAD[chan];
+  // check for broadcast:
+  if (chan >= TX_BUFFER_CHAN){
+    unsigned replay = 0;
+    if (chan == 63)
+      replay = 1;
+    else if (chan == 62)
+      replay = 2;
+    else
+      return 0;
 
+    for (int i=0; i<replay; i++){
+      for (unsigned char c=0; c<TX_BUFFER_CHAN; c++){
+	tx_buffer_in(c, tx_data);
+      }
+    }
+    return 1;
+  }
+
+  unsigned head = G_TX_BUFFER_HEAD[chan];
   if (((head+1) % TX_BUFFER_DEPTH) == G_TX_BUFFER_TAIL[chan]){
     printf("ERROR:  LOST!!!!\n");
     G_TX_LOST++;

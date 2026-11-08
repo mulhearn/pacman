@@ -7,16 +7,16 @@
 #include "xstatus.h"
 #include "xil_printf.h"
 #include "sleep.h"
+#include "xemacps.h"
 
+#include "hw_access.h"
+#include "dma.h"
+#include "global.h"
 #include "gpiops.h"
-#include "axil.h"
 #include "iic.h"
 #include "rxtx.h"
 #include "timing.h"
 #include "adc.h"
-
-
-#include "xemacps.h"
 
 #define EMAC_DEVICE_ID      XPAR_XEMACPS_0_DEVICE_ID
 #define PHY_ADDRESS         0x1A    // Your CPLD PHY address
@@ -87,54 +87,6 @@ void toggle_cpld(){
   }
 }
 
-
-void read_global_status(){
-  xil_printf("fw major----------- %d   \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+C_ADDR_GLOBAL_FW_MAJOR));
-  xil_printf("fw minor----------- %d   \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+C_ADDR_GLOBAL_FW_MINOR));
-  xil_printf("fw build----------- 0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+C_ADDR_GLOBAL_FW_BUILD));
-  xil_printf("hw code------------ 0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+C_ADDR_GLOBAL_HW_CODE));
-  xil_printf("scratch a---------- 0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRA));
-  xil_printf("scratch b---------- 0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRB));
-  xil_printf("\r\n");
-  xil_printf("enables------------ 0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+C_ADDR_GLOBAL_ENABLES));
-  xil_printf("\r\n");
-  //xil_printf("timing status-------0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_STATUS));
-  //xil_printf("trig config---------0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_TRIG));
-  //xil_printf("sync config---------0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_SYNC));
-  //xil_printf("\r\n");
-  //xil_printf("timestamp-----------0x%x \r\n", Xil_In32(ADDR_AXIL_REGS+SCOPE_GLOBAL+ROLE_TIMING+C_ADDR_TIMING_STAMP));
-}
-
-void toggle_scratch(){
-  unsigned scra, scrb;
-  static int mode = 0;
-  mode = (mode + 1) % 3;
-  switch(mode){
-    case 1:
-      scra = 0xAAAAAAAA;
-      scrb = 0xBBBBBBBB;
-      break;
-    case 2:
-      scra = 0x12341234;
-      scrb = 0x7777FFFF;
-      break;
-    default:
-      scra = 0x0;
-      scrb = 0x0;
-  }
-  xil_printf("INFO: setting scratch a to 0x%08x and scratch b to 0x%08x \r\n", scra, scrb);
-  Xil_Out32(ADDR_AXIL_REGS+SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRA, scra);
-  Xil_Out32(ADDR_AXIL_REGS+SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRB, scrb);
-}
-
-void toggle_enables(){
-  unsigned enables[] = {0x00000000, 0x00010000, 0x00010001,  0x000103FF, 0x001103FF};
-  static int mode = 0;
-  mode = (mode + 1) % 5;
-  xil_printf("INFO: setting enables to 0x%08x \r\n", enables[mode]);
-  Xil_Out32(ADDR_AXIL_REGS+SCOPE_GLOBAL+C_ADDR_GLOBAL_ENABLES, enables[mode]);
-}
-
 void toggle_dcache(){
   static int mode = 0;
   mode = (mode + 1) % 2;
@@ -156,35 +108,138 @@ void blink_leds(){
 
   xil_printf("BLINK LEDS:  blinking LED 3 via AXIL...\r\n");
   for (int iblink=0; iblink<nblink; iblink++){
-    Xil_Out32(ADDR_AXIL_REGS+SCOPE_GLOBAL+C_ADDR_GLOBAL_LEDS, 0x1);
+    Xil_Out32(AXIL_REGISTERS_BASEADDR+SCOPE_GLOBAL+C_ADDR_GLOBAL_LEDS, 0x1);
     usleep(wait_usec);
-    Xil_Out32(ADDR_AXIL_REGS+SCOPE_GLOBAL+C_ADDR_GLOBAL_LEDS, 0x0);
+    Xil_Out32(AXIL_REGISTERS_BASEADDR+SCOPE_GLOBAL+C_ADDR_GLOBAL_LEDS, 0x0);
     usleep(wait_usec);
   }
 
   xil_printf("BLINK LEDS:  blinking LED 4 via AXIL...\r\n");
   for (int iblink=0; iblink<nblink; iblink++){
-    Xil_Out32(ADDR_AXIL_REGS+SCOPE_GLOBAL+C_ADDR_GLOBAL_LEDS, 0x2);
+    Xil_Out32(AXIL_REGISTERS_BASEADDR+SCOPE_GLOBAL+C_ADDR_GLOBAL_LEDS, 0x2);
     usleep(wait_usec);
-    Xil_Out32(ADDR_AXIL_REGS+SCOPE_GLOBAL+C_ADDR_GLOBAL_LEDS, 0x0);
+    Xil_Out32(AXIL_REGISTERS_BASEADDR+SCOPE_GLOBAL+C_ADDR_GLOBAL_LEDS, 0x0);
     usleep(wait_usec);
   }
+}
 
+void rxtx_menu(){
+  printf("RX/TX Menu: \r\n");
 
-
-
-
+  while(1){
+    printf("choose an option:\r\n");
+    printf("(0) exit RX/TX Menu \r\n");
+    printf("(1) read tx status (2) read tx look (3) toggle tx mask (4) toggle tx config \r\n");
+    printf("(5) read rx status (6) read rx look (7) toggle rx config (8) toggle rx global config \r\n");
+    printf("(9) zero counts \r\n");
+    printf("(a) init descriptor ring mode (b) show BDs (c) show head/tail (d) clear IOC flags \r\n");
+    printf("(e) single TX (f) single RX (g) batch TX (h) batch RX \r\n");
+    printf("(m) show TX buffer (n) show RX buffer (o) show RX transferred \r\n");
+    printf("...\r\n");
+    printf("(t) reset TX DMA (u) TX DMA status (v) reset RX DMA (w) RX DMA status (x) long DMA status \r\n");
+    printf("(y) benchmark TX (z) benchmark RX/TX loopback \r\n");
+    unsigned char c=inbyte();
+    printf("pressed:  %c\n\r", c);
+    switch(c){
+    case '0':
+      return;
+    case '1':
+      read_tx_status();
+      break;
+    case '2':
+      read_tx_look();
+      break;
+    case '3':
+      toggle_tx_mask();
+      break;
+    case '4':
+      toggle_tx_config();
+      break;
+    case '5':
+      read_rx_status();
+      break;
+    case '6':
+      read_rx_look();
+      break;
+    case '7':
+      toggle_rx_config();
+      break;
+    case '8':
+      toggle_rx_global_config();
+      break;
+    case '9':
+      zero_rxtx_counts();
+      break;
+    case 'a':
+      init_rxtx_descriptor_ring_mode(8);
+      break;
+    case 'b':
+      show_rxtx_bds();
+      break;
+    case 'c':
+      show_rxtx_head_tail();
+      break;
+    case 'd':
+      clear_rxtx_ioc();
+      break;
+    case 'e':
+      single_tx();
+      break;
+    case 'f':
+      single_rx();
+      break;
+    case 'g':
+      batch_tx();
+      break;
+    case 'h':
+      batch_rx();
+      break;
+    case 'm':
+      show_tx_buffer();
+      break;
+    case 'n':
+      show_rx_buffer();
+      break;
+    case 'o':
+      show_rx_transferred();
+      break;
+    case 't':
+      dma_reset_tx(DMA_TIMEOUT);
+      break;
+    case 'u':
+      dma_show_tx_status();
+      break;
+    case 'v':
+      dma_reset_rx(DMA_TIMEOUT);
+      break;
+    case 'w':
+      dma_show_rx_status();
+      break;
+    case 'x':
+      dma_show_long_status();
+      break;
+    case 'y':
+      benchmark_tx();
+      break;
+    case 'z':
+      benchmark_rxtx_loopback();
+      break;
+    default:
+      printf("invalid selection...\n\r");
+    }
+  }
 }
 
 int main(){
-  xil_printf("Demonstration Driver For PACMAN TX/RX \r\n");
-  xil_printf("Sanity number:  2\r\n");
+  xil_printf("Menu-Driver Demonstration Driver For PACMAN\r\n");
+  xil_printf("Sanity number:  1\r\n");
   xil_printf("Random Max:  0x%x Random Number:  0x%x \r\n", RAND_MAX, rand());
 
   int status = 0;
   status |= init_gpiops();
   status |= init_iic();
   mdio_init();
+  init_rxtx();
   if (status != XST_SUCCESS) {
     xil_printf("Hardware initialization has FAILED.\r\n");
     return 0;
@@ -193,8 +248,8 @@ int main(){
   while(1){
     xil_printf("choose an option:\r\n");
     xil_printf("(1) blink LEDs (2) read global status (3) toggle scratch (4) toggle enables (5) toggle dcache \r\n");
-    xil_printf("(6) I2C menu (7) RX/TX menu (8) timing menu (9) ADC menu\r\n");
-    xil_printf("(a) read MAC From CPLD (b) toggle CPLD config \r\n");
+    xil_printf("(6) read MAC From CPLD (7) toggle CPLD config \r\n");
+    xil_printf("(a) I2C menu (b) RX/TX menu (c) timing menu (d) ADC menu\r\n");
     unsigned char c=inbyte();
     xil_printf("pressed:  %c\n\r", c);
     switch(c){
@@ -205,31 +260,31 @@ int main(){
       read_global_status();
       break;
     case '3':
-      toggle_scratch();
+      toggle_global_scratch();
       break;
     case '4':
-      toggle_enables();
+      toggle_global_enables();
       break;
     case '5':
       toggle_dcache();
       break;
     case '6':
-      iic_menu();
-      break;
-    case '7':
-      rxtx_menu();
-      break;
-    case '8':
-      timing_menu();
-      break;
-    case '9':
-      adc_menu();
-      break;
-    case 'a':
       read_mac_from_cpld();
       break;
-    case 'b':
+    case '7':
       toggle_cpld();
+      break;
+    case 'a':
+      iic_menu();
+      break;
+    case 'b':
+      rxtx_menu();
+      break;
+    case 'c':
+      timing_menu();
+      break;
+    case 'd':
+      adc_menu();
       break;
     default:
       xil_printf("invalid selection...\n\r");
@@ -237,7 +292,3 @@ int main(){
   }
   return 0;
 }
-
-
-
-

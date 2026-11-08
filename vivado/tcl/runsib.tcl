@@ -8,6 +8,9 @@ set origin_dir [file dirname [info script]]/..
 
 open_project $origin_dir/$proj_name/$proj_name.xpr
 
+source $origin_dir/tcl/version_info.tcl
+import_files -force gen/hdl/version_info_pkg.vhd
+
 update_compile_order -fileset sources_1
 reset_run synth_1
 reset_run impl_1

@@ -4,8 +4,8 @@ INCLUDE_DIR := include
 SRC_DIR := src
 OBJ_DIR := obj
 
-SRC := $(wildcard $(SRC_DIR)/*.cc)
-OBJ := $(SRC:$(SRC_DIR)/%.cc=$(OBJ_DIR)/%.o)
+SRC := $(wildcard $(SRC_DIR)/*.c)
+OBJ := $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
 CPPFLAGS += -I${INCLUDE_DIR}
 
@@ -18,7 +18,7 @@ build: $(APP)
 $(APP): $(OBJ)
 	$(CC) $(LDFLAGS) $(filter-out $(OBJ_DIR)/$(filter-out $@, $(APP)).o, $^) $(LDLIBS) -o $@
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cc | $(OBJ_DIR)
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR):

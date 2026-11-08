@@ -33,24 +33,25 @@ architecture behaviour of tx_unit_tb is
       S_REGBUS_RB_WDATA	     : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_WACK       : out std_logic;
 
-      POSI_O                 : out std_logic_vector(C_NUM_UART-1 downto 0)
+      POSI_O                 : out std_logic_vector(C_NUM_UART-1 downto 0);
+      DEBUG_O                : out  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
       );
   end component;
 
   signal count    : integer := 0;
-  signal aclk     : std_logic;
-  signal aresetn  : std_logic;
-  signal uclk     : std_logic;
+  signal aclk     : std_logic  := '0';
+  signal aresetn  : std_logic  := '0';
+  signal uclk     : std_logic  := '0';
 
   signal tdata    : std_logic_vector(C_TX_AXIS_WIDTH-1 downto 0) := (others => '0');
   signal tvalid   : std_logic := '0';
-  signal tready   : std_logic;
+  signal tready   : std_logic := '0';
   signal tlast    : std_logic := '0';
 
   -- read signals:
   signal raddr    : std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0) := (others => '0');
   signal rupdate  : std_logic := '0';
-  signal rdata    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+  signal rdata    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
   signal rack     : std_logic := '0';
   -- write signals:
   signal waddr    : std_logic_vector(C_RB_ADDR_WIDTH-1 downto 0) := (others => '0');
@@ -59,6 +60,8 @@ architecture behaviour of tx_unit_tb is
   signal wack     : std_logic := '0';
 
   signal posi     : std_logic_vector(C_NUM_UART-1 downto 0);
+
+  signal debug    : std_logic_vector(C_RB_DATA_WIDTH-1 downto 0) := (others => '0');
 
   -- control the output for different stages of the demo:
   signal show_regbus_output : std_logic := '0';
@@ -83,7 +86,8 @@ begin
     S_REGBUS_RB_WADDR   => waddr,
     S_REGBUS_RB_WDATA   => wdata,
     S_REGBUS_RB_WACK    => wack,
-    POSI_O              => posi
+    POSI_O              => posi,
+    DEBUG_O             => debug
   );
 
   aclk_process : process
@@ -98,7 +102,7 @@ begin
   aresetn_process : process
   begin
     aresetn <= '0';
-    wait for 10 ns;
+    wait for 20 ns;
     aresetn <= '1';
     wait;
   end process;
@@ -111,31 +115,41 @@ begin
     wait for 50 ns;
   end process;
 
+  runshow_process : process
+  begin
+    show_tx_output <= '0';
+    wait for 300 ns;
+    show_tx_output <= '1';
+    wait for 7200 ns;
+    show_tx_output <= '0';
+    wait;
+  end process;
+
   stream_process : process
-    variable ibuf : integer;
+    variable ibuf : integer := 0;
   begin
     tvalid <= '0';
     tdata(63 downto 0)    <= (others => '0');
     tlast                 <= '0';
     wait for 1 ns;
-    wait for 110 ns;
+    wait for 90 ns;
     show_axis_output<='1';
     tvalid <= '1';
     tdata(63 downto 0)    <= x"000000FFFFFFFFFF";
     tlast                 <= '0';
     wait for 10 ns;
-    for i in 0 to 39 loop
+    for i in 0 to 19 loop
       tvalid <= '1';
       tdata <= (others => '0');
-      ibuf := 16#55555A00# + i;
+      ibuf := 16#1111CC00# + 2*i;
       tdata(31 downto 0)    <= std_logic_vector(to_unsigned(ibuf, 32));
-      ibuf := 16#55555B00# + i;
+      ibuf := 16#1111DD00# + 2*i;
       tdata(63 downto 32)    <= std_logic_vector(to_unsigned(ibuf, 32));
-      ibuf := 16#55555C00# + i;
+      ibuf := 16#2222CC00# + 2*i+1;
       tdata(95 downto 64)    <= std_logic_vector(to_unsigned(ibuf, 32));
-      ibuf := 16#55555D00# + i;
+      ibuf := 16#2222DD00# + 2*i+1;
       tdata(127 downto 96)    <= std_logic_vector(to_unsigned(ibuf, 32));
-      if (i < 39) then
+      if (i < 19) then
         tlast <= '0';
       else
         tlast <= '1';
@@ -157,37 +171,29 @@ begin
     rupdate <= '0';
     wait for 1 ns;
     wait for 30 ns;
-    raddr   <= x"0000";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"3F00";
-    rupdate <= '1';
-    wait for 10 ns;
     raddr   <= x"0004";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"0018";
+    raddr   <= x"0C04";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"001C";
+    raddr   <= x"0020";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"3F20";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"0030";
+    raddr   <= x"0C20";
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"0000";
     rupdate <= '0';
     wait for 10 ns;
     show_regbus_output <= '0';
-    wait for 500 ns;
+    wait for 8000 ns;
     show_regbus_output <= '1';
-    raddr   <= x"0000";
+    wait for 10 ns;
+    raddr   <= x"0020";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"3F00";
+    raddr   <= x"0C20";
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"0018";
@@ -202,31 +208,10 @@ begin
     raddr   <= x"011C";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"0218";
+    raddr   <= x"0C18";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"021C";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"0318";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"031C";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"0000";
-    rupdate <= '0';
-    wait for 10 ns;
-    show_regbus_output <= '0';
-    wait for 8000 ns;
-    show_regbus_output <= '1';
-    raddr   <= x"0000";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"3F00";
-    rupdate <= '1';
-    wait for 10 ns;
-    raddr   <= x"0030";
+    raddr   <= x"0C1C";
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"0000";
@@ -247,25 +232,13 @@ begin
     wdata   <= x"00001601";
     wupdate <= '1';
     wait for 10 ns;
-    waddr   <= x"0004";
-    wdata   <= x"00001601";
-    wupdate <= '1';
-    wait for 10 ns;
-    waddr   <= x"3F20";
-    wdata   <= x"00000001";
-    wupdate <= '1';
-    wait for 10 ns;
     waddr   <= x"0000";
     wdata   <= x"00000000";
     wupdate <= '0';
-    wait for 1000 ns;
-    show_tx_output<='1';
-    wait for 100 ns;
-    waddr   <= x"3F20";
-    wdata   <= x"00000000";
-    wupdate <= '1';
-    wait for 7200 ns;
-    show_tx_output<='0';
+    --wait for 1000 ns;
+    --waddr   <= x"3FA8";
+    --wdata   <= x"00000000";
+    --wupdate <= '1';
     wait;
   end process;
 
@@ -274,7 +247,6 @@ begin
   begin
     wait for 10 ns;
     if (show_regbus_output='1') then
-
       write (l, String'("c: "));
       write (l, count, left, 4);
       write (l, String'(" || ra: 0x"));
@@ -293,6 +265,8 @@ begin
       hwrite (l, wdata);
       write (l, String'(" wk:"));
       write (l, wack);
+      write (l, String'(" || debug: 0x"));
+      hwrite (l, debug);
       if (aresetn = '0') then
         write (l, String'(" (RESET)"));
       end if;
@@ -342,7 +316,37 @@ begin
     end if;
   end process;
 
-
+  comment_process : process
+    variable l : line;
+  begin
+    write(l, String'("INFO:  DEBUG output at start: 0x"));
+    hwrite(l, debug);
+    writeline(output, l);
+    write(l, String'("INFO:  Resetting:"));
+    writeline(output, l);
+    wait until (count=3);
+    write(l, String'("INFO:  Setting TX config via broadcast (0x3B04), reading back config, and checking counts are zero:"));
+    writeline(output, l);
+    wait until (count=10);
+    write(l, String'("INFO:  TX data arrives on AXI Stream:  21 beats of 128 bits each (40 64-bit uart packets plus one 128-bit header) "));
+    writeline(output, l);
+    wait until (count=60);
+    write(l, String'("INFO:  TX begins with start bit (0) on each uart channel:"));
+    writeline(output, l);
+    wait until (count=70);
+    write(l, String'("INFO:  TX payload follows, with 64 bits for each uart channel:"));
+    writeline(output, l);
+    wait until (count=710);
+    write(l, String'("INFO:  TX ends with stop bit (1) on each uart channel:"));
+    writeline(output, l);
+    wait until (count=720);
+    write(l, String'("INFO:  TX output remains high until the next transmission:"));
+    writeline(output, l);
+    wait until (count=800);
+    write(l, String'("INFO:  Read the TX count and look registers for several UART channels:"));
+    writeline(output, l);
+    wait;
+  end process;
 
 
 end behaviour;

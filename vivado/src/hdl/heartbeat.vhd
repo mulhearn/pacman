@@ -4,6 +4,8 @@ use ieee.numeric_std.all;
 library work;
 use work.common.all;
 
+-- heartbeat:  presents a periodic heartbeat on channel CHANNEL to the RX buffer
+
 entity heartbeat is
   generic (
     constant CHANNEL   : integer := 16#48#;  -- ASCII H
@@ -13,7 +15,7 @@ entity heartbeat is
     ACLK          : in  std_logic;
     ARESETN       : in  std_logic;
     EN_I          : in  std_logic;
-    CYCLES_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
+    CONFIG_I      : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
     DATA_O        : out  std_logic_vector(C_RX_DATA_WIDTH-1 downto 0);
     VALID_O       : out  std_logic;
     READY_I       : in std_logic;
@@ -49,7 +51,7 @@ begin
         valid <= '0';
       end if;
 
-      if ((EN_I='1') and ((count+1) >= unsigned(CYCLES_I))) then
+      if ((EN_I='1') and ((count+1) >= unsigned(CONFIG_I))) then
         if ((valid='0') or ((valid='1') and (ready='1'))) then
           valid <= '1';
           count <= 0;

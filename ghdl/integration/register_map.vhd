@@ -5,35 +5,88 @@ use ieee.numeric_std.all;
 package register_map is
 
   -- Top Level SCOPE (4 - bits)
-  constant C_SCOPE_GLOBAL  : integer := 2#1111#;
-  constant C_SCOPE_TIMING  : integer := 2#1110#; -- E
-  constant C_SCOPE_UART_TX : integer := 2#00#;   -- UART_TX = 00XX
-  constant C_SCOPE_UART_RX : integer := 2#01#;   -- UART_RX = 01XX
+  constant C_SCOPE_GLOBAL   : integer := 2#1111#; -- GLOBAL = 0xF = 0b1111
+  constant C_SCOPE_TIMING   : integer := 2#1110#; -- TIMING = 0xE = 0b1110
+  constant C_SCOPE_ADC      : integer := 2#1110#; -- ADC    = 0xD = 0b1101
+  constant C_SCOPE_UPPER_TX : integer := 2#00#;   -- TX     =     = 0b00XX
+  constant C_SCOPE_UPPER_RX : integer := 2#01#;   -- RX     =     = 0b01XX
 
-  -- ROLES (next 4-bits) within the GLOBAL SCOPE:
-  constant C_ROLE_GLOBAL   : integer := 2#1111#;
-  constant C_ROLE_TIMING   : integer := 2#1110#;
-  constant C_ROLE_ADC      : integer := 2#1101#;
+  --
+  -- Registers with SCOPE=GLOBAL
+  --
+  constant C_ADDR_GLOBAL_STATUS          : integer := 16#000#; -- Read Only
+  constant C_ADDR_GLOBAL_ENABLES         : integer := 16#010#;
+  constant C_ADDR_GLOBAL_LEDS            : integer := 16#014#;
+  constant C_ADDR_GLOBAL_SCRATCH_A       : integer := 16#020#;
+  constant C_ADDR_GLOBAL_SCRATCH_B       : integer := 16#024#;
+  constant C_ADDR_GLOBAL_FIRMWARE_MAJOR  : integer := 16#F10#; -- Read Only
+  constant C_ADDR_GLOBAL_FIRMWARE_MINOR  : integer := 16#F14#; -- Read Only
+  constant C_ADDR_GLOBAL_FIRMWARE_LETTER : integer := 16#F18#; -- Read Only
+  constant C_ADDR_GLOBAL_HARDWARE_MAJOR  : integer := 16#F20#; -- Read Only
+  constant C_ADDR_GLOBAL_HARDWARE_MINOR  : integer := 16#F24#; -- Read Only
+  constant C_ADDR_GLOBAL_HARDWARE_LETTER : integer := 16#F28#; -- Read Only
+  constant C_ADDR_GLOBAL_SYNTHESIS_DATE  : integer := 16#F30#; -- Read Only
+  constant C_ADDR_GLOBAL_GIT_HASH_UPPER  : integer := 16#F40#; -- Read Only
+  constant C_ADDR_GLOBAL_GIT_HASH_LOWER  : integer := 16#F44#; -- Read Only
+  constant C_ADDR_GLOBAL_VIVADO_MAJOR    : integer := 16#F50#; -- Read Only
+  constant C_ADDR_GLOBAL_VIVADO_MINOR    : integer := 16#F54#; -- Read Only
+  --
+  -- Registers with SCOPE=UART_TX
+  --
+  constant C_ADDR_TX_UART_STATUS    : integer := 16#00#; -- Read Only
+  constant C_ADDR_TX_UART_CONFIG    : integer := 16#04#; -- Read Only
+  -- 64-bit RX register as two 32-bit words (LSB) A B C D (MSB)
+  constant C_ADDR_TX_UART_LOOK_C    : integer := 16#18#; -- Read Only
+  constant C_ADDR_TX_UART_LOOK_D    : integer := 16#1C#; -- Read Only
+  -- Counters: (Zero by writing ZERO_CNTS register on global channel 0x7F)
+  constant C_ADDR_TX_UART_STARTS    : integer := 16#20#;
+  constant C_ADDR_TX_UART_BEATS     : integer := 16#24#; -- count valid='1' & ready='1'
 
-  -- Registers with SCOPE=GLOBAL ROLE=GLOBAL
-  constant C_ADDR_GLOBAL_SCRA      : integer := 16#00#;
-  constant C_ADDR_GLOBAL_SCRB      : integer := 16#04#;
+  -- Channel number (loopback test of channel id)
+  constant C_ADDR_TX_UART_CHAN      : integer := 16#50#;
 
-  constant C_ADDR_GLOBAL_FW_MAJOR  : integer := 16#10#; -- Read Only
-  constant C_ADDR_GLOBAL_FW_MINOR  : integer := 16#14#; -- Read Only
-  constant C_ADDR_GLOBAL_FW_BUILD  : integer := 16#18#; -- Read Only
-  constant C_ADDR_GLOBAL_HW_CODE   : integer := 16#1C#; -- Read Only
+  -- Global Status and Flags
+  constant C_ADDR_TX_BUFFER_STATUS  : integer := 16#A0#;
+  constant C_ADDR_TX_ZERO_CNTS      : integer := 16#A8#;
 
-  constant C_ADDR_GLOBAL_ENABLES   : integer := 16#20#;
+  --
+  -- Registers with SCOPE=UART_RX
+  --
 
-  constant C_ADDR_GLOBAL_STATUS    : integer := 16#30#;
-  constant C_ADDR_GLOBAL_LEDS      : integer := 16#34#;
-  constant C_ADDR_GLOBAL_ADC_LOOK  : integer := 16#40#;
+  constant C_ADDR_RX_UART_STATUS    : integer := 16#00#;
+  constant C_ADDR_RX_UART_CONFIG    : integer := 16#04#;
+  -- 128-bit RX register as four 32-bit words (LSB) A B C D (MSB)
+  constant C_ADDR_RX_UART_LOOK_A    : integer := 16#10#;
+  constant C_ADDR_RX_UART_LOOK_B    : integer := 16#14#;
+  constant C_ADDR_RX_UART_LOOK_C    : integer := 16#18#;
+  constant C_ADDR_RX_UART_LOOK_D    : integer := 16#1C#;
+
+  -- Counters: (Zero by writing ZERO_CNTS register on global channel 0x7F)
+  constant C_ADDR_RX_UART_STARTS    : integer := 16#20#; -- count busy '0'->'1'
+  constant C_ADDR_RX_UART_BEATS     : integer := 16#24#; -- count valid='1' & ready='1'
+  constant C_ADDR_RX_UART_UPDATES   : integer := 16#28#; -- count update='1'
+  constant C_ADDR_RX_UART_LOST      : integer := 16#2C#; -- count lost='1'
+
+  -- Channel number (loopback test of channel id)
+  constant C_ADDR_RX_UART_CHAN      : integer := 16#50#;
+
+  -- Global Status and Flags
+  constant C_ADDR_RX_BUFFER_STATUS    : integer := 16#A0#;
+  constant C_ADDR_RX_BUFFER_CONFIG    : integer := 16#A4#;
+  constant C_ADDR_RX_ZERO_CNTS  : integer := 16#A8#;
+
+  -- FIFO counters (only via global channel 0x7F) from AXI Stream DATA FIFO
+  constant C_ADDR_RX_FIFO_CNT   : integer := 16#B0#;
+  constant C_ADDR_RX_FIFO_MAX   : integer := 16#B4#;
+
+  -- Heartbeat and Sync Config registers
+  constant C_ADDR_RX_HEARTBEAT_CONFIG      : integer := 16#C0#;
+  constant C_ADDR_RX_ROLLOVER_CONFIG       : integer := 16#C4#;
 
   -- Registers with SCOPE=TIMING ROLE(2 bits)=CFG, COUNTER, REGULAR
-  constant C_TIMING_REGULAR               : integer := 16#0#;
-  constant C_TIMING_COUNTER               : integer := 16#2#;
-  constant C_TIMING_CFG                   : integer := 16#4#;
+  constant C_TIMING_REGULAR                : integer := 16#0#;
+  constant C_TIMING_COUNTER                : integer := 16#2#;
+  constant C_TIMING_CFG                    : integer := 16#4#;
 
   constant C_ADDR_TIMING_STATUS            : integer := 16#00#;
   constant C_ADDR_TIMING_STAMP             : integer := 16#04#;
@@ -61,54 +114,5 @@ package register_map is
   constant C_ADDR_ATC_H_START              : integer := 16#80#;
   constant C_ADDR_ATC_H_END                : integer := 16#A4#;
 
-  -- Registers with SCOPE=UART_RX
-
-  -- RX Unit Registers --
-  constant C_ADDR_RX_STATUS     : integer := 16#00#;
-  constant C_ADDR_RX_CONFIG     : integer := 16#04#;
-
-  -- 128 RX register (LSB) A B C D (MSB)
-  constant C_ADDR_RX_LOOK_A     : integer := 16#10#;
-  constant C_ADDR_RX_LOOK_B     : integer := 16#14#;
-  constant C_ADDR_RX_LOOK_C     : integer := 16#18#;
-  constant C_ADDR_RX_LOOK_D     : integer := 16#1C#;
-
-  -- Counters: (Zero by writing ZERO_CNTS register on global channel 0x7F)
-  constant C_ADDR_RX_STARTS     : integer := 16#20#; -- count busy '0'->'1'
-  constant C_ADDR_RX_BEATS      : integer := 16#24#; -- count valid='1' & ready='1'
-  constant C_ADDR_RX_UPDATES    : integer := 16#28#; -- count update='1'
-  constant C_ADDR_RX_LOST       : integer := 16#2C#; -- count lost='1'
-
-  -- Channel number (loopback test of channel id)
-  constant C_ADDR_RX_NCHAN      : integer := 16#50#;
-
-  -- Global Status and Flags
-  constant C_ADDR_RX_GSTATUS    : integer := 16#A0#;
-  constant C_ADDR_RX_GCONFIG    : integer := 16#A4#;
-  constant C_ADDR_RX_ZERO_CNTS  : integer := 16#A8#;
-
-  -- FIFO counters (only via global channel 0x7F) from AXI Stream DATA FIFO
-  constant C_ADDR_RX_FRCNT      : integer := 16#B0#;
-  constant C_ADDR_RX_FWCNT      : integer := 16#B4#;
-  -- DMA Interrupt bit (S2MM)
-  constant C_ADDR_RX_DMAITR     : integer := 16#B8#;
-
-  -- Heartbeat and Sync Config registers
-  constant C_ADDR_RX_HEARTBEAT_CYCLES  : integer := 16#C0#;
-  constant C_ADDR_RX_SYNC_CYCLES       : integer := 16#C4#;
-
-  -- Registers with SCOPE=UART_TX
-  -- TODO:  needs sync with RX registers, e.g. GSTATUS.
-
-  constant C_ADDR_TX_STATUS   : integer := 16#00#;
-  constant C_ADDR_TX_CONFIG   : integer := 16#04#;
-  -- 64 RX register (LSB) C D (MSB) --
-  constant C_ADDR_TX_LOOK_C   : integer := 16#18#;
-  constant C_ADDR_TX_LOOK_D   : integer := 16#1C#;
-  constant C_ADDR_TX_GFLAGS   : integer := 16#20#;
-  constant C_ADDR_TX_STARTS   : integer := 16#30#;
-
-  -- Channel number (loopback test of channel id)
-  constant C_ADDR_TX_NCHAN    : integer := 16#50#;
 
 end package register_map;

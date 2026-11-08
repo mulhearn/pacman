@@ -32,9 +32,7 @@ architecture behaviour of rx_unit_tb is
       S_REGBUS_RB_WACK       : out std_logic;
 
       TIMESTAMP_I            : in  std_logic_vector(31 downto 0);
-      FIFO_RCNT_I            : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      FIFO_WCNT_I            : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      DMA_ITR_I              : in  std_logic;
+      FIFO_COUNT_I           : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
 
       PISO_I                 : in  std_logic_vector(C_NUM_UART-1 downto 0);
       LOOPBACK_I             : in  std_logic_vector(C_NUM_UART-1 downto 0)
@@ -88,9 +86,7 @@ begin
     S_REGBUS_RB_WDATA   => wdata,
     S_REGBUS_RB_WACK    => wack,
     TIMESTAMP_I         => timestamp,
-    FIFO_RCNT_I         => x"CCCCCCCC",
-    FIFO_WCNT_I         => x"CCCCCCCC",
-    DMA_ITR_I           => '1',
+    FIFO_COUNT_I        => x"CCCCCCCC",
     PISO_I              => piso,
     LOOPBACK_I          => (others => '1')
   );

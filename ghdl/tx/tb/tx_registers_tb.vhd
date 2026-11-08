@@ -26,13 +26,15 @@ architecture behaviour of tx_registers_tb is
       S_REGBUS_RB_WDATA	     : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
       S_REGBUS_RB_WACK       : out std_logic;
 
-      LOOK_I                 : in uart_tx_data_array_t;
-      STATUS_I               : in uart_reg_array_t;
-      BSTATUS_I    	     : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0);
-      CONFIG_O               : out uart_reg_array_t;
-      GFLAGS_O               : out std_logic_vector(C_TX_GFLAGS_WIDTH-1 downto 0)
+      UART_LOOK_I                 : in uart_tx_data_array_t;
+      UART_STATUS_I               : in uart_reg_array_t;
+      UART_CONFIG_O               : out uart_reg_array_t;
+
+      BUFFER_STATUS_I    	  : in  std_logic_vector(C_RB_DATA_WIDTH-1 downto 0)
     );
   end component;
+
+  signal count    : integer := 0;
   signal aclk     : std_logic;
   signal aresetn  : std_logic;
   -- read signals:
@@ -47,7 +49,6 @@ architecture behaviour of tx_registers_tb is
   signal wack     : std_logic := '0';
 
   signal config   : uart_reg_array_t;
-  signal gflags   : std_logic_vector(C_TX_GFLAGS_WIDTH-1 downto 0);
 
 begin
   uut0: tx_registers port map (
@@ -61,11 +62,10 @@ begin
     S_REGBUS_RB_WADDR   => waddr,
     S_REGBUS_RB_WDATA   => wdata,
     S_REGBUS_RB_WACK    => wack,
-    LOOK_I  => (others => x"DDDDDDDDCCCCCCCC"),
-    STATUS_I  => (others => x"00000008"),
-    BSTATUS_I  => x"00000001",
-    CONFIG_O  => config,
-    GFLAGS_O => gflags
+    UART_LOOK_I  => (others => x"DDDDDDDDCCCCCCCC"),
+    UART_STATUS_I  => (others => x"1234ABCD"),
+    BUFFER_STATUS_I  => x"AABBCCDD",
+    UART_CONFIG_O  => config
   );
 
   aresetn_process : process
@@ -78,6 +78,7 @@ begin
 
   aclk_process : process
   begin
+    count <= count + 1;
     aclk <= '1';
     wait for 5 ns;
     aclk <= '0';
@@ -89,12 +90,18 @@ begin
     raddr   <= x"0000";
     rupdate <= '0';
     wait for 1 ns;
-    wait for 30 ns;
-    raddr   <= x"0000";
+    wait for 40 ns;
+    raddr   <= x"0C04";
     rupdate <= '1';
     wait for 10 ns;
     raddr   <= x"0004";
     rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"0104";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"0000";
+    rupdate <= '0';
     wait for 10 ns;
     raddr   <= x"0018";
     rupdate <= '1';
@@ -102,20 +109,50 @@ begin
     raddr   <= x"001C";
     rupdate <= '1';
     wait for 10 ns;
+    raddr   <= x"0C18";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"0C1C";
+    rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"0000";
+    rupdate <= '0';
+    wait for 10 ns;
+    raddr   <= x"0000";
+    rupdate <= '1';
+    wait for 10 ns;
     raddr   <= x"0C00";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"0C04";
+    raddr   <= x"0000";
+    rupdate <= '0';
+    wait for 10 ns;
+    raddr   <= x"0020";
+    rupdate <= '1';
+    wait for 80 ns;
+    raddr   <= x"0C20";
+    rupdate <= '1';
+    wait for 50 ns;
+    raddr   <= x"0000";
+    rupdate <= '0';
+    wait for 10 ns;
+    raddr   <= x"3FA0";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"0C40";
+    raddr   <= x"0000";
+    rupdate <= '0';
+    wait for 10 ns;
+    raddr   <= x"0C50";
     rupdate <= '1';
     wait for 10 ns;
-    raddr   <= x"3F20";
+    raddr   <= x"0150";
     rupdate <= '1';
-    wait for 20 ns;
-    raddr   <= x"0030";
+    wait for 10 ns;
+    raddr   <= x"0050";
     rupdate <= '1';
+    wait for 10 ns;
+    raddr   <= x"0000";
+    rupdate <= '0';
     wait;
   end process;
 
@@ -126,19 +163,19 @@ begin
     wupdate <= '0';
     wait for 1 ns;
     wait for 20 ns;
-    waddr   <= x"0004";
-    wdata   <= x"1111B601";
+    waddr   <= x"3B04";
+    wdata   <= x"00001601";
     wupdate <= '1';
     wait for 10 ns;
-    waddr   <= x"3F20";
-    wdata   <= x"00000003";
+    waddr   <= x"0004";
+    wdata   <= x"AAAA1601";
     wupdate <= '1';
     wait for 10 ns;
     waddr   <= x"0000";
     wdata   <= x"00000000";
     wupdate <= '0';
-    wait for 110 ns;
-    waddr   <= x"3F30";
+    wait for 130 ns;
+    waddr   <= x"3FA8";
     wdata   <= x"00000000";
     wupdate <= '1';
     wait for 10 ns;
@@ -153,8 +190,8 @@ begin
   begin
     --wait for 1 ns;
     wait for 10 ns;
-    write (l, String'("aclk: "));
-    write (l, aclk);
+    write (l, String'("c: "));
+    write (l, count, left, 4);
     write (l, String'(" || ra: 0x"));
     hwrite (l, raddr);
     write (l, String'(" ru:"));
@@ -171,10 +208,41 @@ begin
     hwrite (l, wdata);
     write (l, String'(" wk:"));
     write (l, wack);
+    write (l, String'(" || cfg(0):  0x"));
+    hwrite (l, config(0));
     if (aresetn = '0') then
       write (l, String'(" (RESET)"));
     end if;
     writeline(output, l);
+  end process;
+
+  comment_process : process
+    variable l : line;
+  begin
+    write(l, String'("INFO:  Resetting:"));
+    writeline(output, l);
+    wait until (count=3);
+    write(l, String'("INFO:  Setting TX config to 0x00001601 via broadcast, then channel 0 only to 0xAAAA1601:"));
+    writeline(output, l);
+    wait until (count=5);
+    write(l, String'("INFO:  Reading back TX config for several channels:"));
+    writeline(output, l);
+    wait until (count=9);
+    write(l, String'("INFO:  Reading TX look for several channels:  (Test pattern input: 0xCCCCCCCC 0xDDDDDDDD)"));
+    writeline(output, l);
+    wait until (count=14);
+    write(l, String'("INFO:  Reading TX status for several channels: (Test pattern input:  0x1234ABCD)"));
+    writeline(output, l);
+    wait until (count=17);
+    write(l, String'("INFO:  Reading TX counts repeatedly, it should increment and restart at zero with write to zero count register"));
+    writeline(output, l);
+    wait until (count=31);
+    write(l, String'("INFO:  Reading TX global status: (Test pattern input:  0xAABBCCDD)"));
+    writeline(output, l);
+    wait until (count=33);
+    write(l, String'("INFO:  Reading back channel number from several channels:"));
+    writeline(output, l);
+    wait;
   end process;
 
 end behaviour;

@@ -101,4 +101,19 @@ begin
     end if;
   end process;
 
+
+  comment_process : process
+    variable l : line;
+  begin
+    write(l, String'("INFO:   Resetting:"));
+    writeline(output, l);
+    wait until (count=3);
+    write(l, String'("INFO:   Setting first LED on:"));
+    writeline(output, l);
+    wait until (count=10);
+    write(l, String'("INFO:   Setting both LEDs on:"));
+    writeline(output, l);
+     wait;
+  end process;
+
 end behaviour;

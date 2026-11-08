@@ -40,17 +40,7 @@ xsct run.tcl
 # In this case, you have to kill the hung processes yourself, e.g. like:
 #
 # (Ctrl-c)
-ps
-#     PID TTY          TIME CMD
-#  154578 pts/1    00:00:01 bash
-#  212039 pts/1    00:00:00 eclipse
-#  212057 pts/1    00:00:10 java
-#  212196 pts/1    00:00:00 ps
-#
-kill -9 212039
-kill -9 212057
-# (but replace above with your own wayward process PIDs)
-
+pkill -9 -f eclipse
 
 #building the FSBL: (You'll need this for petalinux packaging!)
 xsct apps/pacman_fsbl/install.tcl
