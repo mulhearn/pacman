@@ -28,37 +28,27 @@
 extern "C" {
 #endif
 
-// Includes:
-// For baremetal, we depart from standard library for types, printf, and sleep.
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
+
+// For baremetal, we depart from standard library for printf and sleep.
 #ifdef _LINUX
-  #include <stdint.h>
-  #include <stdio.h>
   #include <unistd.h>
 #else
-  #include "xil_types.h"
   #include "xil_printf.h"
   #include "xil_cache.h"
   #include "sleep.h"
 #endif
 
-// Typedefs
-#ifdef _LINUX
-  typedef uint8_t  hw_u8_t;
-  typedef uint16_t hw_u16_t;
-  typedef uint32_t hw_u32_t;
-  typedef uint64_t hw_u64_t;
-  typedef uint32_t hw_addr_t;
-  typedef uint32_t hw_val_t;
-  typedef volatile uint32_t * hw_ptr_t;
-#else
-  typedef u8  hw_u8_t;
-  typedef u16 hw_u16_t;
-  typedef u32 hw_u32_t;
-  typedef u64 hw_u64_t;
-  typedef u32 hw_addr_t;
-  typedef u32 hw_val_t;
-  typedef volatile u32 * hw_ptr_t;
-#endif
+typedef uint8_t   hw_u8_t;
+typedef uint16_t  hw_u16_t;
+typedef uint32_t  hw_u32_t;
+typedef uint64_t  hw_u64_t;
+
+typedef hw_u32_t  hw_addr_t;
+typedef hw_u32_t  hw_val_t;
+typedef volatile hw_u32_t * hw_ptr_t;
 
 // check sizes of typedefs:
 #ifdef __cplusplus
@@ -93,9 +83,9 @@ HW_STATIC_ASSERT(sizeof(hw_u32_t) == 4,  "unexpected hw_u32_t size");
 #endif
 
 // printf mapping
-#ifndef _LINUX
-  #define printf xil_printf
-#endif
+//#ifndef _LINUX
+//  #define printf xil_printf
+//#endif
 
 #define HW_SUCCESS 0
 
@@ -150,6 +140,12 @@ void dma_platform_init_buffer(hw_addr_t baseaddr, hw_addr_t size);
 // get a pointer to the hardware address addr
 hw_ptr_t dma_ptr(hw_addr_t addr);
 
+// get a pointer to the hardware address addr (asserts pointer is within allocation)
+hw_ptr_t dma_ptr(hw_addr_t addr);
+
+//get a pointer to the hardware address addr (asserts buffer is within allocation)
+hw_ptr_t dma_safe_buffer(hw_addr_t addr, hw_addr_t size);
+
 //
 // I2C Interface:
 //
@@ -178,7 +174,8 @@ void iic_write(hw_u8_t addr, hw_u8_t reg, const hw_u8_t *data, hw_u32_t len);
 // reg: register within device
 // data: pointer to hw_u8 array to receive bytes
 // len: number of bytes to read
-void iic_read(hw_u8_t addr, hw_u8_t reg, hw_u8_t *data, hw_u32_t len);
+// use_repeated_read: true to use repeated read (default behavior)
+void iic_read(hw_u8_t addr, hw_u8_t reg, hw_u8_t *data, hw_u32_t len, bool use_repeated_read);
 
 //
 // PS GPIO (MIO) Interface:

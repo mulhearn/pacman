@@ -15,9 +15,9 @@ void adc_init(){
 }
 
 void adc_read_registers(){
-  printf("ADC status--------------- 0x%x \r\n", axil_read_register(SCOPE_ADC+C_ADDR_ADC_STATUS));
-  printf("ADC config--------------- 0x%x \r\n", axil_read_register(SCOPE_ADC+C_ADDR_ADC_CONFIG));
-  printf("ADC look----------------- 0x%x \r\n", axil_read_register(SCOPE_ADC+C_ADDR_ADC_LOOK));
+  printf("ADC status--------------- 0x%x \r\n", (unsigned int) axil_read_register(SCOPE_ADC+C_ADDR_ADC_STATUS));
+  printf("ADC config--------------- 0x%x \r\n", (unsigned int) axil_read_register(SCOPE_ADC+C_ADDR_ADC_CONFIG));
+  printf("ADC look----------------- 0x%x \r\n", (unsigned int) axil_read_register(SCOPE_ADC+C_ADDR_ADC_LOOK));
 }
 
 void adc_toggle_sleep(){

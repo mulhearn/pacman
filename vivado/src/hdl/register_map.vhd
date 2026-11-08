@@ -21,10 +21,10 @@ package register_map is
   constant C_ADDR_GLOBAL_SCRATCH_B       : integer := 16#024#;
   constant C_ADDR_GLOBAL_FIRMWARE_MAJOR  : integer := 16#F10#; -- Read Only
   constant C_ADDR_GLOBAL_FIRMWARE_MINOR  : integer := 16#F14#; -- Read Only
-  constant C_ADDR_GLOBAL_FIRMWARE_LETTER : integer := 16#F18#; -- Read Only
+  constant C_ADDR_GLOBAL_FIRMWARE_PATCH  : integer := 16#F18#; -- Read Only
   constant C_ADDR_GLOBAL_HARDWARE_MAJOR  : integer := 16#F20#; -- Read Only
   constant C_ADDR_GLOBAL_HARDWARE_MINOR  : integer := 16#F24#; -- Read Only
-  constant C_ADDR_GLOBAL_HARDWARE_LETTER : integer := 16#F28#; -- Read Only
+  constant C_ADDR_GLOBAL_HARDWARE_PATCH  : integer := 16#F28#; -- Read Only
   constant C_ADDR_GLOBAL_SYNTHESIS_DATE  : integer := 16#F30#; -- Read Only
   constant C_ADDR_GLOBAL_GIT_HASH_UPPER  : integer := 16#F40#; -- Read Only
   constant C_ADDR_GLOBAL_GIT_HASH_LOWER  : integer := 16#F44#; -- Read Only

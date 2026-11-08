@@ -31,6 +31,8 @@ extern "C" {
 
 void read_atc_registers();
 
+void set_atc_default_config();
+
 #define C_ATC_BUSY_WAIT 10
 int wait_atc_busy(int timeout);
 

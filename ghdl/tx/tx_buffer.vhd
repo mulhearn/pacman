@@ -7,25 +7,36 @@ use work.common.all;
 -- tx_buffer: buffers data (from DMA) to be transmitted
 --
 -- Receives data to be transmitted via AXI stream interface (from PS
--- via DMA) Each DMA packet consists of a 128-bit header and 20
--- 128-bit words.  The header contains a channel mask specifying which
--- channels have data to transmit.  The 20 128-bit words contains the
--- 40 uart payloads, each of 64 bits.  Payload from inactive UARTs is
--- ignored.
+-- via DMA) Each DMA packet consists of a 64-bit header followed by 40
+-- 64-bit words (one for each UART) containing the data to be
+-- transmitted.  The header contains a channel mask specifying which
+-- channels have data to transmit.
 --
 -- Once an entire DMA packet is received, the data for each UART is
 -- placed in an output buffer and a valid bit is set for each UART
 -- specified in the mask.  The stream reader is sent the ready
--- command, releasing its own buffer, so that it can beging reading
--- the next DMA packet.
+-- command, releasing its own buffer, so that it can begin reading the
+-- next DMA packet in parallel with UART transmission.
 --
 -- Each valid bit is cleared upon receiving a ready from the
--- corresponding UART.  Once no valid bits remain high, the state
--- returns to IDLE.
+-- corresponding UART.  The output buffer is not updated with new data until no
+-- valid bits remain high from the previous transmission.
 --
 -- This module contains the AXI stream reader module, which handles the
 -- incoming AXI stream (with UART channels serial) and outputs the data in
 -- parallel format.
+--
+-- The tx_buffer is an FSM with following states:
+--
+--   IDLE:  waiting for next TX packet
+--     When stream reader reports an entire packet is valid, move to START_TX
+--
+--   START_TX: start UART transmission.  Copy stream data to output
+--     buffer, assert ready to free stream readers buffer, and set valid high for each UART as specified in the mask.
+--     Move to TX state on next clock cycle.
+--
+--   TX: UART transmission.  Clear valid as each UART channel reports ready.
+--     When no channel has valid data, move to IDLE state.
 --
 
 entity tx_buffer is

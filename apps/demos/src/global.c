@@ -43,22 +43,22 @@ void read_global_status(){
   get_synthesis_date_string(synthesis_date_str, sizeof(synthesis_date_str));
   get_git_hash_string(git_hash_str, sizeof(git_hash_str));
 
-  printf("firmware major----------- %d   \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_FIRMWARE_MAJOR));
-  printf("firmware minor----------- %d   \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_FIRMWARE_MINOR));
-  printf("firmware letter---------- 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_FIRMWARE_LETTER));
-  printf("hardware major----------- %d   \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_HARDWARE_MAJOR));
-  printf("hardware minor----------- %d   \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_HARDWARE_MINOR));
-  printf("hardware letter---------- 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_HARDWARE_LETTER));
-  printf("scratch a---------------- 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRATCH_A));
-  printf("scratch b---------------- 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRATCH_B));
-  printf("enables------------------ 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_ENABLES));
-  printf("leds--------------------- 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_LEDS));
-  printf("status------------------- 0x%x \r\n", axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_STATUS));
+  printf("firmware major----------- %u   \r\n", (unsigned int) axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_FIRMWARE_MAJOR));
+  printf("firmware minor----------- %u   \r\n", (unsigned int) axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_FIRMWARE_MINOR));
+  printf("firmware letter---------- 0x%x \r\n", (unsigned int) axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_FIRMWARE_LETTER));
+  printf("hardware major----------- %u   \r\n", (unsigned int) axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_HARDWARE_MAJOR));
+  printf("hardware minor----------- %u   \r\n", (unsigned int) axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_HARDWARE_MINOR));
+  printf("hardware letter---------- 0x%x \r\n", (unsigned int)axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_HARDWARE_LETTER));
+  printf("scratch a---------------- 0x%x \r\n", (unsigned int)axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRATCH_A));
+  printf("scratch b---------------- 0x%x \r\n", (unsigned int)axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRATCH_B));
+  printf("enables------------------ 0x%x \r\n", (unsigned int)axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_ENABLES));
+  printf("leds--------------------- 0x%x \r\n", (unsigned int)axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_LEDS));
+  printf("status------------------- 0x%x \r\n", (unsigned int)axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_STATUS));
   printf("synthesis date----------- %s   \r\n", synthesis_date_str);
   printf("git hash----------------- %s   \r\n", git_hash_str);
-  printf("vivado version----------- %d.%d \r\n",
-	 axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_VIVADO_MAJOR),
-	 axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_VIVADO_MINOR));
+  printf("vivado version----------- %u.%u \r\n",
+	 (unsigned int) axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_VIVADO_MAJOR),
+	 (unsigned int) axil_read_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_VIVADO_MINOR));
 }
 
 void toggle_global_scratch(){
@@ -78,7 +78,7 @@ void toggle_global_scratch(){
       scra = 0x0;
       scrb = 0x0;
   }
-  printf("INFO: setting scratch a to 0x%08x and scratch b to 0x%08x \r\n", scra, scrb);
+  printf("INFO: setting scratch a to 0x%08x and scratch b to 0x%08x \r\n", (unsigned int)scra, (unsigned int)scrb);
   axil_write_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRATCH_A, scra);
   axil_write_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRATCH_B, scrb);
 }
@@ -87,6 +87,6 @@ void toggle_global_enables(){
   unsigned enables[] = {0x00000000, 0x00010000, 0x00010001,  0x000103FF, 0x001103FF};
   static int mode = 0;
   mode = (mode + 1) % 5;
-  printf("INFO: setting enables to 0x%08x \r\n", enables[mode]);
+  printf("INFO: setting enables to 0x%08x \r\n", (unsigned int)enables[mode]);
   axil_write_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_ENABLES, enables[mode]);
 }

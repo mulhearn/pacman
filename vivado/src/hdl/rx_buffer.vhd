@@ -7,41 +7,63 @@ use work.common.all;
 -- rx_buffer: Send received (RX) data (from UARTs) out to DMA via an AXI
 -- stream using round-robin scheduling.
 --
--- Each UART channel has a single buffer, which is marked valid upon a
--- complete transfer from the UART receiver.
+-- Each UART channel has a single 64-bit buffer (see rx_chan.vhd)
+-- which is marked valid upon a complete transfer from the UART
+-- receiver.  In addition to the 40 UART channels, additional RX
+-- channels are assigned for trigger and sync words.
 --
--- A turn counter runs from 0 to 63.  When the stream is running (i.e.
--- if the receiving FIFO is not full) valid data from a UART is added
--- to the stream only on its turn (e.g. UART 5 streams on turn 5).
--- When streamed, the ready bit is set, so that the UART channel
--- clears the valid bit, and its (single buffer) is ready to recieve
--- updated data.  If new data arrives on the RX channel before the
--- valid bit is cleared (via ready) the packet is lost, which is noted
--- by the lost bit in the UART status.  Counters track the number of
--- lost packets for each UART (which should be zero during normal
--- operation).
+-- Valid data is streamed using turn-based round-robin scheduling.
+-- The stream width is 64 bits, but the word size is 192 bits, so each
+-- turn lasts for three 64-bit fragments.
 --
--- The UART RX channels consume turns 0-39.  The remaining turns are used for
--- adding additional words (e.g. heartbeat and rollover words) to the stream,
--- and for state machine transitions.
+-- The rx_buffer is an FSM with states:
 --
--- Upon first seeing data after a pause, the streaming does not
--- commence until the start of the next cycle (at turn 0).  This
--- orders the data in the DMA packet nicely, starting with channel 0,
--- when the data is synchronous (such as during loopback testing).
+--   IDLE:  waiting for arrival of valid data
+--     On arrival of valid data, move to STREAM state
+--
+--   WAIT_STATE: all valid data streamed, wait for new data or timeout
+--     On arrival of valid data, move to STREAM state
+--     If configurable timeout occurs, move to TRAILER state
+--
+--   STREAM: turn-based round-robin streaming of data to FIFO. Each RX
+--     channel is assigned one turn which lasts long enough to stream
+--     three 64-bit fragments when valid data is available and the
+--     stream is not busy.
+--     If the number of words sent exceeds a threshold, move to
+--     TRAILER state.
+--     If no more valid data is available, return to WAIT_STATE
+--
+--   TRAILER: stream trailer word
+--     At end of packet, send three 64-bit fragments to write a
+--     192-bit TRAILER reporting the number of 192-bit words streamed
+--     (not including the TRAILER), and set LAST bit on the final
+--     fragment of the trailer.  Return to IDLE state after TRAILER is
+--     streamed
+--
+-- Data for the channel corresponding to the current turn is selected
+-- via the MUX.  After valid data for a channel has been buffered for
+-- streaming, the ready bit is set for that channel.  On receiving
+-- ready, each UART channel clears its valid bit.  If new data arrives
+-- on the RX channel before the valid bit is cleared (via ready) the
+-- packet is lost, which is noted by the lost bit in the UART status
+-- (see rx_chan.vhd).  Counters track the number of lost packets for
+-- each UART (which should be zero during normal operation).
 --
 -- Although the data is streamed one word at a time, many words are
--- assembled into a single DMA packet using the LAST word.  All data
--- that arrives within a configurable number of cycles (each cycle is
--- 64 turns) is included in the same DMA packet.  (In future, we could
--- specify a maximum time and a maximum packet size).  In this
--- version, the maximum time translates to a maximum possible size.
+-- assembled into a single DMA packet (as marked via the LAST bit).
+-- The size of the DMA packet is configurable based on a maximum number of
+-- words and a timeout.
 --
 -- CONFIG_I:   0xMMMMTTTT
 -- DEFAULT:    0x00000001
--- where: TTTT is a timeout in cycles for writing a complete packet
---        MMMM is max words for writing a complete packet at the end of a cycle
---        In both cases, a zero is no timeout / no maximum
+-- where: TTTT is timeout in clock cycles for completing packet
+--        MMMM is max words streamed for completing a packet
+--
+-- In both cases, a zero is no condition (no timeout / no maximum).
+-- The timeout is not checked while in stream state, so e.g. a timeout of one
+-- (default setting) will send data from all channels with valid data once
+-- valid data from at least one channel is available.
+--
 
 entity rx_buffer is
   port (

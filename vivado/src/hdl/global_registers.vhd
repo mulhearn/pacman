@@ -2,7 +2,8 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 library work;
-use work.version.all;
+use work.firmware_version.all;
+use work.hardware_version.all;
 use work.common.all;
 use work.register_map.all;
 use work.version_info_pkg.all;
@@ -130,8 +131,8 @@ begin
           elsif (reg=C_ADDR_GLOBAL_FIRMWARE_MINOR) then
             rdata <= std_logic_vector(to_unsigned(C_FIRMWARE_MINOR,rdata'length));
             rack  <= '1';
-          elsif (reg=C_ADDR_GLOBAL_FIRMWARE_LETTER) then
-            rdata <= std_logic_vector(to_unsigned(C_FIRMWARE_LETTER,rdata'length));
+          elsif (reg=C_ADDR_GLOBAL_FIRMWARE_PATCH) then
+            rdata <= std_logic_vector(to_unsigned(C_FIRMWARE_PATCH,rdata'length));
             rack  <= '1';
           elsif (reg=C_ADDR_GLOBAL_HARDWARE_MAJOR) then
             rdata <= std_logic_vector(to_unsigned(C_HARDWARE_MAJOR,rdata'length));
@@ -139,8 +140,8 @@ begin
           elsif (reg=C_ADDR_GLOBAL_HARDWARE_MINOR) then
             rdata <= std_logic_vector(to_unsigned(C_HARDWARE_MINOR,rdata'length));
             rack  <= '1';
-          elsif (reg=C_ADDR_GLOBAL_HARDWARE_LETTER) then
-            rdata <= std_logic_vector(to_unsigned(C_HARDWARE_LETTER,rdata'length));
+          elsif (reg=C_ADDR_GLOBAL_HARDWARE_PATCH) then
+            rdata <= std_logic_vector(to_unsigned(C_HARDWARE_PATCH,rdata'length));
             rack  <= '1';
           elsif (reg=C_ADDR_GLOBAL_SYNTHESIS_DATE) then
             rdata <= std_logic_vector(to_unsigned(C_SYNTHESIS_DATE,rdata'length));

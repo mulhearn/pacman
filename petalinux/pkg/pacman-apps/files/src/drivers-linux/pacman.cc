@@ -39,7 +39,8 @@ int pacman_init(int verbose){
   unsigned fwminor = G_PACMAN_AXIL[0XFF14>>2];
 
   if (verbose){
-    printf("INFO:  Running pacman-server version %d.%d\n", PACMAN_SERVER_MAJOR_VERSION, PACMAN_SERVER_MINOR_VERSION);
+    printf("INFO:  Running pacman-server version %d.%d.%d\n",
+	   PACMAN_SERVER_MAJOR_VERSION, PACMAN_SERVER_MINOR_VERSION, PACMAN_SERVER_PATCH_VERSION);
     printf("INFO:  Running pacman firmware version %d.%d\n", fwmajor, fwminor);
   }
 
@@ -78,30 +79,24 @@ int pacman_init(int verbose){
   // G_PACMAN_AXIL[0x3B04>>2] = 0x05281602;
   G_PACMAN_AXIL[0x3B04>>2] = 0x07BC1601;
 
-  if (verbose){
-    printf("INFO:  Setting both G and H output to active low \n");
-    printf("INFO:  POKE_C -> G+T (1 clock cycle) \n");
-    printf("INFO:  POKE_D -> G   (256 clock cycle) \n");
-    printf("INFO:  LEMO_A -> H+T (1 clock cycle) \n");
-    printf("INFO:  LEMO_B -> H+T (1 clock cycle) \n");
-  }
   //polarity configuration: 0xE108
   // 0x0HHHGGGI H=H output mask(10 bits) G=G output mask (10 bits) I = input mask (2 bits)
   G_PACMAN_AXIL[0xE108>>2] = 0x03FF3FF0;
 
   //destination configurations:
   // 0x0MMMDDDO M=tile enables, D=duration O=output enables (1 = G, 2 = H, 4 = T)
-  //LEMO A destination configuration:  This is a SYNC pulse, H+T, duration 2
-  G_PACMAN_AXIL[0xE110>>2] = 0x03FF0026;
-  //LEMO B destination configuration:  This is also a SYNC pulse, H+T, duration 2
-  G_PACMAN_AXIL[0xE114>>2] = 0x03FF0026;
-  //POKE C destination configuration:  This is an INTERNAL_RESET pulse, G+T, duration 8
-  G_PACMAN_AXIL[0xE118>>2] = 0x03FF0085;
-  //POKE C destination configuration:  This is a FULL_RESET pulse, G+T, duration 1023
-  //G_PACMAN_AXIL[0xE118>>2] = 0x03FF3FF5;
+  //LEMO A destination configuration:  This is a SYNC pulse, H+T, duration 5
+  G_PACMAN_AXIL[0xE110>>2] = 0x03FF0056;
+  //LEMO B destination configuration:  This is a SYNC pulse, H+T, duration 5
+  G_PACMAN_AXIL[0xE114>>2] = 0x03FF0056;
+
+  //POKE C destination configuration:  This is an INTERNAL_RESET pulse, G, duration 24
+  G_PACMAN_AXIL[0xE118>>2] = 0x03FF0181;
+  //POKE D destination configuration:  This is a FULL_RESET pulse, G, duration 1024
+  G_PACMAN_AXIL[0xE11C>>2] = 0x03FF4001;
 
   //POKE D destination configuration:  This is a SYNC pulse, H+T, duration 2
-  G_PACMAN_AXIL[0xE11C>>2] = 0x03FF1001;
+  //G_PACMAN_AXIL[0xE11C>>2] = 0x03FF0056;
 
   //Request ATC configuration update:
   G_PACMAN_AXIL[0xE100>>2] = 0x0;
@@ -119,7 +114,7 @@ int pacman_init_tx(int verbose, int skip_reset){
   dma_reset_tx(DMA_TIMEOUT);
   dma_reset_rx(DMA_TIMEOUT);
 
-  init_tx_descriptor_ring_mode(128);
+  init_tx_descriptor_ring_mode(512);
   return EXIT_SUCCESS;
 }
 
@@ -186,7 +181,7 @@ int pacman_poll_tx(){
 
   while((batch_count < batch_size) && dma_next_available_tx_bd(&nxta)){
     if (tx_buffer_out(output)==1){
-      //tx_buffer_print_output(output);
+      tx_buffer_print_output(output);
       hw_ptr_t tx_buf = dma_get_buffer(nxta);
       for (unsigned i=0; i<frags; i++)
 	tx_buf[i] = output[i];

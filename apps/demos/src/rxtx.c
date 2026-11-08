@@ -3,6 +3,7 @@
 #include "hw_access.h"
 #include "dma.h"
 #include "global.h"
+#include "asic.h"
 #include "rxtx.h"
 
 hw_val_t tx_mask_b = 0xFF;
@@ -10,41 +11,11 @@ hw_val_t tx_mask_a = 0xFFFFFFFF;
 
 static unsigned G_TX_COUNTER = 0;
 
-// this is reserved in system-user.dtsi and located within the HP AXI interface for DMA (0x00000000 - 0x3FFFFFFF):
-#define DMA_BUFFER_BASEADDR  0x20000000
-#define DMA_BUFFER_SIZE      0x10000000  // 256 MB
-
-#define TX_BD_BASEADDR       0x20000000
-#define RX_BD_BASEADDR       0x21000000
-
-// 40 uarts x 64 bits + 1-64 bit header => 328 bits = 0x148
-// Note: DMA driver will alighn buffer *spacing* to 0x150
-#define TX_PACKET_BYTES 0x148
-#define TX_HEADER_BYTES 8
-#define TX_PAYLOAD_U32_WORDS ((TX_PACKET_BYTES - TX_HEADER_BYTES)/4)
-#define TX_HEADER_U32_WORDS  (TX_HEADER_BYTES/4)
-
-// Buffer sizes:
-// 1 single UART        (1+1)*24    =  48  = 0x30   <-- size MMMM=0x0001
-// 40 UART              (40+1)*24   = 984  = 0x3D8  <-- typical test pattern size
-// 40 UART + 3 Extra    (40+3+1)*24 = 1056 = 0x420  <-- max for CCCC=0x0001
-//#define RX_BUF_BYTES 0x800
-// Enough for single cycles, max (40 uarts + header + 3 T/S/HB) * 16 bytes = 0x2c0 bytes
-// Each uart rx takes 10 cycles, so for 10 cycles, the maximum buffer size is:
-//    (40 + 1 + 10*3)*16 = 0x470 (1136) bytes
-// So the buffer size below is enough for more than 140 cycles (0x8C) which you should see in settings
-// Note:  when switching to 64 bit timestamps, each cycle will take three times as long, and so this becomes:
-//    (3*40 + 1 + 30*3)*24 = 5064 (0x13c8)
-// and the buffer size below is enough for 32 (0x20)  cycles (about 1/4 of 0x8C)
-// More directly, that is large enough for 682 words (0x2aa)
-#define RX_BUF_BYTES 0x4000
-
-#define TX_BATCH_NEXTDESC_ADDR       0x20100000
-#define RX_BATCH_NEXTDESC_ADDR       0x20100004
-
 void init_rxtx(void){
   dma_platform_init();
   dma_platform_init_buffer(DMA_BUFFER_BASEADDR, DMA_BUFFER_SIZE);
+  dma_init_batch_tx_taildesc(TX_BATCH_NEXTDESC_ADDR);
+  dma_init_batch_rx_taildesc(RX_BATCH_NEXTDESC_ADDR);
 }
 
 void init_tx_descriptor_ring_mode(int ring_size){
@@ -54,7 +25,6 @@ void init_tx_descriptor_ring_mode(int ring_size){
   dma_write_tx_curdesc(TX_BD_BASEADDR);
   dma_write_tx_taildesc(TX_BD_BASEADDR);
 
-  dma_init_batch_tx_taildesc(TX_BATCH_NEXTDESC_ADDR);
   dma_write_batch_tx_taildesc(TX_BD_BASEADDR);
 
   dma_run_tx(DMA_TIMEOUT);
@@ -70,7 +40,7 @@ void init_rx_descriptor_ring_mode(int ring_size){
 
   dma_write_rx_curdesc(dma_get_next_bd_addr(RX_BD_BASEADDR));
   dma_write_rx_taildesc(RX_BD_BASEADDR);
-  dma_init_batch_rx_taildesc(RX_BATCH_NEXTDESC_ADDR);
+
   dma_write_batch_rx_taildesc(RX_BD_BASEADDR);
 
   dma_run_rx(DMA_TIMEOUT);
@@ -166,7 +136,7 @@ void batch_tx(void){
   hw_addr_t nxta;
 
   while((count < 10) && (dma_next_available_tx_bd(&nxta))){
-    printf("INFO:  working on buffer %d at HW addr 0x%08X \r\n", count, nxta);
+    printf("INFO:  working on buffer %d at HW addr 0x%08X \r\n", count, (unsigned int) nxta);
     hw_ptr_t tx_buf = dma_get_buffer(nxta);
 
     tx_buf[0]= tx_mask_a;
@@ -212,44 +182,96 @@ void benchmark_dma_rxtx_loopback();
 
 void toggle_tx_config(void){
   static int mode = 0;
-  mode = (mode + 1) % 3;
+  mode = (mode + 1) % 4;
   if (mode==0){
     unsigned config = 0x00001602;
-    printf("INFO: No Delay.  Broadcasting tx config write 0x%08x \r\n", config);
+    printf("INFO: Half speed.  Broadcasting tx config write 0x%08x \r\n", (unsigned int) config);
     axil_write_register(SCOPE_TX+UART_BROADCAST+C_ADDR_TX_UART_CONFIG, config);
   } else if (mode==1) {
     unsigned config = 0x05281602;
-    printf("INFO: Half Speed.  Broadcasting tx config write 0x%08x \r\n", config);
+    printf("INFO: Half Speed with max 50 percent duty cycle (delay 0x528)  Broadcasting tx config write 0x%08x \r\n", (unsigned int) config);
     axil_write_register(SCOPE_TX+UART_BROADCAST+C_ADDR_TX_UART_CONFIG, config);
   } else if (mode==2) {
     unsigned config = 0x00001601;
-    printf("INFO: Double speed.  Broadcasting tx config write 0x%08x \r\n", config);
+    printf("INFO: Full speed.  Broadcasting tx config write 0x%08x \r\n", (unsigned int) config);
     axil_write_register(SCOPE_TX+UART_BROADCAST+C_ADDR_TX_UART_CONFIG, config);
+  } else if (mode==3) {
+    unsigned config = 0x05281601;
+    printf("INFO: Full speed with max 33 percent duty (delay 0x528).  Broadcasting tx config write 0x%08x \r\n", (unsigned int) config);
+    axil_write_register(SCOPE_TX+UART_BROADCAST+C_ADDR_TX_UART_CONFIG, config);
+  }
+  
+}
+
+void rx_disable_uart(unsigned chan){
+  if (chan < 40){
+    hw_u32_t cfg = axil_read_register(SCOPE_RX+(chan<<8)+C_ADDR_RX_UART_CONFIG);
+    // for the particular config value of "11" the AND step could be skipped, but let's not:
+    cfg &= (~0x00030000);
+    cfg |=   0x00030000;
+    axil_write_register(SCOPE_RX+(chan<<8)+C_ADDR_RX_UART_CONFIG, cfg);
   }
 }
 
+void rx_enable_uart(unsigned chan){
+  if (chan < 40){
+    hw_u32_t cfg = axil_read_register(SCOPE_RX+(chan<<8)+C_ADDR_RX_UART_CONFIG);
+    // for the particular config value of "00" the OR step could be skipped, but let's not:
+    cfg &= (~0x00030000);
+    cfg |=   0x00000000;
+    axil_write_register(SCOPE_RX+(chan<<8)+C_ADDR_RX_UART_CONFIG, cfg);
+  }
+}
+
+bool rx_uart_is_enabled(unsigned chan){
+  if (chan < 40){
+    hw_u32_t cfg = axil_read_register(SCOPE_RX+(chan<<8)+C_ADDR_RX_UART_CONFIG);
+    if ((cfg&0x00020000) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+
+
 void toggle_rx_config(void){
   static int mode = 0;
-  mode = (mode + 1) % 4;
+  mode = (mode + 1) % 6;
   if (mode==0){
     unsigned config = 0x00001002;
-    printf("INFO: No internal loopback.  Broadcasting rx config write 0x%08x \r\n", config);
+    printf("INFO: Half speed, no internal loopback.  Broadcasting rx config write 0x%08x \r\n", (unsigned int) config);
     axil_write_register(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_UART_CONFIG, config);
   } else if (mode==1) {
     unsigned config = 0x00011002;
-    printf("INFO: Full internal loopback.  Broadcasting rx configs write 0x%08x \r\n", config);
+    printf("INFO: Half speed, full internal loopback.  Broadcasting rx configs write 0x%08x \r\n", config);
     axil_write_register(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_UART_CONFIG, config);
   } else if (mode==2) {
-    unsigned config = 0x00011001;
-    printf("INFO: Full internal loopback at full speed.  Broadcasting rx configs write 0x%08x \r\n", config);
+    unsigned config = 0x00001001;
+    printf("INFO: Full speed, no internal loopback.  Broadcasting rx configs write 0x%08x \r\n", (unsigned int) config);
     axil_write_register(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_UART_CONFIG, config);
   } else if (mode==3) {
+    unsigned config = 0x00011001;
+    printf("INFO: Full speed, full internal loopback.  Broadcasting rx configs write 0x%08x \r\n", (unsigned int) config);
+    axil_write_register(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_UART_CONFIG, config);    
+  } else if (mode==4) {
     unsigned config;
     config = 0x00011002;
-    printf("INFO: Tiles 2-10 use internal loopback.  Broadcasting rx configs t 0x%08x \r\n", config);
+    printf("INFO: Half speed, tiles 2-10 use internal loopback.  Broadcasting rx configs t 0x%08x \r\n", (unsigned int) config);
     axil_write_register(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_UART_CONFIG, config);
     config = 0x00001002;
-    printf("INFO: Tile 1 does not use internal loopback.  Setting Tile 1 rx config 0x%08x \r\n", config);
+    printf("INFO: Tile 1 does not use internal loopback.  Setting Tile 1 rx config 0x%08x \r\n", (unsigned int) config);
+    axil_write_register(SCOPE_RX+(0<<8)+C_ADDR_RX_UART_CONFIG, config);
+    axil_write_register(SCOPE_RX+(1<<8)+C_ADDR_RX_UART_CONFIG, config);
+    axil_write_register(SCOPE_RX+(2<<8)+C_ADDR_RX_UART_CONFIG, config);
+    axil_write_register(SCOPE_RX+(3<<8)+C_ADDR_RX_UART_CONFIG, config);
+  } else if (mode==5) {
+    unsigned config;
+    config = 0x00011001;
+    printf("INFO: Full speed, tiles 2-10 use internal loopback.  Broadcasting rx configs t 0x%08x \r\n", (unsigned int) config);
+    axil_write_register(SCOPE_RX+UART_BROADCAST+C_ADDR_RX_UART_CONFIG, config);
+    config = 0x00001001;
+    printf("INFO: Tile 1 does not use internal loopback.  Setting Tile 1 rx config 0x%08x \r\n", (unsigned int) config);
     axil_write_register(SCOPE_RX+(0<<8)+C_ADDR_RX_UART_CONFIG, config);
     axil_write_register(SCOPE_RX+(1<<8)+C_ADDR_RX_UART_CONFIG, config);
     axil_write_register(SCOPE_RX+(2<<8)+C_ADDR_RX_UART_CONFIG, config);
@@ -270,8 +292,8 @@ void toggle_rx_buffer_enables(void){
   static int mode = 0;
   mode = (mode + 1) % 4;
 
-  unsigned config[] = {0x0, 0x3, 0x1, 0x2};
-  printf("INFO: Setting RX buffer config to 0x%08X \r\n", config[mode]);
+  unsigned config[] = {0x3, 0x0, 0x1, 0x2};
+  printf("INFO: Setting RX buffer enables to 0x%08X \r\n", config[mode]);
   axil_write_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_BUFFER_ENABLES, config[mode]);
 }
 
@@ -288,28 +310,30 @@ void read_rx_status(void){
 
     printf("%2d: ch: %2d cfg: 0x%08x status: 0x%08x s: %d b: %d u: %d l: %d\r\n",i, ichan, config, status, starts, beats, updates, lost);
   }
-  printf("rx buffer status------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_BUFFER_STATUS));
-  printf("rx buffer config------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_BUFFER_CONFIG));
-  printf("rx buffer enables-----------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_BUFFER_ENABLES));
-  printf("rx pacman id----------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_PACMAN));
-  printf("FIFO count------------------%d      \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_FIFO_CNT));
-  printf("FIFO max--------------------%d      \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_FIFO_MAX));
-  printf("heartbeat config------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_HEARTBEAT_CONFIG));
-  printf("sync config-----------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_ROLLOVER_CONFIG));
-  printf("word_type_lut---------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_WORD_TYPE_LUT));
+  printf("rx buffer status------------0x%x    \r\n", (unsigned int) axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_BUFFER_STATUS));
+  printf("rx buffer config------------0x%x    \r\n", (unsigned int) axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_BUFFER_CONFIG));
+  printf("rx buffer enables-----------0x%x    \r\n", (unsigned int) axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_BUFFER_ENABLES));
+  printf("rx pacman id----------------0x%x    \r\n", (unsigned int) axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_PACMAN));
+  printf("FIFO count------------------%d      \r\n", (unsigned int) axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_FIFO_CNT));
+  printf("FIFO max--------------------%d      \r\n", (unsigned int) axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_FIFO_MAX));
+  printf("heartbeat config------------0x%x    \r\n", (unsigned int) axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_HEARTBEAT_CONFIG));
+  printf("sync config-----------------0x%x    \r\n", (unsigned int) axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_ROLLOVER_CONFIG));
+  printf("word_type_lut---------------0x%x    \r\n", (unsigned int) axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_WORD_TYPE_LUT));
 
-  printf("heartbeat header------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_HEARTBEAT_HEADER));
-  printf("rollover header-------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_ROLLOVER_HEADER));
-  //printf("trigger header--------------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_TRIG_HEADER));
-  printf("end of packet header--------0x%x    \r\n", axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_EOP_HEADER));
+  printf("heartbeat header------------0x%x    \r\n", (unsigned int) axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_HEARTBEAT_HEADER));
+  printf("rollover header-------------0x%x    \r\n", (unsigned int) axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_ROLLOVER_HEADER));
+  //printf("trigger header--------------0x%x    \r\n", (unsigned int) axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_TRIG_HEADER));
+  printf("end of packet header--------0x%x    \r\n", (unsigned int) axil_read_register(SCOPE_RX+0x3F00+C_ADDR_RX_EOP_HEADER));
 }
 
 void read_rx_look(void){
+  hw_u32_t udata[2];
   for (int i=0; i<40; i++){
     axil_write_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_LOOK_SELECT, i);
-    unsigned a = axil_read_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_LOOK_UA);
-    unsigned b = axil_read_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_LOOK_UB);
-    printf("Channel %2d Look:  0x%08x %08x \r\n", i, b, a);
+    udata[0] = axil_read_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_LOOK_UA);
+    udata[1] = axil_read_register(SCOPE_RX+UART_GLOBAL+C_ADDR_RX_LOOK_UB);
+    printf("Channel %2d Look:  0x%08x %08x ", i, (unsigned int) udata[1], (unsigned int) udata[0]);
+    asic_print_packet_summary(udata);
   }
 }
 
@@ -320,17 +344,20 @@ void read_tx_status(void){
     unsigned config = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_UART_CONFIG);
     unsigned starts = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_UART_STARTS);
     unsigned beats = axil_read_register(SCOPE_TX+cshift+C_ADDR_TX_UART_BEATS);
-    printf("%2d: config: 0x%08x status: 0x%08x starts: %d beats: %d\r\n",i, config, status, starts, beats);
+    printf("%2d: config: 0x%08x status: 0x%08x starts: %d beats: %d\r\n",i,
+	   (unsigned int) config, (unsigned int) status, starts, beats);
   }
-  printf("rx buffer status----------- 0x%x    \r\n", axil_read_register(SCOPE_TX+0x3F00+C_ADDR_TX_BUFFER_STATUS));
+  printf("rx buffer status----------- 0x%x    \r\n", (unsigned int) axil_read_register(SCOPE_TX+0x3F00+C_ADDR_TX_BUFFER_STATUS));
 }
 
 void read_tx_look(void){
+  hw_u32_t udata[2];
   for (int i=0; i<40; i++){
     axil_write_register(SCOPE_TX+UART_GLOBAL+C_ADDR_TX_LOOK_SELECT, i);
-    unsigned a = axil_read_register(SCOPE_TX+UART_GLOBAL+C_ADDR_TX_LOOK_UA);
-    unsigned b = axil_read_register(SCOPE_TX+UART_GLOBAL+C_ADDR_TX_LOOK_UB);
-    printf("Channel %2d Look:  0x%08x %08x \r\n", i, b, a);
+    udata[0] = axil_read_register(SCOPE_TX+UART_GLOBAL+C_ADDR_TX_LOOK_UA);
+    udata[1] = axil_read_register(SCOPE_TX+UART_GLOBAL+C_ADDR_TX_LOOK_UB);
+    printf("Channel %2d Look:  0x%08x %08x ", i, (unsigned int) udata[1], (unsigned int) udata[0]);
+    asic_print_packet_summary(udata);
   }
 }
 
@@ -354,7 +381,7 @@ void toggle_tx_mask(void){
     tx_mask_b = 0xFF;
     tx_mask_a = 0xFFFFFFFF;
   }
-  printf("RX mask:  0x%08x %08x \r\n", tx_mask_b, tx_mask_a);
+  printf("RX mask:  0x%08x %08x \r\n", (unsigned int) tx_mask_b, (unsigned int) tx_mask_a);
 }
 
 void zero_rxtx_counts(void){
@@ -406,7 +433,7 @@ void benchmark_tx(void){
 
   unsigned elapsed_us = hw_timer_elapsed_us();
 
-  printf("INFO:  elapsed microseconds:    %d (0x%x)\r\n", elapsed_us, elapsed_us);
+  printf("INFO:  elapsed microseconds:    %d (0x%x)\r\n", elapsed_us, (unsigned int) elapsed_us);
   printf("INFO:  tx payloads per packet:  %d\r\n", uarts);
   printf("INFO:  packets:                 %d\r\n", packets);
 
@@ -429,7 +456,6 @@ void benchmark_rxtx_loopback(void){
   const unsigned uart_bytes  = 24;    // 192-bits per uart channel
   const unsigned batch_size  = 100;
   const unsigned rx_expected = uarts * uart_bytes * tx_packets;
-  const unsigned rx_trailer_bytes = 24; // Each DMA RX packet has a two 192-bit word trailer
 
   const unsigned timeout = 10000;
   unsigned rx_timeout = timeout;
@@ -473,8 +499,8 @@ void benchmark_rxtx_loopback(void){
       hw_addr_t nxta = 0;
       while((batch_count < batch_size) && (dma_next_available_rx_bd(&nxta))){
 	unsigned xbytes = dma_poll_bd_transferred(nxta);
-	if (xbytes > rx_trailer_bytes){
-	  rx_bytes += xbytes - rx_trailer_bytes;
+	if (xbytes > RX_TRAILER_BYTES){
+	  rx_bytes += xbytes - RX_TRAILER_BYTES;
 	} else {
 	  printf("ERROR: invalid RX packet of size %d bytes found \r\n", xbytes);
 	  return;

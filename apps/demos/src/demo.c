@@ -19,6 +19,10 @@
 #include "asic.h"
 #include "led.h"
 
+#include "iic_menu.h"
+#include "asic_menu.h"
+#include "atc_menu.h"
+
 #define EMAC_DEVICE_ID      XPAR_XEMACPS_0_DEVICE_ID
 #define PHY_ADDRESS         0x1A    // Your CPLD PHY address
 
@@ -217,68 +221,10 @@ void rxtx_menu(){
   }
 }
 
-void atc_menu(){
-  printf("ASIC timing and control (ATC) signal menu:  \r\n");
-  while(1){
-    printf("choose an option:\r\n");
-    printf("(0) Exit timing menu\r\n");
-    printf("(1) read ATC registers (2) read ATC counts (3) toggle ATC destinations \r\n");
-    printf("(4) poke C (5) poke D \r\n");
-
-    unsigned char c=inbyte();
-    printf("pressed:  %c\r\n", c);
-    switch(c){
-    case '0':
-      return;
-    case '1':
-      read_atc_registers();
-      break;
-    case '2':
-      read_atc_counts();
-      break;
-    case '3':
-      toggle_atc_destinations();
-      break;
-    case '4':
-      send_poke_c();
-      break;
-    case '5':
-      send_poke_d();
-      break;
-    default:
-      printf("invalid selection...\r\n");
-    }
-  }
-}
-
-void iic_menu(){
-}
 
 void adc_menu(){
 }
 
-void asic_menu(){
-  xil_printf("ASIC Menu: \r\n");
-  while(1){
-    xil_printf("choose an option:\r\n");
-    xil_printf("(0) exit ASIC Menu \r\n");
-    xil_printf("(1) toggle ASIC power (2) ASIC hello \r\n");
-    unsigned char c=inbyte();
-    xil_printf("pressed:  %c\n\r", c);
-    switch(c){
-    case '0':
-      return;
-    case '1':
-      toggle_asic_power();
-      break;
-    case '2':
-      asic_hello();
-      break;
-    default:
-      xil_printf("invalid selection...\n\r");
-    }
-  }
-}
 
 int main(){
   printf("Menu-Driver Demonstration Driver For PACMAN\r\n");

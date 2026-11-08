@@ -66,14 +66,14 @@ void asic_toggle_power(){
 
   if (mode == 0) {
     printf("setting VDDA and VDDD to zero \r\n");
-    iic_set_vdda(0, 0x0);
-    iic_set_vddd(0, 0x0);
+    iic_set_vdda_dn(0, 0x0);
+    iic_set_vddd_dn(0, 0x0);
     axil_write_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_ENABLES, 0x0);
   } else {
     printf("setting VDDA and VDDD to nominal for ASIC \r\n");
-    iic_set_vdda(0, 0xE2FF);
-    //iic_set_vddd(0, 0x6DFF);
-    iic_set_vddd(0, 0x75FF);
+    iic_set_vdda_dn(0, 0xE2FF);
+    //iic_set_vddd_dn(0, 0x6DFF);
+    iic_set_vddd_dn(0, 0x75FF);
     axil_write_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_ENABLES, 0x00010001);
   }
 }
@@ -233,11 +233,15 @@ void asic_read_rx(){
 
     if (((trailer[0]&0xFF) != 0x4C) || (trailer[2] != words)){
       printf("ERROR: invalid trailer detected in DMA packet... skipping.\r\n");
-      printf("DMA packet tailer: 0x%x %x 0x%x %x 0x%x %x\r\n", trailer[5], trailer[4], trailer[3], trailer[2], trailer[1], trailer[0]);
+      printf("DMA packet tailer: 0x%x %x 0x%x %x 0x%x %x\r\n",
+	     (unsigned int) trailer[5], (unsigned int) trailer[4], (unsigned int) trailer[3],
+	     (unsigned int) trailer[2], (unsigned int) trailer[1], (unsigned int) trailer[0]);
       dma_add_rx_bd(nxta);
       continue;
     } else if (verbose) {
-      printf("DMA packet tailer: 0x%x %x 0x%x %x 0x%x %x\r\n", trailer[5], trailer[4], trailer[3], trailer[2], trailer[1], trailer[0]);
+      printf("DMA packet tailer: 0x%x %x 0x%x %x 0x%x %x\r\n",
+	     (unsigned int) trailer[5], (unsigned int) trailer[4], (unsigned int) trailer[3],
+	     (unsigned int) trailer[2], (unsigned int) trailer[1], (unsigned int) trailer[0]);
     }
 
     for (unsigned i=0; i<words; i++){
@@ -246,8 +250,10 @@ void asic_read_rx(){
       if (start == 0)
 	start = timestamp;
       if (verbose)
-	printf("asic packet: 0x%x %x timestamp: 0x%x %x header: 0x%x %x\r\n", word[5], word[4], word[3], word[2], word[1], word[0]);
-      printf("elapsed t: 0x%08lx ", timestamp - start);
+	printf("asic packet: 0x%x %x timestamp: 0x%x %x header: 0x%x %x\r\n",
+	       (unsigned int) word[5], (unsigned int) word[4], (unsigned int) word[3],
+	       (unsigned int) word[2], (unsigned int) word[1], (unsigned int) word[0]);
+      printf("elapsed t: 0x%08lx ", (unsigned long) (timestamp - start));
       asic_print_packet_summary(&word[4]);
     }
     count++;
@@ -308,7 +314,9 @@ void asic_loopback(){
 	hw_u32_t * trailer = (hw_u32_t *) &buf[6*words];
 	if (((trailer[0]&0xFF) != 0x4C) || (trailer[2] != words)){
 	  printf("ERROR: invalid trailer detected in DMA packet... skipping.\r\n");
-	  printf("DMA packet tailer: 0x%x %x 0x%x %x 0x%x %x\r\n", trailer[5], trailer[4], trailer[3], trailer[2], trailer[1], trailer[0]);
+	  printf("DMA packet tailer: 0x%x %x 0x%x %x 0x%x %x\r\n",
+		 (unsigned int) trailer[5], (unsigned int) trailer[4], (unsigned int) trailer[3],
+		 (unsigned int) trailer[2], (unsigned int) trailer[1], (unsigned int) trailer[0]);
 	  dma_add_rx_bd(nxta);
 	  continue;
 	}
@@ -353,7 +361,7 @@ void asic_menu(){
   printf("ASIC menu:  \r\n");
   while(1){
     printf("choose an option:\r\n");
-    printf("(x) Exit timing menu\r\n");
+    printf("(x) Exit ASIC menu\r\n");
     printf("(v) toggle ASIC version (u) toggle RX UART enables (p) toggle ASIC power\r\n");
     printf("(f) send full reset (i) send internal reset (c) config root chip \r\n");
     printf("(a) request all registers (h) hello ASIC (r) read RX \r\n");

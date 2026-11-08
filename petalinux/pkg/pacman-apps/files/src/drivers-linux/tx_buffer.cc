@@ -39,7 +39,6 @@ void tx_buffer_status(){
 
 void tx_buffer_print_output(uint32_t * src){
   printf("channel mask:  0x%08x %08x\n", src[1], src[0]);
-  printf("always zero:   0x%08x %08x\n", src[3], src[2]);
   for (int i=0; i<TX_BUFFER_CHAN; i++){
     if (((src[i/32]>>(i%32))&1)==1) {
       printf("chan: %3d tx_data: 0x%08x %08x\n", i, src[2+2*i+1], src[2+2*i+0]);
@@ -61,7 +60,7 @@ unsigned tx_buffer_lost(){
 }
 
 
-unsigned tx_buffer_in(unsigned char chan, uint32_t * tx_data){
+unsigned tx_buffer_in(unsigned char chan, uint32_t tx_data_hi, uint32_t tx_data_lo){
 
   // check for broadcast:
   if (chan >= TX_BUFFER_CHAN){
@@ -75,7 +74,7 @@ unsigned tx_buffer_in(unsigned char chan, uint32_t * tx_data){
 
     for (unsigned i=0; i<replay; i++){
       for (unsigned char c=0; c<TX_BUFFER_CHAN; c++){
-	tx_buffer_in(c, tx_data);
+	tx_buffer_in(c, tx_data_hi, tx_data_lo);
       }
     }
     return 1;
@@ -87,8 +86,8 @@ unsigned tx_buffer_in(unsigned char chan, uint32_t * tx_data){
     G_TX_LOST++;
     return 0;
   }
-  G_TX_BUFFER_DATA[chan][2*head+0] = tx_data[0];
-  G_TX_BUFFER_DATA[chan][2*head+1] = tx_data[1];
+  G_TX_BUFFER_DATA[chan][2*head+0] = tx_data_lo;
+  G_TX_BUFFER_DATA[chan][2*head+1] = tx_data_hi;
   G_TX_BUFFER_HEAD[chan] = (head + 1) % TX_BUFFER_DEPTH;
   return 1;
 }
