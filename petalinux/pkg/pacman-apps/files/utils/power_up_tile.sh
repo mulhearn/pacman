@@ -4,27 +4,24 @@
 #
 TILE=$1
 
-#PACMAN_UTIL=/home/root/pacman_util.py
-PACMAN_UTIL=./pacman_util.py
+PACMAN_UTIL=/home/root/utils/pacman_util.py
 
-# set dacs
-VDDD_DAC_VALUE=43875 # just a guess, should be a touch low (~1.75V) from nominal
-VDDA_DAC_VALUE=43875
+# DAC values:
+VDDD_DAC_VALUE=28000
+VDDA_DAC_VALUE=58000
 
+# Address for this TILE
 VDDA_DAC_WRITE_ADDR=$(( 0x24010 + $TILE-1 ))
 VDDD_DAC_WRITE_ADDR=$(( 0x24020 + $TILE-1 ))
 
-# enable larpix power
-ANALOG_PWR_EN_ADDR=0x00000014
-ANALOG_PWR_EN_VALUE=1 # enable larpix power
-
-# set tile enable set address
-TILE_EN_SET_ADDR=0x0000A108
-TILE_EN_VALUE=$((1 << (${TILE}-1)))
-
-# write registers
+# Write DAC registers
 $PACMAN_UTIL \
     --write $VDDA_DAC_WRITE_ADDR $VDDA_DAC_VALUE \
-    --write $VDDD_DAC_WRITE_ADDR $VDDD_DAC_VALUE \
-    --write $ANALOG_PWR_EN_ADDR $ANALOG_PWR_EN_VALUE \
-    --write $TILE_EN_SET_ADDR $TILE_EN_VALUE
+    --write $VDDD_DAC_WRITE_ADDR $VDDD_DAC_VALUE
+
+# enable tile power (global enable):
+$PACMAN_UTIL  --string enable_tile_power
+
+# set enable for this tile:
+CMD="enable_tile tile="$TILE
+$PACMAN_UTIL  --string "$CMD"

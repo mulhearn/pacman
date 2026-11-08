@@ -1,6 +1,10 @@
 #ifndef __GLOBAL_H_
 #define __GLOBAL_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // GLOBAL REGISTERS:
 
 #define SCOPE_GLOBAL 0xF000
@@ -28,6 +32,10 @@ void get_git_hash_string(char * buffer, size_t buffer_size);
 void read_global_status();
 void toggle_global_scratch();
 void toggle_global_enables();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // __GLOBAL_H_
 

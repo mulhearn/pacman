@@ -10,21 +10,23 @@
 
 #include "hw_access.h"
 #include "global.h"
-#include "mio.h"
-#include "bram.h"
 #include "dma.h"
 #include "led.h"
-#include "i2c.h"
+#include "iic.h"
 #include "rxtx.h"
 #include "atc.h"
+#include "adc.h"
+#include "asic.h"
+
+#include "asic_menu.h"
 
 // *** LED ***
 
 void blink_leds(){
-  printf("INFO: starting LED blink test...\n");
+  printf("INFO: starting LED blink test...\r\n");
   blink_red_led();
   blink_pacman_leds();
-  printf("INFO: done with LED blink test.\n");
+  printf("INFO: done with LED blink test.\r\n");
 }
 
 // *** GLOBAL UNIT ***
@@ -34,7 +36,7 @@ void toggle_global_enables_obsolete(){
   unsigned enables[] = {0x00000000, 0x00010000, 0x00010001,  0x000103FF, 0x001103FF};
   static int mode = 0;
   mode = (mode + 1) % 5;
-  printf("INFO: setting enables to 0x%08x \n", enables[mode]);
+  printf("INFO: setting enables to 0x%08x \r\n", enables[mode]);
   axil_write_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_ENABLES, enables[mode]);
 }
 
@@ -55,7 +57,7 @@ void toggle_global_scratch_obsolete(){
       scra = 0x0;
       scrb = 0x0;
   }
-  printf("INFO: setting scratch a to 0x%08x and scratch b to 0x%08x \n", scra, scrb);
+  printf("INFO: setting scratch a to 0x%08x and scratch b to 0x%08x \r\n", scra, scrb);
   axil_write_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRATCH_A, scra);
   axil_write_register(SCOPE_GLOBAL+C_ADDR_GLOBAL_SCRATCH_B, scrb);
 }
@@ -63,53 +65,65 @@ void toggle_global_scratch_obsolete(){
 // *** POWER UNIT ***
 
 void toggle_power(){
-  unsigned vddd[] = {0x00, 0xFFFF, 0,8000, 0x4000};
-  unsigned vdda[] = {0x00, 0xFFFF, 0x8000, 0x4000};
+  unsigned vddd[] = {0x00, 0x2000, 0x4000, 0x8000, 0xFFFF};
+  unsigned vdda[] = {0x00, 0x2000, 0x4000, 0x8000, 0xFFFF};
   static int mode = 0;
-  mode = (mode + 1) % 4;
+  mode = (mode + 1) % 5;
 
-  printf("INFO: setting VDDD to 0x%x \n", vddd[mode]);
+  printf("INFO: setting VDDD to 0x%x \r\n", vddd[mode]);
   for (int i=0; i<10; i++){
-    i2c_set_vddd(i, vddd[mode]);
+    iic_set_vddd(i, vddd[mode]);
   }
 
-  printf("INFO: setting VDDA to 0x%x \n", vdda[mode]);
+  printf("INFO: setting VDDA to 0x%x \r\n", vdda[mode]);
   for (int i=0; i<10; i++){
-    i2c_set_vdda(i, vdda[mode]);
+    iic_set_vdda(i, vdda[mode]);
   }
+}
+
+void toggle_test_dac(){
+  // VDDA DAC is used for postive  end of differential test DAC output
+  // VDDD DAC is used for negative end of differntial test DAC output
+
+  unsigned vp[] = {0x00, 0x1000, 0x0000, 0x2000, 0x0000};
+  unsigned vn[] = {0x00, 0x0000, 0x1000, 0x0000, 0x2000};
+  static int mode = 0;
+  mode = (mode + 1) % 5;
+
+  printf("INFO: setting DAC test VP to 0x%x \r\n", vp[mode]);
+  printf("INFO: setting DAC test VN to 0x%x \r\n", vn[mode]);
+  iic_set_vdda(10, vp[mode]);
+  iic_set_vddd(10, vn[mode]);
+
 }
 
 void monitor_power(){
   for (int i=0; i<10; i++){
-    printf("TILE %2d POWER SUMMARY:\n", i+1);
-    unsigned vdda = i2c_mon_vdda(i);
-    unsigned vddd = i2c_mon_vddd(i);
-    unsigned idda = i2c_mon_idda(i);
-    unsigned iddd = i2c_mon_iddd(i);
+    printf("TILE %2d POWER SUMMARY:\r\n", i+1);
+    unsigned vdda = iic_mon_vdda_mv(i);
+    unsigned vddd = iic_mon_vddd_mv(i);
+    unsigned idda = iic_mon_idda_ma(i);
+    unsigned iddd = iic_mon_iddd_ma(i);
 
-    printf("VDDA:  voltage:  %5d mV current: %5d mA\n", vdda, idda);
-    printf("VDDD:  voltage:  %5d mV current: %5d mV\n", vddd, iddd);
+    printf("VDDA:  voltage:  %5d mV current: %5d mA\r\n", vdda, idda);
+    printf("VDDD:  voltage:  %5d mV current: %5d mA\r\n", vddd, iddd);
   }
 
-  printf("BOARD POWER SUMMARY:\n");
+  printf("BOARD POWER SUMMARY:\r\n");
 
-  unsigned vxa = i2c_mon_vdda(0xa);
-  unsigned vya = i2c_mon_vddd(0xa);
-  unsigned ixa = i2c_mon_idda(0xa);
-  unsigned iya = i2c_mon_iddd(0xa);
+  unsigned vba = iic_mon_vboard_mv(0);
+  unsigned vbb = iic_mon_vboard_mv(1);
+  unsigned vbc = iic_mon_vboard_mv(2);
+  unsigned vbd = iic_mon_vboard_mv(3);
 
-  unsigned vxb = i2c_mon_vdda(0xb);
-  unsigned vyb = i2c_mon_vddd(0xb);
-  unsigned ixb = i2c_mon_idda(0xb);
-  unsigned iyb = i2c_mon_iddd(0xb);
-
-  float cyb = 4.5*iyb/20000.;
-
-  printf("Board 3V6:  voltage:  %5d mV  current:  %5d mA\n",  vxa, ixa);
-  printf("Board 3V3:  voltage:  %5d mV  current:  %5d mA\n",  vya, iya);
-  printf("Board 3V0:  voltage:  %5d mV  current:  %5d mA\n",  vxb, ixb);
-  printf("RTD Probe:  3V3:      %5d mV  current:  %.1f mA\n", vyb, cyb);
-
+  unsigned iba = iic_mon_iboard_ma(0);
+  unsigned ibb = iic_mon_iboard_ma(1);
+  unsigned ibc = iic_mon_iboard_ma(2);
+  unsigned prb = iic_mon_probe_dn();
+  printf("Board 3V6:  voltage:  %5d mV  current:  %5d mA\r\n",  vba, iba);
+  printf("Board 3V3:  voltage:  %5d mV  current:  %5d mA\r\n",  vbb, ibb);
+  printf("Board 3V0:  voltage:  %5d mV  current:  %5d mA\r\n",  vbc, ibc);
+  printf("RTD Probe:  3V3:      %5d mV  current:  0x%04X DN\r\n",   vbd, prb);
 }
 
 void record_iv_curves(){
@@ -120,46 +134,153 @@ void record_iv_curves(){
     return;
   }
 
-  printf("INFO: first setting all voltages to zero.\n");
+  printf("INFO: first setting all voltages to zero.\r\n");
   for (int i=0; i<10; i++){
-    i2c_set_vdda(i, 0);
-    i2c_set_vddd(i, 0);
+    iic_set_vdda(i, 0);
+    iic_set_vddd(i, 0);
   }
 
   for (int i=0; i<10; i++){
-    fprintf(file, "TILE:   %d\n", i+1);
-    printf("INFO:  VDDD/VDDA IV curves for Tile %d\n", i+1);
+    fprintf(file, "TILE:   %d\r\n", i+1);
+    printf("INFO:  VDDD/VDDA IV curves for Tile %d\r\n", i+1);
     for (unsigned vset = 0x0000; vset<=0xFFFF; vset+=0x1000){
-      i2c_set_vdda(i, vset);
-      i2c_set_vddd(i, vset);
+      iic_set_vdda(i, vset);
+      iic_set_vddd(i, vset);
       usleep(10);
-      unsigned vdda = i2c_mon_vdda(i);
-      unsigned vddd = i2c_mon_vddd(i);
-      unsigned idda = i2c_mon_idda(i);
-      unsigned iddd = i2c_mon_iddd(i);
-      printf("INFO:  vset: 0x%04x vdda: %7d idda: %7d vddd: %7d iddd: %7d\n", vset, vdda, idda, vddd, iddd);
-      fprintf(file, "vset: 0x%04x vdda: %7d idda: %7d vddd: %7d iddd: %7d\n", vset, vdda, idda, vddd, iddd);
+      unsigned vdda = iic_mon_vdda(i);
+      unsigned vddd = iic_mon_vddd(i);
+      unsigned idda = iic_mon_idda(i);
+      unsigned iddd = iic_mon_iddd(i);
+      printf("INFO:  vset: 0x%04x vdda: %7d idda: %7d vddd: %7d iddd: %7d\r\n", vset, vdda, idda, vddd, iddd);
+      fprintf(file, "vset: 0x%04x vdda: %7d idda: %7d vddd: %7d iddd: %7d\r\n", vset, vdda, idda, vddd, iddd);
     }
-    i2c_set_vdda(i, 0);
-    i2c_set_vddd(i, 0);
+    iic_set_vdda(i, 0);
+    iic_set_vddd(i, 0);
   }
   fclose(file);
 }
 
+
+void run_check_iic(){
+  printf("INFO: running check I2C routine\r\n");
+  check_iic();
+}
+
+void toggle_mux(){
+  static int mode = 0;
+  mode = (mode + 1) % 4;
+  if (mode == 0) {
+    printf("INFO: disabling all inputs to MUX A and B.\r\n");
+    iic_set_muxa(0);
+    iic_set_muxb(0);
+  } else if (mode == 1) {
+    printf("INFO: setting MUX A to DAC input and disabling MUX B inputs.\r\n");
+    iic_set_muxa(11);
+    iic_set_muxb(0);
+  } else if (mode == 2) {
+    printf("INFO: setting MUX B to DAC input and disabling MUX A inputs.\r\n");
+    iic_set_muxa(0);
+    iic_set_muxb(11);
+  } else {
+    printf("INFO: setting MUX A and B to DAC input.\r\n");
+    iic_set_muxa(11);
+    iic_set_muxb(11);
+  }
+}
+
+
+
+void read_iic_status(){
+  printf("INFO: I2C driver status:  0x%08x\r\n", iic_platform_status());
+}
+
 // *** MENUS ***
 
-void power_menu(){
+void adc_menu(){
   while(1){
-    printf("POWER MENU:  choose an option:\n");
-    printf("(0) main menu (1) toggle enables (2) toggle power (3) monitor power\n");
-    printf("(4) write IV curves to file\n");
+    printf("ADC MENU:  choose an option:\r\n");
+    printf("(0) main menu (1) read ADC registers (2) toggle ADC sleep (3) toggle ADC enable (4) toggle DAC (5) toggle MUX \r\n");
 
     int input;
     if (scanf("%d", &input) != 1){
-      printf("ERROR: invalid input.\n");
+      printf("ERROR: invalid input.\r\n");
       continue;
     }
-    printf("INFO: selected %d\n", input);
+    printf("INFO: selected %d\r\n", input);
+
+    switch(input){
+    case 0:
+      return;
+    case 1:
+      adc_read_registers();
+      break;
+    case 2:
+      adc_toggle_sleep();
+      break;
+    case 3:
+      adc_toggle_config();
+      break;
+    case 4:
+      toggle_test_dac();
+      break;
+    case 5:
+      toggle_mux();
+      break;
+    default:
+      printf("invalid selection...\r\n");
+    }
+  }
+  return;
+}
+
+
+
+
+void iic_menu(){
+  while(1){
+    printf("I2C MENU:  choose an option:\r\n");
+    printf("(0) main menu (1) check I2C (2) toggle MUX (3) read I2C status\r\n");
+
+    int input;
+    if (scanf("%d", &input) != 1){
+      printf("ERROR: invalid input.\r\n");
+      continue;
+    }
+    printf("INFO: selected %d\r\n", input);
+
+    switch(input){
+    case 0:
+      return;
+    case 1:
+      run_check_iic();
+      break;
+    case 2:
+      toggle_mux();
+      break;
+    case 3:
+      read_iic_status();
+      break;
+    default:
+      printf("invalid selection...\r\n");
+    }
+  }
+  return;
+}
+
+
+
+void power_menu(){
+  while(1){
+    printf("POWER MENU:  choose an option:\r\n");
+    printf("(0) main menu (1) toggle enables (2) toggle power (3) monitor power\r\n");
+    printf("(4) write IV curves to file (5) check I2C (6) read I2C status\r\n");
+
+    int input;
+    if (scanf("%d", &input) != 1){
+      printf("ERROR: invalid input.\r\n");
+      continue;
+    }
+    printf("INFO: selected %d\r\n", input);
 
     switch(input){
     case 0:
@@ -176,8 +297,14 @@ void power_menu(){
     case 4:
       record_iv_curves();
       break;
+    case 5:
+      check_iic();
+      break;
+    case 6:
+      read_iic_status();
+      break;
     default:
-      printf("invalid selection...\n\r");
+      printf("invalid selection...\r\n");
     }
   }
   return;
@@ -185,7 +312,7 @@ void power_menu(){
 
 void rxtx_menu(){
   while(1){
-    printf("RXTX MENU:  choose an option:\n");
+    printf("RXTX MENU:  choose an option:\r\n");
     printf("choose an option:\r\n");
     printf("(0) exit RX/TX Menu \r\n");
     printf("(1) read tx status (2) read rx status (3) read tx look (4) read rx look\r\n");
@@ -201,10 +328,10 @@ void rxtx_menu(){
 
     int input;
     if (scanf("%d", &input) != 1){
-      printf("ERROR: invalid input.\n");
+      printf("ERROR: invalid input.\r\n");
       continue;
     }
-    printf("INFO: selected %d\n", input);
+    printf("INFO: selected %d\r\n", input);
 
     switch(input){
     case 0:
@@ -240,7 +367,7 @@ void rxtx_menu(){
       toggle_tx_mask();
       break;
     case 20:
-      init_rxtx_descriptor_ring_mode(8);
+      init_rxtx_descriptor_ring_mode(512);
       break;
     case 21:
       show_rxtx_bds();
@@ -294,7 +421,7 @@ void rxtx_menu(){
       benchmark_rxtx_loopback();
       break;
     default:
-      printf("invalid selection...\n\r");
+      printf("invalid selection...\r\n");
     }
   }
   return;
@@ -310,10 +437,10 @@ void atc_menu(){
 
     int input;
     if (scanf("%d", &input) != 1){
-      printf("ERROR: invalid input.\n");
+      printf("ERROR: invalid input.\r\n");
       continue;
     }
-    printf("INFO: selected %d\n", input);
+    printf("INFO: selected %d\r\n", input);
 
     switch(input){
     case 0:
@@ -334,23 +461,27 @@ void atc_menu(){
       send_poke_d();
       break;
     default:
-      printf("invalid selection...\n\r");
+      printf("invalid selection...\r\n");
     }
   }
 }
 
 void main_menu(){
   while(1){
-    printf("MAIN MENU:  choose an option:\n");
-    printf("(1) blink LEDs (2) global registers (3) toggle scratch registers\n");
-    printf("(4) power menu (5) RX/TX menu (6) ATC menu \n");
+    printf("MAIN MENU:  choose an option:\r\n");
+    printf("(1) blink LEDs (2) global registers (3) toggle scratch registers\r\n");
+    printf("(4) power menu (5) I2C menu (6) RX/TX menu (7) ATC menu (8) ADC menu \r\n");
+    printf("(9) ASIC menu \r\n");
     int input;
     if (scanf("%d", &input) != 1){
-      printf("ERROR: invalid input.\n");
+      printf("ERROR: invalid input.\r\n");
       continue;
     }
+    int tmp;
+    while ((tmp = getchar()) != '\n' && tmp != EOF){}
 
-    printf("INFO: selected %d\n", input);
+
+    printf("INFO: selected %d\r\n", input);
 
     switch(input){
     case 1:
@@ -366,27 +497,36 @@ void main_menu(){
       power_menu();
       break;
     case 5:
-      rxtx_menu();
+      iic_menu();
       break;
     case 6:
+      rxtx_menu();
+      break;
+    case 7:
       atc_menu();
       break;
+    case 8:
+      adc_menu();
+      break;
+    case 9:
+      asic_menu();
+      break;
     default:
-      printf("invalid selection...\n\r");
+      printf("invalid selection...\r\n");
     }
   }
   return;
 }
 
 int main(){
-  printf("pacman_menu:  PACMAN Linux driver access via menu, for diagnostics and hardware checkout.\n");
-  //printf("Random Max:  0x%x Random Number:  0x%x \n", RAND_MAX, rand());
+  printf("pacman_menu:  PACMAN Linux driver access via menu, for diagnostics and hardware checkout.\r\n");
+  //printf("Random Max:  0x%x Random Number:  0x%x \r\n", RAND_MAX, rand());
 
-  init_mio();
-  init_axil_driver();
-  init_bram();
+  axil_platform_init();
+  iic_platform_init();
+  bram_platform_init();
   init_rxtx();
   init_led();
-  init_i2c();
+
   main_menu();
 }

@@ -7,15 +7,10 @@
 #include <sys/time.h>
 
 #define SOCKET_B_BINDING_SUB "tcp://localhost:5556"
-
-static void * ctx = NULL;
-static void * sub = NULL;
-
 #define MAX_CHANNEL 40
 
-// BUFFER SIZE:  8 + N * 16
-//#define MAX_BUFFER_SIZE 16392
-#define MAX_BUFFER_SIZE 256008
+// BUFFER SIZE:  24 + N * 24
+#define MAX_BUFFER_SIZE 256000
 uint32_t rx_buffer[MAX_BUFFER_SIZE/4];
 
 int main(int argc, char* argv[]){
@@ -24,16 +19,15 @@ int main(int argc, char* argv[]){
     packets[i]=0;
   }
 
-  struct timeval start, end;
-  double elapsed_time;
-  int rc, iparam;
+  struct timeval start;
+  int iparam;
   printf("INFO:  Starting ZMQ loopback demo.\n");
   printf("INFO:  RAND_MAX: 0x%x\n", RAND_MAX);
   printf("INFO:  Creating new ZMQ context...\n");
   void* ctx = zmq_ctx_new();
 
   printf("INFO:  Initializing SUB socket (B) ...\n");
-  sub = zmq_socket(ctx, ZMQ_SUB);
+  void * sub = zmq_socket(ctx, ZMQ_SUB);
   iparam = 1000;
   zmq_setsockopt(sub, ZMQ_RCVTIMEO, &iparam, sizeof(iparam));
   zmq_setsockopt(sub, ZMQ_SUBSCRIBE, "", 0);
@@ -50,8 +44,8 @@ int main(int argc, char* argv[]){
   while(1){
     zmq_msg_t msg;
     zmq_msg_init(&msg);
-    rc = zmq_msg_recv(&msg, sub, 0);
-    int size = zmq_msg_size(&msg);
+    zmq_msg_recv(&msg, sub, 0);
+    unsigned size = zmq_msg_size(&msg);
     if (size <= 0){
       zmq_msg_close(&msg);
       //printf("DEBUG:  no message received \n");
@@ -67,21 +61,21 @@ int main(int argc, char* argv[]){
     //printf("DEBUG:  received message of size %d bytes \n", size);
     //printf("DEBUG:  header:  0x%x 0x%x\n", rx_buffer[0], rx_buffer[1]);
     uint32_t mtype = rx_buffer[0]&0xFF;
-    uint32_t npkts = (rx_buffer[1]>>16)&0xFFFF;
-    //printf("DEBUG:  type:  0x%x pkts:  0x%x (%d)\n", mtype, npkts, npkts);
+    uint32_t nbytes = rx_buffer[1];
     if (mtype != 0x44){
-      printf("ERROR:  message type is not 0x44 (0x%x)... discarding\n", mtype);
+      printf("NOTE:  message type is not 0x44 (0x%x)... discarding\n", mtype);
       continue;
     }
-    if (size != (npkts*16+8)){
-      printf("ERROR:  message size (%d) does not match packets in header (%d)\n", size, npkts);
+    if (size != nbytes+24){
+      printf("ERROR:  message size (%d bytes) does not match n_bytes in header (%d)\n", size, nbytes);
       continue;
     }
     //printf("DEBUG:  received valid message\n");
-    for (int i=0; i<npkts; i++){
-      uint32_t wtype =  rx_buffer[2+4*i]&0xFF;
-      uint32_t chan  = (rx_buffer[2+4*i]>>8)&0xFF;
-      //printf("DEBUG:  packet %d wtype:  0x%x  chan:  %d \n", i, wtype, chan);
+    unsigned npkts = (nbytes / 24);
+    for (unsigned i=0; i<npkts; i++){
+      uint32_t wtype =  rx_buffer[6+6*i]&0xFF;
+      uint32_t chan  = (rx_buffer[6+6*i]>>16)&0xFFFF;
+      printf("DEBUG:  packet %d wtype:  0x%x  chan:  %d \n", i, wtype, chan);
 
       if (wtype == 0x44){
 	if ((chan == 0) || (chan > 40)){

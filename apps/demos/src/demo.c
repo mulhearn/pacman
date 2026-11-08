@@ -12,11 +12,12 @@
 #include "hw_access.h"
 #include "dma.h"
 #include "global.h"
-#include "gpiops.h"
 #include "iic.h"
 #include "rxtx.h"
 #include "atc.h"
 #include "adc.h"
+#include "asic.h"
+#include "led.h"
 
 #define EMAC_DEVICE_ID      XPAR_XEMACPS_0_DEVICE_ID
 #define PHY_ADDRESS         0x1A    // Your CPLD PHY address
@@ -101,26 +102,8 @@ void toggle_dcache(){
 }
 
 void blink_leds(){
-  blink_mio_leds();
-
-  static const int nblink = 5;
-  static const int wait_usec = 100000;
-
-  xil_printf("BLINK LEDS:  blinking LED 3 via AXIL...\r\n");
-  for (int iblink=0; iblink<nblink; iblink++){
-    Xil_Out32(AXIL_REGISTERS_BASEADDR+SCOPE_GLOBAL+C_ADDR_GLOBAL_LEDS, 0x1);
-    usleep(wait_usec);
-    Xil_Out32(AXIL_REGISTERS_BASEADDR+SCOPE_GLOBAL+C_ADDR_GLOBAL_LEDS, 0x0);
-    usleep(wait_usec);
-  }
-
-  xil_printf("BLINK LEDS:  blinking LED 4 via AXIL...\r\n");
-  for (int iblink=0; iblink<nblink; iblink++){
-    Xil_Out32(AXIL_REGISTERS_BASEADDR+SCOPE_GLOBAL+C_ADDR_GLOBAL_LEDS, 0x2);
-    usleep(wait_usec);
-    Xil_Out32(AXIL_REGISTERS_BASEADDR+SCOPE_GLOBAL+C_ADDR_GLOBAL_LEDS, 0x0);
-    usleep(wait_usec);
-  }
+  blink_red_led();
+  blink_pacman_leds();
 }
 
 void rxtx_menu(){
@@ -268,19 +251,48 @@ void atc_menu(){
   }
 }
 
+void iic_menu(){
+}
 
+void adc_menu(){
+}
 
+void asic_menu(){
+  xil_printf("ASIC Menu: \r\n");
+  while(1){
+    xil_printf("choose an option:\r\n");
+    xil_printf("(0) exit ASIC Menu \r\n");
+    xil_printf("(1) toggle ASIC power (2) ASIC hello \r\n");
+    unsigned char c=inbyte();
+    xil_printf("pressed:  %c\n\r", c);
+    switch(c){
+    case '0':
+      return;
+    case '1':
+      toggle_asic_power();
+      break;
+    case '2':
+      asic_hello();
+      break;
+    default:
+      xil_printf("invalid selection...\n\r");
+    }
+  }
+}
 
 int main(){
   printf("Menu-Driver Demonstration Driver For PACMAN\r\n");
-  printf("Sanity number:  2\r\n");
+  printf("Sanity number:  1\r\n");
   printf("Random Max:  0x%x Random Number:  0x%x \r\n", RAND_MAX, rand());
 
   int status = 0;
-  status |= init_gpiops();
-  status |= init_iic();
+  axil_platform_init();
+  iic_platform_init();
+  gpio_platform_init();
+
   mdio_init();
   init_rxtx();
+  init_led();
   if (status != XST_SUCCESS) {
     printf("Hardware initialization has FAILED.\r\n");
     return 0;
@@ -290,7 +302,7 @@ int main(){
     printf("choose an option:\r\n");
     printf("(1) blink LEDs (2) read global status (3) toggle scratch (4) toggle enables (5) toggle dcache \r\n");
     printf("(6) read MAC From CPLD (7) toggle CPLD config \r\n");
-    printf("(a) I2C menu (b) RX/TX menu (c) ATC menu (d) ADC menu\r\n");
+    printf("(a) I2C menu (b) RX/TX menu (c) ATC menu (d) ADC menu (e) single ASIC menu\r\n");
     unsigned char c=inbyte();
     printf("pressed:  %c\r\n", c);
     switch(c){
@@ -326,6 +338,9 @@ int main(){
       break;
     case 'd':
       adc_menu();
+      break;
+    case 'e':
+      asic_menu();
       break;
     default:
       printf("invalid selection...\r\n");

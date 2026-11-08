@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include <string>
 #include <vector>
 #include <map>
@@ -172,21 +173,43 @@ string handle_read_enables(const pacman_command_t&){
 }
 
 string handle_send_full_reset(const pacman_command_t& cmd) {
-  return "not yet implemented...";
+  unsigned mask = 0;
+  if (!get_unsigned(cmd, "mask", mask))
+    return "ERROR: invalid or missing argument for mask\n";
+
+  // update pulse duration for full reset (1023 cycles):
+  pacman_write(0xE118, 0x03FF3FF5);
+  pacman_write(0xE100, 0x00);
+  usleep(10);
+
+  // reset pulses triggered by poke C
+  pacman_write(0xE0C0, mask);
+  usleep(100);
+
+  // set pulse duration back to default (internal reset, 8 cycles):
+  pacman_write(0xE118, 0x03FF0085);
+  pacman_write(0xE100, 0x00);
+  usleep(10);
+
+  return "full reset sent to " + to_hex(mask) + "\n";
 }
+
 string handle_send_internal_reset(const pacman_command_t& cmd) {
   unsigned mask = 0;
   if (!get_unsigned(cmd, "mask", mask))
     return "ERROR: invalid or missing argument for mask\n";
   // reset pulses triggered by poke C
   pacman_write(0xE0C0, mask);
+
   return "internal reset sent to " + to_hex(mask) + "\n";
 }
+
 string handle_send_sync_timestamp(const pacman_command_t& cmd) {
   unsigned mask = 0;
   if (!get_unsigned(cmd, "mask", mask))
     return "ERROR: invalid or missing argument for mask\n";
-  // sync pulses triggered by poke D
+
+  // sync pulses are triggered by poke D
   pacman_write(0xE0D0, mask);
   return "sync timestamp sent to " + to_hex(mask) + "\n";
 }

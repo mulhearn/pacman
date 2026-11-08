@@ -77,7 +77,6 @@ int main(int argc, char* argv[]) {
     zmq_msg_t pub_msg;
 
     uint64_t total_words = 0;
-    uint32_t batch_words = 0;
     auto batch_start_time = std::chrono::steady_clock::now();
 
     while (1) {
@@ -86,37 +85,35 @@ int main(int argc, char* argv[]) {
         uint32_t available = rx_buffer_count();
 
         // Accumulate words in batch counter
-        batch_words += available;
-        if (batch_words > MAX_BATCH) batch_words = MAX_BATCH;
+        if (available > MAX_BATCH) available = MAX_BATCH;
 
         auto now = std::chrono::steady_clock::now();
         auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - batch_start_time).count();
 
         // Check if we should flush
-        if ((batch_words >= MIN_BATCH && msg_ready) ||
-            (batch_words > 0 && elapsed_ms >= BATCH_TIMEOUT_MS && msg_ready)) {
+        if (msg_ready && ((available >= MIN_BATCH) || ((available > 0) && (elapsed_ms >= BATCH_TIMEOUT_MS)))){
 
             // Copy words from RX buffer into message buffer
-            for (uint32_t i = 0; i < batch_words; i++) {
+            for (uint32_t i = 0; i < available; i++) {
                 pacman_word_t* w = (pacman_word_t*)(msg_buffer + HEADER_BYTES + i*WORD_BYTES);
                 if (rx_buffer_out((uint32_t*)w) == 0) {
                     printf("ERROR: rx_buffer_out failed unexpectedly\n");
-                    batch_words = 0;
+                    available = 0;
                     batch_start_time = std::chrono::steady_clock::now();
                     break;
                 }
             }
 
             // Initialize header
-            write_header_data((pacman_header_t*)msg_buffer, batch_words*WORD_BYTES);
+            write_header_data((pacman_header_t*)msg_buffer, available*WORD_BYTES);
 
             // Send message with zero-copy
             msg_ready = false;
             if (zmq_msg_init_data(&pub_msg, msg_buffer,
-                                  HEADER_BYTES + batch_words*WORD_BYTES,
+                                  HEADER_BYTES + available*WORD_BYTES,
                                   clear_msg, NULL) != 0) {
                 perror("ERROR: zmq_msg_init_data failed");
-                batch_words = 0;
+                available = 0;
                 batch_start_time = std::chrono::steady_clock::now();
                 continue;
             }
@@ -124,18 +121,18 @@ int main(int argc, char* argv[]) {
             if (zmq_msg_send(&pub_msg, pub_socket, 0) < 0) {
                 perror("ERROR: zmq_msg_send failed");
             } else {
-                total_words += batch_words;
+                total_words += available;
             }
 
             zmq_msg_close(&pub_msg);
 
-            batch_words = 0;
+            available = 0;
             batch_start_time = std::chrono::steady_clock::now();
         }
 
         // Avoid busy spin if nothing to do
-        if (available == 0 && batch_words < MIN_BATCH) {
-            std::this_thread::sleep_for(std::chrono::microseconds(100));
+        if (available < MIN_BATCH) {
+	  std::this_thread::sleep_for(std::chrono::microseconds(100));
         }
     }
 

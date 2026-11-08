@@ -1,4 +1,3 @@
-//#define SIMULATED_PACMAN
 #ifdef SIMULATED_PACMAN
 
 #include <stdlib.h>
@@ -10,6 +9,7 @@
 
 #include "pacman.hh"
 #include "pacman_vspace.hh"
+#include "pacman_highlevel_interface.hh"
 #include "tx_buffer.hh"
 #include "rx_buffer.hh"
 
@@ -130,7 +130,7 @@ int pacman_poll_rx(){
 int pacman_poll_tx(){
   uint32_t src[TX_BUFFER_BYTES/4];
   int count = 0;
-  uint8_t pacman_id = pacman_vspace_get_pacman_id();
+  uint8_t pacman_id = get_pacman_id();
 
   while (tx_buffer_out(src)){
     //printf("DEBUG:  Filling loopback buffer...\n");
